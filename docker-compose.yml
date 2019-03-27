@@ -20,7 +20,7 @@ services:
     volumes:
       - ~/config.default.js:/usr/src/app/config/config.default.js
     ports:
-      - 7653:7001
+      - 7654:7001
     networks:
       overlay:
 
