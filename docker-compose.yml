@@ -10,6 +10,7 @@ services:
   #     overlay:
   #       aliases:
   #         - ipfs
+
   app:
     restart: always
     build: .
@@ -22,6 +23,33 @@ services:
       - 7654:7001
     networks:
       overlay:
+
+  prod:
+    restart: always
+    build: .
+    hostname: "{{.Service.Name}}-{{.Task.Slot}}"
+    # command: npm run serve
+    command: npm run dev
+    volumes:
+      - ~/config.default.js:/usr/local/smart-signature/ss-backend-config/config.prod.js
+    ports:
+      - 7653:7001
+    networks:
+      overlay:
+
+  test:
+    restart: always
+    build: .
+    hostname: "{{.Service.Name}}-{{.Task.Slot}}"
+    # command: npm run serve
+    command: npm run dev
+    volumes:
+      - ~/config.default.js:/usr/local/smart-signature/ss-backend-config/config.local.js
+    ports:
+      - 7652:7001
+    networks:
+      overlay:
+
   # app:
   #   restart: always
   #   build: .
