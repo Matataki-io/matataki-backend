@@ -20,7 +20,7 @@ services:
     volumes:
       - /usr/local/smart-signature/ss-backend-config/config.prod.js:/usr/src/app/config/config.default.js
     ports:
-      - 7654:7001
+      - 7653:7001
     networks:
       overlay:
 
@@ -33,7 +33,7 @@ services:
     volumes:
       - /usr/local/smart-signature/ss-backend-config/config.local.js:/usr/src/app/config/config.default.js
     ports:
-      - 7653:7001
+      - 7652:7001
     networks:
       overlay:
 
