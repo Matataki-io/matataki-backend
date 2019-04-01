@@ -45,6 +45,8 @@ module.exports = appInfo => {
     httpEndpoint: 'http://eos.greymass.com',
     chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
     keyProvider: 'a private key',
+    contract: "signature.bp",
+    actor: "kuriharachie",
   };
 
   config.mail = {

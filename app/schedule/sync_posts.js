@@ -42,10 +42,10 @@ class SyncPosts extends Subscription {
         ids.push(post.id);
         actions.push(
           {
-            account: 'signature.bp',
+            account: this.ctx.app.config.eos.contract,
             name: 'publish',
             authorization: [{
-              actor: 'kuriharachie',
+              actor: this.ctx.app.config.eos.actor,
               permission: 'active',
             }],
             data: {

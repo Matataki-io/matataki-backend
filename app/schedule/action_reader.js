@@ -19,7 +19,7 @@ class ActionReader extends Subscription {
     this.config = {
       startAt: 500,
       step: 20,
-      watchAccount: "signature.bp"
+      watchAccount: ctx.app.config.eos.contract,
     }
   }
 
