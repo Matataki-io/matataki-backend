@@ -249,7 +249,7 @@ http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
 #### 添加评论 (need access_token)
 
-* POST /comment
+* POST /post/comment
 * 响应状态码：200
 
 参数：
