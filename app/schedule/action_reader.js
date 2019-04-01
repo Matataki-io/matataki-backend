@@ -17,7 +17,7 @@ class ActionReader extends Subscription {
     });
 
     this.config = {
-      startAt: 500,
+      startAt: 1500,
       step: 20,
       watchAccount: ctx.app.config.eos.contract,
     }
@@ -77,8 +77,23 @@ class ActionReader extends Subscription {
         var sign_id = null;
 
         var type = "other";
-        // const now = moment().format('YYYY-MM-DD HH:mm:ss');
         const block_time = x.block_time;
+        
+        // bill type
+        if (act_name == "bill" && act_account == this.config.watchAccount) {
+          act_data = x.action_trace.act.data;
+
+          author = act_data.owner;
+
+          if (act_data.quantity) {
+            amount = (act_data.quantity.split(" ")[0] - 0) * 10000;
+          }
+
+          sign_id = act_data.signId;
+          type = "bill " + act_data.type;
+
+          act_data = JSON.stringify(x.action_trace.act.data);
+        }
 
         // 判断是打赏转账类型
         if (act_name == "transfer" && act_account == "eosio.token") {
@@ -89,7 +104,7 @@ class ActionReader extends Subscription {
 
           var from = act_data.from;
           var to = act_data.to;
-          var amount = (act_data.quantity.split(" ")[0] - 0) * 10000;
+          amount = (act_data.quantity.split(" ")[0] - 0) * 10000;
 
           act_data = JSON.stringify(x.action_trace.act.data);
 

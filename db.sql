@@ -227,7 +227,7 @@ CREATE TABLE actions (
 
   author varchar(100),
   memo varchar(100),
-  amount INT UNSIGNED DEFAULT 0,
+  amount INT  DEFAULT 0,
   sign_id INT UNSIGNED DEFAULT 0,
   
   type varchar(100),
