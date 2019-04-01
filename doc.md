@@ -272,3 +272,28 @@ http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
 请求示例: 
 * curl -X GET https://api.smartsignature.io/supports?user=flyovergross
+
+
+
+#### 获取粉丝列表
+
+* GET /follows
+
+* 参数 :
+* page: 页数，默认第一页
+* user: 指定用户
+
+
+请求示例: 
+curl https://api.smartsignature.io/follows\?user\=xiaotiandada | jq
+
+#### 获取关注列表
+
+* GET /fans
+
+* 参数 :
+* page: 页数，默认第一页
+* user: 指定用户
+
+请求示例: 
+curl https://api.smartsignature.io/fans\?user\=xiaotiandada | jq

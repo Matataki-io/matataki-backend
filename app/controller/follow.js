@@ -80,7 +80,66 @@ class FollowController extends Controller {
     }
   }
 
- 
+
+  async follows() {
+    const pagesize = 20;
+
+    const { page = 1, user } = this.ctx.query;
+
+    if (!user) {
+      this.ctx.body = {
+        msg: 'user require ',
+      };
+      this.ctx.status = 500;
+      return;
+    }
+
+    let whereOption = {
+      username: user
+    }
+
+    const results = await this.app.mysql.select('follows', {
+      where: whereOption,
+      columns: ['followed'],
+      orders: [['create_time', 'desc']],
+      limit: pagesize,
+      offset: (page - 1) * pagesize,
+    });
+
+    this.ctx.body = results;
+  }
+
+  async fans() {
+    const pagesize = 20;
+
+    const { page = 1, user } = this.ctx.query;
+
+    if (!user) {
+      this.ctx.body = {
+        msg: 'user require ',
+      };
+      this.ctx.status = 500;
+      return;
+    }
+
+    let whereOption = {
+      followed: user
+    }
+
+    const results = await this.app.mysql.select('follows', {
+      where: whereOption,
+      columns: ['username'],
+      orders: [['create_time', 'desc']],
+      limit: pagesize,
+      offset: (page - 1) * pagesize,
+    });
+
+
+    this.ctx.body = results;
+  }
+
+
+
 
 }
 

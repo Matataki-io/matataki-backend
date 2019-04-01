@@ -43,6 +43,12 @@ module.exports = app => {
   app.router.post('/follow', app.controller.follow.follow);
   app.router.post('/unfollow', app.controller.follow.unfollow);
 
+  // 关注列表
+  app.router.get('/follows', app.controller.follow.follows);
+  // 粉丝列表（谁关注了我？）
+  app.router.get('/fans', app.controller.follow.fans);
+  
+
   // 获取access token 
   app.router.post('/auth', app.controller.auth.auth);
 };
