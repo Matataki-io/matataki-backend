@@ -47,6 +47,7 @@ module.exports = appInfo => {
     keyProvider: 'a private key',
     contract: "signature.bp",
     actor: "kuriharachie",
+    startAt: 1500
   };
 
   config.mail = {
@@ -61,7 +62,7 @@ module.exports = appInfo => {
 
   config.security = {
     // TODO: reset in production
-    domainWhiteList: [ 'localhost:8080', 'ss-web.starling.team', '.ngrok.io', '192.168.0.102:8080', 'sign-dev.dravatar.xyz', '192.168.31.67:8080' ],
+    domainWhiteList: ['localhost:8080', 'ss-web.starling.team', '.ngrok.io', '192.168.0.102:8080', 'sign-dev.dravatar.xyz', '192.168.31.67:8080'],
     csrf: {
       enable: false,
     },

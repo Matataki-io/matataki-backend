@@ -17,7 +17,7 @@ class ActionReader extends Subscription {
     });
 
     this.config = {
-      startAt: 1500,
+      startAt: ctx.app.config.eos.startAt,
       step: 20,
       watchAccount: ctx.app.config.eos.contract,
     }
