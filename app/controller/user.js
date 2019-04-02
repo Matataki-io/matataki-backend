@@ -46,48 +46,35 @@ class UserController extends Controller {
   }
 
 
-  async income() {
+  async assets() {
     const ctx = this.ctx;
 
-    const username = ctx.params.username;
+    const { page = 1, user } = this.ctx.query;
+    const pagesize = 20;
 
-    // 2.获取某账号关注数
-    const follows = await this.app.mysql.query(
-      'select count(*) as follows from follows where username = ? and status=1',
-      [username]
-    );
-
-    // 3.获取某账号粉丝数
-    const fans = await this.app.mysql.query(
-      'select count(*) as fans from follows where followed = ? and status=1',
-      [username]
-    );
-
-    var is_follow = false;
-
-    const current_user = this.get_current_user();
-
-    if (current_user) {
-      const result = await this.app.mysql.get('follows', { username: current_user, followed: username, status: 1 });
-      if (result) {
-        is_follow = true;
-      }
+    if (!user) {
+      ctx.status = 500;
+      ctx.body = "user required";
+      return;
     }
 
-    const result = {
-      username,
-      follows: follows[0].follows,
-      fans: fans[0].fans,
-      is_follow: is_follow
-    };
+    let whereOption = {
+      "act_name": "bill",
+      "type": ["bill share income", "bill sign income"],
+      "author": user
+    }
 
-    ctx.logger.info('debug info', result);
+    const results = await this.app.mysql.select('actions', {
+      where: whereOption,
+      columns: ['author', 'amount', 'sign_id', 'create_time', "type"],
+      orders: [['create_time', 'desc']],
+      limit: pagesize,
+      offset: (page - 1) * pagesize,
+    });
 
-    ctx.body = result;
+    ctx.body = results;
     ctx.status = 200;
   }
-
-
 
 
 }

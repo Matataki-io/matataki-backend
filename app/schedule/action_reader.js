@@ -68,6 +68,7 @@ class ActionReader extends Subscription {
 
         var seq = x.account_action_seq;
         var act_account = x.action_trace.act.account;
+        var act_receiver = x.action_trace.receipt.receiver;
         var act_name = x.action_trace.act.name;
         var act_data = "";
 
@@ -78,9 +79,9 @@ class ActionReader extends Subscription {
 
         var type = "other";
         const block_time = x.block_time;
-        
+
         // bill type
-        if (act_name == "bill" && act_account == this.config.watchAccount) {
+        if (act_name === "bill" && act_account === this.config.watchAccount && act_receiver === this.config.watchAccount) {
           act_data = x.action_trace.act.data;
 
           author = act_data.owner;
