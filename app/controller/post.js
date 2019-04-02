@@ -27,7 +27,13 @@ class PostController extends Controller {
     ctx.logger.info('debug info', author, title, content, publickey, sign, username);
 
     if (fissionFactor > 2000) {
-      fissionFactor = 2000; // 最大2000
+      // fissionFactor = 2000; // 最大2000
+      ctx.body = {
+        msg: 'fissionFactor should >= 2000',
+      };
+      ctx.status = 500;
+
+      return;
     }
 
     // check signature
