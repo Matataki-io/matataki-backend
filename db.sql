@@ -250,3 +250,7 @@ CREATE TABLE comments (
 );
 
 drop table comments;
+
+
+-- 避免sign id 在正式和测试服中重复（修改测试服起始id为10010）
+alter table posts AUTO_INCREMENT=100010;
