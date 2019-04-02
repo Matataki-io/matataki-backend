@@ -58,9 +58,27 @@ class UserController extends Controller {
       return;
     }
 
+    // 1. 历史总创作收入 (sign income)
+    const totalSignIncome = await this.app.mysql.query(
+      'select sum(amount) as totalSignIncome from actions where type = ? and author= ?',
+      ["bill sign income", user]
+    );
+
+    // 2. 历史总打赏收入 (share income)
+    const totalShareIncome = await this.app.mysql.query(
+      'select sum(amount) as totalShareIncome from actions where type = ? and author= ?',
+      ["bill share income", user]
+    );
+
+    // 3. 历史总打赏支出 (support expenses)
+    const totalShareExpenses = await this.app.mysql.query(
+      'select sum(amount) as totalShareExpenses from actions where type = ? and author= ?',
+      ["bill support expenses", user]
+    );
+
     let whereOption = {
       "act_name": "bill",
-      "type": ["bill share income", "bill sign income"],
+      "type": ["bill share income", "bill sign income", "bill support expenses"],
       "author": user
     }
 
@@ -72,7 +90,15 @@ class UserController extends Controller {
       offset: (page - 1) * pagesize,
     });
 
-    ctx.body = results;
+    let resp = {
+      user: user,
+      totalSignIncome: totalSignIncome[0].totalSignIncome || 0,
+      totalShareIncome: totalShareIncome[0].totalShareIncome || 0,
+      totalShareExpenses: totalShareExpenses[0].totalShareExpenses || 0,
+      history: results
+    }
+
+    ctx.body = resp;
     ctx.status = 200;
   }
 

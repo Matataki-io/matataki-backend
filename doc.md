@@ -285,7 +285,7 @@ http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
 
 请求示例: 
-curl https://api.smartsignature.io/follows\?user\=xiaotiandada | jq
+curl https://api.smartsignature.io/follows?user=xiaotiandada | jq
 
 #### 获取关注列表
 
@@ -296,4 +296,171 @@ curl https://api.smartsignature.io/follows\?user\=xiaotiandada | jq
 * user: 指定用户
 
 请求示例: 
-curl https://api.smartsignature.io/fans\?user\=xiaotiandada | jq
+curl https://api.smartsignature.io/fans?user=xiaotiandada | jq
+
+
+#### 获取资产明细
+
+* GET /assets
+
+* 参数 :
+* page: 页数，默认第一页
+* user: 指定用户
+
+
+请求示例: 
+curl https://api.smartsignature.io/assets?user=gaojin.game | jq
+
+
+```
+
+{
+  "user": "gaojin.game",
+  "totalSignIncome": 0,
+  "totalShareIncome": 17550,
+  "totalShareExpenses": -10000,
+  "history": [
+    {
+      "author": "gaojin.game",
+      "amount": 10,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:32.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 10,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:30.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 10,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:28.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 10,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:26.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 10,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:23.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 500,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:20.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:18.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:16.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:13.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:10.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:08.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:05.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:03.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:48:01.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:47:57.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:47:55.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:47:53.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:47:51.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:47:49.000Z",
+      "type": "bill share income"
+    },
+    {
+      "author": "gaojin.game",
+      "amount": 1000,
+      "sign_id": 211,
+      "create_time": "2019-04-01T03:47:46.000Z",
+      "type": "bill share income"
+    }
+  ]
+}
+
+```
