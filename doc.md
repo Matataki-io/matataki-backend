@@ -464,3 +464,36 @@ curl https://api.smartsignature.io/assets?user=gaojin.game | jq
 }
 
 ```
+
+
+#### 获取单篇文章的信息
+
+新增, read: 阅读次数， ups: 被打赏次数, value: 被打赏总金额
+
+* GET /post/:hash
+* 响应状态码：200
+
+请求示例: 
+curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiyLF8cW1 | jq
+
+* 响应体：
+```
+{
+  "id": 225,
+  "username": "daaaaaaaaaab",
+  "author": "daaaaaaaaaab",
+  "title": "法學、經濟學與區塊鏈的最潮交會 — 激進市場（Radical Markets）提案入門 [含閱讀清單]",
+  "short_content": null,
+  "hash": "Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiyLF8cW1",
+  "sign": "SIG_K1_KZ42uGArUszTgdhfytVGWF1TGtJTSHcM521LEM3BLv4GptBMRjJRK754ogCpfW6X42aKoKzS85X2iKFt66XKe68TRrgtmY",
+  "public_key": "EOS5mZZrQXTy5Pw97kb8xqTikVQyUNfCDzSYsQiACkAf9gJbJK9hr",
+  "status": 0,
+  "onchain_status": 1,
+  "create_time": "2019-04-02T13:23:13.000Z",
+  "fission_factor": 2000,
+  "read": 58,
+  "ups": 3,
+  "value": 15100
+}
+
+```
