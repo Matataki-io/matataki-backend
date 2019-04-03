@@ -132,6 +132,101 @@ class PostController extends Controller {
     this.ctx.body = results;
   }
 
+
+  async getSupportTimesRanking() {
+    const pagesize = 20;
+
+    const { page = 1 } = this.ctx.query;
+
+    const results = await this.app.mysql.query(
+      'select sign_id, count(*) as total from actions where type = ? group by sign_id order by total desc limit ?,?',
+      ["share", (page - 1) * pagesize, pagesize]
+    );
+
+    let signids = [];
+    _.each(results, (row) => {
+      signids.push(row.sign_id);
+    })
+
+    let results2 = [];
+
+    if (signids.length > 0) {
+
+      let whereOption2 = {
+        id: signids
+      }
+
+      results2 = await this.app.mysql.select('posts', { // 搜索 post 表
+        where: whereOption2, // WHERE 条件
+        columns: ['id', 'author', 'title', 'short_content', 'hash', 'create_time'], // 要查询的表字段
+        orders: [['create_time', 'desc']], // 排序方式
+        limit: pagesize, // 返回数据量
+        offset: (page - 1) * pagesize, // 数据偏移量
+      });
+
+      _.each(results2, (row2) => {
+        _.each(results, (row) => {
+          if (row2.id === row.sign_id) {
+            row2.times = row.total;
+          }
+        })
+      })
+
+      results2 = results2.sort((a, b) => {
+        return b.times - a.times;
+      })
+    }
+
+    this.ctx.body = results2;
+  }
+
+  async getSupportAmountRanking() {
+    const pagesize = 20;
+
+    const { page = 1 } = this.ctx.query;
+
+    const results = await this.app.mysql.query(
+      'select sign_id, sum(amount) as total from actions where type = ? group by sign_id order by total desc limit ?,?',
+      ["share", (page - 1) * pagesize, pagesize]
+    );
+
+    let signids = [];
+    _.each(results, (row) => {
+      signids.push(row.sign_id);
+    })
+
+    let results2 = [];
+
+    if (signids.length > 0) {
+
+      let whereOption2 = {
+        id: signids
+      }
+
+      results2 = await this.app.mysql.select('posts', { // 搜索 post 表
+        where: whereOption2, // WHERE 条件
+        columns: ['id', 'author', 'title', 'short_content', 'hash', 'create_time'], // 要查询的表字段
+        orders: [['create_time', 'desc']], // 排序方式
+        limit: pagesize, // 返回数据量
+        offset: (page - 1) * pagesize, // 数据偏移量
+      });
+
+      _.each(results2, (row2) => {
+        _.each(results, (row) => {
+          if (row2.id === row.sign_id) {
+            row2.value = row.total;
+          }
+        })
+      })
+
+      results2 = results2.sort((a, b) => {
+        return b.value - a.value;
+      })
+    }
+
+    this.ctx.body = results2;
+  }
+
   async supports() {
     const pagesize = 20;
 
@@ -173,7 +268,6 @@ class PostController extends Controller {
         limit: pagesize, // 返回数据量
         offset: (page - 1) * pagesize, // 数据偏移量
       });
-
     }
 
     this.ctx.body = results2;

@@ -54,5 +54,11 @@ module.exports = app => {
 
   // 获取access token 
   app.router.post('/auth', app.controller.auth.auth);
+
+  // 被打赏次数排行榜
+  app.router.get('/getSupportTimesRanking', app.controller.post.getSupportTimesRanking);
+  // 被打赏总额排行榜
+  app.router.get('/getSupportAmountRanking', app.controller.post.getSupportAmountRanking);
+  
 };
 

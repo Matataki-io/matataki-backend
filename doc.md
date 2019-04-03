@@ -497,3 +497,154 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 }
 
 ```
+
+#### 获取打赏次数排行榜
+
+* GET /getSupportTimesRanking
+
+* 参数 
+* page: 页数，默认第一页
+
+请求示例：
+
+* curl -X GET https://api.smartsignature.io/getSupportTimesRanking
+* curl -X GET https://api.smartsignature.io/getSupportTimesRanking?page=2
+
+
+返回示例：
+
+```
+[
+  {
+    "id": 211,
+    "author": "andoromedaio",
+    "title": "活动 | 《链接偶像》送福利，币娘小姐姐们等你带回家！",
+    "short_content": null,
+    "hash": "QmRoUwGkwGLwwUnUQHnHptHnvzZ16LiuW6aR5YwP834GJD",
+    "create_time": "2019-04-01T03:44:43.000Z",
+    "times": 28
+  },
+  {
+    "id": 213,
+    "author": "eosjupiter33",
+    "title": "币圈趣头条？智能签名将如何打破信息茧房",
+    "short_content": null,
+    "hash": "QmRxs3qTLMgFpRQF7kVV6gfkPWEPYyNGLYJ2mGaSGYYaQa",
+    "create_time": "2019-04-01T09:57:40.000Z",
+    "times": 5
+  },
+  {
+    "id": 225,
+    "author": "daaaaaaaaaab",
+    "title": "法學、經濟學與區塊鏈的最潮交會 — 激進市場（Radical Markets）提案入門 [含閱讀清單]",
+    "short_content": null,
+    "hash": "Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiyLF8cW1",
+    "create_time": "2019-04-02T13:23:13.000Z",
+    "times": 3
+  },
+  {
+    "id": 216,
+    "author": "ygllxjgotodo",
+    "title": "机械系的悲催小伙儿",
+    "short_content": null,
+    "hash": "QmUewbj9fFwErkujsHaGjZJYancnXH76iacSYisf1fxET3",
+    "create_time": "2019-04-02T02:20:09.000Z",
+    "times": 2
+  },
+  {
+    "id": 218,
+    "author": "andoromedaio",
+    "title": "仙女电波  Vol. 1 仿生人会梦见电子羊吗",
+    "short_content": null,
+    "hash": "QmezBtn7MKSzppKYoJ6E417R1RgNzUWqvTJMEMS9g2dLmX",
+    "create_time": "2019-04-02T03:42:00.000Z",
+    "times": 2
+  },
+  {
+    "id": 220,
+    "author": "andoromedaio",
+    "title": "1000EOS等你来！智能签名写作训练营系列1：爆款文章炼成",
+    "short_content": null,
+    "hash": "QmdbKn7a4o2ouhyqg9yL1irD8rraYSWEqg7PBTxXUQz8YV",
+    "create_time": "2019-04-02T07:20:22.000Z",
+    "times": 1
+  },
+  {
+    "id": 223,
+    "author": "neigung12345",
+    "title": "区块链相关的优质（误）公众号汇总(有链接)",
+    "short_content": null,
+    "hash": "QmT8aha65VssFf1xsp5jho6xZVibUCZihrSETyzxbyprSB",
+    "create_time": "2019-04-02T10:28:09.000Z",
+    "times": 1
+  },
+] 
+
+```
+
+
+#### 获取打赏金额排行榜
+
+* GET /getSupportAmountRanking
+
+* 参数 
+* page: 页数，默认第一页
+
+请求示例：
+
+* curl -X GET https://api.smartsignature.io/getSupportAmountRanking
+* curl -X GET https://api.smartsignature.io/getSupportAmountRanking?page=2
+
+
+返回示例：
+
+```
+[
+  {
+    "id": 211,
+    "author": "andoromedaio",
+    "title": "活动 | 《链接偶像》送福利，币娘小姐姐们等你带回家！",
+    "short_content": null,
+    "hash": "QmRoUwGkwGLwwUnUQHnHptHnvzZ16LiuW6aR5YwP834GJD",
+    "create_time": "2019-04-01T03:44:43.000Z",
+    "value": 44650
+  },
+  {
+    "id": 225,
+    "author": "daaaaaaaaaab",
+    "title": "法學、經濟學與區塊鏈的最潮交會 — 激進市場（Radical Markets）提案入門 [含閱讀清單]",
+    "short_content": null,
+    "hash": "Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiyLF8cW1",
+    "create_time": "2019-04-02T13:23:13.000Z",
+    "value": 15100
+  },
+  {
+    "id": 223,
+    "author": "neigung12345",
+    "title": "区块链相关的优质（误）公众号汇总(有链接)",
+    "short_content": null,
+    "hash": "QmT8aha65VssFf1xsp5jho6xZVibUCZihrSETyzxbyprSB",
+    "create_time": "2019-04-02T10:28:09.000Z",
+    "value": 10000
+  },
+  {
+    "id": 218,
+    "author": "andoromedaio",
+    "title": "仙女电波  Vol. 1 仿生人会梦见电子羊吗",
+    "short_content": null,
+    "hash": "QmezBtn7MKSzppKYoJ6E417R1RgNzUWqvTJMEMS9g2dLmX",
+    "create_time": "2019-04-02T03:42:00.000Z",
+    "value": 5100
+  },
+  {
+    "id": 221,
+    "author": "bagawuziwei1",
+    "title": "《链游大师》剑与魔法的幻想，默认素材首揭",
+    "short_content": null,
+    "hash": "QmV4rTx2xk3Aos1xksrYHAHBANv7CddYqSf3JQBjF3maoa",
+    "create_time": "2019-04-02T07:21:55.000Z",
+    "value": 1000
+  }
+] 
+
+```
