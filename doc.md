@@ -648,3 +648,15 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 ] 
 
 ```
+
+
+#### 修改昵称 (need access_token)
+
+* POST /user/setNickname
+* 响应状态码：201
+
+参数：
+* nickname: 昵称
+
+请求示例: 
+* curl -d "nickname=joenick" -H "x-access-token: access-token"  -X POST https://api.smartsignature.io/user/setNickname
