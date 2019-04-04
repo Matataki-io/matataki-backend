@@ -23,14 +23,14 @@
 
 #### 获取用户信息 
     
-新增, 返回fans数和follow数 ,is_follow 是否关注
+新增, 返回fans数和follow数 ,is_follow 是否关注， nickname 昵称
 
 * GET /user/:username
 * 响应状态码：200
 * 响应体：
 
 ```
-{"username":"minakokojima","follows":4,"fans":5, is_follow: false }
+{"username":"minakokojima", "username":"minanick" ,"follows":4,"fans":5, is_follow: false }
 
 ```
 
