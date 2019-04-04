@@ -16,6 +16,8 @@ module.exports = app => {
   router.get('/supports', controller.post.supports);
   // 单篇文章
   router.get('/post/:hash', controller.post.post);
+  // 单篇文章（for 短链接）
+  router.get('/p/:id', controller.post.p);
 
   // 文章阅读事件上报 
   router.post('/post/show/:hash', controller.post.show);

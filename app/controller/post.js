@@ -314,6 +314,48 @@ class PostController extends Controller {
     }
   }
 
+  async p() {
+    const ctx = this.ctx;
+    const id = ctx.params.id;
+
+    const post = await this.app.mysql.get('posts', { id });
+
+    if (post) {
+      // 阅读次数
+      const read = await this.app.mysql.query(
+        'select count(*) as num from readers where hash = ? ',
+        [id]
+      );
+
+      post.read = read[0].num;
+
+      // 被赞次数
+      const ups = await this.app.mysql.query(
+        'select count(*) as ups from actions where sign_id = ? and type = ? ',
+        [post.id, "share"]
+      );
+
+      post.ups = ups[0].ups;
+
+      // 被赞总金额
+      const value = await this.app.mysql.query(
+        'select sum(amount) as value from actions where sign_id = ? and type = ? ',
+        [post.id, "share"]
+      );
+
+      post.value = value[0].value || 0;
+
+      ctx.body = post;
+      ctx.status = 200;
+    } else {
+      ctx.body = {
+        msg: 'post not found',
+      };
+      ctx.status = 404;
+    }
+  }
+
+
   async show() {
     const ctx = this.ctx;
     const hash = ctx.params.hash;

@@ -660,3 +660,38 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 
 请求示例: 
 * curl -d "nickname=joenick" -H "x-access-token: access-token"  -X POST https://api.smartsignature.io/user/setNickname
+
+
+
+
+#### 获取单篇文章的信息 （短链接 issues）
+
+
+* GET /p/:id
+* 响应状态码：200
+
+请求示例: 
+curl https://api.smartsignature.io/p/123 | jq
+
+* 响应体：
+
+```
+{
+  "id": 123,
+  "username": null,
+  "author": "cryptobuffff",
+  "title": "我是一个粉刷匠",
+  "short_content": null,
+  "hash": "QmUkEM3FKU1mvBSKfZLMWubBZMnnmNMp5No8DoWTrUZ8vX",
+  "sign": "SIG_K1_K9gV2aPKUoYX53C9bbXPKs1ZhH5jkmPTLqM3eygRcDeGbJkZgbk5de4UESSowpPUB3KXq9GLZn66kyLqobTVZPQBi5pZ2k",
+  "public_key": "EOS89Q5D3pDAn4UeLqhtX8ZoDWKNTmiYewPQk4CmQTdj81BuTe9es",
+  "status": 0,
+  "onchain_status": 1,
+  "create_time": "2019-03-21T12:35:29.000Z",
+  "fission_factor": 2000,
+  "read": 0,
+  "ups": 0,
+  "value": 0
+}
+
+```
