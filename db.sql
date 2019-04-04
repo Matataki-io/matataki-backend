@@ -254,3 +254,12 @@ drop table comments;
 
 -- 避免sign id 在正式和测试服中重复（修改测试服起始id为10010）
 alter table posts AUTO_INCREMENT=100010;
+
+
+
+
+-- add new column into users table
+ALTER TABLE users ADD COLUMN nickname varchar(100) DEFAULT null;
+ALTER TABLE users ADD COLUMN avatar varchar(255) DEFAULT null;
+ALTER TABLE users ADD COLUMN create_time timestamp;
+

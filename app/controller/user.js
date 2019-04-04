@@ -1,6 +1,7 @@
 'use strict';
 
 const Controller = require('../core/base_controller');
+const moment = require('moment');
 
 class UserController extends Controller {
 
@@ -102,6 +103,45 @@ class UserController extends Controller {
     ctx.status = 200;
   }
 
+  async setNickname() {
+
+    const ctx = this.ctx;
+
+    const { nickname = '' } = ctx.request.body;
+
+    const current_user = this.get_current_user();
+
+    try {
+      this.checkAuth(current_user);
+    } catch (err) {
+      ctx.status = 401;
+      ctx.body = err.message;
+      return;
+    }
+
+    try {
+      const now = moment().format('YYYY-MM-DD HH:mm:ss');
+
+      const result = await this.app.mysql.query(
+        'INSERT INTO users VALUES (null, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE nickname = ?',
+        [current_user, "", nickname, "", now, nickname]
+      );
+
+      const updateSuccess = result.affectedRows >= 1;
+
+      if (updateSuccess) {
+        ctx.status = 201;
+      } else {
+        ctx.status = 500;
+      }
+    } catch (err) {
+      ctx.logger.error(err.sqlMessage);
+      ctx.body = {
+        msg: 'setNickname error: ' + err.sqlMessage,
+      };
+      ctx.status = 500;
+    }
+  }
 
 }
 

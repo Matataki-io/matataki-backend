@@ -27,6 +27,8 @@ module.exports = app => {
 
   // 获取资产历史统计、和详情列表（默认最新20条）
   router.get('/assets', controller.user.assets);
+  // 修改用户nickname (need access token)
+  router.post('/user/setNickname', controller.user.setNickname);
 
   // 分享
   router.post('/share', controller.share.share);

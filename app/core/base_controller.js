@@ -33,17 +33,17 @@ class BaseController extends Controller {
       var decoded = jwt.decode(token, this.app.config.jwtTokenSecret);
 
       if (decoded.exp <= Date.now()) {
-        throw new Error("access_token has expired");
+        throw new Error("invaid access_token: expired");
       }
 
       if (username && username !== decoded.iss) {
-        throw new Error("wrong user");
+        throw new Error("invaid access_token: wrong user");
       }
 
       return decoded.iss;
     } catch (err) {
       console.log("access token decode err", err);
-      throw new Error("invaid access_token");
+      throw err;
     }
   }
 
