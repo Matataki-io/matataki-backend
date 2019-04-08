@@ -35,14 +35,17 @@ class UserController extends Controller {
 
     // nick name
     let nickname = "";
+    let avatar = "";
     const user = await this.app.mysql.get('users', { username: username });
     if (user) {
       nickname = user.nickname;
+      avatar = user.avatar;
     }
 
     const result = {
       username,
       nickname,
+      avatar,
       follows: follows[0].follows,
       fans: fans[0].fans,
       is_follow: is_follow
@@ -146,6 +149,46 @@ class UserController extends Controller {
       ctx.logger.error(err.sqlMessage);
       ctx.body = {
         msg: 'setNickname error: ' + err.sqlMessage,
+      };
+      ctx.status = 500;
+    }
+  }
+
+  async setAvatar() {
+
+    const ctx = this.ctx;
+
+    const { avatar = '' } = ctx.request.body;
+
+    const current_user = this.get_current_user();
+
+    try {
+      this.checkAuth(current_user);
+    } catch (err) {
+      ctx.status = 401;
+      ctx.body = err.message;
+      return;
+    }
+
+    try {
+      const now = moment().format('YYYY-MM-DD HH:mm:ss');
+
+      const result = await this.app.mysql.query(
+        'INSERT INTO users (username, avatar, create_time) VALUES ( ?, ?, ?) ON DUPLICATE KEY UPDATE avatar = ?',
+        [current_user, avatar, now, avatar]
+      );
+
+      const updateSuccess = result.affectedRows >= 1;
+
+      if (updateSuccess) {
+        ctx.status = 201;
+      } else {
+        ctx.status = 500;
+      }
+    } catch (err) {
+      ctx.logger.error(err.sqlMessage);
+      ctx.body = {
+        msg: 'setAvatar error: ' + err.sqlMessage,
       };
       ctx.status = 500;
     }

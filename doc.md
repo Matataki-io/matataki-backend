@@ -23,14 +23,14 @@
 
 #### 获取用户信息 
     
-新增, 返回fans数和follow数 ,is_follow 是否关注， nickname 昵称
+新增, 返回fans数和follow数 ,is_follow 是否关注， nickname 昵称, avatar, 头像的ipfs hash
 
 * GET /user/:username
 * 响应状态码：200
 * 响应体：
 
 ```
-{"username":"minakokojima", "username":"minanick" ,"follows":4,"fans":5, is_follow: false }
+{"username":"minakokojima", "username":"minanick" "avatar": "QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT","follows":4,"fans":5, is_follow: false }
 
 ```
 
@@ -695,3 +695,79 @@ curl https://api.smartsignature.io/p/123 | jq
 }
 
 ```
+
+
+#### 上传图像到ipfs服务器
+
+* POST /ipfs/upload
+* 响应状态码：200
+
+参数：
+* avatar: 
+
+上传示例：
+
+```
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>JavaScript file upload</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</head>
+<script type="text/javascript">
+
+</script>
+
+<body>
+  <form action=" https://apitest.smartsignature.io/ipfs/upload" method="post" enctype="multipart/form-data">
+    <fieldset>
+      <legend>Upload photo</legend>
+      <input type="file" name="avatar" id="avatar">
+      <button type="submit">Upload</button>
+    </fieldset>
+  </form>
+  </br>
+  </br>
+  <a id="url"></a>
+  </br>
+  </br>
+  <img id="output">
+</body>
+
+</html>
+
+
+```
+
+返回图片的ipfs hash：
+
+```
+{"code":200,"hash":"QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT"}
+
+```
+
+#### 展示上传的图片
+
+* GET /image/:hash
+* 响应状态码：200
+
+请求示例： 
+
+https://apitest.smartsignature.io/image/QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT
+
+
+
+#### 设置头像 (need access_token)
+
+* POST /user/setAvatar
+* 响应状态码：201
+
+参数：
+* avatar: 头像的ipfs hash
+
+请求示例: 
+
+* curl -d "avatar=QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT" -H "x-access-token: access-token"  -X POST https://api.smartsignature.io/user/setAvatar
+
