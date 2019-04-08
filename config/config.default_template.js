@@ -13,8 +13,13 @@ module.exports = appInfo => {
   config.keys = appInfo.name + '_1552273931927_1142';
   config.jwtTokenSecret = "smart signature auth secret";
 
+  config.env = 'test'
   // add your middleware config here
-  config.middleware = [];
+  config.middleware = ['errorHandler'];
+
+  config.errorHandler = {
+    match: '/',
+  },
 
   config.mysql = {
     // 单数据库信息配置
