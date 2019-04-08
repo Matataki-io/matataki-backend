@@ -38,8 +38,8 @@ class UserController extends Controller {
     let avatar = "";
     const user = await this.app.mysql.get('users', { username: username });
     if (user) {
-      nickname = user.nickname;
-      avatar = user.avatar;
+      nickname = user.nickname || "";
+      avatar = user.avatar || "";
     }
 
     const result = {
