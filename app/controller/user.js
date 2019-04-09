@@ -130,7 +130,18 @@ class UserController extends Controller {
       return;
     }
 
+
     try {
+      const user = await this.app.mysql.get('users', { nickname: nickname });
+
+      if (user) {
+        ctx.body = {
+          msg: 'duplicate nickname',
+        };
+        ctx.status = 500;
+        return;
+      }
+
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
       const result = await this.app.mysql.query(
@@ -146,7 +157,7 @@ class UserController extends Controller {
         ctx.status = 500;
       }
     } catch (err) {
-      ctx.logger.error(err.sqlMessage);
+      console.log(err);
       ctx.body = {
         msg: 'setNickname error: ' + err.sqlMessage,
       };
