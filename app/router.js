@@ -24,6 +24,10 @@ module.exports = app => {
   // 添加评论
   router.post('/post/comment', controller.post.comment);
 
+    // 隐藏文章
+  app.router.delete('/post/:id', app.controller.post.delete);
+  
+
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:username', controller.user.user);
 

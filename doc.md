@@ -771,3 +771,12 @@ https://apitest.smartsignature.io/image/QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd
 
 * curl -d "avatar=QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT" -H "x-access-token: access-token"  -X POST https://api.smartsignature.io/user/setAvatar
 
+
+#### 删除文章(隐藏) (need access_token)
+
+* DELETE /post/:id
+* 响应状态码：200
+
+请求示例: 
+
+* curl  -H "x-access-token: access-token"  -X DELETE https://api.smartsignature.io/post/100010
