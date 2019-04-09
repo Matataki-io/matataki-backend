@@ -18,6 +18,17 @@ class PostController extends Controller {
       keyProvider: [ctx.app.config.eos.keyProvider],
       httpEndpoint: ctx.app.config.eos.httpEndpoint,
     });
+
+    if (!this.app.read_cache) {
+      this.app.read_cache = {};
+    }
+    if (!this.app.value_cache) {
+      this.app.value_cache = {};
+    }
+    if (!this.app.ups_cache) {
+      this.app.ups_cache = {};
+    }
+
   }
 
   async publish() {
@@ -106,7 +117,6 @@ class PostController extends Controller {
     }
   }
 
-
   async posts() {
     const pagesize = 20;
 
@@ -129,9 +139,58 @@ class PostController extends Controller {
       offset: (page - 1) * pagesize, // 数据偏移量
     });
 
+    if (results.length > 0) {
+
+      // 阅读次数
+      for (let i = 0; i < results.length; i++) {
+        if (this.app.read_cache[results[i].id] !== undefined) {
+          results[i].read = this.app.read_cache[results[i].id];
+        } else {
+          const read = await this.app.mysql.query(
+            'select count(*) as num from readers where hash = ? ',
+            [results[i].hash]
+          );
+          results[i].read = read[0].num;
+          this.app.read_cache[results[i].id] = read[0].num;
+        }
+      }
+
+      // 被赞总金额
+      for (let i = 0; i < results.length; i++) {
+        if (this.app.value_cache[results[i].id] !== undefined) {
+          results[i].value = this.app.value_cache[results[i].id];
+        } else {
+          const value = await this.app.mysql.query(
+            'select sum(amount) as value from actions where sign_id = ? and type = ? ',
+            [results[i].id, "share"]
+          );
+
+          let num = value[0].value || 0;
+
+          results[i].value = num;
+          this.app.value_cache[results[i].id] = num;
+        }
+      }
+
+      // 赞赏次数
+      for (let i = 0; i < results.length; i++) {
+        if (this.app.ups_cache[results[i].id] !== undefined) {
+          results[i].ups = this.app.ups_cache[results[i].id];
+        } else {
+          const ups = await this.app.mysql.query(
+            'select count(*) as ups from actions where sign_id = ? and type = ? ',
+            [results[i].id, "share"]
+          );
+
+          results[i].ups = ups[0].ups;
+          this.app.ups_cache[results[i].id] = ups[0].ups;
+        }
+      }
+
+    }
+
     this.ctx.body = results;
   }
-
 
   async getSupportTimesRanking() {
     const pagesize = 20;
@@ -175,6 +234,37 @@ class PostController extends Controller {
       results2 = results2.sort((a, b) => {
         return b.times - a.times;
       })
+
+      // 阅读次数
+      for (let i = 0; i < results2.length; i++) {
+        if (this.app.read_cache[results2[i].id] !== undefined) {
+          results2[i].read = this.app.read_cache[results2[i].id];
+        } else {
+          const read = await this.app.mysql.query(
+            'select count(*) as num from readers where hash = ? ',
+            [results2[i].hash]
+          );
+          results2[i].read = read[0].num;
+          this.app.read_cache[results2[i].id] = read[0].num;
+        }
+      }
+
+      // 被赞总金额
+      for (let i = 0; i < results2.length; i++) {
+        if (this.app.value_cache[results2[i].id] !== undefined) {
+          results2[i].value = this.app.value_cache[results2[i].id];
+        } else {
+          const value = await this.app.mysql.query(
+            'select sum(amount) as value from actions where sign_id = ? and type = ? ',
+            [results2[i].id, "share"]
+          );
+
+          let num = value[0].value || 0;
+
+          results2[i].value = num;
+          this.app.value_cache[results2[i].id] = num;
+        }
+      }
     }
 
     this.ctx.body = results2;
@@ -222,6 +312,36 @@ class PostController extends Controller {
       results2 = results2.sort((a, b) => {
         return b.value - a.value;
       })
+
+      // 阅读次数
+      for (let i = 0; i < results2.length; i++) {
+        if (this.app.read_cache[results2[i].id] !== undefined) {
+          results2[i].read = this.app.read_cache[results2[i].id];
+        } else {
+          const read = await this.app.mysql.query(
+            'select count(*) as num from readers where hash = ? ',
+            [results2[i].hash]
+          );
+          results2[i].read = read[0].num;
+          this.app.read_cache[results2[i].id] = read[0].num;
+        }
+      }
+
+      // 赞赏次数
+      for (let i = 0; i < results2.length; i++) {
+        if (this.app.ups_cache[results2[i].id] !== undefined) {
+          results2[i].ups = this.app.ups_cache[results2[i].id];
+        } else {
+          const ups = await this.app.mysql.query(
+            'select count(*) as ups from actions where sign_id = ? and type = ? ',
+            [results2[i].id, "share"]
+          );
+
+          results2[i].ups = ups[0].ups;
+          this.app.ups_cache[results2[i].id] = ups[0].ups;
+        }
+      }
+
     }
 
     this.ctx.body = results2;
@@ -296,6 +416,7 @@ class PostController extends Controller {
 
       post.ups = ups[0].ups;
 
+
       // 被赞总金额
       const value = await this.app.mysql.query(
         'select sum(amount) as value from actions where sign_id = ? and type = ? ',
@@ -303,6 +424,11 @@ class PostController extends Controller {
       );
 
       post.value = value[0].value || 0;
+
+      // update cahce
+      this.app.read_cache[post.id] = post.read;
+      this.app.value_cache[post.id] = post.value;
+      this.app.ups_cache[post.id] = post.ups;
 
       ctx.body = post;
       ctx.status = 200;
@@ -345,6 +471,11 @@ class PostController extends Controller {
 
       post.value = value[0].value || 0;
 
+      // update cahce
+      this.app.read_cache[post.id] = post.read;
+      this.app.value_cache[post.id] = post.value;
+      this.app.ups_cache[post.id] = post.ups;
+
       ctx.body = post;
       ctx.status = 200;
     } else {
@@ -354,7 +485,6 @@ class PostController extends Controller {
       ctx.status = 404;
     }
   }
-
 
   async show() {
     const ctx = this.ctx;
@@ -453,8 +583,6 @@ class PostController extends Controller {
     }
   }
 
-
-
   async comment() {
     const ctx = this.ctx;
     const { comment = '', sign_id  } = ctx.request.body;
@@ -500,10 +628,6 @@ class PostController extends Controller {
       ctx.status = 500;
     }
   }
-
-
-
-
 }
 
 module.exports = PostController;
