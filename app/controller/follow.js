@@ -1,8 +1,8 @@
 'use strict';
 
 const Controller = require('../core/base_controller');
-
 const moment = require('moment');
+var _ = require('lodash');
 
 class FollowController extends Controller {
 
@@ -106,6 +106,39 @@ class FollowController extends Controller {
       offset: (page - 1) * pagesize,
     });
 
+    let users = [];
+
+    _.each(results, (row) => {
+      row.is_follow = false;
+      users.push(row.followed)
+    })
+
+
+    const current_user = this.get_current_user();
+
+    if (current_user) {
+      let whereOption2 = {
+        username: current_user,
+        followed: users
+      }
+
+      const my_follows = await this.app.mysql.select('follows', {
+        where: whereOption2,
+        columns: ['followed'],
+        orders: [['create_time', 'desc']],
+        limit: pagesize,
+        offset: (page - 1) * pagesize,
+      });
+
+      _.each(results, (row) => {
+        _.each(my_follows, (row2) => {
+          if (row.followed === row2.followed) {
+            row.is_follow = true;
+          }
+        })
+      })
+    }
+
     this.ctx.body = results;
   }
 
@@ -133,6 +166,39 @@ class FollowController extends Controller {
       limit: pagesize,
       offset: (page - 1) * pagesize,
     });
+
+
+    let users = [];
+
+    _.each(results, (row) => {
+      row.is_follow = false;
+      users.push(row.username)
+    })
+
+    const current_user = this.get_current_user();
+
+    if (current_user) {
+      let whereOption2 = {
+        username: current_user,
+        followed: users
+      }
+
+      const my_follows = await this.app.mysql.select('follows', {
+        where: whereOption2,
+        columns: ['followed'],
+        orders: [['create_time', 'desc']],
+        limit: pagesize,
+        offset: (page - 1) * pagesize,
+      });
+
+      _.each(results, (row) => {
+        _.each(my_follows, (row2) => {
+          if (row.followed === row2.followed) {
+            row.is_follow = true;
+          }
+        })
+      })
+    }
 
 
     this.ctx.body = results;
