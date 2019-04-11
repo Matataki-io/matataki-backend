@@ -283,9 +283,38 @@ http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 * page: 页数，默认第一页
 * user: 指定用户
 
+ps: 如果有传 access token, 服务端会检索 access token所属用户，是否已经关注了 列表中的人 ， 字段 is_follow 
+
+根据 is_follow， 去表示UI界面上 “关注” 按钮的状态。
 
 请求示例: 
 curl https://api.smartsignature.io/follows?user=xiaotiandada | jq
+
+```
+[
+  {
+    "followed": "linklinkguan",
+    "is_follow": true
+  },
+  {
+    "followed": "shellteo2345",
+    "is_follow": false
+  },
+  {
+    "followed": "ygllxjgotodo",
+    "is_follow": false
+  },
+  {
+    "followed": "eoseoteoteot",
+    "is_follow": false
+  },
+  {
+    "followed": "flyovergross",
+    "is_follow": false
+  }
+]
+
+```
 
 #### 获取关注列表
 
@@ -294,6 +323,9 @@ curl https://api.smartsignature.io/follows?user=xiaotiandada | jq
 * 参数 :
 * page: 页数，默认第一页
 * user: 指定用户
+
+ps: 如果有传 access token, 服务端会检索 access token所属用户，是否已经关注了 列表中的人 ， 字段 is_follow 
+根据 is_follow， 去表示UI界面上 “关注” 按钮的状态。
 
 请求示例: 
 curl https://api.smartsignature.io/fans?user=xiaotiandada | jq
