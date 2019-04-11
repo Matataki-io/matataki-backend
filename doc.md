@@ -30,7 +30,7 @@
 * 响应体：
 
 ```
-{"username":"minakokojima", "username":"minanick" "avatar": "QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT","follows":4,"fans":5, is_follow: false }
+{"username":"minakokojima", "nickname":"minanick" "avatar": "QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT","follows":4,"fans":5, is_follow: false }
 
 ```
 
