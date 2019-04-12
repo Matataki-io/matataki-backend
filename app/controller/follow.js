@@ -98,6 +98,18 @@ class FollowController extends Controller {
       username: user
     }
 
+    // 获取某账号关注数
+    const follows = await this.app.mysql.query(
+      'select count(*) as follows from follows where username = ? and status=1',
+      [user]
+    );
+
+    // 3.获取某账号粉丝数
+    const fans = await this.app.mysql.query(
+      'select count(*) as fans from follows where followed = ? and status=1',
+      [user]
+    );
+
     const results = await this.app.mysql.select('follows', {
       where: whereOption,
       columns: ['followed'],
@@ -139,7 +151,13 @@ class FollowController extends Controller {
       })
     }
 
-    this.ctx.body = results;
+    let resp = {
+      totalFollows: follows[0].follows,
+      totalFans: fans[0].fans,
+      list: results
+    }
+
+    this.ctx.body = resp;
   }
 
   async fans() {
@@ -158,6 +176,19 @@ class FollowController extends Controller {
     let whereOption = {
       followed: user
     }
+
+    // 获取某账号关注数
+    const follows = await this.app.mysql.query(
+      'select count(*) as follows from follows where username = ? and status=1',
+      [user]
+    );
+
+    // 3.获取某账号粉丝数
+    const fans = await this.app.mysql.query(
+      'select count(*) as fans from follows where followed = ? and status=1',
+      [user]
+    );
+
 
     const results = await this.app.mysql.select('follows', {
       where: whereOption,
@@ -201,7 +232,13 @@ class FollowController extends Controller {
     }
 
 
-    this.ctx.body = results;
+    let resp = {
+      totalFollows: follows[0].follows,
+      totalFans: fans[0].fans,
+      list: results
+    }
+
+    this.ctx.body = resp;
   }
 
 

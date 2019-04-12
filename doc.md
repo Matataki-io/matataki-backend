@@ -287,32 +287,53 @@ ps: 如果有传 access token, 服务端会检索 access token所属用户，是
 
 根据 is_follow， 去表示UI界面上 “关注” 按钮的状态。
 
+
 请求示例: 
 curl https://api.smartsignature.io/follows?user=xiaotiandada | jq
 
 ```
-[
-  {
-    "followed": "linklinkguan",
-    "is_follow": true
-  },
-  {
-    "followed": "shellteo2345",
-    "is_follow": false
-  },
-  {
-    "followed": "ygllxjgotodo",
-    "is_follow": false
-  },
-  {
-    "followed": "eoseoteoteot",
-    "is_follow": false
-  },
-  {
-    "followed": "flyovergross",
-    "is_follow": false
-  }
-]
+{
+  "totalFollows": 9,
+  "totalFans": 8,
+  "list": [
+    {
+      "followed": "xiaotiandada",
+      "is_follow": true
+    },
+    {
+      "followed": "helloworld11",
+      "is_follow": true
+    },
+    {
+      "followed": "cryptobuffff",
+      "is_follow": true
+    },
+    {
+      "followed": "linklinkguan",
+      "is_follow": true
+    },
+    {
+      "followed": "QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy",
+      "is_follow": true
+    },
+    {
+      "followed": "333333",
+      "is_follow": true
+    },
+    {
+      "followed": "222222",
+      "is_follow": true
+    },
+    {
+      "followed": "111111",
+      "is_follow": true
+    },
+    {
+      "followed": "tengavinwood",
+      "is_follow": true
+    }
+  ]
+}
 
 ```
 
@@ -329,6 +350,57 @@ ps: 如果有传 access token, 服务端会检索 access token所属用户，是
 
 请求示例: 
 curl https://api.smartsignature.io/fans?user=xiaotiandada | jq
+
+
+```
+{
+  "totalFollows": 9,
+  "totalFans": 8,
+  "list": [
+    {
+      "username": "xiaotiandada",
+      "is_follow": false
+    },
+    {
+      "username": "cryptobuffff",
+      "is_follow": false
+    },
+    {
+      "username": "linklinkguan",
+      "is_follow": false
+    },
+    {
+      "username": "flyovergross",
+      "is_follow": false
+    },
+    {
+      "username": "",
+      "is_follow": false
+    },
+    {
+      "username": "444444",
+      "is_follow": false
+    },
+    {
+      "username": "333333",
+      "is_follow": false
+    },
+    {
+      "username": "222222",
+      "is_follow": false
+    },
+    {
+      "username": "111111",
+      "is_follow": false
+    },
+    {
+      "username": "tengavinwood",
+      "is_follow": false
+    }
+  ]
+}
+
+```
 
 
 #### 获取资产明细
