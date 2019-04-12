@@ -4,6 +4,23 @@ const { Controller } = require('egg');
 const jwt = require('jwt-simple');
 
 class BaseController extends Controller {
+
+  constructor(ctx) {
+    super(ctx);
+    if (!this.app.read_cache) {
+      this.app.read_cache = {};
+    }
+    if (!this.app.value_cache) {
+      this.app.value_cache = {};
+    }
+    if (!this.app.ups_cache) {
+      this.app.ups_cache = {};
+    }
+    if (!this.app.post_cache) {
+      this.app.post_cache = {};
+    }
+  }
+
   get user() {
     return this.ctx.session.user;
   }

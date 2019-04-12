@@ -18,17 +18,6 @@ class PostController extends Controller {
       keyProvider: [ctx.app.config.eos.keyProvider],
       httpEndpoint: ctx.app.config.eos.httpEndpoint,
     });
-
-    if (!this.app.read_cache) {
-      this.app.read_cache = {};
-    }
-    if (!this.app.value_cache) {
-      this.app.value_cache = {};
-    }
-    if (!this.app.ups_cache) {
-      this.app.ups_cache = {};
-    }
-
   }
 
   async publish() {
@@ -185,8 +174,9 @@ class PostController extends Controller {
           results[i].ups = ups[0].ups;
           this.app.ups_cache[results[i].id] = ups[0].ups;
         }
+        this.app.post_cache[results[i].id] = results[i];
       }
-
+      
     }
 
     this.ctx.body = results;
@@ -263,6 +253,8 @@ class PostController extends Controller {
 
           results2[i].value = num;
           this.app.value_cache[results2[i].id] = num;
+
+          this.app.post_cache[results2[i].id] = results2[i];
         }
       }
     }
@@ -339,6 +331,8 @@ class PostController extends Controller {
 
           results2[i].ups = ups[0].ups;
           this.app.ups_cache[results2[i].id] = ups[0].ups;
+
+          this.app.post_cache[results2[i].id] = results2[i];
         }
       }
 
@@ -430,6 +424,8 @@ class PostController extends Controller {
       this.app.value_cache[post.id] = post.value;
       this.app.ups_cache[post.id] = post.ups;
 
+      this.app.post_cache[post.id] = post;
+
       ctx.body = post;
       ctx.status = 200;
     } else {
@@ -475,6 +471,8 @@ class PostController extends Controller {
       this.app.read_cache[post.id] = post.read;
       this.app.value_cache[post.id] = post.value;
       this.app.ups_cache[post.id] = post.ups;
+
+      this.app.post_cache[post.id] = post;
 
       ctx.body = post;
       ctx.status = 200;
