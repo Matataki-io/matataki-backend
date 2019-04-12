@@ -2,6 +2,7 @@
 
 const Controller = require('../core/base_controller');
 const moment = require('moment');
+var _ = require('lodash');
 
 class UserController extends Controller {
 
@@ -101,6 +102,18 @@ class UserController extends Controller {
       limit: pagesize,
       offset: (page - 1) * pagesize,
     });
+
+    for (let i = 0; i < results.length; i++) {
+      if (this.app.post_cache[results[i].sign_id] !== undefined) {
+        results[i].title = this.app.post_cache[results[i].sign_id].title;
+      } else {
+        const post = await this.app.mysql.get('posts', { id: results[i].sign_id });
+        if (post) {
+          results[i].title = post.title;
+          this.app.post_cache[results[i].sign_id] = post;
+        }
+      }
+    }
 
     let resp = {
       user: user,
