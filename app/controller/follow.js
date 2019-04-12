@@ -110,6 +110,8 @@ class FollowController extends Controller {
       [user]
     );
 
+
+
     const results = await this.app.mysql.select('follows', {
       where: whereOption,
       columns: ['followed'],
@@ -122,9 +124,43 @@ class FollowController extends Controller {
 
     _.each(results, (row) => {
       row.is_follow = false;
+      row.fans = 0;
+      row.follows = 0;
       users.push(row.followed)
     })
 
+
+    // 获取某账号关注数
+    const follow = await this.app.mysql.query(
+      'select username, count(*) as follow from follows where status=1 and username in (?) group by username',
+      [users]
+    );
+
+    console.log(follow);
+
+    _.each(results, (row) => {
+      _.each(follow, (row2) => {
+        if (row.followed === row2.username) {
+          row.follows = row2.follow;
+        }
+      })
+    })
+
+    // 获取某账号粉丝数 
+    const fan = await this.app.mysql.query(
+      'select followed, count(*) as fans from follows where status=1 and followed in (?) group by followed',
+      [users]
+    );
+
+     console.log(fan);
+
+    _.each(results, (row) => {
+      _.each(fan, (row2) => {
+        if (row.followed === row2.followed) {
+          row.fans = row2.fans;
+        }
+      })
+    })
 
     const current_user = this.get_current_user();
 
@@ -240,9 +276,6 @@ class FollowController extends Controller {
 
     this.ctx.body = resp;
   }
-
-
-
 
 }
 
