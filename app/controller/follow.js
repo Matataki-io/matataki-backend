@@ -127,7 +127,7 @@ class FollowController extends Controller {
     })
 
 
-    if (user.length > 0) {
+    if (users.length > 0) {
       // 获取列表中账号关注数
       const follow = await this.app.mysql.query(
         'select username, count(*) as follow from follows where status=1 and username in (?) group by username',
