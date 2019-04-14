@@ -94,10 +94,6 @@ class FollowController extends Controller {
       return;
     }
 
-    let whereOption = {
-      username: user
-    }
-
     // 获取当前账号关注数
     const follows = await this.app.mysql.query(
       'select count(*) as follows from follows where username = ? and status=1',
@@ -111,7 +107,9 @@ class FollowController extends Controller {
     );
 
     const results = await this.app.mysql.select('follows', {
-      where: whereOption,
+      where: {
+        username: user
+      },
       columns: ['followed'],
       orders: [['create_time', 'desc']],
       limit: pagesize,
@@ -128,33 +126,37 @@ class FollowController extends Controller {
       users.push(row.followed)
     })
 
-    // 获取列表中账号关注数
-    const follow = await this.app.mysql.query(
-      'select username, count(*) as follow from follows where status=1 and username in (?) group by username',
-      [users]
-    );
 
-    _.each(results, (row) => {
-      _.each(follow, (row2) => {
-        if (row.followed === row2.username) {
-          row.follows = row2.follow;
-        }
+    if (user.length > 0) {
+      // 获取列表中账号关注数
+      const follow = await this.app.mysql.query(
+        'select username, count(*) as follow from follows where status=1 and username in (?) group by username',
+        [users]
+      );
+
+      _.each(results, (row) => {
+        _.each(follow, (row2) => {
+          if (row.followed === row2.username) {
+            row.follows = row2.follow;
+          }
+        })
       })
-    })
 
-    // 获取列表中账号粉丝数 
-    const fan = await this.app.mysql.query(
-      'select followed, count(*) as fans from follows where status=1 and followed in (?) group by followed',
-      [users]
-    );
+      // 获取列表中账号粉丝数 
+      const fan = await this.app.mysql.query(
+        'select followed, count(*) as fans from follows where status=1 and followed in (?) group by followed',
+        [users]
+      );
 
-    _.each(results, (row) => {
-      _.each(fan, (row2) => {
-        if (row.followed === row2.followed) {
-          row.fans = row2.fans;
-        }
+      _.each(results, (row) => {
+        _.each(fan, (row2) => {
+          if (row.followed === row2.followed) {
+            row.fans = row2.fans;
+          }
+        })
       })
-    })
+    }
+
 
     const current_user = this.get_current_user();
 
@@ -218,10 +220,6 @@ class FollowController extends Controller {
       return;
     }
 
-    let whereOption = {
-      followed: user
-    }
-
     // 获取当前账号关注数
     const follows = await this.app.mysql.query(
       'select count(*) as follows from follows where username = ? and status=1',
@@ -235,7 +233,9 @@ class FollowController extends Controller {
     );
 
     const results = await this.app.mysql.select('follows', {
-      where: whereOption,
+      where: {
+        followed: user
+      },
       columns: ['username'],
       orders: [['create_time', 'desc']],
       limit: pagesize,
@@ -252,33 +252,39 @@ class FollowController extends Controller {
       users.push(row.username)
     })
 
-    // 获取列表中账号关注数
-    const follow = await this.app.mysql.query(
-      'select username, count(*) as follow from follows where status=1 and username in (?) group by username',
-      [users]
-    );
+    let follow = [];
 
-    _.each(results, (row) => {
-      _.each(follow, (row2) => {
-        if (row.followed === row2.username) {
-          row.follows = row2.follow;
-        }
+    if (users.length > 0) {
+      // 获取列表中账号关注数
+      follow = await this.app.mysql.query(
+        'select username, count(*) as follow from follows where status=1 and username in (?) group by username',
+        [users]
+      );
+      _.each(results, (row) => {
+        _.each(follow, (row2) => {
+          if (row.followed === row2.username) {
+            row.follows = row2.follow;
+          }
+        })
       })
-    })
+    }
 
-    // 获取列表中账号粉丝数 
-    const fan = await this.app.mysql.query(
-      'select followed, count(*) as fans from follows where status=1 and followed in (?) group by followed',
-      [users]
-    );
+    let fan = [];
+    if (users.length > 0) {
+      // 获取列表中账号粉丝数 
+      fan = await this.app.mysql.query(
+        'select followed, count(*) as fans from follows where status=1 and followed in (?) group by followed',
+        [users]
+      );
 
-    _.each(results, (row) => {
-      _.each(fan, (row2) => {
-        if (row.followed === row2.followed) {
-          row.fans = row2.fans;
-        }
+      _.each(results, (row) => {
+        _.each(fan, (row2) => {
+          if (row.followed === row2.followed) {
+            row.fans = row2.fans;
+          }
+        })
       })
-    })
+    }
 
     const current_user = this.get_current_user();
 
