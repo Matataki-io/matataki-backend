@@ -160,7 +160,7 @@ class FollowController extends Controller {
 
     const current_user = this.get_current_user();
 
-    if (current_user) {
+    if (current_user && users.length > 0) {
 
       const my_follows = await this.app.mysql.select('follows', {
         where: {
@@ -288,7 +288,7 @@ class FollowController extends Controller {
 
     const current_user = this.get_current_user();
 
-    if (current_user) {
+    if (current_user && users.length > 0) {
       let whereOption2 = {
         username: current_user,
         followed: users
