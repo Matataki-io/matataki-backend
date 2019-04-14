@@ -252,34 +252,31 @@ class FollowController extends Controller {
       users.push(row.username)
     })
 
-    let follow = [];
-
+    
     if (users.length > 0) {
       // 获取列表中账号关注数
-      follow = await this.app.mysql.query(
+      let follow = await this.app.mysql.query(
         'select username, count(*) as follow from follows where status=1 and username in (?) group by username',
         [users]
       );
+
       _.each(results, (row) => {
         _.each(follow, (row2) => {
-          if (row.followed === row2.username) {
+          if (row.username === row2.username) {
             row.follows = row2.follow;
           }
         })
       })
-    }
 
-    let fan = [];
-    if (users.length > 0) {
       // 获取列表中账号粉丝数 
-      fan = await this.app.mysql.query(
+      let fan = await this.app.mysql.query(
         'select followed, count(*) as fans from follows where status=1 and followed in (?) group by followed',
         [users]
       );
 
       _.each(results, (row) => {
         _.each(fan, (row2) => {
-          if (row.followed === row2.followed) {
+          if (row.username === row2.followed) {
             row.fans = row2.fans;
           }
         })
@@ -326,7 +323,6 @@ class FollowController extends Controller {
         })
       })
     }
-
 
     let resp = {
       totalFollows: follows[0].follows,
