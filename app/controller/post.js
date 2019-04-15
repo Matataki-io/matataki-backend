@@ -111,22 +111,20 @@ class PostController extends Controller {
 
     const { page = 1, type = 'all', author } = this.ctx.query;
 
-    let whereOption = {
-      status: 0
-    }
+
+    let results = []
 
     if (author) {
-      whereOption.author = [author]
+      results = await this.app.mysql.query(
+        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time,  b.nickname from posts a left join users b on a.username = b.username where a.status=0 and a.author = ? order by create_time desc limit ?, ?',
+        [ author, (page - 1) * pagesize, pagesize]
+      );
+    } else {
+      results = await this.app.mysql.query(
+        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time,  b.nickname from posts a left join users b on a.username = b.username where a.status=0 order by create_time desc limit ?, ?',
+        [ (page - 1) * pagesize, pagesize]
+      );
     }
-
-    const results = await this.app.mysql.select('posts', { // 搜索 post 表
-      // where: { status: 0, author: ['author1', 'author2'] }, // WHERE 条件
-      where: whereOption, // WHERE 条件
-      columns: ['id', 'author', 'title', 'short_content', 'hash', 'create_time'], // 要查询的表字段
-      orders: [['create_time', 'desc']], // 排序方式
-      limit: pagesize, // 返回数据量
-      offset: (page - 1) * pagesize, // 数据偏移量
-    });
 
     if (results.length > 0) {
 
@@ -201,17 +199,10 @@ class PostController extends Controller {
 
     if (signids.length > 0) {
 
-      let whereOption2 = {
-        id: signids
-      }
-
-      results2 = await this.app.mysql.select('posts', { // 搜索 post 表
-        where: whereOption2, // WHERE 条件
-        columns: ['id', 'author', 'title', 'short_content', 'hash', 'create_time'], // 要查询的表字段
-        orders: [['create_time', 'desc']], // 排序方式
-        limit: pagesize, // 返回数据量
-        offset: 0, // 数据偏移量
-      });
+      results2 = await this.app.mysql.query(
+        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time,  b.nickname from posts a left join users b on a.username = b.username where a.id in (?) and a.status=0 order by create_time desc',
+        [signids]
+      );
 
       _.each(results2, (row2) => {
         _.each(results, (row) => {
@@ -281,17 +272,10 @@ class PostController extends Controller {
 
     if (signids.length > 0) {
 
-      let whereOption2 = {
-        id: signids
-      }
-
-      results2 = await this.app.mysql.select('posts', { // 搜索 post 表
-        where: whereOption2, // WHERE 条件
-        columns: ['id', 'author', 'title', 'short_content', 'hash', 'create_time'], // 要查询的表字段
-        orders: [['create_time', 'desc']], // 排序方式
-        limit: pagesize, // 返回数据量
-        offset: 0, // 数据偏移量
-      });
+      results2 = await this.app.mysql.query(
+        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time,  b.nickname from posts a left join users b on a.username = b.username where a.id in (?) and a.status=0 order by create_time desc',
+        [signids]
+      );
 
       _.each(results2, (row2) => {
         _.each(results, (row) => {
@@ -370,7 +354,7 @@ class PostController extends Controller {
     let results2 = [];
 
     if (signids.length > 0) {
-      results2 = await this.app.mysql.select('posts', { 
+      results2 = await this.app.mysql.select('posts', {
         where: {
           id: signids
         },
