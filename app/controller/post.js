@@ -176,7 +176,7 @@ class PostController extends Controller {
         }
         this.app.post_cache[results[i].id] = results[i];
       }
-      
+
     }
 
     this.ctx.body = results;
@@ -210,7 +210,7 @@ class PostController extends Controller {
         columns: ['id', 'author', 'title', 'short_content', 'hash', 'create_time'], // 要查询的表字段
         orders: [['create_time', 'desc']], // 排序方式
         limit: pagesize, // 返回数据量
-        offset: (page - 1) * pagesize, // 数据偏移量
+        offset: 0, // 数据偏移量
       });
 
       _.each(results2, (row2) => {
@@ -290,7 +290,7 @@ class PostController extends Controller {
         columns: ['id', 'author', 'title', 'short_content', 'hash', 'create_time'], // 要查询的表字段
         orders: [['create_time', 'desc']], // 排序方式
         limit: pagesize, // 返回数据量
-        offset: (page - 1) * pagesize, // 数据偏移量
+        offset: 0, // 数据偏移量
       });
 
       _.each(results2, (row2) => {
@@ -370,17 +370,14 @@ class PostController extends Controller {
     let results2 = [];
 
     if (signids.length > 0) {
-
-      let whereOption2 = {
-        id: signids
-      }
-
-      results2 = await this.app.mysql.select('posts', { // 搜索 post 表
-        where: whereOption2, // WHERE 条件
+      results2 = await this.app.mysql.select('posts', { 
+        where: {
+          id: signids
+        },
         columns: ['id', 'author', 'title', 'short_content', 'hash', 'create_time'], // 要查询的表字段
         orders: [['create_time', 'desc']], // 排序方式
         limit: pagesize, // 返回数据量
-        offset: (page - 1) * pagesize, // 数据偏移量
+        offset: 0, // 数据偏移量 
       });
     }
 
