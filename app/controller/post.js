@@ -111,69 +111,68 @@ class PostController extends Controller {
 
     const { page = 1, type = 'all', author } = this.ctx.query;
 
-
     let results = []
 
     if (author) {
       results = await this.app.mysql.query(
         'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time,  b.nickname from posts a left join users b on a.username = b.username where a.status=0 and a.author = ? order by create_time desc limit ?, ?',
-        [ author, (page - 1) * pagesize, pagesize]
+        [author, (page - 1) * pagesize, pagesize]
       );
     } else {
       results = await this.app.mysql.query(
         'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time,  b.nickname from posts a left join users b on a.username = b.username where a.status=0 order by create_time desc limit ?, ?',
-        [ (page - 1) * pagesize, pagesize]
+        [(page - 1) * pagesize, pagesize]
       );
     }
 
     if (results.length > 0) {
 
+      let hashs = [];
+      let signids = [];
+
+      _.each(results, row => {
+        row.read = 0;
+        row.value = 0;
+        row.ups = 0;
+        hashs.push(row.hash);
+        signids.push(row.id);
+      })
+
       // 阅读次数
-      for (let i = 0; i < results.length; i++) {
-        if (this.app.read_cache[results[i].id] !== undefined) {
-          results[i].read = this.app.read_cache[results[i].id];
-        } else {
-          const read = await this.app.mysql.query(
-            'select count(*) as num from readers where hash = ? ',
-            [results[i].hash]
-          );
-          results[i].read = read[0].num;
-          this.app.read_cache[results[i].id] = read[0].num;
-        }
-      }
+      const read = await this.app.mysql.query(
+        'select hash, count(*) as num from readers where hash in (?) group by hash',
+        [hashs]
+      );
 
-      // 被赞总金额
-      for (let i = 0; i < results.length; i++) {
-        if (this.app.value_cache[results[i].id] !== undefined) {
-          results[i].value = this.app.value_cache[results[i].id];
-        } else {
-          const value = await this.app.mysql.query(
-            'select sum(amount) as value from actions where sign_id = ? and type = ? ',
-            [results[i].id, "share"]
-          );
-
-          let num = value[0].value || 0;
-
-          results[i].value = num;
-          this.app.value_cache[results[i].id] = num;
-        }
-      }
+      // 赞赏金额
+      const value = await this.app.mysql.query(
+        'select sign_id, sum(amount) as value from actions where sign_id in (?) and type = ? group by sign_id ',
+        [signids, "share"]
+      );
 
       // 赞赏次数
-      for (let i = 0; i < results.length; i++) {
-        if (this.app.ups_cache[results[i].id] !== undefined) {
-          results[i].ups = this.app.ups_cache[results[i].id];
-        } else {
-          const ups = await this.app.mysql.query(
-            'select count(*) as ups from actions where sign_id = ? and type = ? ',
-            [results[i].id, "share"]
-          );
+      const ups = await this.app.mysql.query(
+        'select sign_id, count(*) as ups from actions where sign_id in (?) and type = ? group by sign_id ',
+        [signids, "share"]
+      );
 
-          results[i].ups = ups[0].ups;
-          this.app.ups_cache[results[i].id] = ups[0].ups;
-        }
-        this.app.post_cache[results[i].id] = results[i];
-      }
+      _.each(results, row => {
+        _.each(read, row2 => {
+          if (row.hash === row2.hash) {
+            row.read = row2.num;
+          }
+        })
+        _.each(value, row2 => {
+          if (row.id === row2.sign_id) {
+            row.value = row2.value;
+          }
+        })
+        _.each(ups, row2 => {
+          if (row.id === row2.sign_id) {
+            row.ups = row2.ups;
+          }
+        })
+      })
 
     }
 
