@@ -10,6 +10,8 @@ module.exports = app => {
 
   // 发布文章
   router.post('/publish', controller.post.publish);
+  // 文章编辑
+  router.post('/edit', controller.post.edit);
   // 文章列表
   router.get('/posts', controller.post.posts);
   // 打赏过的文章

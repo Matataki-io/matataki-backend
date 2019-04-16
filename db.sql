@@ -256,10 +256,19 @@ drop table comments;
 alter table posts AUTO_INCREMENT=100010;
 
 
-
-
 -- add new column into users table
 ALTER TABLE users ADD COLUMN nickname varchar(100) DEFAULT null;
 ALTER TABLE users ADD COLUMN avatar varchar(255) DEFAULT null;
 ALTER TABLE users ADD COLUMN create_time timestamp;
 
+
+CREATE TABLE edit_history (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  sign_id INT UNSIGNED DEFAULT 0,
+  hash varchar(100),
+  title varchar(100),
+  sign varchar(255), 
+  public_key varchar(100), 
+  create_time timestamp,
+  PRIMARY KEY (id)
+);

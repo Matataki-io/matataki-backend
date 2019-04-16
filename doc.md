@@ -884,3 +884,27 @@ https://apitest.smartsignature.io/image/QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd
 请求示例: 
 
 * curl  -H "x-access-token: access-token"  -X DELETE https://api.smartsignature.io/post/100010
+
+
+#### 编辑文章 (need access_token)
+
+* POST /edit
+* 响应状态码：201
+
+参数: (和publish相比，多了一个signId)
+
+1. signId: 文章的id, 必传
+2. author: 作者，必传
+3. title: 标题，可选
+4. publickey 签名时的公钥，必传
+5. hash:  新文章内容的ipfs hash，必传
+6. sign: 签名, 必传
+7. 
+
+请求示例: 
+
+```
+
+curl -H "x-access-token: access-token" -d "signId=1&author=joetothemoon&title=ddasdasd&publickey=EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C&hash=QmPtcBBEU5JdVy3yBtUfRMx7F2UDQs9V3KdqrcmGppc5VX&sign=SIG_K1_KdWVRnpoYUh1XH1QhhyisAoqGysSLmue46r1J2pJjgSMN9944YADea3WSBnW2ify9BVsk2ipRVAXqRkaxkKernojX9Mfed" -X POST https://api.smartsignature.io//edit
+
+```

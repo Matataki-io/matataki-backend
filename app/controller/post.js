@@ -24,7 +24,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000 } = ctx.request.body;
 
-    ctx.logger.info('debug info', author, title, content, publickey, sign, username);
+    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username);
 
     if (fissionFactor > 2000) {
       // fissionFactor = 2000; // 最大2000
@@ -36,31 +36,11 @@ class PostController extends Controller {
       return;
     }
 
-    // check signature
-    const hash_piece1 = hash.slice(0, 12);
-    const hash_piece2 = hash.slice(12, 24);
-    const hash_piece3 = hash.slice(24, 36);
-    const hash_piece4 = hash.slice(36, 48);
-
-    const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
-
     try {
-      const recover = ecc.recover(sign, sign_data);
-      ctx.logger.info('recover', recover);
-      if (recover !== publickey) {
-        ctx.body = {
-          msg: 'invalid signature',
-        };
-        ctx.status = 500;
-
-        return;
-      }
+      this.eos_signature_verify(author, hash, sign, publickey);
     } catch (err) {
-      ctx.logger.error(err.sqlMessage);
-      ctx.body = {
-        msg: 'invalid signature ' + err,
-      };
-      ctx.status = 500;
+      ctx.status = 401;
+      ctx.body = err.message;
       return;
     }
 
@@ -103,6 +83,123 @@ class PostController extends Controller {
         msg: 'insert error' + err.sqlMessage,
       };
       ctx.status = 500;
+    }
+  }
+
+  async edit() {
+    const ctx = this.ctx;
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000 } = ctx.request.body;
+
+    // 编辑的时候，signId需要带上
+    if (!signId) {
+      ctx.body = {
+        msg: 'signId require',
+      };
+      ctx.status = 500;
+
+      return;
+    }
+
+    if (fissionFactor > 2000) {
+      ctx.body = {
+        msg: 'fissionFactor should >= 2000',
+      };
+      ctx.status = 500;
+      return;
+    }
+
+    const post = await this.app.mysql.get('posts', { id: signId });
+
+    if (!post) {
+      ctx.body = {
+        msg: 'post not found',
+      };
+      ctx.status = 404;
+
+      return;
+    }
+
+    const current_user = this.get_current_user();
+
+    try {
+      this.checkAuth(current_user);
+    } catch (err) {
+      ctx.status = 401;
+      ctx.body = err.message;
+      return;
+    }
+
+    if (current_user !== post.username) {
+      ctx.status = 401;
+      ctx.body = "wrong user";
+      return;
+    }
+
+    ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash, username);
+
+    try {
+      this.eos_signature_verify(author, hash, sign, publickey);
+    } catch (err) {
+      ctx.status = 401;
+      ctx.body = err.message;
+      return;
+    }
+
+    try {
+      const conn = await this.app.mysql.beginTransaction();
+
+      try {
+        // insert edit history
+        const now = moment().format('YYYY-MM-DD HH:mm:ss');
+        await conn.insert("edit_history", {
+          hash: hash,
+          title: title,
+          sign: sign,
+          public_key: publickey,
+          create_time: now,
+        });
+
+        // 修改 post 的 hash, publickey, sign title
+        await conn.update("posts", {
+          hash: hash + "a",
+          public_key: publickey,
+          sign: sign,
+          title: title,
+        }, { where: { id: signId } });
+
+        await conn.commit();
+      } catch (err) {
+        await conn.rollback();
+        throw err;
+      }
+
+      ctx.status = 201;
+
+    } catch (err) {
+      ctx.logger.error(err.sqlMessage);
+      ctx.body = {
+        msg: 'edit error' + err.sqlMessage,
+      };
+      ctx.status = 500;
+    }
+
+  }
+
+  eos_signature_verify(author, hash, sign, publickey) {
+    const hash_piece1 = hash.slice(0, 12);
+    const hash_piece2 = hash.slice(12, 24);
+    const hash_piece3 = hash.slice(24, 36);
+    const hash_piece4 = hash.slice(36, 48);
+
+    const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
+
+    try {
+      const recover = ecc.recover(sign, sign_data);
+      if (recover !== publickey) {
+        throw new Error("invalid signature");
+      }
+    } catch (err) {
+      throw new Error("invalid signature " + err);
     }
   }
 
