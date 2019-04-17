@@ -22,7 +22,7 @@ class PostController extends Controller {
 
   async publish() {
     const ctx = this.ctx;
-    const { author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000 } = ctx.request.body;
+    const { author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover } = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username);
 
@@ -56,6 +56,7 @@ class PostController extends Controller {
         hash,
         fission_factor: fissionFactor,
         create_time: now,
+        cover: cover // 封面url
       });
 
       const updateSuccess = result.affectedRows === 1;
@@ -212,65 +213,24 @@ class PostController extends Controller {
 
     if (author) {
       results = await this.app.mysql.query(
-        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time,  b.nickname from posts a left join users b on a.username = b.username where a.status=0 and a.author = ? order by create_time desc limit ?, ?',
+        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover,  b.nickname from posts a left join users b on a.username = b.username where a.status=0 and a.author = ? order by create_time desc limit ?, ?',
         [author, (page - 1) * pagesize, pagesize]
       );
     } else {
       results = await this.app.mysql.query(
-        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time,  b.nickname from posts a left join users b on a.username = b.username where a.status=0 order by create_time desc limit ?, ?',
+        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname from posts a left join users b on a.username = b.username where a.status=0 order by create_time desc limit ?, ?',
         [(page - 1) * pagesize, pagesize]
       );
     }
 
     if (results.length > 0) {
-
-      let hashs = [];
       let signids = [];
 
       _.each(results, row => {
-        row.read = 0;
-        row.value = 0;
-        row.ups = 0;
-        hashs.push(row.hash);
         signids.push(row.id);
       })
 
-      // 阅读次数
-      const read = await this.app.mysql.query(
-        'select hash, count(*) as num from readers where hash in (?) group by hash',
-        [hashs]
-      );
-
-      // 赞赏金额
-      const value = await this.app.mysql.query(
-        'select sign_id, sum(amount) as value from actions where sign_id in (?) and type = ? group by sign_id ',
-        [signids, "share"]
-      );
-
-      // 赞赏次数
-      const ups = await this.app.mysql.query(
-        'select sign_id, count(*) as ups from actions where sign_id in (?) and type = ? group by sign_id ',
-        [signids, "share"]
-      );
-
-      _.each(results, row => {
-        _.each(read, row2 => {
-          if (row.hash === row2.hash) {
-            row.read = row2.num;
-          }
-        })
-        _.each(value, row2 => {
-          if (row.id === row2.sign_id) {
-            row.value = row2.value;
-          }
-        })
-        _.each(ups, row2 => {
-          if (row.id === row2.sign_id) {
-            row.ups = row2.ups;
-          }
-        })
-      })
-
+      results = await this.getPostsBySignids(signids);
     }
 
     this.ctx.body = results;
@@ -294,59 +254,11 @@ class PostController extends Controller {
     let results2 = [];
 
     if (signids.length > 0) {
-
-      results2 = await this.app.mysql.query(
-        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, b.nickname from posts a left join users b on a.username = b.username where a.id in (?) and a.status=0 order by create_time desc',
-        [signids]
-      );
-
-      _.each(results2, (row2) => {
-        _.each(results, (row) => {
-          if (row2.id === row.sign_id) {
-            row2.ups = row.total;
-          }
-        })
-      })
+      results2 = await this.getPostsBySignids(signids);
 
       results2 = results2.sort((a, b) => {
         return b.ups - a.ups;
       })
-
-      let hashs = [];
-      let ids = [];
-
-      _.each(results2, row => {
-        row.read = 0;
-        row.value = 0;
-        hashs.push(row.hash);
-        ids.push(row.id);
-      })
-
-      // 阅读次数
-      const read = await this.app.mysql.query(
-        'select hash, count(*) as num from readers where hash in (?) group by hash',
-        [hashs]
-      );
-
-      // 赞赏金额
-      const value = await this.app.mysql.query(
-        'select sign_id, sum(amount) as value from actions where sign_id in (?) and type = ? group by sign_id ',
-        [ids, "share"]
-      );
-
-      _.each(results2, row => {
-        _.each(read, row2 => {
-          if (row.hash === row2.hash) {
-            row.read = row2.num;
-          }
-        })
-        _.each(value, row2 => {
-          if (row.id === row2.sign_id) {
-            row.value = row2.value;
-          }
-        })
-      })
-
     }
 
     this.ctx.body = results2;
@@ -370,77 +282,21 @@ class PostController extends Controller {
     let results2 = [];
 
     if (signids.length > 0) {
-
-      results2 = await this.app.mysql.query(
-        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time,  b.nickname from posts a left join users b on a.username = b.username where a.id in (?) and a.status=0 order by create_time desc',
-        [signids]
-      );
-
-      _.each(results2, (row2) => {
-        _.each(results, (row) => {
-          if (row2.id === row.sign_id) {
-            row2.value = row.total;
-          }
-        })
-      })
+      results2 = await this.getPostsBySignids(signids);
 
       results2 = results2.sort((a, b) => {
         return b.value - a.value;
       })
-
-      let hashs = [];
-      let ids = [];
-
-      _.each(results2, row => {
-        row.read = 0;
-        row.ups = 0;
-        hashs.push(row.hash);
-        ids.push(row.id);
-      })
-
-      // 阅读次数
-      const read = await this.app.mysql.query(
-        'select hash, count(*) as num from readers where hash in (?) group by hash',
-        [hashs]
-      );
-
-      // 赞赏次数
-      const ups = await this.app.mysql.query(
-        'select sign_id, count(*) as ups from actions where sign_id in (?) and type = ? group by sign_id ',
-        [ids, "share"]
-      );
-
-      _.each(results2, row => {
-        _.each(read, row2 => {
-          if (row.hash === row2.hash) {
-            row.read = row2.num;
-          }
-        })
-
-        _.each(ups, row2 => {
-          if (row.id === row2.sign_id) {
-            row.ups = row2.ups;
-          }
-        })
-      })
-
     }
 
     this.ctx.body = results2;
   }
 
+  // 我赞赏过的文章列表
   async supports() {
     const pagesize = 20;
 
     const { page = 1, user } = this.ctx.query;
-
-    // const results = await this.app.mysql.select('actions', {
-    //   where: whereOption, // WHERE 条件
-    //   columns: ['author', 'amount', 'sign_id', 'create_time'], // 要查询的表字段
-    //   orders: [['create_time', 'desc']], // 排序方式
-    //   limit: pagesize, // 返回数据量
-    //   offset: (page - 1) * pagesize, // 数据偏移量
-    // });
 
     let results = [];
 
@@ -461,18 +317,67 @@ class PostController extends Controller {
       signids.push(row.sign_id);
     })
 
-    let results2 = [];
+    let results2 = await this.getPostsBySignids(signids);
+
+    this.ctx.body = results2;
+  }
+
+  async getPostsBySignids(signids) {
+    let results = [];
 
     if (signids.length > 0) {
-
-      results2 = await this.app.mysql.query(
-        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time,  b.nickname from posts a left join users b on a.username = b.username where a.id in (?) and a.status=0 order by create_time desc',
+      results = await this.app.mysql.query(
+        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname from posts a left join users b on a.username = b.username where a.id in (?) and a.status=0 order by create_time desc',
         [signids]
       );
 
+      let hashs = [];
+
+      _.each(results, row => {
+        row.read = 0;
+        row.value = 0;
+        row.ups = 0;
+        hashs.push(row.hash);
+      })
+
+      // 阅读次数
+      const read = await this.app.mysql.query(
+        'select hash, count(*) as num from readers where hash in (?) group by hash',
+        [hashs]
+      );
+
+      // 赞赏金额
+      const value = await this.app.mysql.query(
+        'select sign_id, sum(amount) as value from actions where sign_id in (?) and type = ? group by sign_id ',
+        [signids, "share"]
+      );
+
+      // 赞赏次数
+      const ups = await this.app.mysql.query(
+        'select sign_id, count(*) as ups from actions where sign_id in (?) and type = ? group by sign_id ',
+        [signids, "share"]
+      );
+
+      _.each(results, row => {
+        _.each(read, row2 => {
+          if (row.hash === row2.hash) {
+            row.read = row2.num;
+          }
+        })
+        _.each(value, row2 => {
+          if (row.id === row2.sign_id) {
+            row.value = row2.value;
+          }
+        })
+        _.each(ups, row2 => {
+          if (row.id === row2.sign_id) {
+            row.ups = row2.ups;
+          }
+        })
+      })
     }
 
-    this.ctx.body = results2;
+    return results;
   }
 
   async post() {
@@ -731,4 +636,3 @@ class PostController extends Controller {
 }
 
 module.exports = PostController;
-

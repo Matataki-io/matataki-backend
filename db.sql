@@ -272,3 +272,6 @@ CREATE TABLE edit_history (
   create_time timestamp,
   PRIMARY KEY (id)
 );
+
+
+ALTER TABLE posts ADD COLUMN cover varchar(255) DEFAULT null;
