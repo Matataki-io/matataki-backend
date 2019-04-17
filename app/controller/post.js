@@ -504,6 +504,13 @@ class PostController extends Controller {
 
       post.value = value[0].value || 0;
 
+      // nickname 
+      let name = post.username || post.author;
+      const nickname = await this.app.mysql.get('users', { username: name });
+      if (nickname) {
+        post.nickname = nickname.nickname;
+      }
+
       // update cahce
       this.app.read_cache[post.id] = post.read;
       this.app.value_cache[post.id] = post.value;
@@ -551,6 +558,13 @@ class PostController extends Controller {
       );
 
       post.value = value[0].value || 0;
+
+      // nickname 
+      let name = post.username || post.author;
+      const nickname = await this.app.mysql.get('users', { username: name });
+      if (nickname) {
+        post.nickname = nickname.nickname;
+      }
 
       // update cahce
       this.app.read_cache[post.id] = post.read;
