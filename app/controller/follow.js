@@ -106,15 +106,10 @@ class FollowController extends Controller {
       [user]
     );
 
-    const results = await this.app.mysql.select('follows', {
-      where: {
-        username: user
-      },
-      columns: ['followed'],
-      orders: [['create_time', 'desc']],
-      limit: pagesize,
-      offset: (page - 1) * pagesize,
-    });
+    const results = await this.app.mysql.query(
+      'select a.followed, b.nickname from follows a left join users b on a.followed = b.username where a.username = ? order by a.create_time desc limit ?,?',
+      [user, (page - 1) * pagesize, pagesize]
+    );
 
     let users = [];
 
@@ -232,15 +227,10 @@ class FollowController extends Controller {
       [user]
     );
 
-    const results = await this.app.mysql.select('follows', {
-      where: {
-        followed: user
-      },
-      columns: ['username'],
-      orders: [['create_time', 'desc']],
-      limit: pagesize,
-      offset: (page - 1) * pagesize,
-    });
+    const results = await this.app.mysql.query(
+      'select a.username, b.nickname from follows a left join users b on a.username = b.username where a.followed = ? order by a.create_time desc limit ?,?',
+      [user, (page - 1) * pagesize, pagesize]
+    );
 
     let users = [];
 
@@ -252,7 +242,7 @@ class FollowController extends Controller {
       users.push(row.username)
     })
 
-    
+
     if (users.length > 0) {
       // 获取列表中账号关注数
       let follow = await this.app.mysql.query(
