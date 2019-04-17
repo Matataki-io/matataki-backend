@@ -275,7 +275,7 @@ http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
 
 
-#### 获取粉丝列表
+#### 获取关注列表
 
 * GET /follows
 
@@ -337,7 +337,7 @@ curl https://api.smartsignature.io/follows?user=xiaotiandada | jq
 
 ```
 
-#### 获取关注列表
+#### 获取粉丝列表
 
 * GET /fans
 
