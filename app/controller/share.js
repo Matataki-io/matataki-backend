@@ -40,25 +40,24 @@ class ShareController extends Controller {
 
     const { page = 1, signid, user  } = this.ctx.query;
 
-    let whereOption = {
-      type: "share"
-    }
+    let results = [];
 
     if (user) {
-      whereOption.author = user
+      results = await this.app.mysql.query(
+        'select a.author, a.amount, a.sign_id, a.create_time,  b.nickname from actions a left join users b on a.author = b.username where a.type = ? and a.author = ? order by create_time desc limit ?,?',
+        ["share", user, (page - 1) * pagesize, pagesize]
+      );
+    } else if (signid) {
+      results = await this.app.mysql.query(
+        'select a.author, a.amount, a.sign_id, a.create_time,  b.nickname from actions a left join users b on a.author = b.username where a.type = ? and a.sign_id = ? order by create_time desc limit ?,?',
+        ["share", signid, (page - 1) * pagesize, pagesize]
+      );
+    } else {
+      results = await this.app.mysql.query(
+        'select a.author, a.amount, a.sign_id, a.create_time,  b.nickname from actions a left join users b on a.author = b.username where a.type = ? order by create_time desc limit ?,?',
+        ["share", (page - 1) * pagesize, pagesize]
+      );
     }
-
-    if (signid) {
-      whereOption.sign_id = signid
-    }
-
-    const results = await this.app.mysql.select('actions', {
-      where: whereOption, // WHERE 条件
-      columns: ['author', 'amount', 'sign_id', 'create_time'], // 要查询的表字段
-      orders: [['create_time', 'desc']], // 排序方式
-      limit: pagesize, // 返回数据量
-      offset: (page - 1) * pagesize, // 数据偏移量
-    });
 
     let signids = [];
     _.each(results, (row) => {

@@ -434,21 +434,27 @@ class PostController extends Controller {
 
     const { page = 1, user } = this.ctx.query;
 
-    let whereOption = {
-      type: "share"
-    }
+    // const results = await this.app.mysql.select('actions', {
+    //   where: whereOption, // WHERE 条件
+    //   columns: ['author', 'amount', 'sign_id', 'create_time'], // 要查询的表字段
+    //   orders: [['create_time', 'desc']], // 排序方式
+    //   limit: pagesize, // 返回数据量
+    //   offset: (page - 1) * pagesize, // 数据偏移量
+    // });
+
+    let results = [];
 
     if (user) {
-      whereOption.author = user
+      results = await this.app.mysql.query(
+        'select author, amount, sign_id, create_time from actions where type = ? and author = ? order by create_time desc limit ?, ?',
+        ["share", user, (page - 1) * pagesize, pagesize]
+      );
+    } else {
+      results = await this.app.mysql.query(
+        'select author, amount, sign_id, create_time from actions where type = ? order by create_time desc limit ?, ?',
+        ["share", (page - 1) * pagesize, pagesize]
+      );
     }
-
-    const results = await this.app.mysql.select('actions', {
-      where: whereOption, // WHERE 条件
-      columns: ['author', 'amount', 'sign_id', 'create_time'], // 要查询的表字段
-      orders: [['create_time', 'desc']], // 排序方式
-      limit: pagesize, // 返回数据量
-      offset: (page - 1) * pagesize, // 数据偏移量
-    });
 
     let signids = [];
     _.each(results, (row) => {
@@ -458,15 +464,12 @@ class PostController extends Controller {
     let results2 = [];
 
     if (signids.length > 0) {
-      results2 = await this.app.mysql.select('posts', {
-        where: {
-          id: signids
-        },
-        columns: ['id', 'author', 'title', 'short_content', 'hash', 'create_time'], // 要查询的表字段
-        orders: [['create_time', 'desc']], // 排序方式
-        limit: pagesize, // 返回数据量
-        offset: 0, // 数据偏移量 
-      });
+
+      results2 = await this.app.mysql.query(
+        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time,  b.nickname from posts a left join users b on a.username = b.username where a.id in (?) and a.status=0 order by create_time desc',
+        [signids]
+      );
+
     }
 
     this.ctx.body = results2;
