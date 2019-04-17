@@ -107,7 +107,7 @@ class FollowController extends Controller {
     );
 
     const results = await this.app.mysql.query(
-      'select a.followed, b.nickname from follows a left join users b on a.followed = b.username where a.username = ? order by a.create_time desc limit ?,?',
+      'select a.followed, b.nickname from follows a left join users b on a.followed = b.username where a.username = ? and a.status=1 order by a.create_time desc limit ?,?',
       [user, (page - 1) * pagesize, pagesize]
     );
 
@@ -159,6 +159,7 @@ class FollowController extends Controller {
 
       const my_follows = await this.app.mysql.select('follows', {
         where: {
+          status: 1,
           username: current_user,
           followed: users
         },
@@ -170,6 +171,7 @@ class FollowController extends Controller {
 
       const my_fans = await this.app.mysql.select('follows', {
         where: {
+          status: 1,
           username: users,
           followed: current_user
         },
@@ -228,7 +230,7 @@ class FollowController extends Controller {
     );
 
     const results = await this.app.mysql.query(
-      'select a.username, b.nickname from follows a left join users b on a.username = b.username where a.followed = ? order by a.create_time desc limit ?,?',
+      'select a.username, b.nickname from follows a left join users b on a.username = b.username where a.followed = ? and a.status=1 order by a.create_time desc limit ?,?',
       [user, (page - 1) * pagesize, pagesize]
     );
 
@@ -277,6 +279,7 @@ class FollowController extends Controller {
 
     if (current_user && users.length > 0) {
       let whereOption2 = {
+        status: 1,
         username: current_user,
         followed: users
       }
@@ -291,6 +294,7 @@ class FollowController extends Controller {
 
       const my_fans = await this.app.mysql.select('follows', {
         where: {
+          status: 1,
           username: users,
           followed: current_user
         },
