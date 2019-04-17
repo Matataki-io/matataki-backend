@@ -162,7 +162,7 @@ class PostController extends Controller {
 
         // 修改 post 的 hash, publickey, sign title
         await conn.update("posts", {
-          hash: hash ,
+          hash: hash,
           public_key: publickey,
           sign: sign,
           title: title,
@@ -174,6 +174,9 @@ class PostController extends Controller {
         throw err;
       }
 
+      ctx.body = {
+        msg: 'success',
+      };
       ctx.status = 201;
 
     } catch (err) {
