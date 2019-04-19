@@ -36,6 +36,14 @@ class PostController extends Controller {
       return;
     }
 
+    if (!username) {
+      ctx.body = {
+        msg: 'username required',
+      };
+      ctx.status = 500;
+      return;
+    }
+
     try {
       this.eos_signature_verify(author, hash, sign, publickey);
     } catch (err) {
