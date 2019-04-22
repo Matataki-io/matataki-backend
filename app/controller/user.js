@@ -33,20 +33,22 @@ class UserController extends Controller {
         is_follow = true;
       }
     }
-
-    // nick name
+            
+    let email = "";
     let nickname = "";
-    let avatar = "";
+    let avatar = "";    
     const user = await this.app.mysql.get('users', { username: username });
-    if (user) {
-      nickname = user.nickname || "";
+    if (user) {      
       avatar = user.avatar || "";
+      email = user.email || "";
+      nickname = user.nickname || "";      
     }
 
     const result = {
-      username,
+      username,      
+      email,
       nickname,
-      avatar,
+      avatar,      
       follows: follows[0].follows,
       fans: fans[0].fans,
       is_follow: is_follow

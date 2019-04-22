@@ -23,15 +23,14 @@
 
 #### 获取用户信息 
     
-新增, 返回fans数和follow数 ,is_follow 是否关注， nickname 昵称, avatar, 头像的ipfs hash
+ 返回 email, nickname, avatar, avatar, fans 数和 follow 数 , is_follow 是否关注， 
 
 * GET /user/:username
 * 响应状态码：200
 * 响应体：
 
 ```
-{"username":"minakokojima", "nickname":"minanick" "avatar": "QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT","follows":4,"fans":5, is_follow: false }
-
+{"username":"minakokojima", "email": "251815992@qq.com", "nickname":"岛娘", "avatar": "QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT","follows":4,"fans":5, is_follow: false }
 ```
 
 请求示例: 
