@@ -201,7 +201,7 @@ class UserController extends Controller {
 
       if (user) {
         ctx.body = {
-          msg: 'duplicate nickname',
+          msg: 'duplicate Email',
         };
         ctx.status = 500;
         return;
@@ -211,7 +211,7 @@ class UserController extends Controller {
 
       const result = await this.app.mysql.query(
         'INSERT INTO users VALUES (null, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE email = ?',
-        [current_user, "", email, "", now, email]
+        [current_user, email, "", "", now, email]
       );
 
       const updateSuccess = result.affectedRows >= 1;
