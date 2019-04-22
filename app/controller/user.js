@@ -177,6 +177,59 @@ class UserController extends Controller {
       ctx.status = 500;
     }
   }
+  
+
+  async setEmail() {
+
+    const ctx = this.ctx;
+
+    const { email = '' } = ctx.request.body;
+
+    const current_user = this.get_current_user();
+
+    try {
+      this.checkAuth(current_user);
+    } catch (err) {
+      ctx.status = 401;
+      ctx.body = err.message;
+      return;
+    }
+
+
+    try {
+      const user = await this.app.mysql.get('users', { email: email });
+
+      if (user) {
+        ctx.body = {
+          msg: 'duplicate Email',
+        };
+        ctx.status = 500;
+        return;
+      }
+
+      const now = moment().format('YYYY-MM-DD HH:mm:ss');
+
+      const result = await this.app.mysql.query(
+        'INSERT INTO users VALUES (null, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE email = ?',
+        [current_user, email, "", "", now, email]
+      );
+
+      const updateSuccess = result.affectedRows >= 1;
+
+      if (updateSuccess) {
+        ctx.status = 201;
+      } else {
+        ctx.status = 500;
+      }
+    } catch (err) {
+      console.log(err);
+      ctx.body = {
+        msg: 'setEmail error: ' + err.sqlMessage,
+      };
+      ctx.status = 500;
+    }
+  }
+
 
   async setAvatar() {
 
