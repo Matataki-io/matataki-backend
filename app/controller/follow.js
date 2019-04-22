@@ -107,7 +107,7 @@ class FollowController extends Controller {
     );
 
     const results = await this.app.mysql.query(
-      'select a.followed, b.nickname from follows a left join users b on a.followed = b.username where a.username = ? and a.status=1 order by a.create_time desc limit ?,?',
+      'select a.followed, b.nickname, b.avatar from follows a left join users b on a.followed = b.username where a.username = ? and a.status=1 order by a.create_time desc limit ?,?',
       [user, (page - 1) * pagesize, pagesize]
     );
 
@@ -230,7 +230,7 @@ class FollowController extends Controller {
     );
 
     const results = await this.app.mysql.query(
-      'select a.username, b.nickname from follows a left join users b on a.username = b.username where a.followed = ? and a.status=1 order by a.create_time desc limit ?,?',
+      'select a.username, b.nickname, b.avatar from follows a left join users b on a.username = b.username where a.followed = ? and a.status=1 order by a.create_time desc limit ?,?',
       [user, (page - 1) * pagesize, pagesize]
     );
 
