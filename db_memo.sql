@@ -275,3 +275,6 @@ CREATE TABLE edit_history (
 
 
 ALTER TABLE posts ADD COLUMN cover varchar(255) DEFAULT null;
+
+
+alter table users change mail email varchar(255) null;
