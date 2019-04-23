@@ -510,9 +510,19 @@ class PostController extends Controller {
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
     try {
+      const post = await this.app.mysql.get('posts', { hash });
+
+      if (!post) {
+        ctx.body = {
+          msg: 'post not found',
+        };
+        ctx.status = 500;
+        return;
+      }
+
       const result = await this.app.mysql.insert('readers', {
         reader: current_user,
-        hash,
+        hash: post.id,
         create_time: now
       });
 
