@@ -353,8 +353,8 @@ class PostController extends Controller {
 
       // 阅读次数
       const read = await this.app.mysql.query(
-        'select hash, count(*) as num from readers where hash in (?) group by hash',
-        [hashs]
+        'select post_id as id, real_read_count as num from post_read_count where post_id in (?) ',
+        [signids]
       );
 
       // 赞赏金额
@@ -371,7 +371,7 @@ class PostController extends Controller {
 
       _.each(results, row => {
         _.each(read, row2 => {
-          if (row.hash === row2.hash) {
+          if (row.id === row2.id) {
             row.read = row2.num;
           }
         })
@@ -399,9 +399,9 @@ class PostController extends Controller {
 
     if (post) {
       // 阅读次数
-      const read = await this.app.mysql.query(
-        'select count(*) as num from readers where hash = ? ',
-        [hash]
+       const read = await this.app.mysql.query(
+        'select real_read_count num from post_read_count where post_id = ? ',
+        [post.id]
       );
 
       post.read = read[0].num;
@@ -456,7 +456,7 @@ class PostController extends Controller {
     if (post) {
       // 阅读次数
       const read = await this.app.mysql.query(
-        'select count(*) as num from readers where hash = ? ',
+        'select real_read_count num from post_read_count where post_id = ? ',
         [id]
       );
 
@@ -520,13 +520,12 @@ class PostController extends Controller {
         return;
       }
 
-      const result = await this.app.mysql.insert('readers', {
-        reader: current_user,
-        hash: post.id,
-        create_time: now
-      });
+      const result = await this.app.mysql.query(
+        'INSERT INTO post_read_count(post_id, real_read_count) VALUES (?, ?) ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
+        [post.id, 1]
+      );
 
-      const updateSuccess = result.affectedRows === 1;
+      const updateSuccess = (result.affectedRows !== 0);
 
       if (updateSuccess) {
         ctx.status = 200;
