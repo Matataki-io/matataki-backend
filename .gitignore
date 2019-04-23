@@ -16,3 +16,4 @@ config/config.default.js
 push.sh
 dist/
 TTD.md
+unittest/

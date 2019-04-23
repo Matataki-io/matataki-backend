@@ -210,6 +210,7 @@ drop table follows;
 CREATE TABLE readers (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   reader varchar(100),
+  sign_id INT UNSIGNED DEFAULT 0,
   hash varchar(100),
   create_time timestamp,
   PRIMARY KEY (id)
@@ -278,3 +279,13 @@ ALTER TABLE posts ADD COLUMN cover varchar(255) DEFAULT null;
 
 
 alter table users change mail email varchar(255) null;
+
+ALTER TABLE readers ADD COLUMN sign_id INT UNSIGNED DEFAULT 0;
+
+CREATE TABLE post_read_count (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  post_id INT UNSIGNED DEFAULT 0,
+  real_read_count INT UNSIGNED DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE (post_id)
+);
