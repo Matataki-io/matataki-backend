@@ -421,7 +421,7 @@ class PostController extends Controller {
       const current_user = this.get_current_user();
       post.support = false;
       if (current_user) {
-        let support = await this.app.mysql.get('posts', { sign_id: post.id, author: current_user, type: 'share' });
+        let support = await this.app.mysql.get('actions', { sign_id: post.id, author: current_user, type: 'share' });
         if (support) {
           post.support = true;
         }
@@ -493,7 +493,7 @@ class PostController extends Controller {
       const current_user = this.get_current_user();
       post.support = false;
       if (current_user) {
-        let support = await this.app.mysql.get('posts', { sign_id: post.id, author: current_user, type: 'share' });
+        let support = await this.app.mysql.get('actions', { sign_id: post.id, author: current_user, type: 'share' });
         if (support) {
           post.support = true;
         }
