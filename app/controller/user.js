@@ -33,22 +33,22 @@ class UserController extends Controller {
         is_follow = true;
       }
     }
-            
+
     let email = "";
     let nickname = "";
-    let avatar = "";    
+    let avatar = "";
     const user = await this.app.mysql.get('users', { username: username });
-    if (user) {      
+    if (user) {
       avatar = user.avatar || "";
       email = user.email || "";
-      nickname = user.nickname || "";      
+      nickname = user.nickname || "";
     }
 
     const result = {
-      username,      
+      username,
       email,
       nickname,
-      avatar,      
+      avatar,
       follows: follows[0].follows,
       fans: fans[0].fans,
       is_follow: is_follow
@@ -135,6 +135,14 @@ class UserController extends Controller {
 
     const { nickname = '' } = ctx.request.body;
 
+    let nickname_regex = /^[\u4e00-\u9fa5_a-zA-Z0-9_]{4,12}$/;
+
+    if (!nickname_regex.test(nickname)) {
+      ctx.status = 400;
+      ctx.body = 'bad request: 昵称长度不超得过12位，且不可包含字符';
+      return;
+    }
+
     const current_user = this.get_current_user();
 
     try {
@@ -179,7 +187,7 @@ class UserController extends Controller {
       ctx.status = 500;
     }
   }
-  
+
 
   async setEmail() {
 
