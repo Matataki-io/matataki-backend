@@ -399,12 +399,21 @@ class PostController extends Controller {
 
     if (post) {
       // 阅读次数
-       const read = await this.app.mysql.query(
+      const read = await this.app.mysql.query(
         'select real_read_count num from post_read_count where post_id = ? ',
         [post.id]
       );
 
       post.read = read[0].num;
+
+      const current_user = this.get_current_user();
+      post.support = false;
+      if (current_user) {
+        let support = await this.app.mysql.get('posts', { sign_id: post.id, author: current_user, type: 'share' });
+        if(support){
+          post.support = true;
+        }
+      }
 
       // 被赞次数
       const ups = await this.app.mysql.query(
@@ -469,6 +478,15 @@ class PostController extends Controller {
       );
 
       post.ups = ups[0].ups;
+
+      const current_user = this.get_current_user();
+      post.support = false;
+      if (current_user) {
+        let support = await this.app.mysql.get('posts', { sign_id: post.id, author: current_user, type: 'share' });
+        if(support){
+          post.support = true;
+        }
+      }
 
       // 被赞总金额
       const value = await this.app.mysql.query(
