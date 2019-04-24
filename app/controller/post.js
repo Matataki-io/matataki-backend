@@ -330,6 +330,18 @@ class PostController extends Controller {
 
     let results2 = await this.getPostsBySignids(signids);
 
+    _.each(results2, row2 => {
+      _.each(results, row => {
+        if (row.sign_id === row2.id) {
+          row2.support_time = row.create_time;
+        }
+      })
+    })
+
+    results2 = results2.sort((a, b) => {
+      return b.support_time - a.support_time;
+    })
+
     this.ctx.body = results2;
   }
 
@@ -410,7 +422,7 @@ class PostController extends Controller {
       post.support = false;
       if (current_user) {
         let support = await this.app.mysql.get('posts', { sign_id: post.id, author: current_user, type: 'share' });
-        if(support){
+        if (support) {
           post.support = true;
         }
       }
@@ -422,7 +434,6 @@ class PostController extends Controller {
       );
 
       post.ups = ups[0].ups;
-
 
       // 被赞总金额
       const value = await this.app.mysql.query(
@@ -483,7 +494,7 @@ class PostController extends Controller {
       post.support = false;
       if (current_user) {
         let support = await this.app.mysql.get('posts', { sign_id: post.id, author: current_user, type: 'share' });
-        if(support){
+        if (support) {
           post.support = true;
         }
       }
