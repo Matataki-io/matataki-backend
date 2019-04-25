@@ -78,7 +78,7 @@ class PostController extends Controller {
         ctx.status = 201;
 
       } else {
-        ctx.logger.error('publish err', err);
+        ctx.logger.error('publish err ', err);
 
         ctx.body = {
           msg: 'publish fail',
@@ -89,7 +89,7 @@ class PostController extends Controller {
     } catch (err) {
       ctx.logger.error(err.sqlMessage);
       ctx.body = {
-        msg: 'insert error' + err.sqlMessage,
+        msg: 'publish error ' + err.sqlMessage,
       };
       ctx.status = 500;
     }
@@ -97,7 +97,7 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000 } = ctx.request.body;
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -161,20 +161,31 @@ class PostController extends Controller {
         // insert edit history
         const now = moment().format('YYYY-MM-DD HH:mm:ss');
         await conn.insert("edit_history", {
-          hash: hash,
-          title: title,
-          sign: sign,
-          public_key: publickey,
+          sign_id: signId,
+          hash: post.hash,
+          title: post.title,
+          sign: post.sign,
+          cover: post.cover,
+          public_key: post.public_key,
           create_time: now,
         });
 
-        // 修改 post 的 hash, publickey, sign title
-        await conn.update("posts", {
+        let updateRow = {
           hash: hash,
           public_key: publickey,
           sign: sign,
-          title: title,
-        }, { where: { id: signId } });
+        }
+
+        if (title) {
+          updateRow.title = title;
+        }
+        
+        if (cover) {
+          updateRow.cover = cover;
+        }
+
+        // 修改 post 的 hash, publickey, sign title
+        await conn.update("posts", updateRow, { where: { id: signId } });
 
         await conn.commit();
       } catch (err) {
@@ -190,7 +201,7 @@ class PostController extends Controller {
     } catch (err) {
       ctx.logger.error(err.sqlMessage);
       ctx.body = {
-        msg: 'edit error' + err.sqlMessage,
+        msg: 'edit error ' + err.sqlMessage,
       };
       ctx.status = 500;
     }
