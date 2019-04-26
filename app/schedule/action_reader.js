@@ -53,7 +53,7 @@ class ActionReader extends Subscription {
 
     this.app.cache = start;
 
-    console.log('sync actions .. start from', start, "to", (this.app.cache + this.config.step));
+    console.log('sync actions .. start from id', start, "to id", (this.app.cache + this.config.step));
 
     var sqls = [];
 
