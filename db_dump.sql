@@ -149,6 +149,7 @@ DROP TABLE IF EXISTS `readers`;
 CREATE TABLE `readers`  (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `reader` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `sign_id` INT(10) UNSIGNED NULL DEFAULT 0,
   `hash` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `create_time` timestamp(0) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
