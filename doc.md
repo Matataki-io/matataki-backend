@@ -904,6 +904,108 @@ https://apitest.smartsignature.io/image/QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd
 
 ```
 
-curl -H "x-access-token: access-token" -d "signId=1&author=joetothemoon&title=ddasdasd&publickey=EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C&hash=QmPtcBBEU5JdVy3yBtUfRMx7F2UDQs9V3KdqrcmGppc5VX&sign=SIG_K1_KdWVRnpoYUh1XH1QhhyisAoqGysSLmue46r1J2pJjgSMN9944YADea3WSBnW2ify9BVsk2ipRVAXqRkaxkKernojX9Mfed" -X POST https://api.smartsignature.io//edit
+curl -H "x-access-token: access-token" -d "signId=1&author=joetothemoon&title=ddasdasd&publickey=EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C&hash=QmPtcBBEU5JdVy3yBtUfRMx7F2UDQs9V3KdqrcmGppc5VX&sign=SIG_K1_KdWVRnpoYUh1XH1QhhyisAoqGysSLmue46r1J2pJjgSMN9944YADea3WSBnW2ify9BVsk2ipRVAXqRkaxkKernojX9Mfed" -X POST https://api.smartsignature.io/edit
+
+```
+
+
+#### draft list
+
+* GET /drafts
+* 响应状态码：201
+
+* 参数 
+* page: 页数，默认第一页
+
+* 请求示例
+
+```
+curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io/drafts 
+
+```
+
+* 返回示例：
+
+```
+
+[
+  {
+    "id": 9,
+    "uid": 166,
+    "title": "11",
+    "content": "222",
+    "status": 0,
+    "create_time": "2019-04-26T08:57:45.000Z",
+    "update_time": "2019-04-26T08:57:45.000Z"
+  }
+]
+
+``` 
+
+#### create draft
+
+* POST /draft/save
+* 响应状态码：201
+
+* 参数 
+* title: 标题
+* content: 内容
+
+* 请求示例
+
+```
+
+curl -H "x-access-token: access-token" -d "title=112121&content=223312122" -X POST https://apitest.smartsignature.io/draft/save 
+
+```
+
+#### update draft
+
+* POST /draft/save
+* 响应状态码：201
+
+* 参数 
+* id : 草稿id
+* title: 标题
+* content: 内容
+
+
+
+#### get draft by id
+
+* GET /draft/:id
+* 响应状态码：200
+
+* 请求示例
+
+```
+curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io/draft/1
+
+```
+
+返回示例:
+
+```
+{
+  "id": 9,
+  "uid": 166,
+  "title": "11",
+  "content": "222",
+  "status": 0,
+  "create_time": "2019-04-26T08:57:45.000Z",
+  "update_time": "2019-04-26T08:57:45.000Z"
+}
+
+```
+
+#### delete draft by id
+
+* DELETE /draft/:id
+* 响应状态码：200
+
+* 请求示例
+
+```
+curl -H "x-access-token: access-token"  -X DELETE https://apitest.smartsignature.io/draft/1 
 
 ```

@@ -73,6 +73,15 @@ module.exports = app => {
   app.router.get('/getSupportTimesRanking', app.controller.post.getSupportTimesRanking);
   // 被打赏总额排行榜
   app.router.get('/getSupportAmountRanking', app.controller.post.getSupportAmountRanking);
-  
+
+  // 草稿箱
+  // 获取我的草稿箱列表 (need access token)
+  app.router.get('/drafts', app.controller.drafts.drafts);
+  // 获取单篇草稿内容 (need access token)
+  app.router.get('/draft/:id', app.controller.drafts.draft);
+  // create or update (need access token)
+  app.router.post('/draft/save', app.controller.drafts.save);
+  // delete (need access token)
+  app.router.delete('/draft/:id', app.controller.drafts.delete);
 };
 

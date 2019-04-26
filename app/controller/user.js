@@ -135,7 +135,7 @@ class UserController extends Controller {
 
     const { nickname = '' } = ctx.request.body;
 
-    let nickname_regex = /^[\u4e00-\u9fa5_a-zA-Z0-9_]{4,12}$/;
+    let nickname_regex = /^[\u4e00-\u9fa5_a-zA-Z0-9_]{1,12}$/;
 
     if (!nickname_regex.test(nickname)) {
       ctx.status = 400;

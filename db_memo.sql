@@ -262,6 +262,7 @@ ALTER TABLE users ADD COLUMN nickname varchar(100) DEFAULT null;
 ALTER TABLE users ADD COLUMN avatar varchar(255) DEFAULT null;
 ALTER TABLE users ADD COLUMN create_time timestamp;
 
+drop table edit_history;
 
 CREATE TABLE edit_history (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -269,14 +270,15 @@ CREATE TABLE edit_history (
   hash varchar(100),
   title varchar(100),
   sign varchar(255), 
+  cover varchar(255) DEFAULT null,
   public_key varchar(100), 
   create_time timestamp,
   PRIMARY KEY (id)
 );
 
+ALTER TABLE edit_history ADD COLUMN cover varchar(255) DEFAULT null;
 
 ALTER TABLE posts ADD COLUMN cover varchar(255) DEFAULT null;
-
 
 alter table users change mail email varchar(255) null;
 
@@ -289,3 +291,25 @@ CREATE TABLE post_read_count (
   PRIMARY KEY (id),
   UNIQUE (post_id)
 );
+
+# 帐号系统 顶级uid ？（todo）
+create table accounts (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  create_time timestamp,
+  PRIMARY KEY (id)
+);
+
+# 草稿箱
+create table drafts (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  uid INT UNSIGNED NOT NULL ,
+  title varchar(255), 
+  content text,
+  status INT UNSIGNED  DEFAULT 0, 
+  create_time timestamp,
+  update_time timestamp,
+  PRIMARY KEY (id)
+);
+
+
+
