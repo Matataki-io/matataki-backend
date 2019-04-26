@@ -16,6 +16,17 @@ class DraftsController extends Controller {
 
     const { page = 1 } = this.ctx.query;
 
+    let user = await this.get_user();
+
+    let results = await this.app.mysql.query(
+      'select * from drafts where uid = ? order by update_time desc limit ?, ?',
+      [user.id, (page - 1) * pagesize, pagesize]
+    );
+
+    this.ctx.body = results;
+  }
+
+  async get_user() {
     const current_user = this.get_current_user();
 
     try {
@@ -26,20 +37,19 @@ class DraftsController extends Controller {
       return;
     }
 
-    const user = await this.app.mysql.get('users', { username: current_user });
+    let user = await this.app.mysql.get('users', { username: current_user });
 
     if (!user) {
-      this.ctx.status = 401;
-      this.ctx.body = "user not found";
-      return;
+
+      let newuser = await this.app.mysql.insert('users', {
+        username: current_user,
+        create_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      });
+
+      user =  await this.app.mysql.get('users', { username: current_user });
     }
 
-    let results = await this.app.mysql.query(
-      'select * from drafts where uid = ? order by update_time desc limit ?, ?',
-      [user.id, (page - 1) * pagesize, pagesize]
-    );
-
-    this.ctx.body = results;
+    return user;
   }
 
   async save() {
@@ -47,38 +57,13 @@ class DraftsController extends Controller {
 
     const { id = '', title = '', content = '' } = ctx.request.body;
 
-    const current_user = this.get_current_user();
-
-    try {
-      this.checkAuth(current_user);
-    } catch (err) {
-      ctx.status = 401;
-      ctx.body = err.message;
-      return;
-    }
-
-    const user = await this.app.mysql.get('users', { username: current_user });
-    const now = moment().format('YYYY-MM-DD HH:mm:ss');
-
-    let uid = 0;
-
-    if (user) {
-      uid = user.id;
-    } else {
-      let newuser = await this.app.mysql.insert('users', {
-        username: current_user,
-        create_time: now
-      });
-      console.log('create new user', newuser);
-      uid = newuser.insertId
-    }
+    const user = await this.get_user();
 
     if (id) {
       await this.save_draft(uid, id, title, content);
     } else {
-      await this.create_draft(uid, title, content);
+      await this.create_draft(user.id, title, content);
     }
-
   }
 
   async save_draft(uid, id, title, content) {
@@ -160,23 +145,7 @@ class DraftsController extends Controller {
   async draft() {
     const id = this.ctx.params.id;
 
-    const current_user = this.get_current_user();
-
-    try {
-      this.checkAuth(current_user);
-    } catch (err) {
-      this.ctx.status = 401;
-      this.ctx.body = err.message;
-      return;
-    }
-
-    const user = await this.app.mysql.get('users', { username: current_user });
-
-    if (!user) {
-      this.ctx.status = 401;
-      this.ctx.body = "user not found";
-      return;
-    }
+    const user = await this.get_user();
 
     const draft = await this.app.mysql.get('drafts', { id: id });
 
@@ -199,23 +168,7 @@ class DraftsController extends Controller {
   async delete() {
     const id = this.ctx.params.id;
 
-    const current_user = this.get_current_user();
-
-    try {
-      this.checkAuth(current_user);
-    } catch (err) {
-      this.ctx.status = 401;
-      this.ctx.body = err.message;
-      return;
-    }
-
-    const user = await this.app.mysql.get('users', { username: current_user });
-
-    if (!user) {
-      this.ctx.status = 401;
-      this.ctx.body = "user not found";
-      return;
-    }
+    const user = await this.get_user();
 
     const draft = await this.app.mysql.get('drafts', { id: id });
 
