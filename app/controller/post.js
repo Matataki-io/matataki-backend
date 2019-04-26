@@ -179,7 +179,7 @@ class PostController extends Controller {
         if (title) {
           updateRow.title = title;
         }
-        
+
         if (cover) {
           updateRow.cover = cover;
         }
@@ -427,7 +427,7 @@ class PostController extends Controller {
         [post.id]
       );
 
-      post.read = read[0].num;
+      post.read = read[0] ? read[0].num : 0
 
       const current_user = this.get_current_user();
       post.support = false;
@@ -491,7 +491,7 @@ class PostController extends Controller {
         [id]
       );
 
-      post.read = read[0].num;
+      post.read = read[0] ? read[0].num : 0
 
       // 被赞次数
       const ups = await this.app.mysql.query(
