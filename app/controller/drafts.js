@@ -60,7 +60,7 @@ class DraftsController extends Controller {
     const user = await this.get_user();
 
     if (id) {
-      await this.save_draft(uid, id, title, content);
+      await this.save_draft(user.id, id, title, content);
     } else {
       await this.create_draft(user.id, title, content);
     }
