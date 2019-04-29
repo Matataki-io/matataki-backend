@@ -180,9 +180,11 @@ class PostController extends Controller {
           updateRow.title = title;
         }
 
-        if (cover && cover !== "" && cover.trim() !== "") {
+        if (cover !== undefined) {
           updateRow.cover = cover;
         }
+
+        // console.log("cover!!!", cover , typeof cover);
 
         // 修改 post 的 hash, publickey, sign title
         await conn.update("posts", updateRow, { where: { id: signId } });
