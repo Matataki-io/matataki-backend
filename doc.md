@@ -950,6 +950,8 @@ curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io
 * 参数 
 * title: 标题
 * content: 内容
+* cover: 封面
+* fissionFactor: 列变参数
 
 * 请求示例
 

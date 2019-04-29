@@ -313,3 +313,6 @@ create table drafts (
 
 
 
+
+ALTER TABLE drafts ADD COLUMN fission_factor INT DEFAULT 2000;
+ALTER TABLE drafts ADD COLUMN cover varchar(255) DEFAULT null;

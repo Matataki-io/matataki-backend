@@ -180,7 +180,7 @@ class PostController extends Controller {
           updateRow.title = title;
         }
 
-        if (cover) {
+        if (cover && cover !== "" && cover.trim() !== "") {
           updateRow.cover = cover;
         }
 
