@@ -264,7 +264,7 @@ class PostController extends Controller {
         throw new Error("invalid ont signature");
       }
     } catch (err) {
-      throw new Error("invalid ont signature " + err);
+      throw err;
     }
   }
 
