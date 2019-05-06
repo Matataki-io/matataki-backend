@@ -83,5 +83,8 @@ module.exports = app => {
   app.router.post('/draft/save', app.controller.drafts.save);
   // delete (need access token)
   app.router.delete('/draft/:id', app.controller.drafts.delete);
+
+  // 跨链打赏 上报接口
+  app.router.get('/support', app.controller.support.support);
 };
 

@@ -316,3 +316,35 @@ create table drafts (
 
 ALTER TABLE drafts ADD COLUMN fission_factor INT DEFAULT 2000;
 ALTER TABLE drafts ADD COLUMN cover varchar(255) DEFAULT null;
+
+
+# 资产列表
+create table assets (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  uid INT UNSIGNED NOT NULL,
+  contract varchar(255) NOT NULL,
+  name varchar(255) NOT NULL,
+  symbol varchar(255) NOT NULL,
+  amount INT UNSIGNED DEFAULT 0, 
+  decimals INT UNSIGNED DEFAULT 0, 
+  platform varchar(255) NOT NULL,
+  PRIMARY KEY (id)
+);
+
+ALTER TABLE posts ADD COLUMN platform varchar(255) DEFAULT 'eos';
+ALTER TABLE users ADD COLUMN platform varchar(255) DEFAULT 'eos';
+
+
+create table supports (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  uid INT UNSIGNED NOT NULL,
+  signid INT UNSIGNED NOT NULL,
+  contract varchar(255) NOT NULL,
+  name varchar(255) NOT NULL,
+  symbol varchar(255) NOT NULL,
+  amount INT UNSIGNED DEFAULT 0, 
+  decimals INT UNSIGNED DEFAULT 0, 
+  platform varchar(255) NOT NULL,
+  status INT UNSIGNED DEFAULT 0, 
+  PRIMARY KEY (id)
+);
