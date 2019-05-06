@@ -1,4 +1,4 @@
-# _example_
+# example
 
 
 ## QuickStart
