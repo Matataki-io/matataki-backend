@@ -875,6 +875,33 @@ https://apitest.smartsignature.io/image/QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd
 * curl -d "avatar=QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT" -H "x-access-token: access-token"  -X POST https://api.smartsignature.io/user/setAvatar
 
 
+#### 设置用户的个性签名（自我介绍）(need access_token)
+
+* POST /user/setIntroduction
+* 成功响应状态码：200
+* 失败响应状态码：400,401,500
+
+Body参数（application/x-www-form-urlencoded）：
+* introduction：用户的个性签名文字，不超过20个字
+
+成功请求示例：
+
+* curl -d "introduction=" -H "x-access-token:access-token" -X POST https://api.smartsignature.io/user/setIntroduction
+```
+{
+    "status": 200,
+    "msg": "Updated successfully"
+}
+```
+
+失败请求示例：
+```
+{
+    "status": 401,
+    "msg": "Cannot get user info from token"
+}
+```
+
 #### 删除文章(隐藏) (need access_token)
 
 * DELETE /post/:id
