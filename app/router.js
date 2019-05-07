@@ -86,5 +86,7 @@ module.exports = app => {
 
   // 跨链打赏 上报接口
   app.router.get('/support', app.controller.support.support);
+
+  app.router.get('/tokens', app.controller.user.tokens);
 };
 
