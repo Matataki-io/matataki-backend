@@ -21,14 +21,14 @@ module.exports = app => {
   // 单篇文章（for 短链接）
   router.get('/p/:id', controller.post.p);
 
-  // 文章阅读事件上报 
+  // 文章阅读事件上报
   router.post('/post/show/:hash', controller.post.show);
   // 添加评论
   router.post('/post/comment', controller.post.comment);
 
     // 隐藏文章
   app.router.delete('/post/:id', app.controller.post.delete);
-  
+
 
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:username', controller.user.user);
@@ -38,9 +38,11 @@ module.exports = app => {
   // 设置用户nickname (need access token)
   router.post('/user/setNickname', controller.user.setNickname);
   // 设置用户email (need access token)
-  router.post('/user/setEmail', controller.user.setEmail);  
+  router.post('/user/setEmail', controller.user.setEmail);
   // 设置用户头像 (need access token)
   router.post('/user/setAvatar', controller.user.setAvatar);
+  // 设置用户的个性签名（自我介绍）
+  router.post('/user/setIntroduction', controller.user.setIntroduction);
 
   // 分享
   router.post('/share', controller.share.share);
@@ -64,9 +66,9 @@ module.exports = app => {
   app.router.get('/follows', app.controller.follow.follows);
   // 粉丝列表（谁关注了我？）
   app.router.get('/fans', app.controller.follow.fans);
-  
 
-  // 获取access token 
+
+  // 获取access token
   app.router.post('/auth', app.controller.auth.auth);
 
   // 被打赏次数排行榜

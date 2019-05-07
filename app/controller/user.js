@@ -37,11 +37,13 @@ class UserController extends Controller {
     let email = "";
     let nickname = "";
     let avatar = "";
+    let introduction = '';
     const user = await this.app.mysql.get('users', { username: username });
     if (user) {
       avatar = user.avatar || "";
       email = user.email || "";
       nickname = user.nickname || "";
+      introduction = user.introduction || '';
     }
 
     const result = {
@@ -49,6 +51,7 @@ class UserController extends Controller {
       email,
       nickname,
       avatar,
+      introduction,
       follows: follows[0].follows,
       fans: fans[0].fans,
       is_follow: is_follow
@@ -281,6 +284,85 @@ class UserController extends Controller {
     }
   }
 
+  async setIntroduction() {
+
+    const ctx = this.ctx;
+
+    const { introduction = '' } = ctx.request.body;
+
+    // 检查自我绍介内容
+    // 错误原因：长度不合法
+    if (introduction.length > 20 || introduction.length < 1) {
+      ctx.status = 400;
+      ctx.body = {
+        status: 400,
+        msg: 'Bad request data, invalid introduction data',
+      };
+      return;
+    }
+
+    const current_user = this.get_current_user();
+
+    // 增加了当无法解码JWT时候的错误处理，以便和checkAuth时候的错误区分开
+    if (current_user === null) {
+      ctx.status = 401;
+      ctx.body = {
+        status: 401,
+        msg: 'Cannot get user info from token',
+      };
+      return;
+    }
+
+    try {
+      this.checkAuth(current_user);
+    } catch (err) {
+      ctx.status = 401;
+      ctx.body = {
+        status: 401,
+        msg: 'Bad authorization data',
+        // errinfo: err.toString(),
+      };
+      return;
+    }
+
+    let updateStatus = 0;
+    try {
+      const result = await this.app.mysql.query(
+        'UPDATE users SET introduction = ? WHERE username = ?',
+        [ introduction, current_user ]
+      );
+      updateStatus = result.affectedRows;
+    } catch (err) {
+      console.log(err);
+      ctx.status = 500;
+      ctx.body = {
+        status: 500,
+        msg: 'Failed due to server error',
+        error: err.toString(),
+      };
+      return;
+    }
+
+    if (updateStatus === 0) {
+      ctx.status = 400;
+      ctx.body = {
+        status: 400,
+        msg: 'None of user introduction is updated, maybe the user does not exist',
+      };
+    } else if (updateStatus === 1) {
+      ctx.status = 200;
+      ctx.body = {
+        status: 200,
+        msg: 'Updated successfully',
+      };
+    } else {
+      ctx.status = 400;
+      ctx.body = {
+        status: 400,
+        msg: 'Too many items was deleted due to unknown error',
+      };
+    }
+  }
 }
 
 module.exports = UserController;
