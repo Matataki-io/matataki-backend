@@ -26,21 +26,38 @@ class DraftsController extends Controller {
     this.ctx.body = results;
   }
 
+  async get_user() {
+    const current_user = this.get_current_user();
+
+    try {
+      this.checkAuth(current_user);
+    } catch (err) {
+      this.ctx.status = 401;
+      this.ctx.body = err.message;
+      return;
+    }
+
+    let user = await this.app.mysql.get('users', { username: current_user });
+
+    if (!user) {
+
+      let newuser = await this.app.mysql.insert('users', {
+        username: current_user,
+        create_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      });
+
+      user =  await this.app.mysql.get('users', { username: current_user });
+    }
+
+    return user;
+  }
 
   async save() {
     const ctx = this.ctx;
 
     const { id = '', title = '', content = '', cover, fissionFactor = 2000 } = ctx.request.body;
 
-    let user;
-
-    try {
-      user = await this.get_user();
-    } catch (err) {
-      this.ctx.status = 401;
-      this.ctx.body = err.message;
-      return;
-    }
+    const user = await this.get_user();
 
     if (id) {
       await this.save_draft(user.id, id, title, content, cover, fissionFactor);
@@ -132,17 +149,7 @@ class DraftsController extends Controller {
   async draft() {
     const id = this.ctx.params.id;
 
-    let user;
-
-    try {
-      user = await this.get_user();
-
-    } catch (err) {
-
-      this.ctx.status = 401;
-      this.ctx.body = err.message;
-      return;
-    }
+    const user = await this.get_user();
 
     const draft = await this.app.mysql.get('drafts', { id: id });
 

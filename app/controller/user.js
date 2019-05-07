@@ -132,28 +132,6 @@ class UserController extends Controller {
     ctx.status = 200;
   }
 
-  async tokens() {
-
-    let user ; 
-
-    try {
-      user = await this.get_user();
-    } catch (err) {
-      this.ctx.status = 401;
-      this.ctx.body = err.message;
-      return;
-    }
-
-    // 1. 历史总创作收入 (sign income)
-    const result = await this.app.mysql.query(
-      'select name, contract, symbol, amount, decimals,  platform from assets where uid = ? ',
-      [user.id]
-    );
-
-    this.ctx.body = result;
-    this.ctx.status = 200;
-  }
-
   async setNickname() {
 
     const ctx = this.ctx;
