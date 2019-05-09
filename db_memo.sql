@@ -352,7 +352,30 @@ create table supports (
   UNIQUE (uid, signid)
 );
 
-## 资产流水
+## 资产log
+create table assets_change_log (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  uid INT UNSIGNED NOT NULL,
+  contract varchar(255) NOT NULL,
+  symbol varchar(255) NOT NULL,
+  amount INT DEFAULT 0, 
+  signid INT UNSIGNED DEFAULT NULL,
+  platform varchar(255) NOT NULL,
+  type varchar(255) NOT NULL,
+  create_time timestamp,
+  PRIMARY KEY (id)
+);
 
 ## 打赏额度
+create table support_quota (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  uid INT UNSIGNED NOT NULL,
+  signid INT UNSIGNED NOT NULL,
+  contract varchar(255) NOT NULL,
+  symbol varchar(255) NOT NULL,
+  quota  INT UNSIGNED NOT NULL,
+  create_time timestamp,
+  PRIMARY KEY (id),
+  UNIQUE (uid, signid, contract, symbol)
+);
 
