@@ -37,6 +37,11 @@ class BaseController extends Controller {
     this.ctx.throw(404, msg);
   }
 
+  response(code, msg) {
+    this.ctx.status = code;
+    this.ctx.body = { msg: msg };
+  }
+
   checkAuth(username) {
     console.log("checkAuth..", username);
 
@@ -103,8 +108,22 @@ class BaseController extends Controller {
     return user;
   }
 
+  async get_or_create_referrer(referrer) {
+    try {
+      let user = await this.app.mysql.get('users', { username: referrer });
 
-
+      if (!user) {
+        let newuser = await this.app.mysql.insert('users', {
+          username: referrer,
+          create_time: moment().format('YYYY-MM-DD HH:mm:ss')
+        });
+        user = await this.app.mysql.get('users', { username: referrer });
+      }
+      return user;
+    } catch (err) {
+      return null;
+    }
+  }
 
 }
 module.exports = BaseController;
