@@ -22,7 +22,6 @@ module.exports = {
     try {
       var decoded = jwt.decode(token, ctx.app.config.jwtTokenSecret);
 
-      //todo 待验证过期时间
       if (decoded.exp <= Date.now()) {
         ctx.throw(401, "invaid access_token: expired");
       }
@@ -50,13 +49,10 @@ module.exports = {
       try {
         var decoded = jwt.decode(token, ctx.app.config.jwtTokenSecret);
 
-        //todo 待验证过期时间
-        // if (decoded.exp <= Date.now()) {
-        //   ctx.throw(401, "invaid access_token: expired");
-        // }
-
-        ctx.user.username = decoded.iss;
-        ctx.user.isAuthenticated = true;
+        if (decoded.exp > Date.now()) {
+          ctx.user.username = decoded.iss;
+          ctx.user.isAuthenticated = true;
+        }
       } catch (err) {
 
       }
