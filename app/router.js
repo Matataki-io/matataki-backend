@@ -92,8 +92,9 @@ module.exports = app => {
   app.router.delete('/draft/:id', app.controller.drafts.delete);
 
   // 跨链打赏 上报接口
-  app.router.get('/support', app.controller.support.support);
+  app.router.post('/support', app.controller.support.support);
 
+  // 个人资产
   app.router.get('/tokens', app.controller.user.tokens);
 };
 

@@ -1038,3 +1038,28 @@ curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io
 curl -H "x-access-token: access-token"  -X DELETE https://apitest.smartsignature.io/draft/1 
 
 ```
+
+#### support 跨链打赏
+
+* POST /support
+* 响应状态码：201
+
+* 参数 
+* signId : 文章id
+* contract: 打赏货币的合约名
+* symbol: 货币符号
+* amount: 打赏数量（ 无精度的，如1EOS，就传10000 ）
+* platform: 平台 eos或ont
+* referrer: 推荐人
+
+* 请求示例：
+
+```
+curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referrer=joetothemoon" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTc5NzE5MDUwNTR9.9BxHyx9T1Tw-_a8-yX-cNO72R45YEIrRuzJh5jMI3ko"  -X POST http://localhost:7001/support 
+
+```
+
+#### tokens 个人资产列表  (need access_token)
+
+* GET /tokens
+* 响应状态码：200

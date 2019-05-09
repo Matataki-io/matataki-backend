@@ -1,97 +1,77 @@
 'use strict';
 
 const Controller = require('../core/base_controller');
-
-const EOS = require('eosjs');
-const ecc = require('eosjs-ecc');
 const moment = require('moment');
-var _ = require('lodash');
-
 class SupportController extends Controller {
 
   constructor(ctx) {
     super(ctx);
-    this.eosClient = EOS({
-      broadcast: true,
-      sign: true,
-      chainId: ctx.app.config.eos.chainId,
-      keyProvider: [ctx.app.config.eos.keyProvider],
-      httpEndpoint: ctx.app.config.eos.httpEndpoint,
-    });
   }
 
   async support() {
-    const ctx = this.ctx;
-    const { author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover } = ctx.request.body;
-
-    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username);
-
-    if (fissionFactor > 2000) {
-      // fissionFactor = 2000; // 最大2000
-      ctx.body = {
-        msg: 'fissionFactor should >= 2000',
-      };
-      ctx.status = 500;
-
-      return;
-    }
-
-    if (!username) {
-      ctx.body = {
-        msg: 'username required',
-      };
-      ctx.status = 500;
-      return;
-    }
+    let user;
 
     try {
-      this.eos_signature_verify(author, hash, sign, publickey);
+      user = await this.get_user();
     } catch (err) {
-      ctx.status = 401;
-      ctx.body = err.message;
+      this.ctx.status = 401;
+      this.ctx.body = err.message;
       return;
+    }
+
+    const { signId,
+      contract,
+      symbol,
+      amount,
+      platform,
+      referrer } = this.ctx.request.body;
+
+    if (!signId) {
+      return this.response(401, "signId required")
+    }
+    if (!contract) {
+      return this.response(401, "contract required")
+    }
+    if (!symbol) {
+      return this.response(401, "symbol required")
+    }
+    if (!amount) {
+      return this.response(401, "amount required")
+    }
+    if (!platform) {
+      return this.response(401, "platform required")
+    }
+    if (!("eos" === platform || "ont" === platform)) {
+      return this.response(401, "platform not support")
+    }
+
+    let referreruid = 0;
+
+    if (referrer && referrer.trim() !== "") {
+      let ref = await this.get_or_create_referrer(referrer);
+      if (ref.id === user.id) {
+        return this.response(401, "referrer can't be yourself")
+      }
+      referreruid = ref.id;
     }
 
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
     try {
-      const result = await this.app.mysql.insert('posts', {
-        author,
-        username,
-        title,
-        public_key: publickey,
-        sign,
-        hash,
-        fission_factor: fissionFactor,
-        create_time: now,
-        cover: cover // 封面url
-      });
+      const result = await this.app.mysql.query(
+        'INSERT INTO supports (uid, signid, contract, symbol, amount, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ? ,?, ?)',
+        [user.id, signId, contract, symbol, amount, referreruid, platform, 0, now]
+      );
 
       const updateSuccess = result.affectedRows === 1;
 
       if (updateSuccess) {
-        ctx.logger.info('publish success ..');
-
-        ctx.body = {
-          msg: 'success',
-        };
-        ctx.status = 201;
-
+        this.response(201, "success")
       } else {
-        ctx.logger.error('publish err ', err);
-
-        ctx.body = {
-          msg: 'publish fail',
-        };
-        ctx.status = 500;
+        this.response(500, "support error")
       }
-
     } catch (err) {
-      ctx.logger.error(err.sqlMessage);
-      ctx.body = {
-        msg: 'publish error ' + err.sqlMessage,
-      };
-      ctx.status = 500;
+      this.response(500, "support error, you have supported this post before");
     }
   }
 
