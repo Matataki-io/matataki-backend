@@ -86,7 +86,7 @@ class VerifySupport extends Subscription {
   async ont_verify(support) {
     // https://dev-docs.ont.io/#/docs-cn/ontology-cli/05-rpc-specification?id=getstorage
     // 根据本体文档说明 取合约中的值，需要传入两个参数： hex_contract_address：以十六进制字符串表示智能合约哈希地址 key：以十六进制字符串表示的存储键值
-    // 所以，key 就用 （signId + uid）的 hex , 对应的value， 和eos版本类似，存储 转账代币合约、数量、符号，推荐人，供这里做二次验证和数据库中是否相符合。
+    // 所以，key 就用 （signId + uid or user address ）的 hex , 对应的value， 和eos版本类似，存储 转账代币合约、数量、符号，推荐人，供这里做二次验证和数据库中是否相符合。
     console.log("ont_verify ", support);
 
     let verifyPass = false;
@@ -103,27 +103,73 @@ class VerifySupport extends Subscription {
       const conn = await this.app.mysql.beginTransaction();
 
       try {
+        // 行为相关者: 作者，打赏人、推荐人
+        
+        let amount = support.amount;
+        let refuid = support.referreruid;
+        let now = moment().format('YYYY-MM-DD HH:mm:ss');
 
-        // 1. 如果有推荐人，先看推荐人额度满了没。没满就给推荐人加钱。 额度 等于裂变参数 * 他自己的打赏额度。没打赏过 不获得推荐人奖励。
+        const post = await this.app.mysql.get('posts', { id: support.signid });
 
-        const result = await conn.query(
-          'INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
-          [support.uid, support.contract, support.symbol, support.amount, support.platform, support.amount]
+        if(!post){
+          return;
+        }
+
+        let fission_factor = post.fission_factor;
+        let quota = amount * fission_factor / 1000;
+
+        await conn.query('INSERT INTO support_quota(uid, signid, contract, symbol, quota, create_time) VALUES (?, ?, ?, ?, ?, ?)',
+            [support.uid, support.signid, support.contract, support.symbol, quota, now]
         );
 
-        // 2. 如果给推荐人加钱
+        // 处理推荐人
+        let referrer_support_quota = await this.app.mysql.get('support_quota', { uid: refuid });
+        
+        if(referrer_support_quota && referrer_support_quota.quota > 0){
 
-        // 3. 记下收入log
+          let delta = referrer_support_quota.quota < amount ? referrer_support_quota.quota: amount;
+         
+          amount -= delta;
 
-        // 4. 记下打赏log
+          await conn.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+            [refuid, support.contract, support.symbol, delta, support.platform, delta]
+          );
 
-        // await conn.update("posts", updateRow, { where: { id: signId } });
+          // update quota
+          let new_quota = referrer_support_quota.quota - delta;
 
-        // auto delta = upstream_share->quota < in.amount ? upstream_share->quota : in.amount;
-        //     _shares.modify(upstream_share, _self, [&](auto &s) {
-        //         s.quota -= delta;
-        //     });
+          if( new_quota < 0 ) {
+            new_quota = 0;
+          }
 
+          await conn.query('UPDATE support_quota SET quota = ? where id = ?',
+            [new_quota, referrer_support_quota.id]
+          );
+
+          // 记录分享者资产变动log
+          await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [refuid, support.signid, support.contract, support.symbol, delta, support.platform, "share income", now]
+          );
+        }
+
+        // get author uid
+        let author = await this.app.mysql.get('users', { username: post.username });
+
+        // 处理文章作者
+        const result = await conn.query(
+          'INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+          [author.id, support.contract, support.symbol, amount, support.platform, amount]
+        );
+
+        // 记录作者者资产变动log
+        await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [author.id, support.signid, support.contract, support.symbol, amount, support.platform, "sign income", now]
+        );
+
+        // 把当前support 改为已处理状态
+        await conn.update("supports", {status:1}, { where: { id: support.id } });
+     
+        // 提交事务
         await conn.commit();
 
       } catch (err) {
@@ -140,4 +186,3 @@ class VerifySupport extends Subscription {
 }
 
 module.exports = VerifySupport;
-
