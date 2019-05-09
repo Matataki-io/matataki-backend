@@ -28,7 +28,7 @@ class SyncPosts extends Subscription {
     console.log("sync posts..");
 
     const results = await this.app.mysql.select('posts', {
-      where: { onchain_status: 0 }, // WHERE 条件
+      where: { onchain_status: 0, platform: "eos" }, // WHERE 条件
       limit: 10, // 返回数据量
       offset: 0, // 数据偏移量
     });

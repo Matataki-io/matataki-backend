@@ -76,7 +76,8 @@ class PostController extends Controller {
         hash,
         fission_factor: fissionFactor,
         create_time: now,
-        cover: cover // 封面url
+        cover: cover, // 封面url
+        platform: platform
       });
 
       const updateSuccess = result.affectedRows === 1;
