@@ -315,9 +315,11 @@ class UserController extends Controller {
     const updateResult = await this.service.user.setUserIntroduction(introduction, ctx.user.username);
 
     if (updateResult === 4) {
-      ctx.body = ctx.msg.paramsFormatInvalid;
+      ctx.body = ctx.msg.userIntroductionInvalid;
       return;
-    } else if (updateResult === 0) {
+    }
+
+    if (updateResult === false) {
       ctx.body = ctx.msg.failure;
       return;
     }
