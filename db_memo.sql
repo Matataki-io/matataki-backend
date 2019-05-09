@@ -352,4 +352,7 @@ create table supports (
   UNIQUE (uid, signid)
 );
 
+## 资产流水
+
+## 打赏额度
 

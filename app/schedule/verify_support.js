@@ -113,7 +113,16 @@ class VerifySupport extends Subscription {
 
         // 2. 如果给推荐人加钱
 
+        // 3. 记下收入log
+
+        // 4. 记下打赏log
+
         // await conn.update("posts", updateRow, { where: { id: signId } });
+
+        // auto delta = upstream_share->quota < in.amount ? upstream_share->quota : in.amount;
+        //     _shares.modify(upstream_share, _self, [&](auto &s) {
+        //         s.quota -= delta;
+        //     });
 
         await conn.commit();
 
