@@ -6,6 +6,8 @@ const EOS = require('eosjs');
 const ecc = require('eosjs-ecc');
 const moment = require('moment');
 var _ = require('lodash');
+const ONT = require('ontology-ts-sdk');
+
 
 class PostController extends Controller {
 
@@ -22,7 +24,7 @@ class PostController extends Controller {
 
   async publish() {
     const ctx = this.ctx;
-    const { author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover } = ctx.request.body;
+    const { author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, platform = 'eos'} = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username);
 
@@ -45,7 +47,17 @@ class PostController extends Controller {
     }
 
     try {
-      this.eos_signature_verify(author, hash, sign, publickey);
+
+      if ('eos' === platform) {
+        this.eos_signature_verify(author, hash, sign, publickey);
+      } else if ('ont' === platform) {
+        this.ont_signature_verify(author, hash, sign, publickey);
+      } else {
+        this.ctx.status = 401;
+        this.ctx.body = 'platform not support';
+        return;
+      }
+
     } catch (err) {
       ctx.status = 401;
       ctx.body = err.message;
@@ -97,7 +109,7 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover } = ctx.request.body;
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, platform = 'eos' } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -147,7 +159,17 @@ class PostController extends Controller {
     ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash, username);
 
     try {
-      this.eos_signature_verify(author, hash, sign, publickey);
+
+      if ('eos' === platform) {
+        this.eos_signature_verify(author, hash, sign, publickey);
+      } else if ('ont' === platform) {
+        this.ont_signature_verify(author, hash, sign, publickey);
+      } else {
+        this.ctx.status = 401;
+        this.ctx.body = 'platform not support';
+        return;
+      }
+
     } catch (err) {
       ctx.status = 401;
       ctx.body = err.message;
@@ -225,6 +247,24 @@ class PostController extends Controller {
       }
     } catch (err) {
       throw new Error("invalid signature " + err);
+    }
+  }
+
+  ont_signature_verify(author, hash, sign, publickey) {
+    try {
+      const pub = new ONT.Crypto.PublicKey(publickey);
+
+      const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
+
+      const signature = ONT.Crypto.Signature.deserializeHex(sign);
+
+      const pass = pub.verify(msg, signature);
+
+      if (!pass) {
+        throw new Error("invalid ont signature");
+      }
+    } catch (err) {
+      throw err;
     }
   }
 

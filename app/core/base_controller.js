@@ -79,6 +79,31 @@ class BaseController extends Controller {
     }
   }
 
+  async get_user() {
+    const current_user = this.get_current_user();
+
+    try {
+      this.checkAuth(current_user);
+    } catch (err) {
+      throw err;
+    }
+
+    let user = await this.app.mysql.get('users', { username: current_user });
+
+    if (!user) {
+
+      let newuser = await this.app.mysql.insert('users', {
+        username: current_user,
+        create_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      });
+
+      user = await this.app.mysql.get('users', { username: current_user });
+    }
+
+    return user;
+  }
+
+
 
 
 }

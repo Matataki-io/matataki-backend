@@ -27,7 +27,7 @@ module.exports = app => {
   // 隐藏文章，统一返回格式示例
   app.router.delete('/post2/:id', passport.authorize, app.controller.post.delete2);
 
-  // 文章阅读事件上报 
+  // 文章阅读事件上报
   router.post('/post/show/:hash', controller.post.show);
   // 添加评论
   router.post('/post/comment', controller.post.comment);
@@ -47,6 +47,8 @@ module.exports = app => {
   router.post('/user/setEmail', controller.user.setEmail);
   // 设置用户头像 (need access token)
   router.post('/user/setAvatar', controller.user.setAvatar);
+  // 设置用户的个性签名（自我介绍）
+  router.post('/user/setIntroduction', controller.user.setIntroduction);
 
   // 分享
   router.post('/share', controller.share.share);
@@ -71,8 +73,7 @@ module.exports = app => {
   // 粉丝列表（谁关注了我？）
   app.router.get('/fans', app.controller.follow.fans);
 
-
-  // 获取access token 
+  // 获取access token
   app.router.post('/auth', app.controller.auth.auth);
 
   // 被打赏次数排行榜
@@ -92,5 +93,7 @@ module.exports = app => {
 
   // 跨链打赏 上报接口
   app.router.get('/support', app.controller.support.support);
+
+  app.router.get('/tokens', app.controller.user.tokens);
 };
 
