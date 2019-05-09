@@ -480,6 +480,21 @@ class PostController extends Controller {
     }
   }
 
+  async p2() {
+    const ctx = this.ctx;
+    const id = ctx.params.id;
+
+    const post = await this.service.post.getById(id, ctx.user.username);
+
+    if (!post) {
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = post;
+  }
+
   async p() {
     const ctx = this.ctx;
     const id = ctx.params.id;
@@ -583,6 +598,30 @@ class PostController extends Controller {
     }
   }
 
+
+  async delete2() {
+    const { ctx } = this;
+
+    // ctx.validate({
+    //   page: { type: 'int', required: true },
+    //   pageSize: { type: 'int', required: true },
+    // }, ctx.query);
+
+    const id = ctx.params.id;
+    if (!id) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const result = await this.service.post.delete(id, ctx.user.username);
+    if (!result) {
+      ctx.body = ctx.msg.postDeleteError;
+    }
+    else {
+      ctx.body = ctx.msg.success;
+    }
+  }
+
   async delete() {
     const ctx = this.ctx;
     const id = ctx.params.id;
@@ -652,7 +691,7 @@ class PostController extends Controller {
 
   async comment() {
     const ctx = this.ctx;
-    const { comment = '', sign_id  } = ctx.request.body;
+    const { comment = '', sign_id } = ctx.request.body;
 
     if (!sign_id) {
       ctx.status = 500;
