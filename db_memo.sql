@@ -323,13 +323,15 @@ create table assets (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   uid INT UNSIGNED NOT NULL,
   contract varchar(255) NOT NULL,
-  name varchar(255) NOT NULL,
   symbol varchar(255) NOT NULL,
   amount INT UNSIGNED DEFAULT 0, 
   decimals INT UNSIGNED DEFAULT 0, 
   platform varchar(255) NOT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE (uid, contract, symbol)
 );
+
+drop table assets;
 
 ALTER TABLE posts ADD COLUMN platform varchar(255) DEFAULT null;
 ALTER TABLE users ADD COLUMN platform varchar(255) DEFAULT null;
