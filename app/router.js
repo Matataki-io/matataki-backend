@@ -47,8 +47,8 @@ module.exports = app => {
   router.post('/user/setEmail', controller.user.setEmail);
   // 设置用户头像 (need access token)
   router.post('/user/setAvatar', controller.user.setAvatar);
-  // 设置用户的个性签名（自我介绍）
-  router.post('/user/setIntroduction', controller.user.setIntroduction);
+  // 设置用户的个性签名（自我介绍），(need access token)
+  router.post('/user/setIntroduction', passport.authorize, controller.user.setIntroduction);
 
   // 分享
   router.post('/share', controller.share.share);

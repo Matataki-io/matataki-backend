@@ -193,8 +193,9 @@ class UserController extends Controller {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
       const result = await this.app.mysql.query(
-        'INSERT INTO users VALUES (null, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE nickname = ?',
-        [current_user, "", nickname, "", now, nickname]
+        'INSERT INTO users (id ,username, nickname, create_time)'
+        + ' VALUES (null, ?, ?, ?) ON DUPLICATE KEY UPDATE nickname = ?',
+        [ current_user, nickname, now, nickname ]
       );
 
       const updateSuccess = result.affectedRows >= 1;
@@ -245,8 +246,9 @@ class UserController extends Controller {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
       const result = await this.app.mysql.query(
-        'INSERT INTO users VALUES (null, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE email = ?',
-        [current_user, email, "", "", now, email]
+        'INSERT INTO users (id ,username, email, create_time)'
+        + ' VALUES (null, ?, ?, ?) ON DUPLICATE KEY UPDATE email = ?',
+        [ current_user, email, now, email ]
       );
 
       const updateSuccess = result.affectedRows >= 1;
@@ -307,83 +309,20 @@ class UserController extends Controller {
   }
 
   async setIntroduction() {
-
     const ctx = this.ctx;
-
     const { introduction = '' } = ctx.request.body;
 
-    // 检查自我绍介内容
-    // 错误原因：长度不合法
-    if (introduction.length > 20 || introduction.length < 1) {
-      ctx.status = 400;
-      ctx.body = {
-        status: 400,
-        msg: 'Bad request data, invalid introduction data',
-      };
+    const updateResult = await this.service.user.setUserIntroduction(introduction, ctx.user.username);
+
+    if (updateResult === 4) {
+      ctx.body = ctx.msg.paramsFormatInvalid;
+      return;
+    } else if (updateResult === 0) {
+      ctx.body = ctx.msg.failure;
       return;
     }
 
-    const current_user = this.get_current_user();
-
-    // 增加了当无法解码JWT时候的错误处理，以便和checkAuth时候的错误区分开
-    if (current_user === null) {
-      ctx.status = 401;
-      ctx.body = {
-        status: 401,
-        msg: 'Cannot get user info from token',
-      };
-      return;
-    }
-
-    try {
-      this.checkAuth(current_user);
-    } catch (err) {
-      ctx.status = 401;
-      ctx.body = {
-        status: 401,
-        msg: 'Bad authorization data',
-        // errinfo: err.toString(),
-      };
-      return;
-    }
-
-    let updateStatus = 0;
-    try {
-      const result = await this.app.mysql.query(
-        'UPDATE users SET introduction = ? WHERE username = ?',
-        [ introduction, current_user ]
-      );
-      updateStatus = result.affectedRows;
-    } catch (err) {
-      console.log(err);
-      ctx.status = 500;
-      ctx.body = {
-        status: 500,
-        msg: 'Failed due to server error',
-        error: err.toString(),
-      };
-      return;
-    }
-
-    if (updateStatus === 0) {
-      ctx.status = 400;
-      ctx.body = {
-        status: 400,
-        msg: 'None of user introduction is updated, maybe the user does not exist',
-      };
-    } else if (updateStatus === 1) {
-      ctx.status = 200;
-      ctx.body = {
-        status: 200,
-        msg: 'Updated successfully',
-      };
-    } else {
-      ctx.status = 400;
-      ctx.body = {
-        status: 400,
-        msg: 'Too many items was deleted due to unknown error',
-      };
-    }
+    ctx.body = ctx.msg.success;
   }
 }
 
