@@ -1,4 +1,5 @@
 'use strict';
+const passport = require('./passport');
 
 /**
  * @param {Egg.Application} app - egg application
@@ -21,12 +22,17 @@ module.exports = app => {
   // 单篇文章（for 短链接）
   router.get('/p/:id', controller.post.p);
 
+  //单篇文章（for 短链接），统一返回格式示例
+  router.get('/p2/:id', passport.verify, controller.post.p2);
+  // 隐藏文章，统一返回格式示例
+  app.router.delete('/post2/:id', passport.authorize, app.controller.post.delete2);
+
   // 文章阅读事件上报
   router.post('/post/show/:hash', controller.post.show);
   // 添加评论
   router.post('/post/comment', controller.post.comment);
 
-    // 隐藏文章
+  // 隐藏文章
   app.router.delete('/post/:id', app.controller.post.delete);
 
 
@@ -66,7 +72,6 @@ module.exports = app => {
   app.router.get('/follows', app.controller.follow.follows);
   // 粉丝列表（谁关注了我？）
   app.router.get('/fans', app.controller.follow.fans);
-
 
   // 获取access token
   app.router.post('/auth', app.controller.auth.auth);

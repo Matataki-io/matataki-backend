@@ -15,6 +15,9 @@ class ActionUpdater extends Subscription {
     }
 
     async subscribe() {
+        //debug不执行
+        if (this.ctx.app.config.isDebug) return;
+
         if (this.app.sqls && this.app.sqls.length > 0) {
             var sub_arr = this.app.sqls.splice(0, 100);
             _.each(sub_arr, (sql) => {

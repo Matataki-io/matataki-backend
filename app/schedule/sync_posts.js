@@ -9,7 +9,7 @@ class SyncPosts extends Subscription {
       broadcast: true,
       sign: true,
       chainId: ctx.app.config.eos.chainId,
-      keyProvider: [ ctx.app.config.eos.keyProvider ],
+      keyProvider: [ctx.app.config.eos.keyProvider],
       httpEndpoint: ctx.app.config.eos.httpEndpoint,
     });
   }
@@ -22,6 +22,9 @@ class SyncPosts extends Subscription {
   }
 
   async subscribe() {
+    //debug不执行
+    if (this.ctx.app.config.isDebug) return;
+
     console.log("sync posts..");
 
     const results = await this.app.mysql.select('posts', {
