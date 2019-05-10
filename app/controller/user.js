@@ -326,6 +326,19 @@ class UserController extends Controller {
 
     ctx.body = ctx.msg.success;
   }
+
+  async getUserDetails() {
+    const ctx = this.ctx;
+
+    const details = await this.service.user.getUserDetails(ctx.user.username);
+    if (details === null) {
+      ctx.body = ctx.msg.userNotExist;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = details;
+  }
 }
 
 module.exports = UserController;
