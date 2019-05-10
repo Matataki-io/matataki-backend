@@ -2,7 +2,7 @@
 
 const { Controller } = require('egg');
 const jwt = require('jwt-simple');
-
+const moment = require('moment');
 class BaseController extends Controller {
 
   constructor(ctx) {
