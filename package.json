@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "async": "^2.6.2",
+    "axios": "^0.18.0",
     "base64url": "^3.0.1",
     "egg": "^2.15.1",
     "egg-cors": "^2.2.0",
