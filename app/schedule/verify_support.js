@@ -94,7 +94,7 @@ class VerifySupport extends Subscription {
 
     // 做本体合约数据验证
 
-    const scriptHash = 'ea7b7ec131074cde99cca50569ec38ecef0ffb88';
+    const scriptHash = 'd7a082235298b65c5b8b78078aad03e792b1add4';
 
     let sponsor = await this.app.mysql.get('users', { id: support.uid });
 
