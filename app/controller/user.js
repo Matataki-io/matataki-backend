@@ -134,7 +134,7 @@ class UserController extends Controller {
 
   async tokens() {
 
-    let user ; 
+    let user;
 
     try {
       user = await this.get_user();
@@ -145,10 +145,25 @@ class UserController extends Controller {
     }
 
     // 1. 历史总创作收入 (sign income)
-    const result = await this.app.mysql.query(
+    const tokens = await this.app.mysql.query(
       'select id, contract, symbol, amount, platform from assets where uid = ? ',
       [user.id]
     );
+
+    let result = {};
+
+    for (let i = 0; i < tokens.length; i++) {
+      let token = tokens[i];
+      const logs = await this.app.mysql.query(
+        'select * from assets_change_log where uid = ? and symbol = ? order by create_time desc',
+        [user.id, token.symbol]
+      );
+      result[token.symbol] = {
+        balance: token.amount,
+        logs: logs
+      }
+    }
+
 
     this.ctx.body = result;
     this.ctx.status = 200;
@@ -195,7 +210,7 @@ class UserController extends Controller {
       const result = await this.app.mysql.query(
         'INSERT INTO users (id ,username, nickname, create_time)'
         + ' VALUES (null, ?, ?, ?) ON DUPLICATE KEY UPDATE nickname = ?',
-        [ current_user, nickname, now, nickname ]
+        [current_user, nickname, now, nickname]
       );
 
       const updateSuccess = result.affectedRows >= 1;
@@ -248,7 +263,7 @@ class UserController extends Controller {
       const result = await this.app.mysql.query(
         'INSERT INTO users (id ,username, email, create_time)'
         + ' VALUES (null, ?, ?, ?) ON DUPLICATE KEY UPDATE email = ?',
-        [ current_user, email, now, email ]
+        [current_user, email, now, email]
       );
 
       const updateSuccess = result.affectedRows >= 1;
