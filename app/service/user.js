@@ -2,6 +2,8 @@
 
 const Service = require('egg').Service;
 const introductionLengthInvalid = 4;
+const emailDuplicated = 5;
+const nicknameDuplicated = 6;
 
 class UserService extends Service {
 
@@ -55,9 +57,9 @@ class UserService extends Service {
     return basicInfo;
   }
 
-  async setUserIntroduction(introduction, current_user) {
+  async setIntroduction(introduction, current_user) {
 
-    if (introduction.length > 20 || introduction.length < 1) {
+    if (introduction.length > 20 || introduction.length < 5) {
       return introductionLengthInvalid;
     }
 
@@ -80,6 +82,64 @@ class UserService extends Service {
     return false;
   }
 
+  async setEmail(email, current_user) {
+
+    const sameEmail = await this.app.mysql.query(
+      'SELECT COUNT(*) AS same_count FROM users WHERE email = ?',
+      [ email ]
+    );
+
+    if (sameEmail[0].same_count) {
+      return emailDuplicated;
+    }
+
+    try {
+      const row = {
+        email,
+      };
+
+      const options = {
+        where: {
+          username: current_user,
+        },
+      };
+
+      const result = await this.app.mysql.update('users', row, options);
+      return result.affectedRows === 1;
+    } catch (err) {
+      this.logger.error('UserService update Email error: %j', err);
+    }
+    return false;
+  }
+
+  async setNickname(nickname, current_user) {
+
+    const sameNickname = await this.app.mysql.query(
+      'SELECT COUNT(*) AS same_count FROM users WHERE nickname = ?',
+      [ nickname ]
+    );
+
+    if (sameNickname[0].same_count) {
+      return nicknameDuplicated;
+    }
+    try {
+      const row = {
+        nickname,
+      };
+
+      const options = {
+        where: {
+          username: current_user,
+        },
+      };
+
+      const result = await this.app.mysql.update('users', row, options);
+      return result.affectedRows === 1;
+    } catch (err) {
+      this.logger.error('UserService updateNickname error: %j', err);
+    }
+    return false;
+  }
 }
 
 module.exports = UserService;

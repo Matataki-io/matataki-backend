@@ -23,6 +23,10 @@ module.exports = {
   userIntroductionInvalid: 10001,
   // 所查询的用户不存在
   userNotExist: 10002,
+  // email发生重复
+  emailDuplicated: 10003,
+  // 昵称发生重复
+  nicknameDuplicated: 10004,
 
   // post相关
   postNotFound: 10100,
@@ -41,6 +45,8 @@ module.exports = {
 
       userIntroductionInvalid: { code: this.userIntroductionInvalid, message: 'introduction too long or empty' },
       userNotExist: { code: this.userNotExist, message: 'user does not exist' },
+      emailDuplicated: { code: this.emailDuplicated, message: 'same email already exists' },
+      nicknameDuplicated: { code: this.nicknameDuplicated, message: 'same nickname already exists' },
 
       postNotFound: { code: this.postNotFound, message: 'post not found' },
       postDeleteError: { code: this.postDeleteError, message: 'delete post error' },
@@ -56,6 +62,8 @@ module.exports = {
 
       userIntroductionInvalid: { code: this.userIntroductionInvalid, message: '请求设置的用户个性签名过长或为空' },
       userNotExist: { code: this.userNotExist, message: '所请求的用户不存在' },
+      emailDuplicated: { code: this.emailDuplicated, message: '已经有相同的email地址存在' },
+      nicknameDuplicated: { code: this.nicknameDuplicated, message: '已经有相同的昵称存在' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },
