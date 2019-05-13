@@ -60,7 +60,7 @@ module.exports = {
       unauthorized: { code: this.unauthorized, message: '未授权' },
       serverError: { code: this.exception, message: 'internal server error' },
 
-      userIntroductionInvalid: { code: this.userIntroductionInvalid, message: '请求设置的用户个性签名过长或为空' },
+      userIntroductionInvalid: { code: this.userIntroductionInvalid, message: '请求设置的用户个性签名不在5-20位' },
       userNotExist: { code: this.userNotExist, message: '所请求的用户不存在' },
       emailDuplicated: { code: this.emailDuplicated, message: '已经有相同的email地址存在' },
       nicknameDuplicated: { code: this.nicknameDuplicated, message: '已经有相同的昵称存在' },

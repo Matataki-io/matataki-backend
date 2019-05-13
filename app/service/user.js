@@ -9,6 +9,16 @@ class UserService extends Service {
 
   async getUserDetails(current_user) {
 
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+
     const basicInfo = await this.app.mysql.get(
       'users',
       { username: current_user }
@@ -22,39 +32,59 @@ class UserService extends Service {
     basicInfo.accounts = accountAttached;
 
     // 筛选状态为1，即有效的follow
-    const followersCount = await this.app.mysql.query(
-      'SELECT COUNT(*) AS followings FROM follows WHERE username = ? AND status = 1',
-      [ current_user ]
+    const counts = await this.app.mysql.query(
+      'SELECT COUNT(*) AS follows FROM follows WHERE username = :user AND status = 1;'
+      + 'SELECT COUNT(*) AS fans FROM follows WHERE followed = :user AND status = 1;'
+      + 'SELECT COUNT(*) AS articles FROM posts WHERE author = :user AND status = 0;'
+      + 'SELECT COUNT(*) AS drafts FROM drafts WHERE uid = :uid AND status = 0;'
+      + 'SELECT COUNT(*) AS supports FROM actions WHERE author = :user AND type = \'share\';',
+      { user: current_user, uid: basicInfo.id }
+      // [ current_user, current_user, current_user, basicInfo.id, current_user ]
     );
-    basicInfo.follow = followersCount[0].followings;
-
-    const followingsCount = await this.app.mysql.query(
-      'SELECT COUNT(*) AS followers FROM follows WHERE followed = ? AND status = 1',
-      [ current_user ]
-    );
-    basicInfo.fan = followingsCount[0].followers;
-
-    // 筛选状态为0，即有效的文章
-    const articlesCount = await this.app.mysql.query(
-      'SELECT COUNT(*) AS articles FROM posts WHERE author = ? AND status = 0',
-      [ current_user ]
-    );
-    basicInfo.posts = articlesCount[0].articles;
-
-    // 筛选状态为0，即有效的草稿
-    const draftCount = await this.app.mysql.query(
-      'SELECT COUNT(*) AS drafts FROM drafts WHERE uid = ? AND status = 0',
-      [ basicInfo.id ]
-    );
-    basicInfo.drafts = draftCount[0].drafts;
-
-    const supportCount = await this.app.mysql.query(
-      'SELECT COUNT (*) AS supports FROM actions WHERE author = ? AND type = \'share\'',
-      [ current_user ]
-    );
-    basicInfo.supports = supportCount[0].supports;
+    basicInfo.follows = counts[0][0].follows;
+    basicInfo.fans = counts[1][0].fans;
+    basicInfo.articles = counts[2][0].articles;
+    basicInfo.drafts = counts[3][0].drafts;
+    basicInfo.supports = counts[4][0].supports;
 
     return basicInfo;
+  }
+
+  async setProfile(current_user, email, nickname, introduction) {
+
+    if (current_user === null) {
+      return false;
+    }
+
+    const row = {};
+    if (email) {
+      row.email = email;
+    }
+
+    if (nickname) {
+      row.nickname = nickname;
+    }
+
+    if (introduction) {
+      if (introduction.length > 20 || introduction.length < 5) {
+        return introductionLengthInvalid;
+      }
+      row.introduction = introduction;
+    }
+
+    const options = {
+      where: {
+        username: current_user,
+      },
+    };
+
+    try {
+      const result = await this.app.mysql.update('users', row, options);
+      return result.affectedRows === 1;
+    } catch (err) {
+      this.logger.error('UserService:: error: %j', err);
+      return false;
+    }
   }
 
   async setIntroduction(introduction, current_user) {

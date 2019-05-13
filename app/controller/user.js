@@ -332,38 +332,13 @@ class UserController extends Controller {
     const ctx = this.ctx;
     const { email = null, nickname = null, introduction = null } = ctx.request.body;
 
-    // 在编辑自己的email和昵称的时候，若无变更，则不应该带此参数
-    if (email) {
-      const emailUpdateResult = await this.service.user.setEmail(email, ctx.user.username);
-      if (emailUpdateResult === 5) {
-        ctx.body = ctx.msg.emailDuplicated;
-        return;
-      } else if (emailUpdateResult === false) {
-        ctx.body = ctx.msg.failure;
-        return;
-      }
-    }
-
-    if (nickname) {
-      const nicknameUpdateResult = await this.service.user.setNickname(nickname, ctx.user.username);
-      if (nicknameUpdateResult === 6) {
-        ctx.body = ctx.msg.nicknameDuplicated;
-        return;
-      } else if (nicknameUpdateResult === false) {
-        ctx.body = ctx.msg.failure;
-        return;
-      }
-    }
-
-    if (introduction) {
-      const introductionUpdateResult = await this.service.user.setIntroduction(introduction, ctx.user.username);
-      if (introductionUpdateResult === 4) {
-        ctx.body = ctx.msg.userIntroductionInvalid;
-        return;
-      } else if (introductionUpdateResult === false) {
-        ctx.body = ctx.msg.failure;
-        return;
-      }
+    const setResult = await this.service.user.setProfile(ctx.user.username, email, nickname, introduction);
+    if (setResult === 4) {
+      ctx.body = ctx.msg.userIntroductionInvalid;
+      return;
+    } else if (setResult === false) {
+      ctx.body = ctx.msg.failure;
+      return;
     }
 
     ctx.body = ctx.msg.success;
