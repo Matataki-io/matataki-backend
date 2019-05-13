@@ -336,7 +336,6 @@ class UserController extends Controller {
     if (email) {
       const emailUpdateResult = await this.service.user.setEmail(email, ctx.user.username);
       if (emailUpdateResult === 5) {
-        // Should use self-defined message instead.
         ctx.body = ctx.msg.emailDuplicated;
         return;
       } else if (emailUpdateResult === false) {
