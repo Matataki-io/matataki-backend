@@ -1061,5 +1061,47 @@ curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referr
 
 #### tokens 个人资产列表  (need access_token)
 
+返回EOS、ONT的待提现、历史总打赏收入、历史总创作收入、总支出、以及流水数据
+
 * GET /tokens
 * 响应状态码：200
+
+响应示例
+
+```
+
+{
+  "EOS": {
+    "balance": 16317,
+    "totalSignIncome": 822,
+    "totalShareIncome": 0,
+    "totalShareExpenses": -811,
+    "logs": [
+      {
+        "id": 4,
+        "uid": 170,
+        "contract": "eosio.token",
+        "symbol": "EOS",
+        "amount": -111,
+        "signid": 2,
+        "platform": "eos",
+        "type": "support expenses",
+        "create_time": "2019-05-13T09:34:21.000Z"
+      },
+      {
+        "id": 5,
+        "uid": 170,
+        "contract": "eosio.token",
+        "symbol": "EOS",
+        "amount": 111,
+        "signid": 2,
+        "platform": "eos",
+        "type": "sign income",
+        "create_time": "2019-05-13T09:34:21.000Z"
+      },
+      ....
+    ]
+  }
+}
+
+```

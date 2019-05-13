@@ -158,9 +158,28 @@ class UserController extends Controller {
         'select * from assets_change_log where uid = ? and symbol = ? order by create_time desc',
         [user.id, token.symbol]
       );
+
+      let totalSignIncome = await this.app.mysql.query(
+        'select sum(amount) as totalSignIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
+        ["sign income", user.id, token.symbol]
+      );
+
+      let totalShareIncome = await this.app.mysql.query(
+        'select sum(amount) as totalShareIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
+        ["share income", user.id, token.symbol]
+      );
+
+      let totalShareExpenses = await this.app.mysql.query(
+        'select sum(amount) as totalShareExpenses from assets_change_log where type = ? and uid = ? and symbol = ?',
+        ["support expenses", user.id, token.symbol]
+      );
+
       result[token.symbol] = {
-        balance: token.amount,
-        logs: logs
+        balance: token.amount,                                              // 余额（待提现）
+        totalSignIncome: totalSignIncome[0].totalSignIncome || 0,           // 总创作收入
+        totalShareIncome: totalShareIncome[0].totalShareIncome || 0,        // 总打赏收入 
+        totalShareExpenses: totalShareExpenses[0].totalShareExpenses || 0,  // 总打赏支出
+        logs: logs                                                          // 流水（之后再来处理分页）
       }
     }
 
