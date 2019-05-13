@@ -36,6 +36,8 @@ module.exports = app => {
   app.router.delete('/post/:id', app.controller.post.delete);
 
 
+  // 获取用户个人主页的统计信息
+  router.get('/user/stats', passport.authorize, controller.user.getUserDetails);
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:username', controller.user.user);
 
@@ -51,8 +53,6 @@ module.exports = app => {
   router.post('/user/setIntroduction', passport.authorize, controller.user.setIntroduction);
   // 设置用户的个人资料，包括email，昵称和自我介绍。
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
-  // 用户个人主页的统计信息接口
-  router.post('/user/getDetail', passport.authorize, controller.user.getUserDetails);
 
   // 分享
   router.post('/share', controller.share.share);
