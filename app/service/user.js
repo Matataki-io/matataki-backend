@@ -82,7 +82,7 @@ class UserService extends Service {
       const result = await this.app.mysql.update('users', row, options);
       return result.affectedRows === 1;
     } catch (err) {
-      this.logger.error('UserService:: error: %j', err);
+      this.logger.error('UserService::setProfile error: %j', err);
       return false;
     }
   }
@@ -107,7 +107,7 @@ class UserService extends Service {
       const result = await this.app.mysql.update('users', row, options);
       return result.affectedRows === 1;
     } catch (err) {
-      this.logger.error('UserService:: error: %j', err);
+      this.logger.error('UserService::setIntroduction error: %j', err);
     }
     return false;
   }
@@ -137,7 +137,7 @@ class UserService extends Service {
       const result = await this.app.mysql.update('users', row, options);
       return result.affectedRows === 1;
     } catch (err) {
-      this.logger.error('UserService update Email error: %j', err);
+      this.logger.error('UserService:: setEmail error: %j', err);
     }
     return false;
   }
@@ -166,7 +166,7 @@ class UserService extends Service {
       const result = await this.app.mysql.update('users', row, options);
       return result.affectedRows === 1;
     } catch (err) {
-      this.logger.error('UserService updateNickname error: %j', err);
+      this.logger.error('UserService:: setNickname error: %j', err);
     }
     return false;
   }
