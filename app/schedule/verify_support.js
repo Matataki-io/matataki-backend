@@ -1,6 +1,8 @@
 const Subscription = require('egg').Subscription;
 const EOS = require('eosjs');
+const ONT = require('ontology-ts-sdk');
 const moment = require('moment');
+const axios = require("axios");
 
 class VerifySupport extends Subscription {
 
@@ -87,11 +89,67 @@ class VerifySupport extends Subscription {
     // https://dev-docs.ont.io/#/docs-cn/ontology-cli/05-rpc-specification?id=getstorage
     // 根据本体文档说明 取合约中的值，需要传入两个参数： hex_contract_address：以十六进制字符串表示智能合约哈希地址 key：以十六进制字符串表示的存储键值
     // 所以，key 就用 （signId + uid or user address ）的 hex , 对应的value， 和eos版本类似，存储 转账代币合约、数量、符号，推荐人，供这里做二次验证和数据库中是否相符合。
-    console.log("ont_verify ", support);
-
+    console.log("ont_verify ");
     let verifyPass = false;
 
-    // TODO 做本体合约数据验证
+    // 做本体合约数据验证
+
+    const scriptHash = 'd7a082235298b65c5b8b78078aad03e792b1add4';
+
+    let sponsor = await this.app.mysql.get('users', { id: support.uid });
+
+    // let key_origin = `${sponsor.username}${support.signid}`;
+    // let keyhex = "01" + Buffer.from(key_origin).toString('hex');
+
+    let key_origin = `${sponsor.username}${support.signid + ""}`;
+    let keyhex = "01" + Buffer.from(key_origin).toString('hex');
+
+
+    const response = await axios.get(`http://polaris1.ont.io:20334/api/v1/storage/${scriptHash}/${keyhex}`);
+
+
+
+    if (response.data && response.data.Result) {
+
+      // console.log(key_origin)
+      // console.log(keyhex)
+      // console.log(response.data)
+
+      let ontMap = ONT.ScriptBuilder.deserializeItem(new ONT.utils.StringReader(response.data.Result));
+
+      let entries = ontMap.entries()
+
+      let obj = entries.next();
+      let row = {}
+
+
+      try {
+        while (!obj.done) {
+          let key = obj.value[0];
+          let value = obj.value[1];
+          if (typeof value === 'string') {
+            value = ONT.utils.hexstr2str(value);
+          }
+          row[key] = value;
+          obj = entries.next();
+        }
+      } catch (err) {
+        console.log(err)
+      }
+
+      if (row.contract == support.contract &&
+        row.symbol == support.symbol &&
+        row.amount == support.amount &&
+        row.sponsor == support.referreruid
+      ) {
+        verifyPass = true;
+      }
+
+      console.log("contract,", row )
+      console.log("mysql", support)
+      console.log("verifyPass", verifyPass)
+
+    }
 
     if (verifyPass) {
       await this.passVerify(support);
@@ -104,14 +162,14 @@ class VerifySupport extends Subscription {
 
       try {
         // 行为相关者: 作者，打赏人、推荐人
-        
+
         let amount = support.amount;
         let refuid = support.referreruid;
         let now = moment().format('YYYY-MM-DD HH:mm:ss');
 
         const post = await this.app.mysql.get('posts', { id: support.signid });
 
-        if(!post){
+        if (!post) {
           return;
         }
 
@@ -119,16 +177,16 @@ class VerifySupport extends Subscription {
         let quota = amount * fission_factor / 1000;
 
         await conn.query('INSERT INTO support_quota(uid, signid, contract, symbol, quota, create_time) VALUES (?, ?, ?, ?, ?, ?)',
-            [support.uid, support.signid, support.contract, support.symbol, quota, now]
+          [support.uid, support.signid, support.contract, support.symbol, quota, now]
         );
 
         // 处理推荐人
         let referrer_support_quota = await this.app.mysql.get('support_quota', { uid: refuid });
-        
-        if(referrer_support_quota && referrer_support_quota.quota > 0){
 
-          let delta = referrer_support_quota.quota < amount ? referrer_support_quota.quota: amount;
-         
+        if (referrer_support_quota && referrer_support_quota.quota > 0) {
+
+          let delta = referrer_support_quota.quota < amount ? referrer_support_quota.quota : amount;
+
           amount -= delta;
 
           await conn.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
@@ -138,7 +196,7 @@ class VerifySupport extends Subscription {
           // update quota
           let new_quota = referrer_support_quota.quota - delta;
 
-          if( new_quota < 0 ) {
+          if (new_quota < 0) {
             new_quota = 0;
           }
 
@@ -167,8 +225,8 @@ class VerifySupport extends Subscription {
         );
 
         // 把当前support 改为已处理状态
-        await conn.update("supports", {status:1}, { where: { id: support.id } });
-     
+        await conn.update("supports", { status: 1 }, { where: { id: support.id } });
+
         // 提交事务
         await conn.commit();
 

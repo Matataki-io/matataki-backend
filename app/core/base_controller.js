@@ -2,7 +2,7 @@
 
 const { Controller } = require('egg');
 const jwt = require('jwt-simple');
-
+const moment = require('moment');
 class BaseController extends Controller {
 
   constructor(ctx) {
@@ -118,6 +118,24 @@ class BaseController extends Controller {
           create_time: moment().format('YYYY-MM-DD HH:mm:ss')
         });
         user = await this.app.mysql.get('users', { username: referrer });
+      }
+      return user;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async get_or_create_user(username, platform) {
+    try {
+      let user = await this.app.mysql.get('users', { username: username });
+
+      if (!user) {
+        let newuser = await this.app.mysql.insert('users', {
+          username: username,
+          platform: platform,
+          create_time: moment().format('YYYY-MM-DD HH:mm:ss')
+        });
+        user = await this.app.mysql.get('users', { username: username });
       }
       return user;
     } catch (err) {

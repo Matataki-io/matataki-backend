@@ -1,6 +1,7 @@
 'use strict';
 
-const Controller = require('egg').Controller;
+const Controller = require('../core/base_controller');
+
 const moment = require('moment');
 const ecc = require('eosjs-ecc');
 const base64url = require('base64url');
@@ -14,6 +15,9 @@ class AuthController extends Controller {
 
     // 1. 取出签名
     const { username, publickey, sign, platform = 'eos'} = this.ctx.request.body;
+
+    // create user if not exit
+    await this.get_or_create_user(username, platform);
 
     if ('eos' === platform) {
       this.eos_auth(sign, username, publickey);
