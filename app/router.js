@@ -37,6 +37,7 @@ module.exports = app => {
 
 
   // 获取用户个人主页的统计信息
+  // 请注意和 获取用户信息 方法 的冲突可能
   router.get('/user/stats', passport.authorize, controller.user.getUserDetails);
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:username', controller.user.user);
