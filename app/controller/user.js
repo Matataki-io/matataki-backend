@@ -154,8 +154,9 @@ class UserController extends Controller {
 
     for (let i = 0; i < tokens.length; i++) {
       let token = tokens[i];
+
       const logs = await this.app.mysql.query(
-        'select * from assets_change_log where uid = ? and symbol = ? order by create_time desc',
+        'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc',
         [user.id, token.symbol]
       );
 
