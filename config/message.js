@@ -31,6 +31,10 @@ module.exports = {
   // post相关
   postNotFound: 10100,
   postDeleteError: 10101,
+  postPublishParamsError: 10102,
+  postPublishSignVerifyError: 10103,
+  postPublishError: 10104,
+
 
 
   returnObj(lang) {
@@ -50,6 +54,9 @@ module.exports = {
 
       postNotFound: { code: this.postNotFound, message: 'post not found' },
       postDeleteError: { code: this.postDeleteError, message: 'delete post error' },
+      postPublishParamsError: { code: this.postPublishParamsError, message: 'parameters error' },
+      postPublishSignVerifyError: { code: this.postPublishSignVerifyError, message: 'signature error' },
+      postPublishError: { code: this.postPublishError, message: 'publish error' },
     };
 
     const zh = {
@@ -67,6 +74,9 @@ module.exports = {
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },
+      postPublishParamsError: { code: this.postPublishParamsError, message: '参数错误' },
+      postPublishSignVerifyError: { code: this.postPublishSignVerifyError, message: '签名验证失败' },
+      postPublishError: { code: this.postPublishError, message: '发布失败' },
     };
 
     let message;

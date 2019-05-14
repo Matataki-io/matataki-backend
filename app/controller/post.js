@@ -28,20 +28,12 @@ class PostController extends Controller {
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username, is_original);
 
     if (fissionFactor > 2000) {
-      // fissionFactor = 2000; // 最大2000
-      ctx.body = {
-        msg: 'fissionFactor should >= 2000',
-      };
-      ctx.status = 500;
-
+      ctx.body = ctx.msg.postPublishParamsError;  //msg: 'fissionFactor should >= 2000',
       return;
     }
 
     if (!username) {
-      ctx.body = {
-        msg: 'username required',
-      };
-      ctx.status = 500;
+      ctx.body = ctx.msg.postPublishParamsError;  //msg: 'username required',
       return;
     }
 
@@ -51,58 +43,34 @@ class PostController extends Controller {
       } else if ('ont' === platform) {
         this.ont_signature_verify(author, hash, sign, publickey);
       } else {
-        this.ctx.status = 401;
-        this.ctx.body = 'platform not support';
+        ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
         return;
       }
     } catch (err) {
-      ctx.status = 401;
-      ctx.body = err.message;
+      ctx.body = ctx.msg.postPublishSignVerifyError;  //err.message;
       return;
     }
 
-    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    const id = await ctx.service.post.publish({
+      author,
+      username,
+      title,
+      public_key: publickey,
+      sign,
+      hash,
+      is_original,
+      fission_factor: fissionFactor,
+      create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+      cover: cover, // 封面url
+      platform: platform
+    });
 
-    try {
-      const result = await this.app.mysql.insert('posts', {
-        author,
-        username,
-        title,
-        public_key: publickey,
-        sign,
-        hash,
-        is_original,
-        fission_factor: fissionFactor,
-        create_time: now,
-        cover: cover, // 封面url
-        platform: platform
-      });
-
-      const updateSuccess = result.affectedRows === 1;
-
-      if (updateSuccess) {
-        ctx.logger.info('publish success ..');
-
-        ctx.body = {
-          msg: 'success',
-        };
-        ctx.status = 201;
-
-      } else {
-        ctx.logger.error('publish err ', err);
-
-        ctx.body = {
-          msg: 'publish fail',
-        };
-        ctx.status = 500;
-      }
-
-    } catch (err) {
-      ctx.logger.error(err.sqlMessage);
-      ctx.body = {
-        msg: 'publish error ' + err.sqlMessage,
-      };
-      ctx.status = 500;
+    if (id > 0) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = id;
+    }
+    else {
+      ctx.body = ctx.msg.postPublishError; //todo 可以再细化失败的原因
     }
   }
 

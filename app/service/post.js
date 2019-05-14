@@ -3,9 +3,19 @@
 const Service = require('egg').Service;
 
 class PostService extends Service {
-  // async publish() {
+  async publish(data) {
+    try {
+      const result = await this.app.mysql.insert('posts', data);
 
-  // }
+      if (result.affectedRows === 1) {
+        return result.insertId;
+      }
+    } catch (err) {
+      this.logger.error("PostService::publish error: %j", err);
+    }
+
+    return 0;
+  }
 
   //根据hash获取文章
   async getByHash(hash, current_user) {
