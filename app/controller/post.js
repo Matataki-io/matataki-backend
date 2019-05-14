@@ -14,10 +14,7 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
     this.eosClient = EOS({
-      broadcast: true,
-      sign: true,
       chainId: ctx.app.config.eos.chainId,
-      keyProvider: [ctx.app.config.eos.keyProvider],
       httpEndpoint: ctx.app.config.eos.httpEndpoint,
     });
   }
@@ -49,7 +46,6 @@ class PostController extends Controller {
     }
 
     try {
-
       if ('eos' === platform) {
         await this.eos_signature_verify(author, hash, sign, publickey);
       } else if ('ont' === platform) {
@@ -59,7 +55,6 @@ class PostController extends Controller {
         this.ctx.body = 'platform not support';
         return;
       }
-
     } catch (err) {
       ctx.status = 401;
       ctx.body = err.message;
