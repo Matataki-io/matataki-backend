@@ -26,9 +26,9 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
       publickey, sign, hash, username, fissionFactor = 2000,
-      cover, declaration = 0, platform = 'eos' } = ctx.request.body;
+      cover, is_original = 0, platform = 'eos' } = ctx.request.body;
 
-    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username, declaration);
+    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username, is_original);
 
     if (fissionFactor > 2000) {
       // fissionFactor = 2000; // 最大2000
@@ -76,7 +76,7 @@ class PostController extends Controller {
         public_key: publickey,
         sign,
         hash,
-        declaration,
+        is_original,
         fission_factor: fissionFactor,
         create_time: now,
         cover: cover, // 封面url
@@ -113,7 +113,7 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, declaration = 0, platform = 'eos' } = ctx.request.body;
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, is_original = 0, platform = 'eos' } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -192,7 +192,7 @@ class PostController extends Controller {
           title: post.title,
           sign: post.sign,
           cover: post.cover,
-          declaration: post.declaration,
+          is_original: post.is_original,
           public_key: post.public_key,
           create_time: now,
         });
@@ -211,8 +211,8 @@ class PostController extends Controller {
           updateRow.cover = cover;
         }
 
-        if (declaration) {
-          updateRow.declaration = declaration;
+        if (is_original) {
+          updateRow.is_original = is_original;
         }
 
         // console.log("cover!!!", cover , typeof cover);
