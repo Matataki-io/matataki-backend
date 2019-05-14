@@ -56,18 +56,8 @@ module.exports = app => {
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
 
   // 分享
-  router.post('/share', controller.share.share);
   router.get('/shares', controller.share.shares);
 
-  // 打赏
-  router.post('/vote', controller.vote.vote);
-
-  // ipfs service
-  // router.post('/ipfs/add', controller.ipfs.add);
-  // router.post('/ipfs/addJSON', controller.ipfs.addJSON);
-
-  // router.get('/ipfs/cat/:hash', controller.ipfs.cat);
-  // router.get('/ipfs/catJSON/:hash', controller.ipfs.catJSON);
 
   // follow 关注和取关动作。关注数和粉丝数在userinfo里
   app.router.post('/follow', app.controller.follow.follow);

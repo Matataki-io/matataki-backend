@@ -422,6 +422,7 @@ class PostController extends Controller {
         row.read = 0;
         row.value = 0;
         row.ups = 0;
+        row.ontvalue = 0;
         hashs.push(row.hash);
       })
 
@@ -435,6 +436,12 @@ class PostController extends Controller {
       const value = await this.app.mysql.query(
         'select sign_id, sum(amount) as value from actions where sign_id in (?) and type = ? group by sign_id ',
         [signids, "share"]
+      );
+
+      //ONT
+      const ont_value = await this.app.mysql.query(
+        'select signid, sum(amount) as value from supports where signid in (?) and symbol = ? and status=1 group by signid ',
+        [signids, "ONT"]
       );
 
       // 赞赏次数
@@ -459,6 +466,12 @@ class PostController extends Controller {
             row.ups = row2.ups;
           }
         })
+         _.each(ont_value, row2 => {
+          if (row.id === row2.signid) {
+            row.ontvalue = row2.value;
+          }
+        })
+        
       })
     }
 
@@ -502,8 +515,18 @@ class PostController extends Controller {
         'select sum(amount) as value from actions where sign_id = ? and type = ? ',
         [post.id, "share"]
       );
+      
 
       post.value = value[0].value || 0;
+
+      //ONT value
+      const ont_value = await this.app.mysql.query(
+        'select signid, sum(amount) as value from supports where signid = ? and symbol = ? and status=1  ',
+        [post.id, "ONT"]
+      );
+
+      post.ontvalue = ont_value[0].value || 0;
+
 
       // nickname 
       let name = post.username || post.author;
@@ -583,6 +606,15 @@ class PostController extends Controller {
       );
 
       post.value = value[0].value || 0;
+
+      //ONT value
+      const ont_value = await this.app.mysql.query(
+        'select signid, sum(amount) as value from supports where signid = ? and symbol = ? and status=1  ',
+        [post.id, "ONT"]
+      );
+
+      post.ontvalue = ont_value[0].value || 0;
+
 
       // nickname 
       let name = post.username || post.author;

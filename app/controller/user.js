@@ -134,7 +134,7 @@ class UserController extends Controller {
 
   async tokens() {
 
-    let user ; 
+    let user;
 
     try {
       user = await this.get_user();
@@ -145,10 +145,45 @@ class UserController extends Controller {
     }
 
     // 1. 历史总创作收入 (sign income)
-    const result = await this.app.mysql.query(
+    const tokens = await this.app.mysql.query(
       'select id, contract, symbol, amount, platform from assets where uid = ? ',
       [user.id]
     );
+
+    let result = {};
+
+    for (let i = 0; i < tokens.length; i++) {
+      let token = tokens[i];
+
+      const logs = await this.app.mysql.query(
+        'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc',
+        [user.id, token.symbol]
+      );
+
+      let totalSignIncome = await this.app.mysql.query(
+        'select sum(amount) as totalSignIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
+        ["sign income", user.id, token.symbol]
+      );
+
+      let totalShareIncome = await this.app.mysql.query(
+        'select sum(amount) as totalShareIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
+        ["share income", user.id, token.symbol]
+      );
+
+      let totalShareExpenses = await this.app.mysql.query(
+        'select sum(amount) as totalShareExpenses from assets_change_log where type = ? and uid = ? and symbol = ?',
+        ["support expenses", user.id, token.symbol]
+      );
+
+      result[token.symbol] = {
+        balance: token.amount,                                              // 余额（待提现）
+        totalSignIncome: totalSignIncome[0].totalSignIncome || 0,           // 总创作收入
+        totalShareIncome: totalShareIncome[0].totalShareIncome || 0,        // 总打赏收入 
+        totalShareExpenses: totalShareExpenses[0].totalShareExpenses || 0,  // 总打赏支出
+        logs: logs                                                          // 流水（之后再来处理分页）
+      }
+    }
+
 
     this.ctx.body = result;
     this.ctx.status = 200;
@@ -195,7 +230,7 @@ class UserController extends Controller {
       const result = await this.app.mysql.query(
         'INSERT INTO users (id ,username, nickname, create_time)'
         + ' VALUES (null, ?, ?, ?) ON DUPLICATE KEY UPDATE nickname = ?',
-        [ current_user, nickname, now, nickname ]
+        [current_user, nickname, now, nickname]
       );
 
       const updateSuccess = result.affectedRows >= 1;
@@ -248,7 +283,7 @@ class UserController extends Controller {
       const result = await this.app.mysql.query(
         'INSERT INTO users (id ,username, email, create_time)'
         + ' VALUES (null, ?, ?, ?) ON DUPLICATE KEY UPDATE email = ?',
-        [ current_user, email, now, email ]
+        [current_user, email, now, email]
       );
 
       const updateSuccess = result.affectedRows >= 1;

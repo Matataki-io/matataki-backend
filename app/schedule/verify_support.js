@@ -80,6 +80,7 @@ class VerifySupport extends Subscription {
       }
 
     } catch (err) {
+      await this.passVerify(support);
       console.log("get table row err");
     }
 
@@ -93,7 +94,6 @@ class VerifySupport extends Subscription {
     let verifyPass = false;
 
     // 做本体合约数据验证
-
     const scriptHash = 'd7a082235298b65c5b8b78078aad03e792b1add4';
 
     let sponsor = await this.app.mysql.get('users', { id: support.uid });
@@ -145,7 +145,7 @@ class VerifySupport extends Subscription {
         verifyPass = true;
       }
 
-      console.log("contract,", row )
+      console.log("contract,", row)
       console.log("mysql", support)
       console.log("verifyPass", verifyPass)
 
@@ -178,6 +178,11 @@ class VerifySupport extends Subscription {
 
         await conn.query('INSERT INTO support_quota(uid, signid, contract, symbol, quota, create_time) VALUES (?, ?, ?, ?, ?, ?)',
           [support.uid, support.signid, support.contract, support.symbol, quota, now]
+        );
+
+        // 记录分享者资产变动log
+        await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [support.uid, support.signid, support.contract, support.symbol, 0 - support.amount, support.platform, "support expenses", now]
         );
 
         // 处理推荐人
