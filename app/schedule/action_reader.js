@@ -122,6 +122,13 @@ class ActionReader extends Subscription {
             author = from; // 记录打赏人
             sign_id = memo.split(" ")[1];
           }
+
+          if (memo.includes("claim")) {
+            type = "claim";
+            author = to; // 记录打赏人
+          }
+
+
         }
 
         // 兼容ONT方案， 查询action中是否存在，不存在，则写入 support 和 asset_change_log
@@ -171,6 +178,19 @@ class ActionReader extends Subscription {
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "share income", block_time]
+              );
+              console.log(result)
+            }
+          }
+        }
+
+        if (type === "claim") {
+          let action = await this.app.mysql.get("actions", { id: seq });
+          if (!action) {
+            let user = await this.app.mysql.get("users", { username: author });
+            if (user) {
+              let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [user.id, sign_id, "eosio.token", "EOS", (0-amount), "eos", "whthdraw", block_time]
               );
               console.log(result)
             }
