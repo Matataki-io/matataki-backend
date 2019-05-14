@@ -14,19 +14,18 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
     this.eosClient = EOS({
-      broadcast: true,
-      sign: true,
       chainId: ctx.app.config.eos.chainId,
-      keyProvider: [ctx.app.config.eos.keyProvider],
       httpEndpoint: ctx.app.config.eos.httpEndpoint,
     });
   }
 
   async publish() {
     const ctx = this.ctx;
-    const { author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, platform = 'eos' } = ctx.request.body;
+    const { author = '', title = '', content = '',
+      publickey, sign, hash, username, fissionFactor = 2000,
+      cover, is_original = 0, platform = 'eos' } = ctx.request.body;
 
-    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username);
+    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username, is_original);
 
     if (fissionFactor > 2000) {
       // fissionFactor = 2000; // 最大2000
@@ -47,9 +46,8 @@ class PostController extends Controller {
     }
 
     try {
-
       if ('eos' === platform) {
-        this.eos_signature_verify(author, hash, sign, publickey);
+        await this.eos_signature_verify(author, hash, sign, publickey);
       } else if ('ont' === platform) {
         this.ont_signature_verify(author, hash, sign, publickey);
       } else {
@@ -57,7 +55,6 @@ class PostController extends Controller {
         this.ctx.body = 'platform not support';
         return;
       }
-
     } catch (err) {
       ctx.status = 401;
       ctx.body = err.message;
@@ -74,6 +71,7 @@ class PostController extends Controller {
         public_key: publickey,
         sign,
         hash,
+        is_original,
         fission_factor: fissionFactor,
         create_time: now,
         cover: cover, // 封面url
@@ -110,7 +108,7 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, platform = 'eos' } = ctx.request.body;
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, is_original = 0, platform = 'eos' } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -160,9 +158,8 @@ class PostController extends Controller {
     ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash, username);
 
     try {
-
       if ('eos' === platform) {
-        this.eos_signature_verify(author, hash, sign, publickey);
+        await this.eos_signature_verify(author, hash, sign, publickey);
       } else if ('ont' === platform) {
         this.ont_signature_verify(author, hash, sign, publickey);
       } else {
@@ -170,7 +167,6 @@ class PostController extends Controller {
         this.ctx.body = 'platform not support';
         return;
       }
-
     } catch (err) {
       ctx.status = 401;
       ctx.body = err.message;
@@ -189,6 +185,7 @@ class PostController extends Controller {
           title: post.title,
           sign: post.sign,
           cover: post.cover,
+          is_original: post.is_original,
           public_key: post.public_key,
           create_time: now,
         });
@@ -205,6 +202,10 @@ class PostController extends Controller {
 
         if (cover !== undefined) {
           updateRow.cover = cover;
+        }
+
+        if (is_original) {
+          updateRow.is_original = is_original;
         }
 
         // console.log("cover!!!", cover , typeof cover);
@@ -233,7 +234,31 @@ class PostController extends Controller {
 
   }
 
-  eos_signature_verify(author, hash, sign, publickey) {
+  async eos_signature_verify(author, hash, sign, publickey) {
+    try {
+      let eosacc = await this.eosClient.getAccount(author);
+
+      let pass_permission_verify = false;
+
+      for (let i = 0; i < eosacc.permissions.length; i++) {
+        let permit = eosacc.permissions[i];
+        let keys = permit.required_auth.keys;
+        for (let j = 0; j < keys.length; j++) {
+          let pub = keys[j].key;
+          if (publickey === pub) {
+            pass_permission_verify = true;
+          }
+        }
+      }
+
+      if (!pass_permission_verify) {
+        throw new Error("permission verify failuree");
+      }
+
+    } catch (err) {
+      throw new Error("eos username verify failure");
+    }
+
     const hash_piece1 = hash.slice(0, 12);
     const hash_piece2 = hash.slice(12, 24);
     const hash_piece3 = hash.slice(24, 36);
@@ -414,6 +439,7 @@ class PostController extends Controller {
         row.read = 0;
         row.value = 0;
         row.ups = 0;
+        row.ontvalue = 0;
         hashs.push(row.hash);
       })
 
@@ -427,6 +453,12 @@ class PostController extends Controller {
       const value = await this.app.mysql.query(
         'select sign_id, sum(amount) as value from actions where sign_id in (?) and type = ? group by sign_id ',
         [signids, "share"]
+      );
+
+      //ONT
+      const ont_value = await this.app.mysql.query(
+        'select signid, sum(amount) as value from supports where signid in (?) and symbol = ? and status=1 group by signid ',
+        [signids, "ONT"]
       );
 
       // 赞赏次数
@@ -451,6 +483,12 @@ class PostController extends Controller {
             row.ups = row2.ups;
           }
         })
+        _.each(ont_value, row2 => {
+          if (row.id === row2.signid) {
+            row.ontvalue = row2.value;
+          }
+        })
+
       })
     }
 
@@ -495,7 +533,17 @@ class PostController extends Controller {
         [post.id, "share"]
       );
 
+
       post.value = value[0].value || 0;
+
+      //ONT value
+      const ont_value = await this.app.mysql.query(
+        'select signid, sum(amount) as value from supports where signid = ? and symbol = ? and status=1  ',
+        [post.id, "ONT"]
+      );
+
+      post.ontvalue = ont_value[0].value || 0;
+
 
       // nickname 
       let name = post.username || post.author;
@@ -575,6 +623,15 @@ class PostController extends Controller {
       );
 
       post.value = value[0].value || 0;
+
+      //ONT value
+      const ont_value = await this.app.mysql.query(
+        'select signid, sum(amount) as value from supports where signid = ? and symbol = ? and status=1  ',
+        [post.id, "ONT"]
+      );
+
+      post.ontvalue = ont_value[0].value || 0;
+
 
       // nickname 
       let name = post.username || post.author;
@@ -792,6 +849,7 @@ class PostController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = post;
   }
+
 }
 
 module.exports = PostController;
