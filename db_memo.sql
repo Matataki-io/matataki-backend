@@ -379,3 +379,12 @@ create table support_quota (
   UNIQUE (uid, signid, contract, symbol)
 );
 
+
+## drop useless tables
+drop table constants;
+drop table eos_auths;
+drop table logs;
+drop table shares;
+drop table votes;
+drop table ariticle;
+drop table readers;

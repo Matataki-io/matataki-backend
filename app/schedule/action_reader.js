@@ -31,7 +31,6 @@ class ActionReader extends Subscription {
   }
 
   async subscribe() {
-    //debug不执行
     if (this.ctx.app.config.isDebug) return;
 
     var start = this.app.cache || this.config.startAt;
@@ -45,7 +44,7 @@ class ActionReader extends Subscription {
         if (id > start) {
           start = id;
         } else {
-          console.log("in the end...will fetch last.")
+          // console.log("in the end...will fetch last.")
         }
       }
 
@@ -55,19 +54,20 @@ class ActionReader extends Subscription {
 
     this.app.cache = start;
 
-    console.log('sync actions .. start from id', start, "to id", (this.app.cache + this.config.step));
+    console.log('sync actions.. start from id', start, "to id", (this.app.cache + this.config.step));
 
     var sqls = [];
 
-    this.eosClient.getActions({
+    try {
 
-      account_name: this.config.watchAccount,
-      pos: start,
-      offset: this.config.step
-    }).then(res => {
+      let res = await this.eosClient.getActions({
+        account_name: this.config.watchAccount,
+        pos: start,
+        offset: this.config.step
+      })
 
-      res.actions.map(x => {
-
+      for (let i = 0; i < res.actions.length; i++) {
+        let x = res.actions[i];
         var seq = x.account_action_seq;
         var act_account = x.action_trace.act.account;
         var act_receiver = x.action_trace.receipt.receiver;
@@ -124,20 +124,66 @@ class ActionReader extends Subscription {
           }
         }
 
+        // 兼容ONT方案， 查询action中是否存在，不存在，则写入 support 和 asset_change_log
+        if (type === "share") {
+          let action = await this.app.mysql.get("actions", { id: seq });
+          if (!action) {
+            let user = await this.app.mysql.get("users", { username: author });
+            if (user) {
+              let result = await this.app.mysql.query('INSERT INTO supports (uid, signid, contract, symbol, amount, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ? ,?, ?)',
+                [user.id, sign_id, "eosio.token", "EOS", amount, 0, "eos", 1, block_time]
+              );
+              console.log(result)
+            }
+          }
+        }
+
+        if (type === "bill support expenses") {
+          let action = await this.app.mysql.get("actions", { id: seq });
+          if (!action) {
+            let user = await this.app.mysql.get("users", { username: author });
+            if (user) {
+              let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [id, sign_id, "eosio.token", "EOS", amount, "eos", "support expenses", block_time]
+              );
+              console.log(result)
+            }
+          }
+        }
+
+        if (type === "bill sign income") {
+          let action = await this.app.mysql.get("actions", { id: seq });
+          if (!action) {
+            let user = await this.app.mysql.get("users", { username: author });
+            if (user) {
+              let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [id, sign_id, "eosio.token", "EOS", amount, "eos", "sign income", block_time]
+              );
+              console.log(result)
+            }
+          }
+        }
+
+        if (type === "bill share income") {
+          let action = await this.app.mysql.get("actions", { id: seq });
+          if (!action) {
+            let user = await this.app.mysql.get("users", { username: author });
+            if (user) {
+              let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [id, sign_id, "eosio.token", "EOS", amount, "eos", "share income", block_time]
+              );
+              console.log(result)
+            }
+          }
+        }
+
         var sql = `INSERT INTO actions VALUES (${seq}, '${act_account}', '${act_name}', '${act_data}','${author}', '${memo}', '${amount}', '${sign_id}', '${type}', '${block_time}') ON DUPLICATE KEY UPDATE id='${seq}';`
-        sqls.push(sql);
-
-      })
-
-      if (this.app.sqls && this.app.sqls.length > 0) {
-        this.app.sqls = _.concat(this.app.sqls, sqls);
-      } else {
-        this.app.sqls = sqls
+        await this.app.mysql.query(sql);
       }
 
-    }).catch(e => {
-      console.log(e)
-    });
+    } catch (err) {
+      console.log(err);
+    }
 
   }
 
