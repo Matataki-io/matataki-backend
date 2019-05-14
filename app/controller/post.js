@@ -300,13 +300,13 @@ class PostController extends Controller {
     const { page = 1 } = this.ctx.query;
 
     const results = await this.app.mysql.query(
-      'select sign_id, count(*) as total from actions where type = ? group by sign_id order by total desc limit ?,?',
-      ["share", (page - 1) * pagesize, pagesize]
+      'select signid, count(*) as total from supports where status = 1 group by signid order by total desc limit ?,?',
+      [(page - 1) * pagesize, pagesize]
     );
 
     let signids = [];
     _.each(results, (row) => {
-      signids.push(row.sign_id);
+      signids.push(row.signid);
     })
 
     let results2 = [];
@@ -328,13 +328,13 @@ class PostController extends Controller {
     const { page = 1 } = this.ctx.query;
 
     const results = await this.app.mysql.query(
-      'select sign_id, sum(amount) as total from actions where type = ? group by sign_id order by total desc limit ?,?',
-      ["share", (page - 1) * pagesize, pagesize]
+      'select signid, sum(amount) as total from supports where status = 1 group by signid order by total desc limit ?,?',
+      [(page - 1) * pagesize, pagesize]
     );
 
     let signids = [];
     _.each(results, (row) => {
-      signids.push(row.sign_id);
+      signids.push(row.signid);
     })
 
     let results2 = [];
@@ -356,30 +356,28 @@ class PostController extends Controller {
 
     const { page = 1, user } = this.ctx.query;
 
-    let results = [];
+    let owner = await this.app.mysql.get("users", { username: user });
 
-    if (user) {
-      results = await this.app.mysql.query(
-        'select author, amount, sign_id, create_time from actions where type = ? and author = ? order by create_time desc limit ?, ?',
-        ["share", user, (page - 1) * pagesize, pagesize]
-      );
-    } else {
-      results = await this.app.mysql.query(
-        'select author, amount, sign_id, create_time from actions where type = ? order by create_time desc limit ?, ?',
-        ["share", (page - 1) * pagesize, pagesize]
-      );
+    if (!owner) {
+      this.ctx.body = [];
+      return;
     }
+
+    let results = await this.app.mysql.query(
+      'select signid,  create_time from supports where status = 1 and uid = ? order by create_time desc limit ?, ?',
+      [owner.id, (page - 1) * pagesize, pagesize]
+    );
 
     let signids = [];
     _.each(results, (row) => {
-      signids.push(row.sign_id);
+      signids.push(row.signid);
     })
 
     let results2 = await this.getPostsBySignids(signids);
 
     _.each(results2, row2 => {
       _.each(results, row => {
-        if (row.sign_id === row2.id) {
+        if (row.signid === row2.id) {
           row2.support_time = row.create_time;
         }
       })
@@ -419,8 +417,8 @@ class PostController extends Controller {
 
       // 赞赏金额
       const value = await this.app.mysql.query(
-        'select sign_id, sum(amount) as value from actions where sign_id in (?) and type = ? group by sign_id ',
-        [signids, "share"]
+        'select signid, sum(amount) as value from supports where status=1 and signid in (?) group by signid ',
+        [signids]
       );
 
       //ONT
@@ -431,8 +429,8 @@ class PostController extends Controller {
 
       // 赞赏次数
       const ups = await this.app.mysql.query(
-        'select sign_id, count(*) as ups from actions where sign_id in (?) and type = ? group by sign_id ',
-        [signids, "share"]
+        'select signid, count(*) as ups from supports where status=1 and signid in (?) group by signid ',
+        [signids]
       );
 
       _.each(results, row => {
@@ -442,12 +440,12 @@ class PostController extends Controller {
           }
         })
         _.each(value, row2 => {
-          if (row.id === row2.sign_id) {
+          if (row.id === row2.signid) {
             row.value = row2.value;
           }
         })
         _.each(ups, row2 => {
-          if (row.id === row2.sign_id) {
+          if (row.id === row2.signid) {
             row.ups = row2.ups;
           }
         })
@@ -479,9 +477,10 @@ class PostController extends Controller {
       post.read = read[0] ? read[0].num : 0
 
       const current_user = this.get_current_user();
+      let user = await this.app.mysql.get("users", { username: current_user });
       post.support = false;
-      if (current_user) {
-        let support = await this.app.mysql.get('actions', { sign_id: post.id, author: current_user, type: 'share' });
+      if (user) {
+        let support = await this.app.mysql.get('supports', { signid: post.id, uid: user.id, status: 1 });
         if (support) {
           post.support = true;
         }
@@ -489,18 +488,17 @@ class PostController extends Controller {
 
       // 被赞次数
       const ups = await this.app.mysql.query(
-        'select count(*) as ups from actions where sign_id = ? and type = ? ',
-        [post.id, "share"]
+        'select count(*) as ups from supports where signid = ? and status = 1 ',
+        [post.id]
       );
 
       post.ups = ups[0].ups;
 
       // 被赞总金额
       const value = await this.app.mysql.query(
-        'select sum(amount) as value from actions where sign_id = ? and type = ? ',
-        [post.id, "share"]
+        'select sum(amount) as value from supports where signid = ? and status = 1 ',
+        [post.id]
       );
-
 
       post.value = value[0].value || 0;
 
@@ -562,32 +560,33 @@ class PostController extends Controller {
       // 阅读次数
       const read = await this.app.mysql.query(
         'select real_read_count num from post_read_count where post_id = ? ',
-        [id]
+        [post.id]
       );
 
       post.read = read[0] ? read[0].num : 0
 
-      // 被赞次数
-      const ups = await this.app.mysql.query(
-        'select count(*) as ups from actions where sign_id = ? and type = ? ',
-        [post.id, "share"]
-      );
-
-      post.ups = ups[0].ups;
-
       const current_user = this.get_current_user();
+      let user = await this.app.mysql.get("users", { username: current_user });
       post.support = false;
-      if (current_user) {
-        let support = await this.app.mysql.get('actions', { sign_id: post.id, author: current_user, type: 'share' });
+      if (user) {
+        let support = await this.app.mysql.get('supports', { signid: post.id, uid: user.id, status: 1 });
         if (support) {
           post.support = true;
         }
       }
 
+      // 被赞次数
+      const ups = await this.app.mysql.query(
+        'select count(*) as ups from supports where signid = ? and status = 1 ',
+        [post.id]
+      );
+
+      post.ups = ups[0].ups;
+
       // 被赞总金额
       const value = await this.app.mysql.query(
-        'select sum(amount) as value from actions where sign_id = ? and type = ? ',
-        [post.id, "share"]
+        'select sum(amount) as value from supports where signid = ? and status = 1 ',
+        [post.id]
       );
 
       post.value = value[0].value || 0;
@@ -607,13 +606,6 @@ class PostController extends Controller {
       if (nickname) {
         post.nickname = nickname.nickname;
       }
-
-      // update cahce
-      this.app.read_cache[post.id] = post.read;
-      this.app.value_cache[post.id] = post.value;
-      this.app.ups_cache[post.id] = post.ups;
-
-      this.app.post_cache[post.id] = post;
 
       ctx.body = post;
       ctx.status = 200;
