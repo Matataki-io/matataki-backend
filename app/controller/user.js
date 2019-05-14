@@ -133,7 +133,7 @@ class UserController extends Controller {
   }
 
   async tokens() {
-
+    const { symbol = "EOS" } = this.ctx.query;
     let user;
 
     try {
@@ -146,8 +146,8 @@ class UserController extends Controller {
 
     // 1. 历史总创作收入 (sign income)
     const tokens = await this.app.mysql.query(
-      'select id, contract, symbol, amount, platform from assets where uid = ? ',
-      [user.id]
+      'select id, contract, symbol, amount, platform from assets where uid = ? and symbol= ? ',
+      [user.id, symbol]
     );
 
     let result = {};
@@ -175,7 +175,7 @@ class UserController extends Controller {
         ["support expenses", user.id, token.symbol]
       );
 
-      result[token.symbol] = {
+      result = {
         balance: token.amount,                                              // 余额（待提现）
         totalSignIncome: totalSignIncome[0].totalSignIncome || 0,           // 总创作收入
         totalShareIncome: totalShareIncome[0].totalShareIncome || 0,        // 总打赏收入 
@@ -184,9 +184,30 @@ class UserController extends Controller {
       }
     }
 
+    this.ctx.body = this.ctx.msg.success;
+    this.ctx.body.data = result;
+  }
 
-    this.ctx.body = result;
-    this.ctx.status = 200;
+  async balance() {
+    const ctx = this.ctx;
+    
+    let user;
+
+    try {
+      user = await this.get_user();
+    } catch (err) {
+      this.ctx.status = 401;
+      this.ctx.body = err.message;
+      return;
+    }
+
+    const tokens = await this.app.mysql.query(
+      'select id, contract, symbol, amount, platform from assets where uid = ? ',
+      [user.id]
+    );
+
+    this.ctx.body = this.ctx.msg.success;
+    this.ctx.body.data = tokens;
   }
 
   async setNickname() {

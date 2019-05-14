@@ -25,7 +25,10 @@ module.exports = app => {
   //单篇文章（for 短链接），统一返回格式示例
   router.get('/p2/:id', passport.verify, controller.post.p2);
   // 隐藏文章，统一返回格式示例
-  app.router.delete('/post2/:id', passport.authorize, app.controller.post.delete2);
+  router.delete('/post2/:id', passport.authorize, app.controller.post.delete2);
+
+  // 编辑时获取我的文章
+  router.get('/mypost/:id', passport.authorize, app.controller.post.mypost);
 
   // 文章阅读事件上报
   router.post('/post/show/:hash', controller.post.show);
@@ -90,6 +93,8 @@ module.exports = app => {
   app.router.post('/support', app.controller.support.support);
 
   // 个人资产
-  app.router.get('/tokens', app.controller.user.tokens);
+  app.router.get('/balance', passport.authorize, app.controller.user.balance);
+  // 资产明细
+  app.router.get('/tokens', passport.authorize, app.controller.user.tokens);
 };
 

@@ -14,10 +14,7 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
     this.eosClient = EOS({
-      broadcast: true,
-      sign: true,
       chainId: ctx.app.config.eos.chainId,
-      keyProvider: [ctx.app.config.eos.keyProvider],
       httpEndpoint: ctx.app.config.eos.httpEndpoint,
     });
   }
@@ -49,9 +46,8 @@ class PostController extends Controller {
     }
 
     try {
-
       if ('eos' === platform) {
-        this.eos_signature_verify(author, hash, sign, publickey);
+        await this.eos_signature_verify(author, hash, sign, publickey);
       } else if ('ont' === platform) {
         this.ont_signature_verify(author, hash, sign, publickey);
       } else {
@@ -59,7 +55,6 @@ class PostController extends Controller {
         this.ctx.body = 'platform not support';
         return;
       }
-
     } catch (err) {
       ctx.status = 401;
       ctx.body = err.message;
@@ -163,9 +158,8 @@ class PostController extends Controller {
     ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash, username);
 
     try {
-
       if ('eos' === platform) {
-        this.eos_signature_verify(author, hash, sign, publickey);
+        await this.eos_signature_verify(author, hash, sign, publickey);
       } else if ('ont' === platform) {
         this.ont_signature_verify(author, hash, sign, publickey);
       } else {
@@ -173,7 +167,6 @@ class PostController extends Controller {
         this.ctx.body = 'platform not support';
         return;
       }
-
     } catch (err) {
       ctx.status = 401;
       ctx.body = err.message;
@@ -241,7 +234,31 @@ class PostController extends Controller {
 
   }
 
-  eos_signature_verify(author, hash, sign, publickey) {
+  async eos_signature_verify(author, hash, sign, publickey) {
+    try {
+      let eosacc = await this.eosClient.getAccount(author);
+
+      let pass_permission_verify = false;
+
+      for (let i = 0; i < eosacc.permissions.length; i++) {
+        let permit = eosacc.permissions[i];
+        let keys = permit.required_auth.keys;
+        for (let j = 0; j < keys.length; j++) {
+          let pub = keys[j].key;
+          if (publickey === pub) {
+            pass_permission_verify = true;
+          }
+        }
+      }
+
+      if (!pass_permission_verify) {
+        throw new Error("permission verify failuree");
+      }
+
+    } catch (err) {
+      throw new Error("eos username verify failure");
+    }
+
     const hash_piece1 = hash.slice(0, 12);
     const hash_piece2 = hash.slice(12, 24);
     const hash_piece3 = hash.slice(24, 36);
@@ -466,12 +483,12 @@ class PostController extends Controller {
             row.ups = row2.ups;
           }
         })
-         _.each(ont_value, row2 => {
+        _.each(ont_value, row2 => {
           if (row.id === row2.signid) {
             row.ontvalue = row2.value;
           }
         })
-        
+
       })
     }
 
@@ -515,7 +532,7 @@ class PostController extends Controller {
         'select sum(amount) as value from actions where sign_id = ? and type = ? ',
         [post.id, "share"]
       );
-      
+
 
       post.value = value[0].value || 0;
 
@@ -815,6 +832,24 @@ class PostController extends Controller {
       ctx.status = 500;
     }
   }
+
+  //获取我的文章，不是我的文章会报401
+  // 新创建的没有id， 用的hash问题
+  async mypost() {
+    const ctx = this.ctx;
+    const id = ctx.params.id;
+
+    const post = await this.service.post.getForEdit(id, ctx.user.username);
+
+    if (!post) {
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = post;
+  }
+
 }
 
 module.exports = PostController;
