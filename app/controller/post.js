@@ -24,9 +24,11 @@ class PostController extends Controller {
 
   async publish() {
     const ctx = this.ctx;
-    const { author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, platform = 'eos'} = ctx.request.body;
+    const { author = '', title = '', content = '',
+      publickey, sign, hash, username, fissionFactor = 2000,
+      cover, declaration = 0, platform = 'eos' } = ctx.request.body;
 
-    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username);
+    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username, declaration);
 
     if (fissionFactor > 2000) {
       // fissionFactor = 2000; // 最大2000
@@ -74,6 +76,7 @@ class PostController extends Controller {
         public_key: publickey,
         sign,
         hash,
+        declaration,
         fission_factor: fissionFactor,
         create_time: now,
         cover: cover, // 封面url
@@ -110,7 +113,7 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, platform = 'eos' } = ctx.request.body;
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, declaration = 0, platform = 'eos' } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -189,6 +192,7 @@ class PostController extends Controller {
           title: post.title,
           sign: post.sign,
           cover: post.cover,
+          declaration: post.declaration,
           public_key: post.public_key,
           create_time: now,
         });
@@ -205,6 +209,10 @@ class PostController extends Controller {
 
         if (cover !== undefined) {
           updateRow.cover = cover;
+        }
+
+        if (declaration) {
+          updateRow.declaration = declaration;
         }
 
         // console.log("cover!!!", cover , typeof cover);
