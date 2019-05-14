@@ -93,6 +93,8 @@ module.exports = app => {
   app.router.post('/support', app.controller.support.support);
 
   // 个人资产
-  app.router.get('/tokens', app.controller.user.tokens);
+  app.router.get('/balance', passport.authorize, app.controller.user.balance);
+  // 资产明细
+  app.router.get('/tokens', passport.authorize, app.controller.user.tokens);
 };
 
