@@ -144,7 +144,7 @@ class ActionReader extends Subscription {
             let user = await this.app.mysql.get("users", { username: author });
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [id, sign_id, "eosio.token", "EOS", amount, "eos", "support expenses", block_time]
+                [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "support expenses", block_time]
               );
               console.log(result)
             }
@@ -157,7 +157,7 @@ class ActionReader extends Subscription {
             let user = await this.app.mysql.get("users", { username: author });
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [id, sign_id, "eosio.token", "EOS", amount, "eos", "sign income", block_time]
+                [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "sign income", block_time]
               );
               console.log(result)
             }
@@ -170,7 +170,7 @@ class ActionReader extends Subscription {
             let user = await this.app.mysql.get("users", { username: author });
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [id, sign_id, "eosio.token", "EOS", amount, "eos", "share income", block_time]
+                [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "share income", block_time]
               );
               console.log(result)
             }
