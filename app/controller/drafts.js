@@ -30,7 +30,7 @@ class DraftsController extends Controller {
   async save() {
     const ctx = this.ctx;
 
-    const { id = '', title = '', content = '', cover, fissionFactor = 2000, declaration = false } = ctx.request.body;
+    const { id = '', title = '', content = '', cover, fissionFactor = 2000, declaration = 0 } = ctx.request.body;
 
     let user;
 
