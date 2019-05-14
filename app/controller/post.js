@@ -51,7 +51,7 @@ class PostController extends Controller {
     try {
 
       if ('eos' === platform) {
-        this.eos_signature_verify(author, hash, sign, publickey);
+        await this.eos_signature_verify(author, hash, sign, publickey);
       } else if ('ont' === platform) {
         this.ont_signature_verify(author, hash, sign, publickey);
       } else {
@@ -163,9 +163,8 @@ class PostController extends Controller {
     ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash, username);
 
     try {
-
       if ('eos' === platform) {
-        this.eos_signature_verify(author, hash, sign, publickey);
+        await this.eos_signature_verify(author, hash, sign, publickey);
       } else if ('ont' === platform) {
         this.ont_signature_verify(author, hash, sign, publickey);
       } else {
@@ -173,7 +172,6 @@ class PostController extends Controller {
         this.ctx.body = 'platform not support';
         return;
       }
-
     } catch (err) {
       ctx.status = 401;
       ctx.body = err.message;
@@ -241,7 +239,31 @@ class PostController extends Controller {
 
   }
 
-  eos_signature_verify(author, hash, sign, publickey) {
+  async eos_signature_verify(author, hash, sign, publickey) {
+     try {
+      let eosacc = await this.eosClient.getAccount(author);
+
+      let pass_permission_verify = false;
+
+      for (let i = 0; i < eosacc.permissions.length; i++) {
+        let permit = eosacc.permissions[i];
+        let keys = permit.required_auth.keys;
+        for (let j = 0; j < keys.length; j++) {
+          let pub = keys[j].key;
+          if (publickey === pub) {
+            pass_permission_verify = true;
+          }
+        }
+      }
+
+      if (!pass_permission_verify) {
+        throw new Error("permission verify failuree");
+      }
+
+    } catch (err) {
+      throw new Error("eos username verify failure");
+    }
+
     const hash_piece1 = hash.slice(0, 12);
     const hash_piece2 = hash.slice(12, 24);
     const hash_piece3 = hash.slice(24, 36);
