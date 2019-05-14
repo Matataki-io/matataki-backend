@@ -10,9 +10,9 @@ class ShareController extends Controller {
   async shares() {
     const pagesize = 20;
 
-    const { page = 1, sign_id } = this.ctx.query;
+    const { page = 1, signid } = this.ctx.query;
 
-    if (!sign_id) {
+    if (!signid) {
       this.ctx.status = 401;
       this.ctx.body = "signid required";
       return;
@@ -20,7 +20,7 @@ class ShareController extends Controller {
 
     let results = await this.app.mysql.query(
       'select a.amount, a.signid, a.create_time, b.nickname, b.username from supports a left join users b on a.uid = b.id where a.status = 1 and a.signid = ? order by a.create_time desc limit ?,?',
-      [sign_id, (page - 1) * pagesize, pagesize]
+      [signid, (page - 1) * pagesize, pagesize]
     );
 
     let signids = [];
