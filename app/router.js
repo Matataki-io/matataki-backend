@@ -25,7 +25,10 @@ module.exports = app => {
   //单篇文章（for 短链接），统一返回格式示例
   router.get('/p2/:id', passport.verify, controller.post.p2);
   // 隐藏文章，统一返回格式示例
-  app.router.delete('/post2/:id', passport.authorize, app.controller.post.delete2);
+  router.delete('/post2/:id', passport.authorize, app.controller.post.delete2);
+
+  // 编辑时获取我的文章
+  router.get('/mypost/:id', passport.authorize, app.controller.post.mypost);
 
   // 文章阅读事件上报
   router.post('/post/show/:hash', controller.post.show);

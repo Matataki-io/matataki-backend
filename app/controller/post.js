@@ -24,7 +24,7 @@ class PostController extends Controller {
 
   async publish() {
     const ctx = this.ctx;
-    const { author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, platform = 'eos'} = ctx.request.body;
+    const { author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, platform = 'eos' } = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username);
 
@@ -774,6 +774,23 @@ class PostController extends Controller {
       };
       ctx.status = 500;
     }
+  }
+
+  //获取我的文章，不是我的文章会报401
+  // 新创建的没有id， 用的hash问题
+  async mypost() {
+    const ctx = this.ctx;
+    const id = ctx.params.id;
+
+    const post = await this.service.post.getForEdit(id, ctx.user.username);
+
+    if (!post) {
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = post;
   }
 }
 

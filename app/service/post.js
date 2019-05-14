@@ -93,6 +93,11 @@ class PostService extends Service {
     return false;
   }
 
+  async getForEdit(id, current_user) {
+    const post = await this.app.mysql.get('posts', { id, username: current_user });
+    return post;
+  }
+
 }
 
 module.exports = PostService;
