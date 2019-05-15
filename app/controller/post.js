@@ -417,8 +417,8 @@ class PostController extends Controller {
 
       // 赞赏金额
       const value = await this.app.mysql.query(
-        'select signid, sum(amount) as value from supports where status=1 and signid in (?) group by signid ',
-        [signids]
+        'select signid, sum(amount) as value from supports where status=1 and signid in (?) and symbol = ? group by signid ',
+        [signids, "EOS"]
       );
 
       //ONT
