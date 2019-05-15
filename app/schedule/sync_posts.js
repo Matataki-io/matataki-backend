@@ -23,12 +23,12 @@ class SyncPosts extends Subscription {
 
   async subscribe() {
     //debug不执行
-    if (this.ctx.app.config.isDebug) return;
+    // if (this.ctx.app.config.isDebug) return;
 
     console.log("sync posts..");
 
     const results = await this.app.mysql.select('posts', {
-      where: { onchain_status: 0, platform: "eos" }, // WHERE 条件
+      where: { onchain_status: 0 }, // WHERE 条件
       limit: 10, // 返回数据量
       offset: 0, // 数据偏移量
     });
@@ -43,6 +43,19 @@ class SyncPosts extends Subscription {
 
         const post = results[i];
         ids.push(post.id);
+
+        let public_key = post.public_key;
+        let signature = post.sign;
+
+        let author = post.username || post.author
+
+        // ONT的签名和公钥和EOS不一样。只好随便放。后续应改方式。
+        if (post.platform === "ont") {
+          author = this.ctx.app.config.eos.contract;
+          public_key = "EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C"
+          signature = "SIG_K1_KiDauAQaHi6GJirH6tHaoLQDkrPP8Cd6KJTQvy9Lbc2dRfcR1TB5moexhsj8ZN5o69FvfBs5iKEV9LFzw4uyWY4oP7GYhU"
+        }
+
         actions.push(
           {
             account: this.ctx.app.config.eos.contract,
@@ -54,11 +67,11 @@ class SyncPosts extends Subscription {
             data: {
               sign: {
                 id: post.id,
-                author: post.username || post.author,
+                author: author,
                 fission_factor: post.fission_factor,
                 ipfs_hash: post.hash,
-                public_key: post.public_key,
-                signature: post.sign,
+                public_key: public_key,
+                signature: signature,
               },
             },
           }
