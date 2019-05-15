@@ -135,8 +135,7 @@ class ActionReader extends Subscription {
         if (type === "share") {
           let action = await this.app.mysql.get("actions", { id: seq });
           if (!action) {
-            let post = await this.app.mysql.get("posts", { id: sign_id });
-            let user = await this.app.mysql.get("users", { username: post.username });
+            let user = await this.app.mysql.get("users", { username: author });
 
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO supports (uid, signid, contract, symbol, amount, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ? ,?, ?)',
@@ -150,8 +149,10 @@ class ActionReader extends Subscription {
         if (type === "bill support expenses") {
           let action = await this.app.mysql.get("actions", { id: seq });
           if (!action) {
-            let post = await this.app.mysql.get("posts", { id: sign_id });
-            let user = await this.app.mysql.get("users", { username: post.username });
+            // let post = await this.app.mysql.get("posts", { id: sign_id });
+            // let user = await this.app.mysql.get("users", { username: post.username });
+
+            let user = await this.app.mysql.get("users", { username: author });
 
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -172,7 +173,11 @@ class ActionReader extends Subscription {
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "sign income", block_time]
               );
               console.log(result)
+              await conn.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+                [user.id, "eosio.token", "EOS", amount, "eos", amount]
+              );
             }
+
           }
         }
 
@@ -186,6 +191,10 @@ class ActionReader extends Subscription {
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "share income", block_time]
               );
               console.log(result)
+              console.log(result)
+              await conn.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+                [user.id, "eosio.token", "EOS", amount, "eos", amount]
+              );
             }
           }
         }
