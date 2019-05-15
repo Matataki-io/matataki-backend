@@ -123,7 +123,7 @@ class ActionReader extends Subscription {
             sign_id = memo.split(" ")[1];
           }
 
-          if (memo.includes("claim")) {
+          if (memo.includes("claim") && act_receiver === to) {
             type = "claim";
             author = to; // 记录打赏人
           }
