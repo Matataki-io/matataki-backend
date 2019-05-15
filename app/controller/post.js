@@ -494,10 +494,10 @@ class PostController extends Controller {
 
       post.ups = ups[0].ups;
 
-      // 被赞总金额
+       // 被赞总金额
       const value = await this.app.mysql.query(
-        'select sum(amount) as value from supports where signid = ? and status = 1 ',
-        [post.id]
+        'select sum(amount) as value from supports where signid = ? and symbol = ? and status = 1 ',
+        [post.id, "EOS"]
       );
 
       post.value = value[0].value || 0;
@@ -585,8 +585,8 @@ class PostController extends Controller {
 
       // 被赞总金额
       const value = await this.app.mysql.query(
-        'select sum(amount) as value from supports where signid = ? and status = 1 ',
-        [post.id]
+        'select sum(amount) as value from supports where signid = ? and symbol = ? and status = 1 ',
+        [post.id, "EOS"]
       );
 
       post.value = value[0].value || 0;
