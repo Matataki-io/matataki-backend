@@ -153,7 +153,7 @@ class UserController extends Controller {
 
     const logs = await this.app.mysql.query(
       'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc limit ? ,? ',
-      [user.id, symbol, (page - 1) * pagesize, pagesize ]
+      [user.id, symbol, (page - 1) * pagesize, pagesize]
     );
 
     let totalSignIncome = await this.app.mysql.query(
@@ -202,9 +202,20 @@ class UserController extends Controller {
     }
 
     const tokens = await this.app.mysql.query(
-      'select id, contract, symbol, amount, platform from assets where uid = ? ',
+      'select contract, symbol, amount, platform from assets where uid = ? ',
       [user.id]
     );
+
+    for (let i = 0; i < tokens.length; i++) {
+      let token = tokens[i];
+      let value = await this.app.mysql.query(
+        'select sum(amount) as value from assets_change_log where uid = ? and symbol = ? and type in (?)',
+        [user.id, token.symbol, ["sign income", "share income"]]
+      );
+
+      tokens[i].totalIncome = value[0].value || 0;
+    }
+
 
     this.ctx.body = this.ctx.msg.success;
     this.ctx.body.data = tokens;
