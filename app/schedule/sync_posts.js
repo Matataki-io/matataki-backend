@@ -28,7 +28,7 @@ class SyncPosts extends Subscription {
     console.log("sync posts..");
 
     const results = await this.app.mysql.select('posts', {
-      where: { onchain_status: 0, platform: "eos" }, // WHERE 条件
+      where: { onchain_status: 0 }, // WHERE 条件
       limit: 10, // 返回数据量
       offset: 0, // 数据偏移量
     });
@@ -43,6 +43,12 @@ class SyncPosts extends Subscription {
 
         const post = results[i];
         ids.push(post.id);
+
+        let author = post.username || post.author
+        if (post.platform === "ont") {
+          author = this.ctx.app.config.eos.contract;
+        }
+
         actions.push(
           {
             account: this.ctx.app.config.eos.contract,
@@ -54,7 +60,7 @@ class SyncPosts extends Subscription {
             data: {
               sign: {
                 id: post.id,
-                author: post.username || post.author,
+                author: author,
                 fission_factor: post.fission_factor,
                 ipfs_hash: post.hash,
                 public_key: post.public_key,
