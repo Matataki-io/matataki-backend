@@ -133,7 +133,8 @@ class UserController extends Controller {
   }
 
   async tokens() {
-    const { symbol = "EOS" } = this.ctx.query;
+    const { page = 1, symbol = "EOS" } = this.ctx.query;
+    let pagesize = 20;
     let user;
 
     try {
@@ -151,8 +152,8 @@ class UserController extends Controller {
     );
 
     const logs = await this.app.mysql.query(
-      'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc',
-      [user.id, symbol]
+      'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc limit ? ,? ',
+      [user.id, symbol, (page - 1) * pagesize, pagesize ]
     );
 
     let totalSignIncome = await this.app.mysql.query(
