@@ -25,12 +25,12 @@ class AuthController extends Controller {
     const { username, publickey, sign, platform = 'eos'} = this.ctx.request.body;
 
     // create user if not exit
-    await this.get_or_create_user(username, platform);
+    let user = await this.get_or_create_user(username, platform);
 
     if ('eos' === platform) {
-      await this.eos_auth(sign, username, publickey);
+      await this.eos_auth(sign, username, publickey, user);
     } else if ('ont' === platform) {
-      await this.ont_auth(sign, username, publickey);
+      await this.ont_auth(sign, username, publickey, user);
     } else {
       this.ctx.status = 401;
       this.ctx.body = 'platform not support';
@@ -38,7 +38,7 @@ class AuthController extends Controller {
 
   }
 
-  async eos_auth(sign, username, publickey) {
+  async eos_auth(sign, username, publickey, user) {
     // 2. 验证签名
     try {
       const recover = ecc.recover(sign, username);
@@ -91,12 +91,14 @@ class AuthController extends Controller {
     var token = jwt.encode({
       iss: username,
       exp: expires,
+      platform: user.platform,
+      id: user.id,
     }, this.app.config.jwtTokenSecret);
 
     this.ctx.body = token;
   }
 
-  async ont_auth(sign, username, publickey) {
+  async ont_auth(sign, username, publickey, user) {
 
     const pub = new ONT.Crypto.PublicKey(publickey);
 
@@ -114,6 +116,8 @@ class AuthController extends Controller {
       var token = jwt.encode({
         iss: username,
         exp: expires,
+        platform: user.platform,
+        id: user.id,
       }, this.app.config.jwtTokenSecret);
 
       this.ctx.body = token;
