@@ -31,7 +31,7 @@ class ActionReader extends Subscription {
   }
 
   async subscribe() {
-    // if (this.ctx.app.config.isDebug) return;
+    if (this.ctx.app.config.isDebug) return;
 
     var start = this.app.cache || this.config.startAt;
 
