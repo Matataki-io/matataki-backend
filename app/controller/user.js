@@ -150,38 +150,37 @@ class UserController extends Controller {
       [user.id, symbol]
     );
 
-    let result = {};
+    const logs = await this.app.mysql.query(
+      'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc',
+      [user.id, symbol]
+    );
 
-    for (let i = 0; i < tokens.length; i++) {
-      let token = tokens[i];
+    let totalSignIncome = await this.app.mysql.query(
+      'select sum(amount) as totalSignIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
+      ["sign income", user.id, symbol]
+    );
 
-      const logs = await this.app.mysql.query(
-        'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc',
-        [user.id, token.symbol]
-      );
+    let totalShareIncome = await this.app.mysql.query(
+      'select sum(amount) as totalShareIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
+      ["share income", user.id, symbol]
+    );
 
-      let totalSignIncome = await this.app.mysql.query(
-        'select sum(amount) as totalSignIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
-        ["sign income", user.id, token.symbol]
-      );
+    let totalShareExpenses = await this.app.mysql.query(
+      'select sum(amount) as totalShareExpenses from assets_change_log where type = ? and uid = ? and symbol = ?',
+      ["support expenses", user.id, symbol]
+    );
 
-      let totalShareIncome = await this.app.mysql.query(
-        'select sum(amount) as totalShareIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
-        ["share income", user.id, token.symbol]
-      );
+    let balance = 0;
+    if (tokens && tokens.length > 0) {
+      balance = tokens[0].amount;
+    }
 
-      let totalShareExpenses = await this.app.mysql.query(
-        'select sum(amount) as totalShareExpenses from assets_change_log where type = ? and uid = ? and symbol = ?',
-        ["support expenses", user.id, token.symbol]
-      );
-
-      result = {
-        balance: token.amount,                                              // 余额（待提现）
-        totalSignIncome: totalSignIncome[0].totalSignIncome || 0,           // 总创作收入
-        totalShareIncome: totalShareIncome[0].totalShareIncome || 0,        // 总打赏收入 
-        totalShareExpenses: totalShareExpenses[0].totalShareExpenses || 0,  // 总打赏支出
-        logs: logs                                                          // 流水（之后再来处理分页）
-      }
+    let result = {
+      balance: balance,                                                   // 余额（待提现）
+      totalSignIncome: totalSignIncome[0].totalSignIncome || 0,           // 总创作收入
+      totalShareIncome: totalShareIncome[0].totalShareIncome || 0,        // 总打赏收入 
+      totalShareExpenses: totalShareExpenses[0].totalShareExpenses || 0,  // 总打赏支出
+      logs: logs                                                          // 流水（之后再来处理分页）
     }
 
     this.ctx.body = this.ctx.msg.success;
@@ -190,7 +189,7 @@ class UserController extends Controller {
 
   async balance() {
     const ctx = this.ctx;
-    
+
     let user;
 
     try {
