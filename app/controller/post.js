@@ -17,6 +17,15 @@ class PostController extends Controller {
       chainId: ctx.app.config.eos.chainId,
       httpEndpoint: ctx.app.config.eos.httpEndpoint,
     });
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
   }
 
   async publish() {
@@ -364,8 +373,9 @@ class PostController extends Controller {
     }
 
     let results = await this.app.mysql.query(
-      'select signid,  create_time from supports where status = 1 and uid = ? order by create_time desc limit ?, ?',
-      [owner.id, (page - 1) * pagesize, pagesize]
+      'SELECT s.create_time, signid FROM supports s INNER JOIN posts p ON s.signid = p.id'
+      + ' WHERE s.status = 1 AND p.status = 0 AND s.uid = :uid ORDER BY s.create_time DESC LIMIT :start, :end;',
+      { uid: owner.id, start: (page - 1) * pagesize, end: pagesize }
     );
 
     let signids = [];
@@ -395,7 +405,7 @@ class PostController extends Controller {
 
     if (signids.length > 0) {
       results = await this.app.mysql.query(
-        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname from posts a left join users b on a.username = b.username where a.id in (?) and a.status=0 order by create_time desc',
+        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname from posts a left join users b on a.username = b.username where a.id in (?) order by create_time desc',
         [signids]
       );
 
