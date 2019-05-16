@@ -27,7 +27,7 @@ class VerifySupport extends Subscription {
   async subscribe() {
     let expire = moment().subtract(1, "day").format('YYYY-MM-DD HH:mm:ss');
 
-    const results = await this.app.mysql.query(`select * from supports where status=0 and create_time>'${expire}' limit 1`);
+    const results = await this.app.mysql.query(`select * from supports where status=0 and create_time>'${expire}' limit 10`);
 
     if (results.length === 0)
       return
@@ -94,7 +94,8 @@ class VerifySupport extends Subscription {
     let verifyPass = false;
 
     // 做本体合约数据验证
-    const scriptHash = 'a75451b23609e04e6606b4a08bc0304bf727ccb5';
+    const scriptHash = this.ctx.app.config.ont.scriptHash;
+    const httpEndpoint = this.ctx.app.config.ont.httpEndpoint;
 
     let sponsor = await this.app.mysql.get('users', { id: support.uid });
 
@@ -105,8 +106,7 @@ class VerifySupport extends Subscription {
     let keyhex = "01" + Buffer.from(key_origin).toString('hex');
 
 
-    const response = await axios.get(`http://polaris1.ont.io:20334/api/v1/storage/${scriptHash}/${keyhex}`);
-
+    const response = await axios.get(`${httpEndpoint}/api/v1/storage/${scriptHash}/${keyhex}`);
 
 
     if (response.data && response.data.Result) {
