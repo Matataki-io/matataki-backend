@@ -405,7 +405,7 @@ class PostController extends Controller {
 
     if (signids.length > 0) {
       results = await this.app.mysql.query(
-        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname from posts a left join users b on a.username = b.username where a.id in (?) order by create_time desc',
+        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname from posts a left join users b on a.username = b.username where a.id in (?) and a.status=0 order by create_time desc',
         [signids]
       );
 
