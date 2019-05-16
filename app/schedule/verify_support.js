@@ -137,10 +137,18 @@ class VerifySupport extends Subscription {
         console.log(err)
       }
 
+      let reffer = 0;
+      if (support.referreruid !== 0) {
+        let user = await this.app.mysql.get('users', { id: support.referreruid });
+        if (user) {
+          reffer = user.username
+        }
+      }
+
       if (row.contract == support.contract &&
         row.symbol == support.symbol &&
         row.amount == support.amount &&
-        row.sponsor == support.referreruid
+        row.sponsor == reffer
       ) {
         verifyPass = true;
       }
