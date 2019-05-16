@@ -194,7 +194,7 @@ class VerifySupport extends Subscription {
         );
 
         // 处理推荐人
-        let referrer_support_quota = await this.app.mysql.get('support_quota', { uid: refuid });
+        let referrer_support_quota = await this.app.mysql.get('support_quota', { uid: refuid, signid: support.signid });
 
         if (referrer_support_quota && referrer_support_quota.quota > 0) {
 
