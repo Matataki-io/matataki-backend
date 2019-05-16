@@ -37,9 +37,8 @@ class UserService extends Service {
       + 'SELECT COUNT(*) AS fans FROM follows WHERE followed = :user AND status = 1;'
       + 'SELECT COUNT(*) AS articles FROM posts WHERE author = :user AND status = 0;'
       + 'SELECT COUNT(*) AS drafts FROM drafts WHERE uid = :uid AND status = 0;'
-      + 'SELECT COUNT(*) AS supports FROM actions WHERE author = :user AND type = \'share\';',
+      + 'SELECT COUNT(*) AS supports, signid FROM supports s INNER JOIN posts p ON s.signid = p.id WHERE s.uid = :uid AND p.status = 0',
       { user: current_user, uid: basicInfo.id }
-      // [ current_user, current_user, current_user, basicInfo.id, current_user ]
     );
     basicInfo.follows = counts[0][0].follows;
     basicInfo.fans = counts[1][0].fans;
