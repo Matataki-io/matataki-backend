@@ -19,7 +19,7 @@ class ShareController extends Controller {
     }
 
     let results = await this.app.mysql.query(
-      'select a.amount, a.signid, a.create_time, b.nickname, b.username from supports a left join users b on a.uid = b.id where a.status = 1 and a.signid = ? order by a.create_time desc limit ?,?',
+      'select a.amount,a.platform, a.signid, a.create_time, b.nickname, b.username from supports a left join users b on a.uid = b.id where a.status = 1 and a.signid = ? order by a.create_time desc limit ?,?',
       [signid, (page - 1) * pagesize, pagesize]
     );
 

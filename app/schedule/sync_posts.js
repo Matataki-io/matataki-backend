@@ -23,7 +23,7 @@ class SyncPosts extends Subscription {
 
   async subscribe() {
     //debug不执行
-    // if (this.ctx.app.config.isDebug) return;
+    if (this.ctx.app.config.isDebug) return;
 
     console.log("sync posts..");
 

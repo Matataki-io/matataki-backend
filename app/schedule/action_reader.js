@@ -123,7 +123,7 @@ class ActionReader extends Subscription {
             sign_id = memo.split(" ")[1];
           }
 
-          if (memo.includes("claim")) {
+          if (memo.includes("claim") && act_receiver === to) {
             type = "claim";
             author = to; // 记录打赏人
           }
@@ -136,6 +136,7 @@ class ActionReader extends Subscription {
           let action = await this.app.mysql.get("actions", { id: seq });
           if (!action) {
             let user = await this.app.mysql.get("users", { username: author });
+
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO supports (uid, signid, contract, symbol, amount, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ? ,?, ?)',
                 [user.id, sign_id, "eosio.token", "EOS", amount, 0, "eos", 1, block_time]
@@ -148,7 +149,11 @@ class ActionReader extends Subscription {
         if (type === "bill support expenses") {
           let action = await this.app.mysql.get("actions", { id: seq });
           if (!action) {
+            // let post = await this.app.mysql.get("posts", { id: sign_id });
+            // let user = await this.app.mysql.get("users", { username: post.username });
+
             let user = await this.app.mysql.get("users", { username: author });
+
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "support expenses", block_time]
@@ -161,25 +166,35 @@ class ActionReader extends Subscription {
         if (type === "bill sign income") {
           let action = await this.app.mysql.get("actions", { id: seq });
           if (!action) {
-            let user = await this.app.mysql.get("users", { username: author });
+            let post = await this.app.mysql.get("posts", { id: sign_id });
+            let user = await this.app.mysql.get("users", { username: post.username });
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "sign income", block_time]
               );
               console.log(result)
+              await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+                [user.id, "eosio.token", "EOS", amount, "eos", amount]
+              );
             }
+
           }
         }
 
         if (type === "bill share income") {
           let action = await this.app.mysql.get("actions", { id: seq });
           if (!action) {
-            let user = await this.app.mysql.get("users", { username: author });
+            let post = await this.app.mysql.get("posts", { id: sign_id });
+            let user = await this.app.mysql.get("users", { username: post.username });
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "share income", block_time]
               );
               console.log(result)
+              console.log(result)
+              await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+                [user.id, "eosio.token", "EOS", amount, "eos", amount]
+              );
             }
           }
         }
@@ -190,7 +205,7 @@ class ActionReader extends Subscription {
             let user = await this.app.mysql.get("users", { username: author });
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [user.id, 0, "eosio.token", "EOS", (0-amount), "eos", "whthdraw", block_time]
+                [user.id, 0, "eosio.token", "EOS", (0 - amount), "eos", "whthdraw", block_time]
               );
               console.log(result)
             }
