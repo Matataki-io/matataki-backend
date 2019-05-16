@@ -25,6 +25,8 @@ class VerifySupport extends Subscription {
   }
 
   async subscribe() {
+    if (this.ctx.app.config.isDebug) return;
+    
     let expire = moment().subtract(1, "day").format('YYYY-MM-DD HH:mm:ss');
 
     const results = await this.app.mysql.query(`select * from supports where status=0 and create_time>'${expire}' limit 10`);
