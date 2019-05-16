@@ -147,7 +147,7 @@ class VerifySupport extends Subscription {
 
       if (row.contract == support.contract &&
         row.symbol == support.symbol &&
-        row.amount == support.amount &&
+        row.amount == (support.amount / 10000) &&
         row.sponsor == reffer
       ) {
         verifyPass = true;

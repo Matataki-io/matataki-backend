@@ -59,6 +59,9 @@ class SupportController extends Controller {
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
     try {
+      if (platform === 'ont') {
+        amount = amount * 10000;
+      }
       const result = await this.app.mysql.query(
         'INSERT INTO supports (uid, signid, contract, symbol, amount, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ? ,?, ?)',
         [user.id, signId, contract, symbol, amount, referreruid, platform, 0, now]
