@@ -173,9 +173,11 @@ class ActionReader extends Subscription {
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "sign income", block_time]
               );
               console.log(result)
-              await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
-                [user.id, "eosio.token", "EOS", amount, "eos", amount]
-              );
+              if (user.platform === "ont") {
+                await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+                  [user.id, "eosio.token", "EOS", amount, "eos", amount]
+                );
+              }
             }
 
           }
@@ -191,10 +193,11 @@ class ActionReader extends Subscription {
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "share income", block_time]
               );
               console.log(result)
-              console.log(result)
-              await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
-                [user.id, "eosio.token", "EOS", amount, "eos", amount]
-              );
+              if (user.platform === "ont") {
+                await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+                  [user.id, "eosio.token", "EOS", amount, "eos", amount]
+                );
+              }
             }
           }
         }
