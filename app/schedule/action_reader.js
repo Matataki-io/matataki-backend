@@ -195,11 +195,11 @@ class ActionReader extends Subscription {
             let post = await this.app.mysql.get("posts", { id: sign_id });
             
             let user;
-            if (post.platform === "ont") {
-              user = await this.app.mysql.get("users", { username: post.username });
-            } else {
+            // if (post.platform === "ont") {
+            //   user = await this.app.mysql.get("users", { username: post.username });
+            // } else {
               user = await this.app.mysql.get("users", { username: author });
-            }
+            // }
 
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
