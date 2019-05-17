@@ -75,6 +75,7 @@ class SupportController extends Controller {
         this.response(500, "support error")
       }
     } catch (err) {
+      this.ctx.logger.error('support error', err);
       this.response(500, "support error, you have supported this post before");
     }
   }
