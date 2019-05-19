@@ -323,16 +323,18 @@ create table assets (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   uid INT UNSIGNED NOT NULL,
   contract varchar(255) NOT NULL,
-  name varchar(255) NOT NULL,
   symbol varchar(255) NOT NULL,
   amount INT UNSIGNED DEFAULT 0, 
   decimals INT UNSIGNED DEFAULT 0, 
   platform varchar(255) NOT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE (uid, contract, symbol)
 );
 
-ALTER TABLE posts ADD COLUMN platform varchar(255) DEFAULT 'eos';
-ALTER TABLE users ADD COLUMN platform varchar(255) DEFAULT 'eos';
+drop table assets;
+
+ALTER TABLE posts ADD COLUMN platform varchar(255) DEFAULT null;
+ALTER TABLE users ADD COLUMN platform varchar(255) DEFAULT null;
 
 
 create table supports (
@@ -340,11 +342,17 @@ create table supports (
   uid INT UNSIGNED NOT NULL,
   signid INT UNSIGNED NOT NULL,
   contract varchar(255) NOT NULL,
-  name varchar(255) NOT NULL,
   symbol varchar(255) NOT NULL,
   amount INT UNSIGNED DEFAULT 0, 
-  decimals INT UNSIGNED DEFAULT 0, 
   platform varchar(255) NOT NULL,
+  referreruid INT UNSIGNED DEFAULT 0, 
   status INT UNSIGNED DEFAULT 0, 
-  PRIMARY KEY (id)
+  create_time timestamp,
+  PRIMARY KEY (id),
+  UNIQUE (uid, signid)
 );
+
+## 资产流水
+
+## 打赏额度
+

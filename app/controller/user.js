@@ -146,7 +146,7 @@ class UserController extends Controller {
 
     // 1. 历史总创作收入 (sign income)
     const result = await this.app.mysql.query(
-      'select name, contract, symbol, amount, decimals,  platform from assets where uid = ? ',
+      'select id, contract, symbol, amount, platform from assets where uid = ? ',
       [user.id]
     );
 
