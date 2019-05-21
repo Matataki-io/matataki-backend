@@ -27,6 +27,8 @@ module.exports = {
   emailDuplicated: 10003,
   // 昵称发生重复
   nicknameDuplicated: 10004,
+  // 昵称不合法,包含字符或者超过12位
+  nicknameInvalid: 10005,
 
   // post相关
   postNotFound: 10100,
@@ -51,6 +53,7 @@ module.exports = {
       userNotExist: { code: this.userNotExist, message: 'user does not exist' },
       emailDuplicated: { code: this.emailDuplicated, message: 'same email already exists' },
       nicknameDuplicated: { code: this.nicknameDuplicated, message: 'same nickname already exists' },
+      nicknameInvalid: { code: this.nicknameInvalid, message: 'invalid nickname, maybe it contian symbols or is longer than 12 characters' },
 
       postNotFound: { code: this.postNotFound, message: 'post not found' },
       postDeleteError: { code: this.postDeleteError, message: 'delete post error' },
@@ -71,6 +74,7 @@ module.exports = {
       userNotExist: { code: this.userNotExist, message: '所请求的用户不存在' },
       emailDuplicated: { code: this.emailDuplicated, message: '已经有相同的email地址存在' },
       nicknameDuplicated: { code: this.nicknameDuplicated, message: '已经有相同的昵称存在' },
+      nicknameInvalid: { code: this.nicknameInvalid, message: '昵称不能包含字符,而且长度须小于12个字' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },

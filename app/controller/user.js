@@ -403,6 +403,9 @@ class UserController extends Controller {
     if (setResult === 4) {
       ctx.body = ctx.msg.userIntroductionInvalid;
       return;
+    } else if (setResult === 7) {
+      ctx.body = ctx.msg.nicknameInvalid;
+      return;
     } else if (setResult === false) {
       ctx.body = ctx.msg.failure;
       return;

@@ -4,6 +4,7 @@ const Service = require('egg').Service;
 const introductionLengthInvalid = 4;
 const emailDuplicated = 5;
 const nicknameDuplicated = 6;
+const nicknameInvalid = 7;
 
 class UserService extends Service {
 
@@ -61,6 +62,10 @@ class UserService extends Service {
     }
 
     if (nickname) {
+      const nicknameCheck = /^[\u4e00-\u9fa5a-zA-Z0-9]{1,12}$/;
+      if (!nicknameCheck.test(nickname)) {
+        return nicknameInvalid;
+      }
       row.nickname = nickname;
     }
 
