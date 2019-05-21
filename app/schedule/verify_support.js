@@ -70,7 +70,7 @@ class VerifySupport extends Subscription {
         let reffer_name = reffer ? reffer.username : "";
 
         let strs = row.amount.split(" ");
-        let amount = parseFloat(strs[0])
+        let amount = parseFloat(strs[0]) * 10000;
         let symbol = strs[1];
 
         if (row.contract == support.contract &&
