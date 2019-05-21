@@ -25,7 +25,8 @@ class VerifySupport extends Subscription {
   }
 
   async subscribe() {
-    if (this.ctx.app.config.isDebug) return;
+    // if (this.ctx.app.config.isDebug) return;
+
     let expire = moment().subtract(1, "day").format('YYYY-MM-DD HH:mm:ss');
 
     const results = await this.app.mysql.query(`select * from supports where status=0 and create_time>'${expire}' limit 10`);
@@ -60,17 +61,30 @@ class VerifySupport extends Subscription {
 
       if (result && result.rows && result.rows.length > 0) {
         let row = result.rows[0];
-        console.log(row);
 
         let verifyPass = false;
 
+        let user = await this.app.mysql.get('users', { id: support.uid });
+        let reffer = await this.app.mysql.get('users', { id: support.referreruid });
+
+        let reffer_name = reffer ? reffer.username : "";
+
+        let strs = row.amount.split(" ");
+        let amount = parseFloat(strs[0])
+        let symbol = strs[1];
+
         if (row.contract == support.contract &&
-          row.symbol == support.symbol &&
-          row.amount == support.amount &&
-          row.reffer == support.referreruid
+          row.user == user.username &&
+          symbol == support.symbol &&
+          amount == support.amount &&
+          row.ref == reffer_name
         ) {
           verifyPass = true;
         }
+
+        console.log("contract,", row)
+        console.log("mysql", support)
+        console.log("verifyPass", verifyPass)
 
         if (verifyPass) {
           await this.passVerify(support);
@@ -81,7 +95,6 @@ class VerifySupport extends Subscription {
       }
 
     } catch (err) {
-      await this.passVerify(support);
       console.log("get table row err");
     }
 
@@ -142,8 +155,8 @@ class VerifySupport extends Subscription {
 
       const verifyPass = (
         row.contract === support.contract
-        && row.symbol === support.symbol 
-        && parseInt(row.amount2) === (support.amount / 10000) 
+        && row.symbol === support.symbol
+        && parseInt(row.amount2) === (support.amount / 10000)
         && row.sponsor === reffer
       );
 
