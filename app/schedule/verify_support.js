@@ -44,7 +44,6 @@ class VerifySupport extends Subscription {
   }
 
   async eos_verify(support) {
-    if (this.ctx.app.config.isDebug) return;
     console.log("eos_verify ", support);
 
     // 根据 signid 去合约中取 table row，Limit 为username， 取到则继续验证 amount， contract ，symbol， referrer， 验证通过才进入结算
@@ -89,7 +88,6 @@ class VerifySupport extends Subscription {
   }
 
   async ont_verify(support) {
-    if (this.ctx.app.config.isDebug) return;
     // https://dev-docs.ont.io/#/docs-cn/ontology-cli/05-rpc-specification?id=getstorage
     // 根据本体文档说明 取合约中的值，需要传入两个参数： hex_contract_address：以十六进制字符串表示智能合约哈希地址 key：以十六进制字符串表示的存储键值
     // 所以，key 就用 （signId + uid or user address ）的 hex , 对应的value， 和eos版本类似，存储 转账代币合约、数量、符号，推荐人，供这里做二次验证和数据库中是否相符合。
