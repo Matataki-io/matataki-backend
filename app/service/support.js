@@ -3,9 +3,9 @@
 const Service = require('egg').Service;
 var _ = require('lodash');
 
-class ShareService extends Service {
+class SupportService extends Service {
 
-  async shareList(signid, page = 1, pagesize = 20) {
+  async commentList(signid, page = 1, pagesize = 20) {
 
     this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
@@ -41,4 +41,4 @@ class ShareService extends Service {
 
 }
 
-module.exports = ShareService;
+module.exports = SupportService;

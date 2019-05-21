@@ -58,8 +58,8 @@ module.exports = app => {
   // 设置用户的个人资料，包括email，昵称和自我介绍。
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
 
-  // 分享
-  router.get('/share/shares', passport.verify, controller.share.shares);
+  // 打赏和评论列表
+  router.get('/support/comments', passport.verify, controller.support.comments);
 
 
   // follow 关注和取关动作。关注数和粉丝数在userinfo里
@@ -78,6 +78,8 @@ module.exports = app => {
   app.router.get('/getSupportTimesRanking', app.controller.post.getSupportTimesRanking);
   // 被打赏总额排行榜
   app.router.get('/getSupportAmountRanking', app.controller.post.getSupportAmountRanking);
+  // // ONT打赏总额排行榜
+  // app.router.get('/getOntAmountRanking', passport.verify, app.controller.post.getOntAmountRanking);
 
   // 草稿箱
   // 获取我的草稿箱列表 (need access token)
