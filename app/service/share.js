@@ -29,6 +29,12 @@ class ShareService extends Service {
       { signid, start: (page - 1) * pagesize, end: pagesize }
     );
 
+    _.each(results, row => {
+      if (row.comment === null) {
+        row.comment = '';
+      }
+    });
+
     return results;
   }
 
