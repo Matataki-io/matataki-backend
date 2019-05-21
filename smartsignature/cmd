@@ -23,7 +23,7 @@ cleos set account permission dragonquest2 active '{"threshold": 1,"keys": [{"key
 
 
 
-cleos -u http://eos.greymass.com get table dragonquest2 1 supports
+cleos -u http://eos.greymass.com get table dragonquest2 5 supports
 
 
 cleos -u http://eos.greymass.com transfer joetothemoon dragonquest2 "0.0001 EOS" "support 5 xiaotiandada"
