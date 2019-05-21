@@ -80,7 +80,8 @@ class ActionReader extends Subscription {
         var sign_id = null;
 
         var type = "other";
-        const block_time = x.block_time;
+        let block_time = x.block_time;
+        block_time = moment(block_time).add(8, "hours").format("YYYY-MM-DD HH:mm:ss");
 
         // bill type
         if (act_name === "bill" && act_account === this.config.watchAccount && act_receiver === this.config.watchAccount) {
@@ -128,7 +129,6 @@ class ActionReader extends Subscription {
             author = to; // 记录打赏人
           }
 
-
         }
 
         // 兼容ONT方案， 查询action中是否存在，不存在，则写入 support 和 asset_change_log
@@ -167,15 +167,23 @@ class ActionReader extends Subscription {
           let action = await this.app.mysql.get("actions", { id: seq });
           if (!action) {
             let post = await this.app.mysql.get("posts", { id: sign_id });
-            let user = await this.app.mysql.get("users", { username: post.username });
+            let user;
+            if (post.platform === "ont") {
+              user = await this.app.mysql.get("users", { username: post.username });
+            } else {
+              user = await this.app.mysql.get("users", { username: author });
+            }
+
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "sign income", block_time]
               );
               console.log(result)
-              await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
-                [user.id, "eosio.token", "EOS", amount, "eos", amount]
-              );
+              if (user.platform === "ont") {
+                await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+                  [user.id, "eosio.token", "EOS", amount, "eos", amount]
+                );
+              }
             }
 
           }
@@ -185,16 +193,24 @@ class ActionReader extends Subscription {
           let action = await this.app.mysql.get("actions", { id: seq });
           if (!action) {
             let post = await this.app.mysql.get("posts", { id: sign_id });
-            let user = await this.app.mysql.get("users", { username: post.username });
+            
+            let user;
+            // if (post.platform === "ont") {
+            //   user = await this.app.mysql.get("users", { username: post.username });
+            // } else {
+              user = await this.app.mysql.get("users", { username: author });
+            // }
+
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "share income", block_time]
               );
               console.log(result)
-              console.log(result)
-              await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
-                [user.id, "eosio.token", "EOS", amount, "eos", amount]
-              );
+              if (user.platform === "ont") {
+                await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+                  [user.id, "eosio.token", "EOS", amount, "eos", amount]
+                );
+              }
             }
           }
         }
