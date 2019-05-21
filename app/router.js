@@ -59,7 +59,7 @@ module.exports = app => {
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
 
   // 分享
-  router.get('/shares', controller.share.shares);
+  router.get('/share/shares', passport.verify, controller.share.shares);
 
 
   // follow 关注和取关动作。关注数和粉丝数在userinfo里

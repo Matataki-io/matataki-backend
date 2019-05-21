@@ -3,56 +3,30 @@
 const Controller = require('egg').Controller;
 var _ = require('lodash');
 
-
 class ShareController extends Controller {
 
-
   async shares() {
-    const pagesize = 20;
 
-    const { page = 1, signid } = this.ctx.query;
+    const ctx = this.ctx;
 
+    const { pagesize = 20, page = 1, signid } = this.ctx.query;
+
+    // singid缺少,此种情况用户正常使用时候不会出现
     if (!signid) {
-      this.ctx.status = 401;
-      this.ctx.body = "signid required";
+      ctx.body = ctx.msg.paramsError;
       return;
     }
 
-    let results = await this.app.mysql.query(
-      'select a.amount,a.platform, a.signid, a.create_time, b.nickname, b.username from supports a left join users b on a.uid = b.id where a.status = 1 and a.signid = ? order by a.create_time desc limit ?,?',
-      [signid, (page - 1) * pagesize, pagesize]
-    );
+    const shares = await this.service.share.shareList(signid, page, pagesize);
 
-    let signids = [];
-    _.each(results, (row) => {
-      signids.push(row.signid);
-    })
-
-    if (signids.length > 0) {
-
-      const comments = await this.app.mysql.select('comments', {
-        where: {
-          sign_id: signids
-        },
-        orders: [['create_time', 'desc']], // 排序方式
-        limit: pagesize, // 返回数据量
-        offset: (page - 1) * pagesize, // 数据偏移量
-      });
-
-      _.each(results, (row) => {
-        var comment = _.find(comments, _.matches({ sign_id: row.signid, username: row.username }));
-
-        if (comment) {
-          row.comment = comment.comment;
-        } else {
-          row.comment = "";
-        }
-      })
+    if (shares === null) {
+      ctx.body = ctx.msg.paramsError;
+      return;
     }
 
-    this.ctx.body = results;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = shares;
   }
-
 }
 
 module.exports = ShareController;
