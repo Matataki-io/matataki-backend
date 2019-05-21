@@ -93,7 +93,7 @@ class UserService extends Service {
 
   async setIntroduction(introduction, current_user) {
 
-    if (introduction.length > 20 || introduction.length < 5) {
+    if (introduction.length > 20) {
       return introductionLengthInvalid;
     }
 

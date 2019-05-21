@@ -49,7 +49,7 @@ module.exports = {
       unauthorized: { code: this.unauthorized, message: 'unauthorized' },
       serverError: { code: this.exception, message: 'internal server error' },
 
-      userIntroductionInvalid: { code: this.userIntroductionInvalid, message: 'introduction too long or empty' },
+      userIntroductionInvalid: { code: this.userIntroductionInvalid, message: 'introduction too long' },
       userNotExist: { code: this.userNotExist, message: 'user does not exist' },
       emailDuplicated: { code: this.emailDuplicated, message: 'same email already exists' },
       nicknameDuplicated: { code: this.nicknameDuplicated, message: 'same nickname already exists' },
@@ -70,7 +70,7 @@ module.exports = {
       unauthorized: { code: this.unauthorized, message: '未授权' },
       serverError: { code: this.exception, message: 'internal server error' },
 
-      userIntroductionInvalid: { code: this.userIntroductionInvalid, message: '请求设置的用户个性签名不在5-20位' },
+      userIntroductionInvalid: { code: this.userIntroductionInvalid, message: '个性签名不能超过20个字!' },
       userNotExist: { code: this.userNotExist, message: '所请求的用户不存在' },
       emailDuplicated: { code: this.emailDuplicated, message: '已经有相同的email地址存在' },
       nicknameDuplicated: { code: this.nicknameDuplicated, message: '已经有相同的昵称存在' },
