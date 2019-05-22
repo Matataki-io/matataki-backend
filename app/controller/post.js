@@ -396,9 +396,9 @@ class PostController extends Controller {
   // 获取按照赞赏数量排序的文章列表(新)
   async getAmountRanking() {
     const ctx = this.ctx;
-    const { page = 1, pagesize = 20, coin = 'EOS' } = this.ctx.query;
+    const { page = 1, pagesize = 20, symbol = 'EOS' } = this.ctx.query;
 
-    const postData = await this.service.post.amountRank(page, pagesize, coin);
+    const postData = await this.service.post.amountRank(page, pagesize, symbol);
 
     if (postData) {
       ctx.body = ctx.msg.success;

@@ -178,7 +178,7 @@ class PostService extends Service {
 
   // 分币种的赞赏金额排序
   // 请注意因为"后筛选"导致的不满20条,进而前端无法加载的问题.
-  async amountRank(page = 1, pagesize = 20, coin = 'EOS') {
+  async amountRank(page = 1, pagesize = 20, symbol = 'EOS') {
     this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function(txt, key) {
@@ -192,8 +192,8 @@ class PostService extends Service {
     // 在support表中, 由币种赞赏总量获得一个文章的排序, 并且已经确保文章是没有被删除的
     const posts = await this.app.mysql.query(
       'SELECT s.signid, sum(amount) AS total FROM supports s INNER JOIN posts p ON s.signid = p.id '
-      + 'WHERE s.status = 1 AND p.status = 0 AND s.symbol = :coinname GROUP BY s.signid ORDER BY total DESC LIMIT :start, :end;',
-      { start: (page - 1) * pagesize, end: 1 * pagesize, coinname: coin.toUpperCase() }
+      + 'WHERE s.status = 1 AND p.status = 0 AND s.symbol = :symbol GROUP BY s.signid ORDER BY total DESC LIMIT :start, :end;',
+      { start: (page - 1) * pagesize, end: 1 * pagesize, symbol: symbol.toUpperCase() }
     );
 
     // 将文章id转为Array
@@ -211,7 +211,7 @@ class PostService extends Service {
     let postList = await this.getPostList(postids);
 
     // 重新由赞赏金额进行排序
-    switch (coin.toUpperCase()) {
+    switch (symbol.toUpperCase()) {
       case 'EOS' :
         postList = postList.sort((a, b) => {
           return a.eosvalue > b.eosvalue ? -1 : 1;
