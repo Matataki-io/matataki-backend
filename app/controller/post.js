@@ -359,6 +359,57 @@ class PostController extends Controller {
     this.ctx.body = results2;
   }
 
+  // 获取按照时间排序的文章列表(基础方法)(新)
+  async getTimeRanking() {
+    const ctx = this.ctx;
+
+    const { page = 1, pagesize = 20, author } = this.ctx.query;
+
+    const postData = await this.service.post.timeRank(page, pagesize, author);
+
+    if (postData) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = postData;
+      return;
+    }
+
+    ctx.body = ctx.msg.failure;
+  }
+
+  // 获取按照赞赏次数排序的文章列表(新)
+  async getSupportsRanking() {
+    const ctx = this.ctx;
+
+    const { page = 1, pagesize = 20 } = this.ctx.query;
+
+    const postData = await this.service.post.supportRank(page, pagesize);
+
+    if (postData) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = postData;
+      return;
+    }
+
+    ctx.body = ctx.msg.failure;
+  }
+
+  // 获取按照赞赏数量排序的文章列表(新)
+  async getAmountRanking() {
+    const ctx = this.ctx;
+    const { page = 1, pagesize = 20, symbol = 'EOS' } = this.ctx.query;
+
+    const postData = await this.service.post.amountRank(page, pagesize, symbol);
+
+    if (postData) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = postData;
+      return;
+    }
+
+    ctx.body = ctx.msg.failure;
+    // return;
+  }
+
   // 我赞赏过的文章列表
   async supports() {
     const pagesize = 20;
