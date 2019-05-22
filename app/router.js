@@ -79,11 +79,11 @@ module.exports = app => {
   // 被打赏总额排行榜
   app.router.get('/getSupportAmountRanking', app.controller.post.getSupportAmountRanking);
   // 按照打赏金额排序的文章列表(新, 可按照币种排序)
-  app.router.get('/getAmountRanking', passport.verify, app.controller.post.getAmountRanking);
+  app.router.get('/posts/amountRanking', passport.verify, app.controller.post.getAmountRanking);
   // 按照打赏次数排序的文章列表(新)
-  app.router.get('/getSupportsRanking', passport.verify, app.controller.post.getSupportsRanking);
+  app.router.get('/posts/supportsRanking', passport.verify, app.controller.post.getSupportsRanking);
   // 按照发布时间排序的文章列表(新)
-  app.router.get('/getTimeRanking', passport.verify, app.controller.post.getTimeRanking);
+  app.router.get('/posts/timeRanking', passport.verify, app.controller.post.getTimeRanking);
 
 
   // 草稿箱
