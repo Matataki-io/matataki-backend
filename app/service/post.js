@@ -1,8 +1,23 @@
 'use strict';
 
 const Service = require('egg').Service;
+var _ = require('lodash');
 
 class PostService extends Service {
+
+  // constructor(ctx, app) {
+  //   super(ctx, app);
+  //   app.mysql.queryFromat = function(query, values) {
+  //     if (!values) return query;
+  //     return query.replace(/\:(\w+)/g, function(txt, key) {
+  //       if (values.hasOwnProperty(key)) {
+  //         return this.escape(values[key]);
+  //       }
+  //       return txt;
+  //     }.bind(this));
+  //   };
+  // }
+
   async publish(data) {
     try {
       const result = await this.app.mysql.insert('posts', data);
@@ -78,6 +93,216 @@ class PostService extends Service {
     }
 
     return post;
+  }
+
+  // 发布时间排序(默认方法)
+  async timeRank(page = 1, pagesize = 20, author = null) {
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+
+    // 获取文章列表, 分为带作者和不带作者的情况.
+    let posts = [];
+    if (author) {
+      posts = await this.app.mysql.query(
+        'SELECT id FROM posts WHERE status = 0 AND author = :author '
+        + 'ORDER BY create_time DESC LIMIT :start, :end;',
+        { author, start: (page - 1) * pagesize, end: 1 * pagesize }
+      );
+    } else {
+      posts = await this.app.mysql.query(
+        'SELECT id FROM posts WHERE status = 0 '
+        + 'ORDER BY create_time DESC LIMIT :start, :end;',
+        { start: (page - 1) * pagesize, end: 1 * pagesize }
+      );
+    }
+
+    if (posts.length === 0) {
+      return [];
+    }
+
+    const postids = [];
+    _.each(posts, row => {
+      postids.push(row.id);
+    });
+
+    const postList = await this.getPostList(postids);
+
+    return postList;
+  }
+
+  // 赞赏次数排序, 在次数相等的情况下按照时间倒序
+  async supportRank(page = 1, pagesize = 20) {
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+
+    // 在support表中, 由赞赏次数获得一个文章的排序, 并且已经确保文章是没有被删除的
+    const posts = await this.app.mysql.query(
+      'SELECT s.signid, count(*) AS total FROM supports s INNER JOIN posts p ON s.signid = p.id '
+      + ' WHERE s.status = 1 AND p.status = 0 GROUP BY s.signid ORDER BY total DESC LIMIT :start, :end;',
+      { start: (page - 1) * pagesize, end: 1 * pagesize }
+    );
+
+    // 将文章id转为Array
+    const postids = [];
+    _.each(posts, row => {
+      postids.push(row.signid);
+    });
+
+    if (postids.length === 0) {
+      return [];
+    }
+
+    let postList = await this.getPostList(postids);
+
+    // 由赞赏次数进行排序
+    postList = postList.sort((a, b) => {
+      return a.ups > b.ups ? -1 : 1;
+    });
+
+    return postList;
+  }
+
+  // 分币种的赞赏金额排序
+  // 请注意因为"后筛选"导致的不满20条,进而前端无法加载的问题.
+  async amountRank(page = 1, pagesize = 20, coin = 'EOS') {
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+
+    // 在support表中, 由币种赞赏总量获得一个文章的排序, 并且已经确保文章是没有被删除的
+    const posts = await this.app.mysql.query(
+      'SELECT s.signid, sum(amount) AS total FROM supports s INNER JOIN posts p ON s.signid = p.id '
+      + 'WHERE s.status = 1 AND p.status = 0 AND s.symbol = :coinname GROUP BY s.signid ORDER BY total DESC LIMIT :start, :end;',
+      { start: (page - 1) * pagesize, end: 1 * pagesize, coinname: coin.toUpperCase() }
+    );
+
+    // 将文章id转为Array
+    const postids = [];
+    _.each(posts, row => {
+      postids.push(row.signid);
+    });
+
+    if (postids.length === 0) {
+      return [];
+    }
+
+    // 调用getPostList函数获得文章的具体信息
+    // 此时序列已经被打乱了
+    let postList = await this.getPostList(postids);
+
+    // 重新由赞赏金额进行排序
+    switch (coin.toUpperCase()) {
+      case 'EOS' :
+        postList = postList.sort((a, b) => {
+          return a.eosvalue > b.eosvalue ? -1 : 1;
+        });
+        break;
+
+      case 'ONT' :
+        postList = postList.sort((a, b) => {
+          return a.ontvalue > b.ontvalue ? -1 : 1;
+        });
+        break;
+    }
+
+    return postList;
+  }
+
+  // 获取文章的列表, 用于成片展示文章时, 会被其他函数调用
+  async getPostList(signids) {
+
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+
+    let postList = [];
+
+    if (signids.length === 0) {
+      return postList;
+    }
+    // 查询文章和作者的信息, 结果是按照时间排序
+    postList = await this.app.mysql.query(
+      'SELECT a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname FROM posts a '
+      + ' LEFT JOIN users b ON a.username = b.username WHERE a.id IN (?) AND a.status = 0 ORDER BY create_time DESC;',
+      [ signids ]
+    );
+
+    const hashs = [];
+
+    // 准备需要返回的数据
+    _.each(postList, row => {
+      row.read = 0;
+      row.eosvalue = 0;
+      row.ups = 0;
+      row.ontvalue = 0;
+      hashs.push(row.hash);
+    });
+
+    // 有关阅读次数,赞赏金额,赞赏次数的统计
+    const stats = await this.app.mysql.query(
+      'SELECT post_id AS id, real_read_count AS num FROM post_read_count WHERE post_id IN (:signid);'
+      + 'SELECT signid, sum(amount) AS value FROM supports WHERE signid IN (:signid) AND symbol = \'EOS\' AND status = 1 GROUP BY signid;'
+      + 'SELECT signid, sum(amount) AS value FROM supports WHERE signid IN (:signid) AND symbol = \'ONT\' AND status = 1 GROUP BY signid;'
+      + 'SELECT signid, count(*) AS ups FROM supports WHERE status=1 AND signid IN (:signid) GROUP BY signid;',
+      { signid: signids }
+    );
+
+    // 分门类填充
+    const read = stats[0];
+    const eosvalue = stats[1];
+    const ontvalue = stats[2];
+    const ups = stats[3];
+
+    // 分配数值到每篇文章
+    _.each(postList, row => {
+      _.each(read, row2 => {
+        if (row.id === row2.id) {
+          row.read = row2.num;
+        }
+      });
+      _.each(eosvalue, row2 => {
+        if (row.id === row2.signid) {
+          row.eosvalue = row2.value;
+        }
+      });
+      _.each(ups, row2 => {
+        if (row.id === row2.signid) {
+          row.ups = row2.ups;
+        }
+      });
+      _.each(ontvalue, row2 => {
+        if (row.id === row2.signid) {
+          row.ontvalue = row2.value;
+        }
+      });
+    });
+    return postList;
   }
 
   // 删除文章

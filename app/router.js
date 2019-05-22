@@ -78,8 +78,13 @@ module.exports = app => {
   app.router.get('/getSupportTimesRanking', app.controller.post.getSupportTimesRanking);
   // 被打赏总额排行榜
   app.router.get('/getSupportAmountRanking', app.controller.post.getSupportAmountRanking);
-  // // ONT打赏总额排行榜
-  // app.router.get('/getOntAmountRanking', passport.verify, app.controller.post.getOntAmountRanking);
+  // 按照打赏金额排序的文章列表(新, 可按照币种排序)
+  app.router.get('/getAmountRanking', passport.verify, app.controller.post.getAmountRanking);
+  // 按照打赏次数排序的文章列表(新)
+  app.router.get('/getSupportsRanking', passport.verify, app.controller.post.getSupportsRanking);
+  // 按照发布时间排序的文章列表(新)
+  app.router.get('/getTimeRanking', passport.verify, app.controller.post.getTimeRanking);
+
 
   // 草稿箱
   // 获取我的草稿箱列表 (need access token)
