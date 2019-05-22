@@ -1,4 +1,5 @@
 'use strict';
+const consts = require('./consts');
 
 const Service = require('egg').Service;
 
@@ -11,45 +12,56 @@ class PostService extends Service {
         return result.insertId;
       }
     } catch (err) {
-      this.logger.error("PostService::publish error: %j", err);
+      this.logger.error('PostService::publish error: %j', err);
     }
 
     return 0;
   }
 
-  //根据hash获取文章
+  // 根据hash获取文章
   async getByHash(hash, current_user) {
     const post = await this.app.mysql.get('posts', { hash });
     return this.getPostProfile(post, current_user);
   }
 
-  //根据id获取文章
+  // 根据id获取文章
   async getById(id, current_user) {
     const post = await this.app.mysql.get('posts', { id });
     return this.getPostProfile(post, current_user);
   }
 
-  //获取文章阅读数等属性
+  // 获取文章阅读数等属性
   async getPostProfile(post, current_user) {
     if (post) {
+
+      // 如果是商品，返回价格
+      if (post.channel_id === consts.channels.product) {
+        const prices = await this.app.mysql.select('product_prices', {
+          where: { sign_id: post.id, status: 1 },
+          columns: [ 'symbol', 'price', 'decimals' ],
+        });
+
+        post.prices = prices;
+      }
+
       // 阅读次数
       const read = await this.app.mysql.query(
         'select real_read_count num from post_read_count where post_id = ? ',
-        [post.id]
+        [ post.id ]
       );
-      post.read = read[0] ? read[0].num : 0
+      post.read = read[0] ? read[0].num : 0;
 
       // 被赞次数
       const ups = await this.app.mysql.query(
         'select count(*) as ups from actions where sign_id = ? and type = ? ',
-        [post.id, "share"]
+        [ post.id, 'share' ]
       );
       post.ups = ups[0].ups;
 
       // 当前用户是否已赞赏
       post.support = false;
       if (current_user) {
-        let support = await this.app.mysql.get('actions', { sign_id: post.id, author: current_user, type: 'share' });
+        const support = await this.app.mysql.get('actions', { sign_id: post.id, author: current_user, type: 'share' });
         if (support) {
           post.support = true;
         }
@@ -58,12 +70,12 @@ class PostService extends Service {
       // 被赞总金额
       const value = await this.app.mysql.query(
         'select sum(amount) as value from actions where sign_id = ? and type = ? ',
-        [post.id, "share"]
+        [ post.id, 'share' ]
       );
       post.value = value[0].value || 0;
 
-      // nickname 
-      let name = post.username || post.author;
+      // nickname
+      const name = post.username || post.author;
       const user = await this.app.mysql.get('users', { username: name });
       if (user) {
         post.nickname = user.nickname;
@@ -89,13 +101,13 @@ class PostService extends Service {
 
       const options = {
         where: {
-          id: id,
-          username: username, // 只能自己的文章
+          id,
+          username, // 只能自己的文章
         },
       };
 
-      //todo，待验证，修改不改变内容，影响行数应该为0
-      let result = await this.app.mysql.update('posts', row, options);
+      // todo，待验证，修改不改变内容，影响行数应该为0
+      const result = await this.app.mysql.update('posts', row, options);
       return result.affectedRows === 1;
     } catch (err) {
       this.logger.error('PostService::delete error: %j', err);
