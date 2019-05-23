@@ -23,7 +23,7 @@ module.exports = app => {
   // router.get('/p/:id', controller.post.p);
 
   // 单篇文章（for 短链接），统一返回格式示例
-  router.get('/p/:id', passport.verify, controller.post.p2);
+  router.get('/p/:id', passport.verify, controller.post.p);
   // 隐藏文章，统一返回格式示例
   router.delete('/post2/:id', passport.authorize, app.controller.post.delete2);
 

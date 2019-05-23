@@ -472,6 +472,7 @@ class PostController extends Controller {
     return results;
   }
 
+  // todo：待删除
   async post() {
     const ctx = this.ctx;
     const hash = ctx.params.hash;
@@ -546,7 +547,7 @@ class PostController extends Controller {
     }
   }
 
-  async p2() {
+  async p() {
     const ctx = this.ctx;
     const id = ctx.params.id;
 
@@ -559,73 +560,6 @@ class PostController extends Controller {
 
     ctx.body = ctx.msg.success;
     ctx.body.data = post;
-  }
-
-  async p() {
-    const ctx = this.ctx;
-    const id = ctx.params.id;
-
-    const post = await this.app.mysql.get('posts', { id });
-
-    if (post) {
-      // 阅读次数
-      const read = await this.app.mysql.query(
-        'select real_read_count num from post_read_count where post_id = ? ',
-        [post.id]
-      );
-
-      post.read = read[0] ? read[0].num : 0
-
-      const current_user = this.get_current_user();
-      let user = await this.app.mysql.get("users", { username: current_user });
-      post.support = false;
-      if (user) {
-        let support = await this.app.mysql.get('supports', { signid: post.id, uid: user.id, status: 1 });
-        if (support) {
-          post.support = true;
-        }
-      }
-
-      // 被赞次数
-      const ups = await this.app.mysql.query(
-        'select count(*) as ups from supports where signid = ? and status = 1 ',
-        [post.id]
-      );
-
-      post.ups = ups[0].ups;
-
-      // 被赞总金额
-      const value = await this.app.mysql.query(
-        'select sum(amount) as value from supports where signid = ? and symbol = ? and status = 1 ',
-        [post.id, "EOS"]
-      );
-
-      post.value = value[0].value || 0;
-
-      //ONT value
-      const ont_value = await this.app.mysql.query(
-        'select signid, sum(amount) as value from supports where signid = ? and symbol = ? and status=1  ',
-        [post.id, "ONT"]
-      );
-
-      post.ontvalue = ont_value[0].value || 0;
-
-
-      // nickname 
-      let name = post.username || post.author;
-      const nickname = await this.app.mysql.get('users', { username: name });
-      if (nickname) {
-        post.nickname = nickname.nickname;
-      }
-
-      ctx.body = post;
-      ctx.status = 200;
-    } else {
-      ctx.body = {
-        msg: 'post not found',
-      };
-      ctx.status = 404;
-    }
   }
 
   async show() {
