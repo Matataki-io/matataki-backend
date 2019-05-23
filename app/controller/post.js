@@ -17,9 +17,9 @@ class PostController extends Controller {
       chainId: ctx.app.config.eos.chainId,
       httpEndpoint: ctx.app.config.eos.httpEndpoint,
     });
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
+      return query.replace(/\:(\w+)/g, function (txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -555,7 +555,7 @@ class PostController extends Controller {
 
       post.ups = ups[0].ups;
 
-       // 被赞总金额
+      // 被赞总金额
       const value = await this.app.mysql.query(
         'select sum(amount) as value from supports where signid = ? and symbol = ? and status = 1 ',
         [post.id, "EOS"]
@@ -600,7 +600,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const id = ctx.params.id;
 
-    const post = await this.service.post.getById(id, ctx.user.username);
+    const post = await this.service.post.getById(id, ctx.user.id);
 
     if (!post) {
       ctx.body = ctx.msg.postNotFound;
