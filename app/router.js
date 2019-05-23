@@ -23,7 +23,7 @@ module.exports = app => {
   // router.get('/p/:id', controller.post.p);
 
   // 单篇文章（for 短链接），统一返回格式示例
-  router.get('/p/:id', passport.verify, controller.post.p2);
+  router.get('/p/:id', passport.verify, controller.post.p);
   // 隐藏文章，统一返回格式示例
   router.delete('/post2/:id', passport.authorize, app.controller.post.delete2);
 
@@ -103,5 +103,7 @@ module.exports = app => {
   app.router.get('/balance', passport.authorize, app.controller.user.balance);
   // 资产明细
   app.router.get('/tokens', passport.authorize, app.controller.user.tokens);
+  // 发起提现
+  app.router.post('/user/withdraw', passport.authorize, app.controller.user.withdraw);
 };
 

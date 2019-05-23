@@ -13,10 +13,7 @@ class PostController extends Controller {
 
   constructor(ctx) {
     super(ctx);
-    this.eosClient = EOS({
-      chainId: ctx.app.config.eos.chainId,
-      httpEndpoint: ctx.app.config.eos.httpEndpoint,
-    });
+
     this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function (txt, key) {
@@ -48,7 +45,13 @@ class PostController extends Controller {
 
     try {
       if ('eos' === platform) {
-        await this.eos_signature_verify(author, hash, sign, publickey);
+        const hash_piece1 = hash.slice(0, 12);
+        const hash_piece2 = hash.slice(12, 24);
+        const hash_piece3 = hash.slice(24, 36);
+        const hash_piece4 = hash.slice(36, 48);
+
+        const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
+        await this.eos_signature_verify(author, sign_data, sign, publickey);
       } else if ('ont' === platform) {
         this.ont_signature_verify(author, hash, sign, publickey);
       } else {
@@ -136,7 +139,14 @@ class PostController extends Controller {
 
     try {
       if ('eos' === platform) {
-        await this.eos_signature_verify(author, hash, sign, publickey);
+        const hash_piece1 = hash.slice(0, 12);
+        const hash_piece2 = hash.slice(12, 24);
+        const hash_piece3 = hash.slice(24, 36);
+        const hash_piece4 = hash.slice(36, 48);
+
+        const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
+
+        await this.eos_signature_verify(author, sign_data, sign, publickey);
       } else if ('ont' === platform) {
         this.ont_signature_verify(author, hash, sign, publickey);
       } else {
@@ -209,66 +219,6 @@ class PostController extends Controller {
       ctx.status = 500;
     }
 
-  }
-
-  async eos_signature_verify(author, hash, sign, publickey) {
-    try {
-      let eosacc = await this.eosClient.getAccount(author);
-
-      let pass_permission_verify = false;
-
-      for (let i = 0; i < eosacc.permissions.length; i++) {
-        let permit = eosacc.permissions[i];
-        let keys = permit.required_auth.keys;
-        for (let j = 0; j < keys.length; j++) {
-          let pub = keys[j].key;
-          if (publickey === pub) {
-            pass_permission_verify = true;
-          }
-        }
-      }
-
-      if (!pass_permission_verify) {
-        throw new Error("permission verify failuree");
-      }
-
-    } catch (err) {
-      throw new Error("eos username verify failure");
-    }
-
-    const hash_piece1 = hash.slice(0, 12);
-    const hash_piece2 = hash.slice(12, 24);
-    const hash_piece3 = hash.slice(24, 36);
-    const hash_piece4 = hash.slice(36, 48);
-
-    const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
-
-    try {
-      const recover = ecc.recover(sign, sign_data);
-      if (recover !== publickey) {
-        throw new Error("invalid signature");
-      }
-    } catch (err) {
-      throw new Error("invalid signature " + err);
-    }
-  }
-
-  ont_signature_verify(author, hash, sign, publickey) {
-    try {
-      const pub = new ONT.Crypto.PublicKey(publickey);
-
-      const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
-
-      const signature = ONT.Crypto.Signature.deserializeHex(sign);
-
-      const pass = pub.verify(msg, signature);
-
-      if (!pass) {
-        throw new Error("invalid ont signature");
-      }
-    } catch (err) {
-      throw err;
-    }
   }
 
   async posts() {
@@ -522,6 +472,7 @@ class PostController extends Controller {
     return results;
   }
 
+  // todo：待删除
   async post() {
     const ctx = this.ctx;
     const hash = ctx.params.hash;
@@ -596,7 +547,7 @@ class PostController extends Controller {
     }
   }
 
-  async p2() {
+  async p() {
     const ctx = this.ctx;
     const id = ctx.params.id;
 
@@ -609,73 +560,6 @@ class PostController extends Controller {
 
     ctx.body = ctx.msg.success;
     ctx.body.data = post;
-  }
-
-  async p() {
-    const ctx = this.ctx;
-    const id = ctx.params.id;
-
-    const post = await this.app.mysql.get('posts', { id });
-
-    if (post) {
-      // 阅读次数
-      const read = await this.app.mysql.query(
-        'select real_read_count num from post_read_count where post_id = ? ',
-        [post.id]
-      );
-
-      post.read = read[0] ? read[0].num : 0
-
-      const current_user = this.get_current_user();
-      let user = await this.app.mysql.get("users", { username: current_user });
-      post.support = false;
-      if (user) {
-        let support = await this.app.mysql.get('supports', { signid: post.id, uid: user.id, status: 1 });
-        if (support) {
-          post.support = true;
-        }
-      }
-
-      // 被赞次数
-      const ups = await this.app.mysql.query(
-        'select count(*) as ups from supports where signid = ? and status = 1 ',
-        [post.id]
-      );
-
-      post.ups = ups[0].ups;
-
-      // 被赞总金额
-      const value = await this.app.mysql.query(
-        'select sum(amount) as value from supports where signid = ? and symbol = ? and status = 1 ',
-        [post.id, "EOS"]
-      );
-
-      post.value = value[0].value || 0;
-
-      //ONT value
-      const ont_value = await this.app.mysql.query(
-        'select signid, sum(amount) as value from supports where signid = ? and symbol = ? and status=1  ',
-        [post.id, "ONT"]
-      );
-
-      post.ontvalue = ont_value[0].value || 0;
-
-
-      // nickname 
-      let name = post.username || post.author;
-      const nickname = await this.app.mysql.get('users', { username: name });
-      if (nickname) {
-        post.nickname = nickname.nickname;
-      }
-
-      ctx.body = post;
-      ctx.status = 200;
-    } else {
-      ctx.body = {
-        msg: 'post not found',
-      };
-      ctx.status = 404;
-    }
   }
 
   async show() {

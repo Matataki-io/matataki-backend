@@ -82,7 +82,7 @@ class PostService extends Service {
         }
       }
 
-      // 如果是商品，并且已经赞过查询出digital_copy，todo：适用数字copy类的商品，posts表需要增加商品
+      // 如果是商品，并且已经赞过查询出digital_copy，todo：适用数字copy类的商品，posts表还需要增加商品分类
       if (post.channel_id === consts.channels.product && post.support) {
         const product = await this.app.mysql.query(
           'select pp.title,digital_copy from product_stocks ps '
