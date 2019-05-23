@@ -45,9 +45,10 @@ class VerifySupport extends Subscription {
   }
 
   async eos_verify(support) {
-    console.log("eos_verify ", support);
 
     // 根据 signid 去合约中取 table row，Limit 为username， 取到则继续验证 amount， contract ，symbol， referrer， 验证通过才进入结算
+    let user = await this.app.mysql.get('users', { id: support.uid });
+
     try {
       let result = await this.eosClient.getTableRows({
         json: "true",
@@ -55,8 +56,7 @@ class VerifySupport extends Subscription {
         scope: support.signid,
         table: "supports",
         limit: 1,
-        // TODO change to username
-        lower_bound: support.uid
+        lower_bound: user.username
       });
 
       if (result && result.rows && result.rows.length > 0) {
@@ -64,10 +64,13 @@ class VerifySupport extends Subscription {
 
         let verifyPass = false;
 
-        let user = await this.app.mysql.get('users', { id: support.uid });
         let reffer = await this.app.mysql.get('users', { id: support.referreruid });
-
         let reffer_name = reffer ? reffer.username : "";
+        
+        let contract_ref = row.ref ;
+        if(contract_ref == 'null'){
+          contract_ref = "";
+        }
 
         let strs = row.amount.split(" ");
         let amount = parseFloat(strs[0]) * 10000;
@@ -77,11 +80,13 @@ class VerifySupport extends Subscription {
           row.user == user.username &&
           symbol == support.symbol &&
           amount == support.amount &&
-          row.ref == reffer_name
+          contract_ref == reffer_name
         ) {
           verifyPass = true;
         }
 
+        console.log("user,", user)
+        console.log("reffer,", reffer)
         console.log("contract,", row)
         console.log("mysql", support)
         console.log("verifyPass", verifyPass)

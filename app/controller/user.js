@@ -426,6 +426,85 @@ class UserController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = details;
   }
+
+  async withdraw() {
+    const ctx = this.ctx;
+    const { contract, symbol, amount, platform, toaddress, memo, publickey, sign } = ctx.request.body;
+
+    // 签名验证
+    try {
+      if ('eos' === platform) {
+        let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
+        await this.eos_signature_verify(ctx.user.username, sign_data, sign, publickey);
+      } else if ('ont' === platform) {
+        await this.ont_signature_verify(author, hash, sign, publickey);
+      } else {
+        ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
+        return;
+      }
+    } catch (err) {
+      ctx.body = ctx.msg.postPublishSignVerifyError;  //err.message;
+      return;
+    }
+
+    let asset = await this.app.mysql.get('assets', { uid: ctx.user.id, symbol: symbol, platform: platform, contract: contract });
+
+    if (!asset) {
+      return this.response(401, "not available asset can withdtaw");
+    }
+
+    let withdraw_amount = parseInt(amount);
+
+    if (!withdraw_amount) {
+      return this.response(401, "invalid amount");
+    }
+
+    if (withdraw_amount > asset.amount) {
+      return this.response(401, "withdraw amount should less than balance");
+    }
+
+    if (!toaddress) {
+      return this.response(401, "withdraw address required");
+    }
+
+    let transfer_memo = memo ? memo : "Withdraw from Smart Signature";
+    let remind_amount = asset.amount - withdraw_amount;
+
+    try {
+      const conn = await this.app.mysql.beginTransaction();
+
+      try {
+        const now = moment().format('YYYY-MM-DD HH:mm:ss');
+        await conn.insert("withdraws", {
+          uid: ctx.user.id,
+          contract: contract,
+          symbol: symbol,
+          amount: withdraw_amount,
+          platform: platform,
+          toaddress: toaddress,
+          memo: transfer_memo,
+          status: 0,
+          create_time: now,
+        });
+
+        await conn.update("assets", {
+          amount: remind_amount
+        }, { where: { id: asset.id } });
+
+        await conn.commit();
+      } catch (err) {
+        await conn.rollback();
+        throw err;
+      }
+
+      ctx.body = ctx.msg.success;
+
+    } catch (err) {
+      ctx.logger.error(err.sqlMessage);
+      this.response(500, 'withdraw error ' + err.sqlMessage)
+    }
+  }
+
 }
 
 module.exports = UserController;
