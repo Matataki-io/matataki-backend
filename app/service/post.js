@@ -2,7 +2,7 @@
 const consts = require('./consts');
 
 const Service = require('egg').Service;
-var _ = require('lodash');
+const _ = require('lodash');
 
 class PostService extends Service {
 
@@ -34,26 +34,26 @@ class PostService extends Service {
   }
 
   // 根据hash获取文章
-  async getByHash(hash, current_user) {
+  async getByHash(hash, userId) {
     const post = await this.app.mysql.get('posts', { hash });
-    return this.getPostProfile(post, current_user);
+    return this.getPostProfile(post, userId);
   }
 
   // 根据id获取文章
-  async getById(id, current_user) {
+  async getById(id, userId) {
     const post = await this.app.mysql.get('posts', { id });
-    return this.getPostProfile(post, current_user);
+    return this.getPostProfile(post, userId);
   }
 
   // 获取文章阅读数等属性
-  async getPostProfile(post, current_user) {
+  async getPostProfile(post, userId) {
     if (post) {
 
       // 如果是商品，返回价格
       if (post.channel_id === consts.channels.product) {
         const prices = await this.app.mysql.select('product_prices', {
           where: { sign_id: post.id, status: 1 },
-          columns: [ 'symbol', 'price', 'decimals' ],
+          columns: ['platform', 'symbol', 'price', 'decimals'],
         });
 
         post.prices = prices;
@@ -62,32 +62,54 @@ class PostService extends Service {
       // 阅读次数
       const read = await this.app.mysql.query(
         'select real_read_count num from post_read_count where post_id = ? ',
-        [ post.id ]
+        [post.id]
       );
       post.read = read[0] ? read[0].num : 0;
 
       // 被赞次数
       const ups = await this.app.mysql.query(
-        'select count(*) as ups from actions where sign_id = ? and type = ? ',
-        [ post.id, 'share' ]
+        'select count(*) as ups from supports where signid = ? and status = 1 ',
+        [post.id]
       );
       post.ups = ups[0].ups;
 
       // 当前用户是否已赞赏
       post.support = false;
-      if (current_user) {
-        const support = await this.app.mysql.get('actions', { sign_id: post.id, author: current_user, type: 'share' });
+      if (userId) {
+        const support = await this.app.mysql.get('supports', { signid: post.id, uid: userId, status: 1 });
         if (support) {
           post.support = true;
         }
       }
 
+      // 如果是商品，并且已经赞过查询出digital_copy，todo：适用数字copy类的商品，posts表需要增加商品
+      if (post.channel_id === consts.channels.product && post.support) {
+        const product = await this.app.mysql.query(
+          'select pp.title,digital_copy from product_stocks ps '
+          + 'inner join supports s on s.id = ps.support_id '
+          + 'inner join product_prices pp on pp.sign_id = ps.sign_id and pp.platform = s.platform and pp.symbol = s.symbol '
+          + 'where s.uid=? and ps.sign_id=?;',
+          [userId, post.id]
+        );
+
+        post.product = product;
+        // post.product.title = '';
+        // post.product.digital_copy = 
+      }
+
       // 被赞总金额
       const value = await this.app.mysql.query(
-        'select sum(amount) as value from actions where sign_id = ? and type = ? ',
-        [ post.id, 'share' ]
+        'select sum(amount) as value from supports where signid = ? and symbol = ? and status = 1 ',
+        [post.id, 'EOS']
       );
       post.value = value[0].value || 0;
+
+      // ONT value
+      const ont_value = await this.app.mysql.query(
+        'select signid, sum(amount) as value from supports where signid = ? and symbol = ? and status=1  ',
+        [post.id, 'ONT']
+      );
+      post.ontvalue = ont_value[0].value || 0;
 
       // nickname
       const name = post.username || post.author;
@@ -109,9 +131,9 @@ class PostService extends Service {
 
   // 发布时间排序(默认方法)
   async timeRank(page = 1, pagesize = 20, author = null) {
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
+      return query.replace(/\:(\w+)/g, function (txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -151,9 +173,9 @@ class PostService extends Service {
 
   // 赞赏次数排序, 在次数相等的情况下按照时间倒序
   async supportRank(page = 1, pagesize = 20) {
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
+      return query.replace(/\:(\w+)/g, function (txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -191,9 +213,9 @@ class PostService extends Service {
   // 分币种的赞赏金额排序
   // 请注意因为"后筛选"导致的不满20条,进而前端无法加载的问题.
   async amountRank(page = 1, pagesize = 20, symbol = 'EOS') {
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
+      return query.replace(/\:(\w+)/g, function (txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -224,13 +246,13 @@ class PostService extends Service {
 
     // 重新由赞赏金额进行排序
     switch (symbol.toUpperCase()) {
-      case 'EOS' :
+      case 'EOS':
         postList = postList.sort((a, b) => {
           return a.eosvalue > b.eosvalue ? -1 : 1;
         });
         break;
 
-      case 'ONT' :
+      case 'ONT':
         postList = postList.sort((a, b) => {
           return a.ontvalue > b.ontvalue ? -1 : 1;
         });
@@ -243,9 +265,9 @@ class PostService extends Service {
   // 获取文章的列表, 用于成片展示文章时, 会被其他函数调用
   async getPostList(signids) {
 
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
+      return query.replace(/\:(\w+)/g, function (txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -262,7 +284,7 @@ class PostService extends Service {
     postList = await this.app.mysql.query(
       'SELECT a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname FROM posts a '
       + ' LEFT JOIN users b ON a.username = b.username WHERE a.id IN (?) AND a.status = 0 ORDER BY create_time DESC;',
-      [ signids ]
+      [signids]
     );
 
     const hashs = [];
