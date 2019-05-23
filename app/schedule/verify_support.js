@@ -66,9 +66,9 @@ class VerifySupport extends Subscription {
 
         let reffer = await this.app.mysql.get('users', { id: support.referreruid });
         let reffer_name = reffer ? reffer.username : "";
-        
-        let contract_ref = row.ref ;
-        if(contract_ref == 'null'){
+
+        let contract_ref = row.ref;
+        if (contract_ref == 'null') {
           contract_ref = "";
         }
 
@@ -193,6 +193,14 @@ class VerifySupport extends Subscription {
           return;
         }
 
+        // 处理发货
+        const is_shipped = await this.shipped(post, support, conn);
+        if (!is_shipped) {
+          await conn.rollback();
+          console.log(`发货失败，sign_id: ${post.id}, support_id: ${support.id}`);
+          return;
+        }
+
         let fission_factor = post.fission_factor;
         let quota = amount * fission_factor / 1000;
 
@@ -264,6 +272,43 @@ class VerifySupport extends Subscription {
       console.log("passVerify err", err);
     }
 
+  }
+
+
+  // 商品类型，处理发货，todo：适用数字copy类的商品，posts表还需要增加商品分类
+  async shipped(post, support, conn) {
+    // 判断文章所属频道，不是商品直接返回true
+    if (post.channel_id !== consts.channels.product) { return true; }
+
+    // 判断金额是否满足商品定价
+    const product_price = await conn.query(
+      'SELECT price, decimals FROM product_prices WHERE sign_id = ? AND platform = ? AND symbol = ? AND status=1;',
+      [support.signid, support.platform, support.symbol]
+    );
+    // 配置错误，没有商品价格信息
+    if (!product_price || product_price.length === 0) {
+      console.log('商品配置错误，sign_id:' + support.signid);
+      return false;
+    }
+    // 判断付款金额
+    if (product_price[0].price > support.amount) {
+      console.log('商品付款金额错误，amount:' + support.amount);
+      return false;
+    }
+
+    // 锁定商品库存
+    const result = await conn.query(
+      'UPDATE product_stocks SET status=1, support_id = ? '
+      + 'WHERE id = (SELECT id FROM (SELECT id FROM product_stocks WHERE sign_id=? AND status=0 LIMIT 1) t);',
+      [support.id, support.signid]
+    );
+    // 没有库存，失败
+    if (result.affectedRows === 0) {
+      console.log('商品库存不足，sign_id:' + support.signid);
+      return false;
+    }
+
+    return true;
   }
 
 }
