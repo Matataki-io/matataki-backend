@@ -308,6 +308,8 @@ class VerifySupport extends Subscription {
       return false;
     }
 
+    // todo: 处理发邮件 function(support.id)
+
     return true;
   }
 
