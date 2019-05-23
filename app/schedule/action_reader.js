@@ -222,7 +222,7 @@ class ActionReader extends Subscription {
             let user = await this.app.mysql.get("users", { username: author });
             if (user) {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [user.id, 0, "eosio.token", "EOS", (0 - amount), "eos", "whthdraw", block_time]
+                [user.id, 0, "eosio.token", "EOS", (0 - amount), "eos", "withdraw", block_time]
               );
               console.log(result)
             }

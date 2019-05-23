@@ -13,10 +13,7 @@ class PostController extends Controller {
 
   constructor(ctx) {
     super(ctx);
-    this.eosClient = EOS({
-      chainId: ctx.app.config.eos.chainId,
-      httpEndpoint: ctx.app.config.eos.httpEndpoint,
-    });
+
     this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function (txt, key) {
@@ -48,7 +45,13 @@ class PostController extends Controller {
 
     try {
       if ('eos' === platform) {
-        await this.eos_signature_verify(author, hash, sign, publickey);
+        const hash_piece1 = hash.slice(0, 12);
+        const hash_piece2 = hash.slice(12, 24);
+        const hash_piece3 = hash.slice(24, 36);
+        const hash_piece4 = hash.slice(36, 48);
+
+        const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
+        await this.eos_signature_verify(author, sign_data, sign, publickey);
       } else if ('ont' === platform) {
         this.ont_signature_verify(author, hash, sign, publickey);
       } else {
@@ -136,7 +139,14 @@ class PostController extends Controller {
 
     try {
       if ('eos' === platform) {
-        await this.eos_signature_verify(author, hash, sign, publickey);
+        const hash_piece1 = hash.slice(0, 12);
+        const hash_piece2 = hash.slice(12, 24);
+        const hash_piece3 = hash.slice(24, 36);
+        const hash_piece4 = hash.slice(36, 48);
+
+        const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
+
+        await this.eos_signature_verify(author, sign_data, sign, publickey);
       } else if ('ont' === platform) {
         this.ont_signature_verify(author, hash, sign, publickey);
       } else {
@@ -209,66 +219,6 @@ class PostController extends Controller {
       ctx.status = 500;
     }
 
-  }
-
-  async eos_signature_verify(author, hash, sign, publickey) {
-    try {
-      let eosacc = await this.eosClient.getAccount(author);
-
-      let pass_permission_verify = false;
-
-      for (let i = 0; i < eosacc.permissions.length; i++) {
-        let permit = eosacc.permissions[i];
-        let keys = permit.required_auth.keys;
-        for (let j = 0; j < keys.length; j++) {
-          let pub = keys[j].key;
-          if (publickey === pub) {
-            pass_permission_verify = true;
-          }
-        }
-      }
-
-      if (!pass_permission_verify) {
-        throw new Error("permission verify failuree");
-      }
-
-    } catch (err) {
-      throw new Error("eos username verify failure");
-    }
-
-    const hash_piece1 = hash.slice(0, 12);
-    const hash_piece2 = hash.slice(12, 24);
-    const hash_piece3 = hash.slice(24, 36);
-    const hash_piece4 = hash.slice(36, 48);
-
-    const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
-
-    try {
-      const recover = ecc.recover(sign, sign_data);
-      if (recover !== publickey) {
-        throw new Error("invalid signature");
-      }
-    } catch (err) {
-      throw new Error("invalid signature " + err);
-    }
-  }
-
-  ont_signature_verify(author, hash, sign, publickey) {
-    try {
-      const pub = new ONT.Crypto.PublicKey(publickey);
-
-      const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
-
-      const signature = ONT.Crypto.Signature.deserializeHex(sign);
-
-      const pass = pub.verify(msg, signature);
-
-      if (!pass) {
-        throw new Error("invalid ont signature");
-      }
-    } catch (err) {
-      throw err;
-    }
   }
 
   async posts() {

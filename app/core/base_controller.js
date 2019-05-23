@@ -3,6 +3,10 @@
 const { Controller } = require('egg');
 const jwt = require('jwt-simple');
 const moment = require('moment');
+const EOS = require('eosjs');
+const ecc = require('eosjs-ecc');
+var _ = require('lodash');
+const ONT = require('ontology-ts-sdk');
 class BaseController extends Controller {
 
   constructor(ctx) {
@@ -19,6 +23,10 @@ class BaseController extends Controller {
     if (!this.app.post_cache) {
       this.app.post_cache = {};
     }
+    this.eosClient = EOS({
+      chainId: ctx.app.config.eos.chainId,
+      httpEndpoint: ctx.app.config.eos.httpEndpoint,
+    });
   }
 
   get user() {
@@ -140,6 +148,59 @@ class BaseController extends Controller {
       return user;
     } catch (err) {
       return null;
+    }
+  }
+
+  async eos_signature_verify(author, sign_data, sign, publickey) {
+    try {
+      let eosacc = await this.eosClient.getAccount(author);
+
+      let pass_permission_verify = false;
+
+      for (let i = 0; i < eosacc.permissions.length; i++) {
+        let permit = eosacc.permissions[i];
+        let keys = permit.required_auth.keys;
+        for (let j = 0; j < keys.length; j++) {
+          let pub = keys[j].key;
+          if (publickey === pub) {
+            pass_permission_verify = true;
+          }
+        }
+      }
+
+      if (!pass_permission_verify) {
+        throw new Error("permission verify failuree");
+      }
+
+    } catch (err) {
+      throw new Error("eos username verify failure");
+    }
+
+    try {
+      const recover = ecc.recover(sign, sign_data);
+      if (recover !== publickey) {
+        throw new Error("invalid signature");
+      }
+    } catch (err) {
+      throw new Error("invalid signature " + err);
+    }
+  }
+
+  async ont_signature_verify(author, hash, sign, publickey) {
+    try {
+      const pub = new ONT.Crypto.PublicKey(publickey);
+
+      const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
+
+      const signature = ONT.Crypto.Signature.deserializeHex(sign);
+
+      const pass = pub.verify(msg, signature);
+
+      if (!pass) {
+        throw new Error("invalid ont signature");
+      }
+    } catch (err) {
+      throw err;
     }
   }
 

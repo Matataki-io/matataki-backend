@@ -21,3 +21,4 @@ TTD.md
 unittest/
 build/
 cmd.sh
+.vscode/

@@ -388,3 +388,20 @@ drop table shares;
 drop table votes;
 drop table ariticle;
 drop table readers;
+
+
+## 提现
+create table withdraws (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  uid INT UNSIGNED NOT NULL,
+  contract varchar(255) NOT NULL,
+  symbol varchar(255) NOT NULL,
+  amount INT DEFAULT 0, 
+  platform varchar(255) NOT NULL,
+  toaddress varchar(255) NOT NULL,    -- 提现地址
+  memo varchar(255) DEFAULT "",       -- 提现备注
+  status INT DEFAULT 0,               -- 0 待处理 1已转账待确认 2成功 3失败 4审核 5审核拒绝
+  trx varchar(255) NOT NULL,
+  create_time timestamp,
+  PRIMARY KEY (id)
+);

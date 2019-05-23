@@ -114,6 +114,8 @@ CONTRACT smartsignature : public contract
 
                   container = memo.substr(++pos);
                   *ref = name(container);
+
+                  check(is_account(*ref), "Referral is not an existing account."); 
             }
       }
 
