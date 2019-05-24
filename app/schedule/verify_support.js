@@ -3,6 +3,7 @@ const EOS = require('eosjs');
 const ONT = require('ontology-ts-sdk');
 const moment = require('moment');
 const axios = require("axios");
+const consts = require('../service/consts');
 
 class VerifySupport extends Subscription {
 
