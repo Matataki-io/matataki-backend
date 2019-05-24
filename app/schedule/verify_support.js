@@ -170,10 +170,10 @@ class VerifySupport extends Subscription {
       console.log("mysql", support)
       console.log("verifyPass", verifyPass)
 
-    }
+      if (verifyPass) {
+        await this.passVerify(support);
+      }
 
-    if (verifyPass) {
-      await this.passVerify(support);
     }
   }
 
