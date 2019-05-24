@@ -2,14 +2,6 @@
 const Service = require('egg').Service;
 const nodemailer = require('nodemailer');
 
-// CREATE TABLE `steam_keys` (
-//     `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-//     `game_index` int(10) UNSIGNED ,
-//     `key_str` varchar(64),
-//     `status` int(1),
-//     PRIMARY KEY (`id`)
-//   );
-
 class MailService extends Service {
 
   async sendMail(supportid) {
@@ -31,15 +23,14 @@ class MailService extends Service {
     }
 
     const mailContent = '<h2>Your Steam Key</h2>'
-      + `<p>[${stock.digital_copy}] -by Smart Signature Project</p>`;
+      + `<p>[ ${stock.digital_copy} ] -by Smart Signature Project</p>`;
     const mailOptions = {
     //   from: this.config.mail.auth.user,
-      from: 'アンドロメダ',
+      from: 'Andoromeda Official',
       to: user.email,
       subject: 'Your Steam Key',
       html: mailContent,
     };
-    // console.log(mailOptions);
     let result = null;
 
     try {
@@ -47,7 +38,6 @@ class MailService extends Service {
       const transpoter = await nodemailer.createTransport(this.config.mail);
       result = await transpoter.sendMail(mailOptions);
     } catch (err) {
-    //   console.log(err);
       this.logger.error('MailService:: sendMail error: %j', err);
       return null;
     }
