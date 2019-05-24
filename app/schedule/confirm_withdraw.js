@@ -51,26 +51,44 @@ class ConfirmWithdraw extends Subscription {
         console.log("交易已确认", last_irreversible_block - block_num, trx.trx.receipt.status)
         await this.do_confirm(withdraw);
       } else {
-         console.log("交易未确认", last_irreversible_block - block_num, trx.trx.receipt.status)
+        console.log("交易未确认", last_irreversible_block - block_num, trx.trx.receipt.status)
       }
     } catch (err) {
       this.ctx.logger.error(err);
     }
-
   }
 
   async ont_trx_confirm(withdraw) {
+    // 查询hash
+    // http://polaris1.ont.io:20334/api/v1/transaction/a3dcb01d71eed20be5921cd85ac5448247b170c78c88545625ab0a240cb1c4ed?raw=0
+    const response = await axios.get(`${this.ctx.app.config.ont.httpEndpoint}/api/v1/transaction/${withdraw.trx}?raw=0}`);
 
+    if (response && response.data && response.data.Result) {
+      let data = response.data;
+      if (data.Desc === 'SUCCESS' && data.Error === 0) {
+        let result = data.Result;
+        if (result.Payer === this.ctx.app.config.ont.withdraw_account && result.Hash === withdraw.trx) {
+          console.log("交易已确认", withdraw);
+          await this.do_confirm(withdraw);
+          return;
+        }
+      }
+    }
+
+    console.log("交易未确认", withdraw)
   }
 
   async do_confirm(withdraw) {
     try {
-      let result = await this.app.mysql.update("withdraws", {
+      await this.app.mysql.update("withdraws", {
         status: 2,
       }, { where: { id: withdraw.id } });
 
-      console.log("do_confirm transfer success");
+      await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [withdraw.uid, 0, withdraw.contract, withdraw.symbol, (0 - withdraw.amount), withdraw.platform, "withdraw", withdraw.create_time]
+      );
 
+      console.log("do_confirm transfer success");
     } catch (err) {
       this.ctx.logger.error(err);
     }

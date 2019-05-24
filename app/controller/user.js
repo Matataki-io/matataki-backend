@@ -434,10 +434,20 @@ class UserController extends Controller {
     // 签名验证
     try {
       if ('eos' === platform) {
+        // EOS最小提现 (测试先不限制)
+        // if(amount < 10000){
+        //   return this.response(401, "EOS withdtaw amount must greater than 1 ");
+        // }
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
         await this.eos_signature_verify(ctx.user.username, sign_data, sign, publickey);
       } else if ('ont' === platform) {
-        await this.ont_signature_verify(author, hash, sign, publickey);
+        // ONT最小提现 (测试先不限制)
+        // if(amount < 30000){
+        //   return this.response(401, "ONT withdtaw amount must greater than 3 ONT");
+        // }
+
+        let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
+        await this.ont_signature_verify(sign_data, sign, publickey);
       } else {
         ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
         return;
