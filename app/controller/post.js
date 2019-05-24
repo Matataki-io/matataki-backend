@@ -208,10 +208,8 @@ class PostController extends Controller {
         throw err;
       }
 
-      ctx.body = {
-        msg: 'success',
-      };
-      ctx.status = 201;
+      ctx.body = ctx.msg.success;
+      ctx.body.data = signId;
 
     } catch (err) {
       ctx.logger.error(err.sqlMessage);
