@@ -53,7 +53,8 @@ class PostController extends Controller {
         const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
         await this.eos_signature_verify(author, sign_data, sign, publickey);
       } else if ('ont' === platform) {
-        this.ont_signature_verify(author, hash, sign, publickey);
+        const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
+        this.ont_signature_verify(msg, sign, publickey);
       } else {
         ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
         return;
@@ -148,7 +149,8 @@ class PostController extends Controller {
 
         await this.eos_signature_verify(author, sign_data, sign, publickey);
       } else if ('ont' === platform) {
-        this.ont_signature_verify(author, hash, sign, publickey);
+        const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
+        this.ont_signature_verify(msg, sign, publickey);
       } else {
         this.ctx.status = 401;
         this.ctx.body = 'platform not support';

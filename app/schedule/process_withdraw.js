@@ -65,23 +65,55 @@ class ProcessWithdraw extends Subscription {
 
       let result = await this.app.mysql.update("withdraws", {
         status: 1,
-        trx:trx
+        trx: trx
       }, { where: { id: withdraw.id } });
 
-      console.log("transfer success");
-
+      console.log("eos transfer success");
     } catch (err) {
       this.ctx.logger.error(err);
     }
 
-  
   }
 
   async ont_transfer(withdraw) {
 
-   
-  }
+    try {
+      const gasLimit = '20000';
+      const gasPrice = '500';
 
+      let private_key_hex = this.ctx.app.config.ont.withdraw_pri;
+      let publickey_address = this.ctx.app.config.ont.withdraw_account;
+
+
+
+      const fromPrivateKey = new ONT.Crypto.PrivateKey(private_key_hex);
+
+      const from = new ONT.Crypto.Address(publickey_address);
+      const to = new ONT.Crypto.Address(withdraw.toaddress);
+
+      const tx = ONT.OntAssetTxBuilder.makeTransferTx('ONT', from, to, withdraw.amount / 10000, gasPrice, gasLimit);
+
+      //tx.payer = from;
+      ONT.TransactionBuilder.signTransaction(tx, fromPrivateKey);
+
+      // we can use RestClient, RpcClient or WebsocketClient to send the trasanction
+      const socketClient = new ONT.WebsocketClient(this.ctx.app.config.ont.websocketClient);
+      const response = await socketClient.sendRawTransaction(tx.serialize(), false, true);
+      if (response && response.Desc == 'SUCCESS' && response.Result) {
+        let trx = response.Result.TxHash;
+        console.log("ont transfer success", trx);
+        let result = await this.app.mysql.update("withdraws", {
+          status: 1,
+          trx: trx
+        }, { where: { id: withdraw.id } });
+      }
+
+    } catch (err) {
+      this.ctx.logger.error("process ont withdraw error ", err);
+    }
+
+
+  }
 
 
 }

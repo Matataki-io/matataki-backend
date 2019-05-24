@@ -186,11 +186,9 @@ class BaseController extends Controller {
     }
   }
 
-  async ont_signature_verify(author, hash, sign, publickey) {
+  async ont_signature_verify(msg, sign, publickey) {
     try {
       const pub = new ONT.Crypto.PublicKey(publickey);
-
-      const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
 
       const signature = ONT.Crypto.Signature.deserializeHex(sign);
 

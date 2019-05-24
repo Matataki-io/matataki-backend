@@ -1105,3 +1105,47 @@ curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referr
 }
 
 ```
+
+
+#### 资产提现
+
+
+* POST /user/withdraw
+* 响应状态码：201
+
+* 参数 
+* contract : 提现币种的合约地址
+* symbol: 提现币种的符号
+* amount: 提现数量（ 1 EOS和1 ONT都是 传10000的格式）
+* platform: 平台（eos or ont）
+* toaddress: 提现地址
+* memo: 转账备注（可放空）
+* publickey: 签名公钥
+* sign: 签名
+
+sign 的签名内容：
+
+```
+let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
+
+比如:
+ "xiaotiandada eosio.token EOS 10000"
+ "ALStiQ9ZFZo8R8aXaHfZEPReJzv3jSz1Es AFmseVrdL9f9oyCzZefL9tG6UbvhUMqNMV ONT 30000"
+
+```
+
+* EOS提现请求示例：
+
+```
+
+curl -d "sign=SIG_K1_Kbx5MbeSZhHZhHnfhA7KD2YEZLfGbvhrWejwgHyzXQa4gvHfdCiAdMgiUJQvYqrpPrgYXugBNF75Rr4K8D6PW91ibTHwpN&publickey=EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C&toaddress=joetothemoon&signId=1&contract=eosio.token&symbol=EOS&amount=1&memo=memoxx&platform=eos" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTkxODg4MjIyMzgsInBsYXRmb3JtIjoiZW9zIiwiaWQiOjE3MH0.DJ5MABCaPYqcrPADYmpVJCGTgXLLuur_Y4JjLSRMJa8"  -X POST http://localhost:7001/user/withdraw
+
+```
+
+* ONT提现请求示例：
+
+```
+
+curl -d "sign=01b07c90984e0385b19f62f29f93b037a8a3c3a9d2d434229c5da315e31bdc1f573cc37c6ad27331a608a7e39a2a4299c71c786371b3790e9a77579d86f58dfedc&publickey=02f57f00790d3e368ad2bf28b08379ce01d608caaf19f862dc92541438fea6daeb&toaddress=ALStiQ9ZFZo8R8aXaHfZEPReJzv3jSz1Es&contract=AFmseVrdL9f9oyCzZefL9tG6UbvhUMqNMV&symbol=ONT&amount=30000&platform=ont" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBTFN0aVE5WkZabzhSOGFYYUhmWkVQUmVKenYzalN6MUVzIiwiZXhwIjoxNTU5MjgzNjQwODYxLCJwbGF0Zm9ybSI6Im9udCIsImlkIjozMDZ9.pcRmiN9aprhTetCIZCXY5eZNRJwOWfI3tyg_UykSlvc"  -X POST http://localhost:7001/user/withdraw
+
+```
