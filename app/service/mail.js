@@ -40,8 +40,8 @@ class MailService extends Service {
         html: mailContent,
       };
 
-      // const transpoter = await nodemailer.createTransport(this.config.mail);
-      // result = await transpoter.sendMail(mailOptions);
+      const transpoter = await nodemailer.createTransport(this.config.mail);
+      result = await transpoter.sendMail(mailOptions);
     } catch (err) {
       this.logger.error('MailService:: sendMail error: %j', err);
       return null;
