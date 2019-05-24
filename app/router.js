@@ -105,5 +105,8 @@ module.exports = app => {
   app.router.get('/tokens', passport.authorize, app.controller.user.tokens);
   // 发起提现
   app.router.post('/user/withdraw', passport.authorize, app.controller.user.withdraw);
+
+  // 邮件测试
+  app.router.get('/mailtest6a3476f5', passport.verify, app.controller.post.mailtest);
 };
 

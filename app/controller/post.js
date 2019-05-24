@@ -755,6 +755,15 @@ class PostController extends Controller {
     ctx.body.data = post;
   }
 
+  async mailTest() {
+    const ctx = this.ctx;
+    const { supportid = 505 } = ctx.query;
+
+    const mail = await this.service.mail.sendMail(supportid);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = mail;
+  }
+
 }
 
 module.exports = PostController;
