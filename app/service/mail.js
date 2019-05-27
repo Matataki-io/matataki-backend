@@ -34,7 +34,7 @@ class MailService extends Service {
       const mailContent = await this.ctx.renderView('mail.tpl', mailData, { viewEngine: 'nunjucks' });
       const mailOptions = {
       //   from: this.config.mail.auth.user,
-        from: `Andoromeda Official <${this.config.mail.auth.user}>`,
+        from: `Smart Signature<${this.config.mail.auth.user}>`,
         to: user[0].email,
         subject: '智能签名:您购买的商品',
         html: mailContent,

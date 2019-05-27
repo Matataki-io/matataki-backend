@@ -310,11 +310,13 @@ class VerifySupport extends Subscription {
     }
 
     // todo: 处理发邮件 function(support.id)
-    const mail = await this.service.mail.sendMail(support.id);
-    if (mail) {
-      console.log('邮件发送成功，sign_id:' + support.signid);
-    } else {
-      console.log('邮件发送失败，sign_id:' + support.signid);
+    if (this.ctx.app.config.mailSetting) {
+      const mail = await this.service.mail.sendMail(support.id);
+      if (mail) {
+        console.log('邮件发送成功，sign_id:' + support.signid);
+      } else {
+        console.log('邮件发送失败，sign_id:' + support.signid);
+      }
     }
 
     return true;
