@@ -264,6 +264,19 @@ class VerifySupport extends Subscription {
         // 提交事务
         await conn.commit();
 
+        // 另行处理邮件发送..
+        if (post.channel_id === consts.channels.product) {
+          this.logger.info('MailService:: sendMail :是商品, 准备发送邮件' + support.id);
+          if (this.ctx.app.config.mailSetting) {
+            const mail = await this.service.mail.sendMail(support.id);
+            if (mail) {
+              this.logger.info('MailService:: sendMail success: supportid: ' + support.id);
+            } else {
+              this.logger.error('MailService:: sendMail error: supportid: ' + support.id);
+            }
+          }
+        }
+
       } catch (err) {
         await conn.rollback();
         console.log(err);
@@ -310,14 +323,6 @@ class VerifySupport extends Subscription {
     }
 
     // todo: 处理发邮件 function(support.id)
-    if (this.ctx.app.config.mailSetting) {
-      const mail = await this.service.mail.sendMail(support.id);
-      if (mail) {
-        this.logger.info('MailService:: sendMail success: supportid: ' + support.id);
-      } else {
-        this.logger.error('MailService:: sendMail error: supportid: ' + support.id);
-      }
-    }
 
     return true;
   }
