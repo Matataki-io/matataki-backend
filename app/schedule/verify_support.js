@@ -313,9 +313,9 @@ class VerifySupport extends Subscription {
     if (this.ctx.app.config.mailSetting) {
       const mail = await this.service.mail.sendMail(support.id);
       if (mail) {
-        console.log('邮件发送成功，sign_id:' + support.signid);
+        this.logger.info('MailService:: sendMail success: supportid: ' + support.id);
       } else {
-        console.log('邮件发送失败，sign_id:' + support.signid);
+        this.logger.error('MailService:: sendMail error: supportid: ' + support.id);
       }
     }
 
