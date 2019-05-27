@@ -755,14 +755,14 @@ class PostController extends Controller {
     ctx.body.data = post;
   }
 
-  async mailtest() {
-    const ctx = this.ctx;
-    const { supportid = 505 } = ctx.query;
+  // async mailtest() {
+  //   const ctx = this.ctx;
+  //   const { supportid = 505 } = ctx.query;
 
-    const mail = await this.service.mail.sendMail(supportid);
-    ctx.body = ctx.msg.success;
-    ctx.body.data = mail;
-  }
+  //   const mail = await this.service.mail.sendMail(supportid);
+  //   ctx.body = ctx.msg.success;
+  //   ctx.body.data = mail;
+  // }
 
 }
 
