@@ -430,7 +430,7 @@ class UserController extends Controller {
   async withdraw() {
     const ctx = this.ctx;
     const { contract, symbol, amount, platform, toaddress, memo, publickey, sign } = ctx.request.body;
-
+    
     // 签名验证
     try {
       if ('eos' === ctx.user.platform) {
@@ -439,6 +439,7 @@ class UserController extends Controller {
         //   return this.response(401, "EOS withdtaw amount must greater than 1 ");
         // }
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
+        console.log("debug for withdraw", ctx.user.platform, sign_data);
         await this.eos_signature_verify(ctx.user.username, sign_data, sign, publickey);
       } else if ('ont' === ctx.user.platform) {
         // ONT最小提现 (测试先不限制)
@@ -447,6 +448,7 @@ class UserController extends Controller {
         // }
 
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
+        console.log("debug for withdraw", ctx.user.platform, sign_data);
         await this.ont_signature_verify(sign_data, sign, publickey);
       } else {
         ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
