@@ -1,12 +1,22 @@
 'use strict';
 
 const Service = require('egg').Service;
+const EOS = require('eosjs');
+
 const introductionLengthInvalid = 4;
 const emailDuplicated = 5;
 const nicknameDuplicated = 6;
 const nicknameInvalid = 7;
 
 class UserService extends Service {
+
+  // constructor(ctx) {
+  //   super(ctx);
+  //   this.eosClient = EOS({
+  //     chainId: ctx.app.config.eos.chainId,
+  //     httpEndpoint: ctx.app.config.eos.httpEndpoint,
+  //   });
+  // }
 
   async getUserDetails(current_user) {
 
@@ -171,6 +181,32 @@ class UserService extends Service {
       return result.affectedRows === 1;
     } catch (err) {
       this.logger.error('UserService:: setNickname error: %j', err);
+    }
+    return false;
+  }
+
+  // EOS: 从链上取得数据, 判断address的合法性
+  async isEosAddress(address) {
+    const eosClient = EOS({
+      chainId: this.ctx.app.config.eos.chainId,
+      httpEndpoint: this.ctx.app.config.eos.httpEndpoint,
+    });
+
+    try {
+      await eosClient.getAccount(address);
+      // console.log(accountInfo);
+    } catch (err) {
+      // 查询的用户不存在时候, 此API会报错, 所以要handle
+      this.logger.info('UserService:: isValidEosAccount info: %j', err);
+      return false;
+    }
+    return true;
+  }
+
+  // ONT: 是A开头的34位字符串,且不含特殊符号,即通过
+  async isOntAddress(address) {
+    if (/^A[0-9a-zA-Z]{33}$/.test(address)) {
+      return true;
     }
     return false;
   }

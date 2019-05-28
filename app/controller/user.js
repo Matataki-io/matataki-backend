@@ -434,6 +434,11 @@ class UserController extends Controller {
     // 签名验证
     try {
       if ('eos' === platform) {
+        const verifyStatus = await this.service.user.isEosAddress(toaddress);
+        if (verifyStatus === false) {
+          ctx.body = ctx.msg.eosAddressInvalid;
+          return;
+        }
         // EOS最小提现 (测试先不限制)
         // if(amount < 10000){
         //   return this.response(401, "EOS withdtaw amount must greater than 1 ");
@@ -441,6 +446,11 @@ class UserController extends Controller {
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
         await this.eos_signature_verify(ctx.user.username, sign_data, sign, publickey);
       } else if ('ont' === platform) {
+        const verifyStatus = await this.service.user.isOntAddress(toaddress);
+        if (verifyStatus === false) {
+          ctx.body = ctx.msg.ontAddressInvalid;
+          return;
+        }
         // ONT最小提现 (测试先不限制)
         // if(amount < 30000){
         //   return this.response(401, "ONT withdtaw amount must greater than 3 ONT");
