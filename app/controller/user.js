@@ -455,7 +455,7 @@ class UserController extends Controller {
         return;
       }
     } catch (err) {
-      console.log("signature_verify error", error);
+      console.log("signature_verify error", err);
       ctx.body = ctx.msg.postPublishSignVerifyError;  //err.message;
       return;
     }
