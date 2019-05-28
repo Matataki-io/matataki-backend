@@ -3,7 +3,7 @@
 const Controller = require('../core/base_controller');
 const moment = require('moment');
 var _ = require('lodash');
-
+const ONT = require('ontology-ts-sdk');
 class UserController extends Controller {
 
   async user() {
@@ -448,8 +448,8 @@ class UserController extends Controller {
         // }
 
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
-        console.log("debug for withdraw", ctx.user.platform, sign_data);
-        await this.ont_signature_verify(sign_data, sign, publickey, publickey, sign);
+        const msg = ONT.utils.str2hexstr(sign_data);
+        await this.ont_signature_verify(msg, sign, publickey, publickey, sign);
       } else {
         ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
         return;
