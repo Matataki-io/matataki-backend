@@ -405,3 +405,9 @@ create table withdraws (
   create_time timestamp,
   PRIMARY KEY (id)
 );
+
+
+ALTER TABLE assets_change_log ADD COLUMN toaddress varchar(255) DEFAULT "";
+ALTER TABLE assets_change_log ADD COLUMN memo varchar(255) DEFAULT "";
+ALTER TABLE assets_change_log ADD COLUMN status INT DEFAULT 2;
+ALTER TABLE assets_change_log ADD COLUMN trx varchar(255) DEFAULT "";

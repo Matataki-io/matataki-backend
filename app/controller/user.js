@@ -152,7 +152,7 @@ class UserController extends Controller {
     );
 
     const logs = await this.app.mysql.query(
-      'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc limit ? ,? ',
+      'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, a.trx, a.toaddress, a.memo, a.status, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc limit ? ,? ',
       [user.id, symbol, (page - 1) * pagesize, pagesize]
     );
 
@@ -485,12 +485,13 @@ class UserController extends Controller {
 
       try {
         const now = moment().format('YYYY-MM-DD HH:mm:ss');
-        await conn.insert("withdraws", {
+        await conn.insert("assets_change_log", {
           uid: ctx.user.id,
           contract: contract,
           symbol: symbol,
           amount: withdraw_amount,
           platform: platform,
+          type: "withdraw",
           toaddress: toaddress,
           memo: transfer_memo,
           status: 0,

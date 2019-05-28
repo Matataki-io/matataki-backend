@@ -27,7 +27,7 @@ class ProcessWithdraw extends Subscription {
   async subscribe() {
     // if (this.ctx.app.config.isDebug) return;
 
-    const results = await this.app.mysql.query(`select * from withdraws where status=0 limit 10`);
+    const results = await this.app.mysql.query(`select * from assets_change_log where type='withdraw' and status=0 limit 10`);
 
     if (results.length === 0)
       return
@@ -63,7 +63,7 @@ class ProcessWithdraw extends Subscription {
 
       let trx = res.transaction_id;
 
-      let result = await this.app.mysql.update("withdraws", {
+      let result = await this.app.mysql.update("assets_change_log", {
         status: 1,
         trx: trx
       }, { where: { id: withdraw.id } });
@@ -102,7 +102,7 @@ class ProcessWithdraw extends Subscription {
       if (response && response.Desc == 'SUCCESS' && response.Result) {
         let trx = response.Result.TxHash;
         console.log("ont transfer success", trx);
-        let result = await this.app.mysql.update("withdraws", {
+        let result = await this.app.mysql.update("assets_change_log", {
           status: 1,
           trx: trx
         }, { where: { id: withdraw.id } });
