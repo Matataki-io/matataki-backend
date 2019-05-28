@@ -3,7 +3,7 @@
 const Controller = require('../core/base_controller');
 const moment = require('moment');
 var _ = require('lodash');
-
+const ONT = require('ontology-ts-sdk');
 class UserController extends Controller {
 
   async user() {
@@ -152,7 +152,7 @@ class UserController extends Controller {
     );
 
     const logs = await this.app.mysql.query(
-      'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc limit ? ,? ',
+      'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, a.trx, a.toaddress, a.memo, a.status, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc limit ? ,? ',
       [user.id, symbol, (page - 1) * pagesize, pagesize]
     );
 
@@ -430,10 +430,10 @@ class UserController extends Controller {
   async withdraw() {
     const ctx = this.ctx;
     const { contract, symbol, amount, platform, toaddress, memo, publickey, sign } = ctx.request.body;
-
+    
     // 签名验证
     try {
-      if ('eos' === platform) {
+      if ('eos' === ctx.user.platform) {
         const verifyStatus = await this.service.user.isEosAddress(toaddress);
         if (verifyStatus === false) {
           ctx.body = ctx.msg.eosAddressInvalid;
@@ -444,8 +444,9 @@ class UserController extends Controller {
         //   return this.response(401, "EOS withdtaw amount must greater than 1 ");
         // }
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
+        console.log("debug for withdraw", ctx.user.platform, sign_data, publickey, sign);
         await this.eos_signature_verify(ctx.user.username, sign_data, sign, publickey);
-      } else if ('ont' === platform) {
+      } else if ('ont' === ctx.user.platform) {
         const verifyStatus = await this.service.user.isOntAddress(toaddress);
         if (verifyStatus === false) {
           ctx.body = ctx.msg.ontAddressInvalid;
@@ -457,12 +458,14 @@ class UserController extends Controller {
         // }
 
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
-        await this.ont_signature_verify(sign_data, sign, publickey);
+        const msg = ONT.utils.str2hexstr(sign_data);
+        await this.ont_signature_verify(msg, sign, publickey, publickey, sign);
       } else {
         ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
         return;
       }
     } catch (err) {
+      console.log("signature_verify error", err);
       ctx.body = ctx.msg.postPublishSignVerifyError;  //err.message;
       return;
     }
@@ -495,12 +498,13 @@ class UserController extends Controller {
 
       try {
         const now = moment().format('YYYY-MM-DD HH:mm:ss');
-        await conn.insert("withdraws", {
+        await conn.insert("assets_change_log", {
           uid: ctx.user.id,
           contract: contract,
           symbol: symbol,
           amount: withdraw_amount,
           platform: platform,
+          type: "withdraw",
           toaddress: toaddress,
           memo: transfer_memo,
           status: 0,

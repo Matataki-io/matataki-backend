@@ -7,9 +7,9 @@ class SupportService extends Service {
 
   async commentList(signid, page = 1, pagesize = 20) {
 
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
+      return query.replace(/\:(\w+)/g, function (txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }

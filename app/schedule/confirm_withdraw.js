@@ -25,7 +25,7 @@ class ConfirmWithdraw extends Subscription {
   }
 
   async subscribe() {
-    const results = await this.app.mysql.query(`select * from withdraws where status=1 limit 10`);
+    const results = await this.app.mysql.query(`select * from assets_change_log where type='withdraw' and status=1 limit 10`);
 
     if (results.length === 0)
       return
@@ -80,13 +80,13 @@ class ConfirmWithdraw extends Subscription {
 
   async do_confirm(withdraw) {
     try {
-      await this.app.mysql.update("withdraws", {
+      await this.app.mysql.update("assets_change_log", {
         status: 2,
       }, { where: { id: withdraw.id } });
 
-      await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [withdraw.uid, 0, withdraw.contract, withdraw.symbol, (0 - withdraw.amount), withdraw.platform, "withdraw", withdraw.create_time]
-      );
+      // await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      //   [withdraw.uid, 0, withdraw.contract, withdraw.symbol, (0 - withdraw.amount), withdraw.platform, "withdraw", withdraw.create_time]
+      // );
 
       console.log("do_confirm transfer success");
     } catch (err) {
