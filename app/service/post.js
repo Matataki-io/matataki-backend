@@ -53,7 +53,7 @@ class PostService extends Service {
       if (post.channel_id === consts.channels.product) {
         const prices = await this.app.mysql.select('product_prices', {
           where: { sign_id: post.id, status: 1 },
-          columns: ['platform', 'symbol', 'price', 'decimals'],
+          columns: ['platform', 'symbol', 'price', 'decimals', 'stock_quantity'],
         });
 
         post.prices = prices;
@@ -85,7 +85,7 @@ class PostService extends Service {
       // 如果是商品，并且已经赞过查询出digital_copy，todo：适用数字copy类的商品，posts表还需要增加商品分类
       if (post.channel_id === consts.channels.product && post.support) {
         const product = await this.app.mysql.query(
-          'select pp.title,digital_copy from product_stocks ps '
+          'select pp.title,digital_copy from product_stock_keys ps '
           + 'inner join supports s on s.id = ps.support_id '
           + 'inner join product_prices pp on pp.sign_id = ps.sign_id and pp.platform = s.platform and pp.symbol = s.symbol '
           + 'where s.uid=? and ps.sign_id=?;',
@@ -93,8 +93,6 @@ class PostService extends Service {
         );
 
         post.product = product;
-        // post.product.title = '';
-        // post.product.digital_copy = 
       }
 
       // 被赞总金额

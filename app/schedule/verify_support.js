@@ -310,14 +310,26 @@ class VerifySupport extends Subscription {
       return false;
     }
 
-    // 锁定商品库存
-    const result = await conn.query(
-      'UPDATE product_stocks SET status=1, support_id = ? '
-      + 'WHERE id = (SELECT id FROM (SELECT id FROM product_stocks WHERE sign_id=? AND status=0 LIMIT 1) t);',
+    // 减库存数量
+    const resultStockQuantity = await conn.query(
+      'UPDATE product_prices SET stock_quantity = stock_quantity - 1 WHERE sign_id = ? AND stock_quantity > 0;',
+      [support.signid]
+    );
+
+    if (resultStockQuantity.affectedRows === 0) {
+      console.log('商品库存不足，sign_id:' + support.signid);
+      return false;
+    }
+
+    // 锁定商品
+    const resultKeys = await conn.query(
+      'UPDATE product_stock_keys SET status=1, support_id = ? '
+      + 'WHERE id = (SELECT id FROM (SELECT id FROM product_stock_keys WHERE sign_id=? AND status=0 LIMIT 1) t);',
       [support.id, support.signid]
     );
+
     // 没有库存，失败
-    if (result.affectedRows === 0) {
+    if (resultKeys.affectedRows === 0) {
       console.log('商品库存不足，sign_id:' + support.signid);
       return false;
     }
