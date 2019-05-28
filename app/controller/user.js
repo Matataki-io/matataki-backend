@@ -439,7 +439,7 @@ class UserController extends Controller {
         //   return this.response(401, "EOS withdtaw amount must greater than 1 ");
         // }
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
-        console.log("debug for withdraw", ctx.user.platform, sign_data);
+        console.log("debug for withdraw", ctx.user.platform, sign_data, publickey, sign);
         await this.eos_signature_verify(ctx.user.username, sign_data, sign, publickey);
       } else if ('ont' === ctx.user.platform) {
         // ONT最小提现 (测试先不限制)
@@ -449,12 +449,13 @@ class UserController extends Controller {
 
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
         console.log("debug for withdraw", ctx.user.platform, sign_data);
-        await this.ont_signature_verify(sign_data, sign, publickey);
+        await this.ont_signature_verify(sign_data, sign, publickey, publickey, sign);
       } else {
         ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
         return;
       }
     } catch (err) {
+      console.log("signature_verify error", error);
       ctx.body = ctx.msg.postPublishSignVerifyError;  //err.message;
       return;
     }
