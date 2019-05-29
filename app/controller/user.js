@@ -427,6 +427,10 @@ class UserController extends Controller {
     ctx.body.data = details;
   }
 
+  isInteger(amount) {
+    return typeof amount === 'number' && amount % 1 === 0;
+  }
+
   async withdraw() {
     const ctx = this.ctx;
     const { contract, symbol, amount, platform, toaddress, memo, publickey, sign } = ctx.request.body;
@@ -498,6 +502,13 @@ class UserController extends Controller {
 
     if (!toaddress) {
       return this.response(401, "withdraw address required");
+    }
+
+    if ('ont' === platform) {
+      let num = withdraw_amount / 10000;
+      if (!isInteger(num)) {
+        return this.response(401, "ONT withdraw only support Integer");
+      }
     }
 
     let transfer_memo = memo ? memo : "Withdraw from Smart Signature";
