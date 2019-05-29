@@ -506,7 +506,7 @@ class UserController extends Controller {
 
     if ('ont' === platform) {
       let num = withdraw_amount / 10000;
-      if (!isInteger(num)) {
+      if (!this.isInteger(num)) {
         return this.response(401, "ONT withdraw only support Integer");
       }
     }
