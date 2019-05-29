@@ -2,6 +2,7 @@
 
 const Service = require('egg').Service;
 const EOS = require('eosjs');
+const ONT = require('ontology-ts-sdk');
 
 const introductionLengthInvalid = 4;
 const emailDuplicated = 5;
@@ -197,18 +198,31 @@ class UserService extends Service {
       // console.log(accountInfo);
     } catch (err) {
       // 查询的用户不存在时候, 此API会报错, 所以要handle
-      this.logger.info('UserService:: isValidEosAccount info: %j', err);
+      this.logger.info('UserService:: isEosAddress: No, info: %j', err);
       return false;
     }
     return true;
   }
 
-  // ONT: 是A开头的34位字符串,且不含特殊符号,即通过
+  // 已被放弃 ONT: 是A开头的34位字符串,且不含特殊符号,即通过
+  // 已被放弃, 符合该条件, 但是非checksumed address 不会被过滤
+  // 后面在process_withdraw的时候, 发起交易的时候会出错, 然后该记录status永远为0而且没有trx交易号码
+  // async isOntAddress(address) {
+  //   if (/^A[0-9a-zA-Z]{33}$/.test(address)) {
+  //     return true;
+  //   }
+  //   return false;
+  // }
+
   async isOntAddress(address) {
-    if (/^A[0-9a-zA-Z]{33}$/.test(address)) {
-      return true;
+    try {
+      const addressVerify = new ONT.Crypto.Address(address);
+      await addressVerify.serialize();
+    } catch (err) {
+      this.logger.info('UserService:: isOntAddress: No, info: %j', err);
+      return false;
     }
-    return false;
+    return true;
   }
 }
 

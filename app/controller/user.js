@@ -431,14 +431,16 @@ class UserController extends Controller {
     const ctx = this.ctx;
     const { contract, symbol, amount, platform, toaddress, memo, publickey, sign } = ctx.request.body;
 
+    let verifyStatus = true;
+    // 验证提现地址合法性
     if (platform === 'eos') {
-      const verifyStatus = await this.service.user.isEosAddress(toaddress);
+      verifyStatus = await this.service.user.isEosAddress(toaddress);
       if (verifyStatus === false) {
         ctx.body = ctx.msg.eosAddressInvalid;
         return;
       }
     } else if (platform === 'ont') {
-      const verifyStatus = await this.service.user.isOntAddress(toaddress);
+      verifyStatus = await this.service.user.isOntAddress(toaddress);
       if (verifyStatus === false) {
         ctx.body = ctx.msg.ontAddressInvalid;
         return;

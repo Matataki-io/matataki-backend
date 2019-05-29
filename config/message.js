@@ -84,8 +84,8 @@ module.exports = {
       nicknameDuplicated: { code: this.nicknameDuplicated, message: '已经有相同的昵称存在' },
       nicknameInvalid: { code: this.nicknameInvalid, message: '昵称不能包含字符,而且长度须小于12个字' },
 
-      eosAddressInvalid: { code: this.eosAddressInvalid, message: 'EOS帐号有误' },
-      ontAddressInvalid: { code: this.ontAddressInvalid, message: 'ONT帐号格式错误' },
+      eosAddressInvalid: { code: this.eosAddressInvalid, message: 'EOS帐号不存在' },
+      ontAddressInvalid: { code: this.ontAddressInvalid, message: 'ONT帐号有误' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },
