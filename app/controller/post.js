@@ -208,8 +208,7 @@ class PostController extends Controller {
         throw err;
       }
 
-      // 此处出现无法从msg模块里面拉取提示信息的问题 不知为何, 只好临时这样修正
-      ctx.body = { code: 200, message: 'success' };
+      ctx.body = ctx.msg.success;
       ctx.body.data = signId;
 
     } catch (err) {

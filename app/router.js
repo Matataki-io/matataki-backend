@@ -12,7 +12,8 @@ module.exports = app => {
   // 发布文章，增加登录验证，todo：还需要改为passport.authorize，必须登录用户才能提交
   router.post('/publish', passport.verify, controller.post.publish);
   // 文章编辑
-  router.post('/edit', controller.post.edit);
+  // 此处为了使用msg模块引入了passport.verify, 以后整体修改的时候需用passport.authorize
+  router.post('/edit', passport.verify, controller.post.edit);
   // 文章列表
   router.get('/posts', controller.post.posts);
   // 打赏过的文章
