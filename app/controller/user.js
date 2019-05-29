@@ -452,7 +452,11 @@ class UserController extends Controller {
         // if(amount < 10000){
         //   return this.response(401, "EOS withdtaw amount must greater than 1 ");
         // }
+
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
+        if ("ont" === platform) {
+          sign_data = `${toaddress.slice(0, 12)} ${toaddress.slice(12, 24)} ${toaddress.slice(24, 36)} ${contract.slice(0, 12)} ${contract.slice(12, 24)} ${contract.slice(24, 36)} ${symbol} ${amount}`;
+        }
         console.log("debug for withdraw", ctx.user.platform, sign_data, publickey, sign);
         await this.eos_signature_verify(ctx.user.username, sign_data, sign, publickey);
       } else if ('ont' === ctx.user.platform) {
