@@ -430,15 +430,24 @@ class UserController extends Controller {
   async withdraw() {
     const ctx = this.ctx;
     const { contract, symbol, amount, platform, toaddress, memo, publickey, sign } = ctx.request.body;
-    
+
+    if (platform === 'eos') {
+      const verifyStatus = await this.service.user.isEosAddress(toaddress);
+      if (verifyStatus === false) {
+        ctx.body = ctx.msg.eosAddressInvalid;
+        return;
+      }
+    } else if (platform === 'ont') {
+      const verifyStatus = await this.service.user.isOntAddress(toaddress);
+      if (verifyStatus === false) {
+        ctx.body = ctx.msg.ontAddressInvalid;
+        return;
+      }
+    }
+
     // 签名验证
     try {
       if ('eos' === ctx.user.platform) {
-        const verifyStatus = await this.service.user.isEosAddress(toaddress);
-        if (verifyStatus === false) {
-          ctx.body = ctx.msg.eosAddressInvalid;
-          return;
-        }
         // EOS最小提现 (测试先不限制)
         // if(amount < 10000){
         //   return this.response(401, "EOS withdtaw amount must greater than 1 ");
@@ -447,11 +456,6 @@ class UserController extends Controller {
         console.log("debug for withdraw", ctx.user.platform, sign_data, publickey, sign);
         await this.eos_signature_verify(ctx.user.username, sign_data, sign, publickey);
       } else if ('ont' === ctx.user.platform) {
-        const verifyStatus = await this.service.user.isOntAddress(toaddress);
-        if (verifyStatus === false) {
-          ctx.body = ctx.msg.ontAddressInvalid;
-          return;
-        }
         // ONT最小提现 (测试先不限制)
         // if(amount < 30000){
         //   return this.response(401, "ONT withdtaw amount must greater than 3 ONT");
