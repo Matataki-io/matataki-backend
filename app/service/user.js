@@ -80,8 +80,8 @@ class UserService extends Service {
       row.nickname = nickname;
     }
 
-    if (introduction) {
-      if (introduction.length > 20 || introduction.length < 5) {
+    if (introduction !== null) {
+      if (introduction.length > 20) {
         return introductionLengthInvalid;
       }
       row.introduction = introduction;
