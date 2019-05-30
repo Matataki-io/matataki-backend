@@ -34,11 +34,36 @@ class ProcessWithdraw extends Subscription {
 
     for (let i = 0; i < results.length; i++) {
       const withdraw = results[i];
-      if ("eos" === withdraw.platform) {
-        await this.eos_transfer(withdraw);
-      } else if ("ont" === withdraw.platform) {
-        await this.ont_transfer(withdraw);
+
+      let isLesshan10Min = moment(withdraw.create_time).add(10, 'm').isAfter(moment());
+      if (isLesshan10Min) {
+        if ("eos" === withdraw.platform) {
+          await this.eos_transfer(withdraw);
+        } else if ("ont" === withdraw.platform) {
+          await this.ont_transfer(withdraw);
+        }
+      } else {
+        await this.refund(withdraw);
       }
+    }
+  }
+
+  async refund(withdraw) {
+    console.log("Refund withdraw", withdraw);
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      await conn.query(
+        'INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+        [withdraw.uid, withdraw.contract, withdraw.symbol, withdraw.amount, withdraw.platform, withdraw.amount]
+      );
+    
+      await conn.update("assets_change_log", { status: 3 }, { where: { id: withdraw.id } });
+
+      await conn.commit();
+      console.log("refund success");
+    } catch (err) {
+      await conn.rollback();
+      this.ctx.logger.error(err);
     }
   }
 
@@ -83,8 +108,6 @@ class ProcessWithdraw extends Subscription {
 
       let private_key_hex = this.ctx.app.config.ont.withdraw_pri;
       let publickey_address = this.ctx.app.config.ont.withdraw_account;
-
-
 
       const fromPrivateKey = new ONT.Crypto.PrivateKey(private_key_hex);
 

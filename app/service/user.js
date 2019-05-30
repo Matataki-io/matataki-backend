@@ -1,12 +1,23 @@
 'use strict';
 
 const Service = require('egg').Service;
+const EOS = require('eosjs');
+const ONT = require('ontology-ts-sdk');
+
 const introductionLengthInvalid = 4;
 const emailDuplicated = 5;
 const nicknameDuplicated = 6;
 const nicknameInvalid = 7;
 
 class UserService extends Service {
+
+  // constructor(ctx) {
+  //   super(ctx);
+  //   this.eosClient = EOS({
+  //     chainId: ctx.app.config.eos.chainId,
+  //     httpEndpoint: ctx.app.config.eos.httpEndpoint,
+  //   });
+  // }
 
   async getUserDetails(current_user) {
 
@@ -57,7 +68,7 @@ class UserService extends Service {
     }
 
     const row = {};
-    if (email) {
+    if (email !== null) {
       row.email = email;
     }
 
@@ -69,8 +80,8 @@ class UserService extends Service {
       row.nickname = nickname;
     }
 
-    if (introduction) {
-      if (introduction.length > 20 || introduction.length < 5) {
+    if (introduction !== null) {
+      if (introduction.length > 20) {
         return introductionLengthInvalid;
       }
       row.introduction = introduction;
@@ -173,6 +184,45 @@ class UserService extends Service {
       this.logger.error('UserService:: setNickname error: %j', err);
     }
     return false;
+  }
+
+  // EOS: 从链上取得数据, 判断address的合法性
+  async isEosAddress(address) {
+    const eosClient = EOS({
+      chainId: this.ctx.app.config.eos.chainId,
+      httpEndpoint: this.ctx.app.config.eos.httpEndpoint,
+    });
+
+    try {
+      await eosClient.getAccount(address);
+      // console.log(accountInfo);
+    } catch (err) {
+      // 查询的用户不存在时候, 此API会报错, 所以要handle
+      this.logger.info('UserService:: isEosAddress: No, info: %j', err);
+      return false;
+    }
+    return true;
+  }
+
+  // 已被放弃 ONT: 是A开头的34位字符串,且不含特殊符号,即通过
+  // 已被放弃, 符合该条件, 但是非checksumed address 不会被过滤
+  // 后面在process_withdraw的时候, 发起交易的时候会出错, 然后该记录status永远为0而且没有trx交易号码
+  // async isOntAddress(address) {
+  //   if (/^A[0-9a-zA-Z]{33}$/.test(address)) {
+  //     return true;
+  //   }
+  //   return false;
+  // }
+
+  async isOntAddress(address) {
+    try {
+      const addressVerify = new ONT.Crypto.Address(address);
+      await addressVerify.serialize();
+    } catch (err) {
+      this.logger.info('UserService:: isOntAddress: No, info: %j', err);
+      return false;
+    }
+    return true;
   }
 }
 

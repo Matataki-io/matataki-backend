@@ -3,7 +3,7 @@
 const Controller = require('../core/base_controller');
 const moment = require('moment');
 var _ = require('lodash');
-
+const ONT = require('ontology-ts-sdk');
 class UserController extends Controller {
 
   async user() {
@@ -427,10 +427,30 @@ class UserController extends Controller {
     ctx.body.data = details;
   }
 
+  isInteger(amount) {
+    return typeof amount === 'number' && amount % 1 === 0;
+  }
+
   async withdraw() {
     const ctx = this.ctx;
     const { contract, symbol, amount, platform, toaddress, memo, publickey, sign } = ctx.request.body;
-    
+
+    let verifyStatus = true;
+    // 验证提现地址合法性
+    if (platform === 'eos') {
+      verifyStatus = await this.service.user.isEosAddress(toaddress);
+      if (verifyStatus === false) {
+        ctx.body = ctx.msg.eosAddressInvalid;
+        return;
+      }
+    } else if (platform === 'ont') {
+      verifyStatus = await this.service.user.isOntAddress(toaddress);
+      if (verifyStatus === false) {
+        ctx.body = ctx.msg.ontAddressInvalid;
+        return;
+      }
+    }
+
     // 签名验证
     try {
       if ('eos' === ctx.user.platform) {
@@ -438,7 +458,11 @@ class UserController extends Controller {
         // if(amount < 10000){
         //   return this.response(401, "EOS withdtaw amount must greater than 1 ");
         // }
+
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
+        if ("ont" === platform) {
+          sign_data = `${toaddress.slice(0, 12)} ${toaddress.slice(12, 24)} ${toaddress.slice(24, 36)} ${contract.slice(0, 12)} ${contract.slice(12, 24)} ${contract.slice(24, 36)} ${symbol} ${amount}`;
+        }
         console.log("debug for withdraw", ctx.user.platform, sign_data, publickey, sign);
         await this.eos_signature_verify(ctx.user.username, sign_data, sign, publickey);
       } else if ('ont' === ctx.user.platform) {
@@ -448,8 +472,8 @@ class UserController extends Controller {
         // }
 
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
-        console.log("debug for withdraw", ctx.user.platform, sign_data);
-        await this.ont_signature_verify(sign_data, sign, publickey, publickey, sign);
+        const msg = ONT.utils.str2hexstr(sign_data);
+        await this.ont_signature_verify(msg, sign, publickey, publickey, sign);
       } else {
         ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
         return;
@@ -472,12 +496,23 @@ class UserController extends Controller {
       return this.response(401, "invalid amount");
     }
 
+    if (withdraw_amount <= 0) {
+      return this.response(401, "invalid amount");
+    }
+
     if (withdraw_amount > asset.amount) {
       return this.response(401, "withdraw amount should less than balance");
     }
 
     if (!toaddress) {
       return this.response(401, "withdraw address required");
+    }
+
+    if ('ont' === platform) {
+      let num = withdraw_amount / 10000;
+      if (!this.isInteger(num)) {
+        return this.response(401, "ONT withdraw only support Integer");
+      }
     }
 
     let transfer_memo = memo ? memo : "Withdraw from Smart Signature";

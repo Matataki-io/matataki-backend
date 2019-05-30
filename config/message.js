@@ -30,6 +30,11 @@ module.exports = {
   // 昵称不合法,包含字符或者超过12位
   nicknameInvalid: 10005,
 
+  // 错误的EOS帐号地址
+  eosAddressInvalid: 10006,
+  // 错误的ONT帐号地址
+  ontAddressInvalid: 10007,
+
   // post相关
   postNotFound: 10100,
   postDeleteError: 10101,
@@ -55,6 +60,9 @@ module.exports = {
       nicknameDuplicated: { code: this.nicknameDuplicated, message: 'same nickname already exists' },
       nicknameInvalid: { code: this.nicknameInvalid, message: 'invalid nickname, maybe it contian symbols or is longer than 12 characters' },
 
+      eosAddressInvalid: { code: this.eosAddressInvalid, message: 'EOS address not avilable on mainnet' },
+      ontAddressInvalid: { code: this.ontAddressInvalid, message: 'ONT address has wrong format' },
+
       postNotFound: { code: this.postNotFound, message: 'post not found' },
       postDeleteError: { code: this.postDeleteError, message: 'delete post error' },
       postPublishParamsError: { code: this.postPublishParamsError, message: 'parameters error' },
@@ -75,6 +83,9 @@ module.exports = {
       emailDuplicated: { code: this.emailDuplicated, message: '已经有相同的email地址存在' },
       nicknameDuplicated: { code: this.nicknameDuplicated, message: '已经有相同的昵称存在' },
       nicknameInvalid: { code: this.nicknameInvalid, message: '昵称不能包含字符,而且长度须小于12个字' },
+
+      eosAddressInvalid: { code: this.eosAddressInvalid, message: 'EOS帐号不存在' },
+      ontAddressInvalid: { code: this.ontAddressInvalid, message: 'ONT帐号有误' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },

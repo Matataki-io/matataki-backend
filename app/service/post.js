@@ -128,7 +128,7 @@ class PostService extends Service {
   }
 
   // 发布时间排序(默认方法)
-  async timeRank(page = 1, pagesize = 20, author = null) {
+  async timeRank(page = 1, pagesize = 20, author = null, channel = null) {
     this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function (txt, key) {
@@ -139,18 +139,34 @@ class PostService extends Service {
       }.bind(this));
     };
 
-    // 获取文章列表, 分为带作者和不带作者的情况.
+    // 获取文章列表, 分为商品文章和普通文章
+    // 再分为带作者和不带作者的情况.
     let posts = [];
+    let sqlcode = '';
     if (author) {
+      sqlcode = 'SELECT p.id FROM posts p WHERE p.status = 0 AND author = :author ';
+      if (channel) {
+        if (isNaN(channel)) {
+          return 2;
+        }
+        sqlcode += 'AND p.channel_id = ' + channel + ' ';
+      }
+      sqlcode += 'GROUP BY p.id ORDER BY p.create_time DESC LIMIT :start, :end;';
       posts = await this.app.mysql.query(
-        'SELECT id FROM posts WHERE status = 0 AND author = :author '
-        + 'ORDER BY create_time DESC LIMIT :start, :end;',
+        sqlcode,
         { author, start: (page - 1) * pagesize, end: 1 * pagesize }
       );
     } else {
+      sqlcode = 'SELECT p.id FROM posts p WHERE p.status = 0 ';
+      if (channel) {
+        if (isNaN(channel)) {
+          return 2;
+        }
+        sqlcode += 'AND p.channel_id = ' + channel + ' ';
+      }
+      sqlcode += 'GROUP BY p.id ORDER BY p.create_time DESC LIMIT :start, :end;';
       posts = await this.app.mysql.query(
-        'SELECT id FROM posts WHERE status = 0 '
-        + 'ORDER BY create_time DESC LIMIT :start, :end;',
+        sqlcode,
         { start: (page - 1) * pagesize, end: 1 * pagesize }
       );
     }
@@ -169,8 +185,8 @@ class PostService extends Service {
     return postList;
   }
 
-  // 赞赏次数排序, 在次数相等的情况下按照时间倒序
-  async supportRank(page = 1, pagesize = 20) {
+  // 赞赏次数排序
+  async supportRank(page = 1, pagesize = 20, channel = null) {
     this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function (txt, key) {
@@ -181,17 +197,28 @@ class PostService extends Service {
       }.bind(this));
     };
 
+    let posts = null;
+    let sqlcode = '';
+    sqlcode = 'SELECT p.id, count(*) AS total FROM posts p '
+      + 'LEFT JOIN supports s ON s.signid = p.id AND s.status = 1 '
+      + 'WHERE p.status = 0 ';
+    if (channel) {
+      if (isNaN(channel)) {
+        return 2;
+      }
+      sqlcode += 'AND p.channel_id = ' + channel + ' ';
+    }
+    sqlcode += 'GROUP BY p.id ORDER BY total DESC LIMIT :start, :end;';
     // 在support表中, 由赞赏次数获得一个文章的排序, 并且已经确保文章是没有被删除的
-    const posts = await this.app.mysql.query(
-      'SELECT s.signid, count(*) AS total FROM supports s INNER JOIN posts p ON s.signid = p.id '
-      + ' WHERE s.status = 1 AND p.status = 0 GROUP BY s.signid ORDER BY total DESC LIMIT :start, :end;',
+    posts = await this.app.mysql.query(
+      sqlcode,
       { start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
     // 将文章id转为Array
     const postids = [];
     _.each(posts, row => {
-      postids.push(row.signid);
+      postids.push(row.id);
     });
 
     if (postids.length === 0) {
@@ -201,6 +228,7 @@ class PostService extends Service {
     let postList = await this.getPostList(postids);
 
     // 由赞赏次数进行排序
+    // 还没加上时间降序
     postList = postList.sort((a, b) => {
       return a.ups > b.ups ? -1 : 1;
     });
@@ -210,7 +238,7 @@ class PostService extends Service {
 
   // 分币种的赞赏金额排序
   // 请注意因为"后筛选"导致的不满20条,进而前端无法加载的问题.
-  async amountRank(page = 1, pagesize = 20, symbol = 'EOS') {
+  async amountRank(page = 1, pagesize = 20, symbol = 'EOS', channel = null) {
     this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function (txt, key) {
@@ -221,17 +249,28 @@ class PostService extends Service {
       }.bind(this));
     };
 
+    let posts = null;
+    let sqlcode = '';
+    sqlcode = 'SELECT p.id, sum(amount) AS total FROM posts p '
+      + 'LEFT JOIN supports s ON s.signid = p.id AND s.symbol = :symbol '
+      + 'WHERE p.status = 0 ';
+    if (channel) {
+      if (isNaN(channel)) {
+        return 2;
+      }
+      sqlcode += 'AND p.channel_id = ' + channel + ' ';
+    }
+    sqlcode += 'GROUP BY p.id ORDER BY total DESC LIMIT :start, :end;';
     // 在support表中, 由币种赞赏总量获得一个文章的排序, 并且已经确保文章是没有被删除的
-    const posts = await this.app.mysql.query(
-      'SELECT s.signid, sum(amount) AS total FROM supports s INNER JOIN posts p ON s.signid = p.id '
-      + 'WHERE s.status = 1 AND p.status = 0 AND s.symbol = :symbol GROUP BY s.signid ORDER BY total DESC LIMIT :start, :end;',
+    posts = await this.app.mysql.query(
+      sqlcode,
       { start: (page - 1) * pagesize, end: 1 * pagesize, symbol: symbol.toUpperCase() }
     );
 
     // 将文章id转为Array
     const postids = [];
     _.each(posts, row => {
-      postids.push(row.signid);
+      postids.push(row.id);
     });
 
     if (postids.length === 0) {
@@ -243,6 +282,7 @@ class PostService extends Service {
     let postList = await this.getPostList(postids);
 
     // 重新由赞赏金额进行排序
+    // 还没加上时间降序
     switch (symbol.toUpperCase()) {
       case 'EOS':
         postList = postList.sort((a, b) => {
