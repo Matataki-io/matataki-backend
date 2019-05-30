@@ -17,7 +17,7 @@ class MailService extends Service {
     };
 
     const product = await this.app.mysql.query(
-      'SELECT u.username, u.email FROM supports s INNER JOIN users u ON s.uid = u.id WHERE s.id = :supportid;'
+      'SELECT u.username, u.email, s.amount, s.symbol, s.create_time FROM supports s INNER JOIN users u ON s.uid = u.id WHERE s.id = :supportid;'
       + 'SELECT s.digital_copy, p.title FROM product_stock_keys s INNER JOIN product_prices p ON s.sign_id = p.sign_id WHERE s.support_id = :supportid LIMIT 1;',
       { supportid }
     );
@@ -30,7 +30,12 @@ class MailService extends Service {
     let result = null;
     try {
       // 配置以及发送邮件
-      const mailData = { user: user[0].username, stockName: stock[0].title, key: stock[0].digital_copy };
+      const mailData = { username: user[0].username,
+        productname: stock[0].title,
+        key: stock[0].digital_copy,
+        amount: (user[0].amount / 10000),
+        time: user[0].create_time.toLocaleString(),
+        symbol: user[0].symbol };
       const mailContent = await this.ctx.renderView('mail.tpl', mailData, { viewEngine: 'nunjucks' });
       const mailOptions = {
         //   from: this.config.mail.auth.user,
