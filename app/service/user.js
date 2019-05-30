@@ -68,7 +68,7 @@ class UserService extends Service {
     }
 
     const row = {};
-    if (email) {
+    if (email !== null) {
       row.email = email;
     }
 
