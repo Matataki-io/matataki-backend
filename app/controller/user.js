@@ -496,6 +496,10 @@ class UserController extends Controller {
       return this.response(401, "invalid amount");
     }
 
+    if (withdraw_amount <= 0) {
+      return this.response(401, "invalid amount");
+    }
+
     if (withdraw_amount > asset.amount) {
       return this.response(401, "withdraw amount should less than balance");
     }
