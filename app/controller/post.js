@@ -313,9 +313,9 @@ class PostController extends Controller {
   async getTimeRanking() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20, author } = this.ctx.query;
+    const { page = 1, pagesize = 20, productonly = 0, author } = this.ctx.query;
 
-    const postData = await this.service.post.timeRank(page, pagesize, author);
+    const postData = await this.service.post.timeRank(page, pagesize, author, productonly * 1);
 
     if (postData) {
       ctx.body = ctx.msg.success;
@@ -330,9 +330,9 @@ class PostController extends Controller {
   async getSupportsRanking() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20 } = this.ctx.query;
+    const { page = 1, pagesize = 20, productonly = 0 } = this.ctx.query;
 
-    const postData = await this.service.post.supportRank(page, pagesize);
+    const postData = await this.service.post.supportRank(page, pagesize, productonly * 1);
 
     if (postData) {
       ctx.body = ctx.msg.success;
@@ -346,9 +346,9 @@ class PostController extends Controller {
   // 获取按照赞赏数量排序的文章列表(新)
   async getAmountRanking() {
     const ctx = this.ctx;
-    const { page = 1, pagesize = 20, symbol = 'EOS' } = this.ctx.query;
+    const { page = 1, pagesize = 20, symbol = 'EOS', productonly = 0 } = this.ctx.query;
 
-    const postData = await this.service.post.amountRank(page, pagesize, symbol);
+    const postData = await this.service.post.amountRank(page, pagesize, symbol, productonly * 1);
 
     if (postData) {
       ctx.body = ctx.msg.success;
