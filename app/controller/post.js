@@ -375,6 +375,23 @@ class PostController extends Controller {
     // return;
   }
 
+  // 用户赞赏过的文章列表(新)
+  async getSupported() {
+    const ctx = this.ctx;
+    const { page = 1, pagesize = 20, user = null } = this.ctx.query;
+
+    const postData = await this.service.post.supportedPosts(page, pagesize, user);
+
+    if (postData === 2) {
+      ctx.body = ctx.msg.paramsError;
+    } else if (postData === 3) {
+      ctx.body = ctx.msg.userNotExist;
+    } else {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = postData;
+    }
+  }
+
   // 我赞赏过的文章列表
   async supports() {
     const pagesize = 20;
@@ -429,7 +446,7 @@ class PostController extends Controller {
 
       _.each(results, row => {
         row.read = 0;
-        row.value = 0;
+        row.eosvalue = 0;
         row.ups = 0;
         row.ontvalue = 0;
         hashs.push(row.hash);

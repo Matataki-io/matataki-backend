@@ -300,6 +300,58 @@ class PostService extends Service {
     return postList;
   }
 
+  // 获取用户赞赏过的文章
+  async supportedPosts(page = 1, pagesize = 20, username = null) {
+    this.app.mysql.queryFromat = function (query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function (txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+
+    // 没写用户
+    if (username === null) {
+      return 2;
+    }
+
+    const user = await this.app.mysql.get('users', { username });
+
+    // 不存在的用户
+    if (!user) {
+      return 3;
+    }
+
+    const posts = await this.app.mysql.query(
+      'SELECT s.create_time, signid FROM supports s INNER JOIN posts p ON s.signid = p.id'
+      + ' WHERE s.status = 1 AND p.status = 0 AND s.uid = :uid ORDER BY s.create_time DESC LIMIT :start, :end;',
+      { uid: user.id, start: (page - 1) * pagesize, end: pagesize }
+    );
+
+    const postids = [];
+    _.each(posts, row => {
+      postids.push(row.signid);
+    });
+
+    let postList = await this.getPostList(postids);
+
+    _.each(postList, row2 => {
+      _.each(posts, row => {
+        if (row.signid === row2.id) {
+          row2.support_time = row.create_time;
+        }
+      });
+    });
+
+    postList = postList.sort((a, b) => {
+      return b.support_time - a.support_time;
+    });
+
+    return postList;
+  }
+
   // 获取文章的列表, 用于成片展示文章时, 会被其他函数调用
   async getPostList(signids) {
 
