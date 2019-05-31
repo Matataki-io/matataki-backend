@@ -19,7 +19,7 @@ class ProcessWithdraw extends Subscription {
 
   static get schedule() {
     return {
-      interval: '10s',
+      interval: '20s',
       type: 'all',
     };
   }
@@ -37,6 +37,8 @@ class ProcessWithdraw extends Subscription {
 
       let isLesshan10Min = moment(withdraw.create_time).add(10, 'm').isAfter(moment());
       if (isLesshan10Min) {
+        console.log(withdraw)
+        // return;
         if ("eos" === withdraw.platform) {
           await this.eos_transfer(withdraw);
         } else if ("ont" === withdraw.platform) {
@@ -56,7 +58,7 @@ class ProcessWithdraw extends Subscription {
         'INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
         [withdraw.uid, withdraw.contract, withdraw.symbol, withdraw.amount, withdraw.platform, withdraw.amount]
       );
-    
+
       await conn.update("assets_change_log", { status: 3 }, { where: { id: withdraw.id } });
 
       await conn.commit();
@@ -67,34 +69,50 @@ class ProcessWithdraw extends Subscription {
     }
   }
 
-  async eos_transfer(withdraw) {
-    console.log("ProcessWithdraw EOS", withdraw);
+  async eos_transfer(w) {
+    console.log("ProcessWithdraw EOS", w);
+    const conn = await this.app.mysql.beginTransaction();
 
     try {
+      let withdraw = await conn.query('SELECT * FROM assets_change_log WHERE id=?  FOR UPDATE;', [w.id]);
+      console.log("withdraw", withdraw)
+      if (!withdraw) {
+        return;
+      }
+
+      await conn.update("assets_change_log", {
+        status: 1,
+      }, { where: { id: withdraw.id } });
+
+      let actions = [{
+        account: withdraw.contract,
+        name: 'transfer',
+        authorization: [{ actor: this.ctx.app.config.eos.withdraw_account, permission: 'active' }],
+        data: {
+          "from": this.ctx.app.config.eos.withdraw_account,
+          "to": withdraw.toaddress,
+          "quantity": `${(withdraw.amount / 10000).toFixed(4)} ${withdraw.symbol}`,
+          "memo": withdraw.memo || ""
+        }
+      }]
+      console.log("actions:", actions);
 
       let res = await this.eosClient.transaction({
-        actions: [{
-          account: withdraw.contract,
-          name: 'transfer',
-          authorization: [{ actor: this.ctx.app.config.eos.withdraw_account, permission: 'active' }],
-          data: {
-            "from": this.ctx.app.config.eos.withdraw_account,
-            "to": withdraw.toaddress,
-            "quantity": `${(withdraw.amount / 10000).toFixed(4)} ${withdraw.symbol}`,
-            "memo": withdraw.memo || ""
-          }
-        }]
+        actions: actions
       })
 
       let trx = res.transaction_id;
 
-      let result = await this.app.mysql.update("assets_change_log", {
+      await conn.update("assets_change_log", {
         status: 1,
         trx: trx
       }, { where: { id: withdraw.id } });
 
       console.log("eos transfer success");
+
+      await conn.commit();
     } catch (err) {
+      await conn.rollback();
       this.ctx.logger.error(err);
     }
 
@@ -102,7 +120,14 @@ class ProcessWithdraw extends Subscription {
 
   async ont_transfer(withdraw) {
 
+    const conn = await this.app.mysql.beginTransaction();
     try {
+      let withdraw = await conn.query('SELECT * FROM assets_change_log WHERE id=?  FOR UPDATE;', [w.id]);
+
+      await conn.update("assets_change_log", {
+        status: 1,
+      }, { where: { id: withdraw.id } });
+
       const gasLimit = '20000';
       const gasPrice = '500';
 
@@ -125,16 +150,20 @@ class ProcessWithdraw extends Subscription {
       if (response && response.Desc == 'SUCCESS' && response.Result) {
         let trx = response.Result.TxHash;
         console.log("ont transfer success", trx);
-        let result = await this.app.mysql.update("assets_change_log", {
+        let result = await conn.update("assets_change_log", {
           status: 1,
           trx: trx
         }, { where: { id: withdraw.id } });
+
+        await conn.commit();
+      } else {
+        await conn.rollback();
       }
 
     } catch (err) {
+      await conn.rollback();
       this.ctx.logger.error("process ont withdraw error ", err);
     }
-
 
   }
 

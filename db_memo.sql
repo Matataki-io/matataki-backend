@@ -400,7 +400,7 @@ create table withdraws (
   platform varchar(255) NOT NULL,
   toaddress varchar(255) NOT NULL,    -- 提现地址
   memo varchar(255) DEFAULT "",       -- 提现备注
-  status INT DEFAULT 0,               -- 0 待处理 1已转账待确认 2成功 3失败 4审核 5审核拒绝
+  status INT DEFAULT 0,               -- 0 待处理 1已转账待确认 2成功 3失败 4审核 5审核拒绝 6转账进行中
   trx varchar(255) NOT NULL,
   create_time timestamp,
   PRIMARY KEY (id)
