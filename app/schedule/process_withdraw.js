@@ -19,7 +19,7 @@ class ProcessWithdraw extends Subscription {
 
   static get schedule() {
     return {
-      interval: '10s',
+      interval: '30s',
       type: 'all',
     };
   }
@@ -72,6 +72,10 @@ class ProcessWithdraw extends Subscription {
 
     try {
 
+      await this.app.mysql.update("assets_change_log", {
+        status: 6, // 转账进行中是标识符，避免二次进入，重复转账
+      }, { where: { id: withdraw.id } });
+
       let res = await this.eosClient.transaction({
         actions: [{
           account: withdraw.contract,
@@ -103,6 +107,10 @@ class ProcessWithdraw extends Subscription {
   async ont_transfer(withdraw) {
 
     try {
+      await this.app.mysql.update("assets_change_log", {
+        status: 6, // 转账进行中是标识符，避免二次进入，重复转账
+      }, { where: { id: withdraw.id } });
+
       const gasLimit = '20000';
       const gasPrice = '500';
 
