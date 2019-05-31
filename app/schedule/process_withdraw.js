@@ -74,7 +74,7 @@ class ProcessWithdraw extends Subscription {
     const conn = await this.app.mysql.beginTransaction();
 
     try {
-      let result = await conn.query('SELECT * FROM assets_change_log WHERE id=? limit 1 FOR UPDATE;', [w.id]);
+      let result = await conn.query('SELECT * FROM assets_change_log WHERE id=? and status=0 limit 1 FOR UPDATE;', [w.id]);
 
       let withdraw;
       if (result && result.length > 0) {
@@ -129,7 +129,7 @@ class ProcessWithdraw extends Subscription {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      let result = await conn.query('SELECT * FROM assets_change_log WHERE id=? limit 1 FOR UPDATE;', [w.id]);
+      let result = await conn.query('SELECT * FROM assets_change_log WHERE id=? and status=0 limit 1 FOR UPDATE;', [w.id]);
 
       let withdraw;
       if (result && result.length > 0) {
