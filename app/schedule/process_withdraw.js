@@ -74,8 +74,15 @@ class ProcessWithdraw extends Subscription {
     const conn = await this.app.mysql.beginTransaction();
 
     try {
-      let withdraw = await conn.query('SELECT * FROM assets_change_log WHERE id=?  FOR UPDATE;', [w.id]);
-      console.log("withdraw", withdraw)
+      let result = await conn.query('SELECT * FROM assets_change_log WHERE id=? limit 1 FOR UPDATE;', [w.id]);
+
+      let withdraw;
+      if (result && result.length > 0) {
+        withdraw = result[0];
+      }
+
+      console.log("withdraw", withdraw, result);
+
       if (!withdraw) {
         return;
       }
@@ -118,11 +125,22 @@ class ProcessWithdraw extends Subscription {
 
   }
 
-  async ont_transfer(withdraw) {
+  async ont_transfer(w) {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      let withdraw = await conn.query('SELECT * FROM assets_change_log WHERE id=?  FOR UPDATE;', [w.id]);
+      let result = await conn.query('SELECT * FROM assets_change_log WHERE id=? limit 1 FOR UPDATE;', [w.id]);
+
+      let withdraw;
+      if (result && result.length > 0) {
+        withdraw = result[0];
+      }
+
+      console.log("withdraw", withdraw, result);
+
+      if (!withdraw) {
+        return;
+      }
 
       await conn.update("assets_change_log", {
         status: 1,
