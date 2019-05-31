@@ -53,12 +53,12 @@ class FissionService extends Service {
           [ support.uid, support.signid, support.contract, support.symbol, 0 - support.amount, support.platform, 'support expenses', now ]
         );
 
-        // 处理推荐人，可能存在高并发问题，需要 FOR UPDATE 锁定推荐人的quota数据
-        const referrer_support_quota = await conn.query('SELECT id, quota FROM support_quota WHERE uid=? AND signid=? FOR UPDATE;', [ refuid, support.signid ]);
+        // 处理裂变推荐人，可能存在高并发问题，需要 FOR UPDATE 锁定推荐人的quota数据
+        const referrer_result = await conn.query('SELECT id, quota FROM support_quota WHERE uid=? AND signid=? FOR UPDATE;', [ refuid, support.signid ]);
         // const referrer_support_quota = await this.app.mysql.get('support_quota', { uid: refuid, signid: support.signid });
 
-        if (referrer_support_quota && referrer_support_quota.quota > 0) {
-
+        if (referrer_result && referrer_result.length > 0 && referrer_result[0].quota > 0) {
+          const referrer_support_quota = referrer_result[0];
           // 本次推荐人可以获得奖励金额
           // 公式：fission_bonus = amount * fission_rate
           const delta = referrer_support_quota.quota < amount * fission_rate / 100 ? referrer_support_quota.quota : amount * fission_rate / 100;
