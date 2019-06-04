@@ -64,73 +64,73 @@ class UserController extends Controller {
   }
 
 
-  async assets() {
-    const ctx = this.ctx;
+  // async assets() {
+  //   const ctx = this.ctx;
 
-    const { page = 1, user } = this.ctx.query;
-    const pagesize = 20;
+  //   const { page = 1, user } = this.ctx.query;
+  //   const pagesize = 20;
 
-    if (!user) {
-      ctx.status = 500;
-      ctx.body = "user required";
-      return;
-    }
+  //   if (!user) {
+  //     ctx.status = 500;
+  //     ctx.body = "user required";
+  //     return;
+  //   }
 
-    // 1. 历史总创作收入 (sign income)
-    const totalSignIncome = await this.app.mysql.query(
-      'select sum(amount) as totalSignIncome from actions where type = ? and author= ?',
-      ["bill sign income", user]
-    );
+  //   // 1. 历史总创作收入 (sign income)
+  //   const totalSignIncome = await this.app.mysql.query(
+  //     'select sum(amount) as totalSignIncome from actions where type = ? and author= ?',
+  //     ["bill sign income", user]
+  //   );
 
-    // 2. 历史总打赏收入 (share income)
-    const totalShareIncome = await this.app.mysql.query(
-      'select sum(amount) as totalShareIncome from actions where type = ? and author= ?',
-      ["bill share income", user]
-    );
+  //   // 2. 历史总打赏收入 (share income)
+  //   const totalShareIncome = await this.app.mysql.query(
+  //     'select sum(amount) as totalShareIncome from actions where type = ? and author= ?',
+  //     ["bill share income", user]
+  //   );
 
-    // 3. 历史总打赏支出 (support expenses)
-    const totalShareExpenses = await this.app.mysql.query(
-      'select sum(amount) as totalShareExpenses from actions where type = ? and author= ?',
-      ["bill support expenses", user]
-    );
+  //   // 3. 历史总打赏支出 (support expenses)
+  //   const totalShareExpenses = await this.app.mysql.query(
+  //     'select sum(amount) as totalShareExpenses from actions where type = ? and author= ?',
+  //     ["bill support expenses", user]
+  //   );
 
-    let whereOption = {
-      "act_name": "bill",
-      "type": ["bill share income", "bill sign income", "bill support expenses"],
-      "author": user
-    }
+  //   let whereOption = {
+  //     "act_name": "bill",
+  //     "type": ["bill share income", "bill sign income", "bill support expenses"],
+  //     "author": user
+  //   }
 
-    const results = await this.app.mysql.select('actions', {
-      where: whereOption,
-      columns: ['author', 'amount', 'sign_id', 'create_time', "type"],
-      orders: [['create_time', 'desc']],
-      limit: pagesize,
-      offset: (page - 1) * pagesize,
-    });
+  //   const results = await this.app.mysql.select('actions', {
+  //     where: whereOption,
+  //     columns: ['author', 'amount', 'sign_id', 'create_time', "type"],
+  //     orders: [['create_time', 'desc']],
+  //     limit: pagesize,
+  //     offset: (page - 1) * pagesize,
+  //   });
 
-    for (let i = 0; i < results.length; i++) {
-      if (this.app.post_cache[results[i].sign_id] !== undefined) {
-        results[i].title = this.app.post_cache[results[i].sign_id].title;
-      } else {
-        const post = await this.app.mysql.get('posts', { id: results[i].sign_id });
-        if (post) {
-          results[i].title = post.title;
-          this.app.post_cache[results[i].sign_id] = post;
-        }
-      }
-    }
+  //   for (let i = 0; i < results.length; i++) {
+  //     if (this.app.post_cache[results[i].sign_id] !== undefined) {
+  //       results[i].title = this.app.post_cache[results[i].sign_id].title;
+  //     } else {
+  //       const post = await this.app.mysql.get('posts', { id: results[i].sign_id });
+  //       if (post) {
+  //         results[i].title = post.title;
+  //         this.app.post_cache[results[i].sign_id] = post;
+  //       }
+  //     }
+  //   }
 
-    let resp = {
-      user: user,
-      totalSignIncome: totalSignIncome[0].totalSignIncome || 0,
-      totalShareIncome: totalShareIncome[0].totalShareIncome || 0,
-      totalShareExpenses: totalShareExpenses[0].totalShareExpenses || 0,
-      history: results
-    }
+  //   let resp = {
+  //     user: user,
+  //     totalSignIncome: totalSignIncome[0].totalSignIncome || 0,
+  //     totalShareIncome: totalShareIncome[0].totalShareIncome || 0,
+  //     totalShareExpenses: totalShareExpenses[0].totalShareExpenses || 0,
+  //     history: results
+  //   }
 
-    ctx.body = resp;
-    ctx.status = 200;
-  }
+  //   ctx.body = resp;
+  //   ctx.status = 200;
+  // }
 
   async tokens() {
     const { page = 1, symbol = "EOS" } = this.ctx.query;
