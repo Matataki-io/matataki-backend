@@ -221,65 +221,65 @@ class UserController extends Controller {
     this.ctx.body.data = tokens;
   }
 
-  async setNickname() {
+  // async setNickname() {
 
-    const ctx = this.ctx;
+  //   const ctx = this.ctx;
 
-    const { nickname = '' } = ctx.request.body;
+  //   const { nickname = '' } = ctx.request.body;
 
-    let nickname_regex = /^[\u4e00-\u9fa5_a-zA-Z0-9_]{1,12}$/;
+  //   let nickname_regex = /^[\u4e00-\u9fa5_a-zA-Z0-9_]{1,12}$/;
 
-    if (!nickname_regex.test(nickname)) {
-      ctx.status = 400;
-      ctx.body = 'bad request: 昵称长度不超得过12位，且不可包含字符';
-      return;
-    }
+  //   if (!nickname_regex.test(nickname)) {
+  //     ctx.status = 400;
+  //     ctx.body = 'bad request: 昵称长度不超得过12位，且不可包含字符';
+  //     return;
+  //   }
 
-    const current_user = this.get_current_user();
+  //   const current_user = this.get_current_user();
 
-    try {
-      this.checkAuth(current_user);
-    } catch (err) {
-      ctx.status = 401;
-      ctx.body = err.message;
-      return;
-    }
+  //   try {
+  //     this.checkAuth(current_user);
+  //   } catch (err) {
+  //     ctx.status = 401;
+  //     ctx.body = err.message;
+  //     return;
+  //   }
 
 
-    try {
-      const user = await this.app.mysql.get('users', { nickname: nickname });
+  //   try {
+  //     const user = await this.app.mysql.get('users', { nickname: nickname });
 
-      if (user) {
-        ctx.body = {
-          msg: 'duplicate nickname',
-        };
-        ctx.status = 500;
-        return;
-      }
+  //     if (user) {
+  //       ctx.body = {
+  //         msg: 'duplicate nickname',
+  //       };
+  //       ctx.status = 500;
+  //       return;
+  //     }
 
-      const now = moment().format('YYYY-MM-DD HH:mm:ss');
+  //     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
-      const result = await this.app.mysql.query(
-        'INSERT INTO users (id ,username, nickname, create_time)'
-        + ' VALUES (null, ?, ?, ?) ON DUPLICATE KEY UPDATE nickname = ?',
-        [current_user, nickname, now, nickname]
-      );
+  //     const result = await this.app.mysql.query(
+  //       'INSERT INTO users (id ,username, nickname, create_time)'
+  //       + ' VALUES (null, ?, ?, ?) ON DUPLICATE KEY UPDATE nickname = ?',
+  //       [current_user, nickname, now, nickname]
+  //     );
 
-      const updateSuccess = result.affectedRows >= 1;
+  //     const updateSuccess = result.affectedRows >= 1;
 
-      if (updateSuccess) {
-        ctx.status = 201;
-      } else {
-        ctx.status = 500;
-      }
-    } catch (err) {
-      console.log(err);
-      ctx.body = {
-        msg: 'setNickname error: ' + err.sqlMessage,
-      };
-      ctx.status = 500;
-    }
-  }
+  //     if (updateSuccess) {
+  //       ctx.status = 201;
+  //     } else {
+  //       ctx.status = 500;
+  //     }
+  //   } catch (err) {
+  //     console.log(err);
+  //     ctx.body = {
+  //       msg: 'setNickname error: ' + err.sqlMessage,
+  //     };
+  //     ctx.status = 500;
+  //   }
+  // }
 
 
   // async setEmail() {

@@ -48,8 +48,8 @@ module.exports = app => {
 
   // 获取资产历史统计、和详情列表（默认最新20条）
   router.get('/assets', controller.user.assets);
-  // 设置用户nickname (need access token)
-  router.post('/user/setNickname', controller.user.setNickname);
+  // // 设置用户nickname (need access token)
+  // router.post('/user/setNickname', controller.user.setNickname);
   // // 设置用户email (need access token)
   // router.post('/user/setEmail', controller.user.setEmail);
   // 设置用户头像 (need access token)
