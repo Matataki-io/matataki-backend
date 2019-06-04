@@ -221,93 +221,93 @@ class PostController extends Controller {
 
   }
 
-  async posts() {
-    const pagesize = 20;
+  // async posts() {
+  //   const pagesize = 20;
 
-    const { page = 1, type = 'all', author } = this.ctx.query;
+  //   const { page = 1, type = 'all', author } = this.ctx.query;
 
-    let results = []
+  //   let results = []
 
-    if (author) {
-      results = await this.app.mysql.query(
-        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover,  b.nickname from posts a left join users b on a.username = b.username where a.status=0 and a.author = ? order by create_time desc limit ?, ?',
-        [author, (page - 1) * pagesize, pagesize]
-      );
-    } else {
-      results = await this.app.mysql.query(
-        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname from posts a left join users b on a.username = b.username where a.status=0 order by create_time desc limit ?, ?',
-        [(page - 1) * pagesize, pagesize]
-      );
-    }
+  //   if (author) {
+  //     results = await this.app.mysql.query(
+  //       'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover,  b.nickname from posts a left join users b on a.username = b.username where a.status=0 and a.author = ? order by create_time desc limit ?, ?',
+  //       [author, (page - 1) * pagesize, pagesize]
+  //     );
+  //   } else {
+  //     results = await this.app.mysql.query(
+  //       'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname from posts a left join users b on a.username = b.username where a.status=0 order by create_time desc limit ?, ?',
+  //       [(page - 1) * pagesize, pagesize]
+  //     );
+  //   }
 
-    if (results.length > 0) {
-      let signids = [];
+  //   if (results.length > 0) {
+  //     let signids = [];
 
-      _.each(results, row => {
-        signids.push(row.id);
-      })
+  //     _.each(results, row => {
+  //       signids.push(row.id);
+  //     })
 
-      results = await this.getPostsBySignids(signids);
-    }
+  //     results = await this.getPostsBySignids(signids);
+  //   }
 
-    this.ctx.body = results;
-  }
+  //   this.ctx.body = results;
+  // }
 
-  async getSupportTimesRanking() {
-    const pagesize = 20;
+  // async getSupportTimesRanking() {
+  //   const pagesize = 20;
 
-    const { page = 1 } = this.ctx.query;
+  //   const { page = 1 } = this.ctx.query;
 
-    const results = await this.app.mysql.query(
-      'select signid, count(*) as total from supports where status = 1 group by signid order by total desc limit ?,?',
-      [(page - 1) * pagesize, pagesize]
-    );
+  //   const results = await this.app.mysql.query(
+  //     'select signid, count(*) as total from supports where status = 1 group by signid order by total desc limit ?,?',
+  //     [(page - 1) * pagesize, pagesize]
+  //   );
 
-    let signids = [];
-    _.each(results, (row) => {
-      signids.push(row.signid);
-    })
+  //   let signids = [];
+  //   _.each(results, (row) => {
+  //     signids.push(row.signid);
+  //   })
 
-    let results2 = [];
+  //   let results2 = [];
 
-    if (signids.length > 0) {
-      results2 = await this.getPostsBySignids(signids);
+  //   if (signids.length > 0) {
+  //     results2 = await this.getPostsBySignids(signids);
 
-      results2 = results2.sort((a, b) => {
-        return b.ups - a.ups;
-      })
-    }
+  //     results2 = results2.sort((a, b) => {
+  //       return b.ups - a.ups;
+  //     })
+  //   }
 
-    this.ctx.body = results2;
-  }
+  //   this.ctx.body = results2;
+  // }
 
-  async getSupportAmountRanking() {
-    const pagesize = 20;
+  // async getSupportAmountRanking() {
+  //   const pagesize = 20;
 
-    const { page = 1 } = this.ctx.query;
+  //   const { page = 1 } = this.ctx.query;
 
-    const results = await this.app.mysql.query(
-      'select signid, sum(amount) as total from supports where status = 1 group by signid order by total desc limit ?,?',
-      [(page - 1) * pagesize, pagesize]
-    );
+  //   const results = await this.app.mysql.query(
+  //     'select signid, sum(amount) as total from supports where status = 1 group by signid order by total desc limit ?,?',
+  //     [(page - 1) * pagesize, pagesize]
+  //   );
 
-    let signids = [];
-    _.each(results, (row) => {
-      signids.push(row.signid);
-    })
+  //   let signids = [];
+  //   _.each(results, (row) => {
+  //     signids.push(row.signid);
+  //   })
 
-    let results2 = [];
+  //   let results2 = [];
 
-    if (signids.length > 0) {
-      results2 = await this.getPostsBySignids(signids);
+  //   if (signids.length > 0) {
+  //     results2 = await this.getPostsBySignids(signids);
 
-      results2 = results2.sort((a, b) => {
-        return b.value - a.value;
-      })
-    }
+  //     results2 = results2.sort((a, b) => {
+  //       return b.value - a.value;
+  //     })
+  //   }
 
-    this.ctx.body = results2;
-  }
+  //   this.ctx.body = results2;
+  // }
 
   // 获取按照时间排序的文章列表(基础方法)(新)
   async getTimeRanking() {
@@ -393,116 +393,116 @@ class PostController extends Controller {
   }
 
   // 我赞赏过的文章列表
-  async supports() {
-    const pagesize = 20;
+  // async supports() {
+  //   const pagesize = 20;
 
-    const { page = 1, user } = this.ctx.query;
+  //   const { page = 1, user } = this.ctx.query;
 
-    let owner = await this.app.mysql.get("users", { username: user });
+  //   let owner = await this.app.mysql.get("users", { username: user });
 
-    if (!owner) {
-      this.ctx.body = [];
-      return;
-    }
+  //   if (!owner) {
+  //     this.ctx.body = [];
+  //     return;
+  //   }
 
-    let results = await this.app.mysql.query(
-      'SELECT s.create_time, signid FROM supports s INNER JOIN posts p ON s.signid = p.id'
-      + ' WHERE s.status = 1 AND p.status = 0 AND s.uid = :uid ORDER BY s.create_time DESC LIMIT :start, :end;',
-      { uid: owner.id, start: (page - 1) * pagesize, end: pagesize }
-    );
+  //   let results = await this.app.mysql.query(
+  //     'SELECT s.create_time, signid FROM supports s INNER JOIN posts p ON s.signid = p.id'
+  //     + ' WHERE s.status = 1 AND p.status = 0 AND s.uid = :uid ORDER BY s.create_time DESC LIMIT :start, :end;',
+  //     { uid: owner.id, start: (page - 1) * pagesize, end: pagesize }
+  //   );
 
-    let signids = [];
-    _.each(results, (row) => {
-      signids.push(row.signid);
-    })
+  //   let signids = [];
+  //   _.each(results, (row) => {
+  //     signids.push(row.signid);
+  //   })
 
-    let results2 = await this.getPostsBySignids(signids);
+  //   let results2 = await this.getPostsBySignids(signids);
 
-    _.each(results2, row2 => {
-      _.each(results, row => {
-        if (row.signid === row2.id) {
-          row2.support_time = row.create_time;
-        }
-      })
-    })
+  //   _.each(results2, row2 => {
+  //     _.each(results, row => {
+  //       if (row.signid === row2.id) {
+  //         row2.support_time = row.create_time;
+  //       }
+  //     })
+  //   })
 
-    results2 = results2.sort((a, b) => {
-      return b.support_time - a.support_time;
-    })
+  //   results2 = results2.sort((a, b) => {
+  //     return b.support_time - a.support_time;
+  //   })
 
-    this.ctx.body = results2;
-  }
+  //   this.ctx.body = results2;
+  // }
 
-  async getPostsBySignids(signids) {
-    let results = [];
+  // async getPostsBySignids(signids) {
+  //   let results = [];
 
-    if (signids.length > 0) {
-      results = await this.app.mysql.query(
-        'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname from posts a left join users b on a.username = b.username where a.id in (?) and a.status=0 order by create_time desc',
-        [signids]
-      );
+  //   if (signids.length > 0) {
+  //     results = await this.app.mysql.query(
+  //       'select a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname from posts a left join users b on a.username = b.username where a.id in (?) and a.status=0 order by create_time desc',
+  //       [signids]
+  //     );
 
-      let hashs = [];
+  //     let hashs = [];
 
-      _.each(results, row => {
-        row.read = 0;
-        row.eosvalue = 0;
-        row.ups = 0;
-        row.ontvalue = 0;
-        hashs.push(row.hash);
-      })
+  //     _.each(results, row => {
+  //       row.read = 0;
+  //       row.eosvalue = 0;
+  //       row.ups = 0;
+  //       row.ontvalue = 0;
+  //       hashs.push(row.hash);
+  //     })
 
-      // 阅读次数
-      const read = await this.app.mysql.query(
-        'select post_id as id, real_read_count as num from post_read_count where post_id in (?) ',
-        [signids]
-      );
+  //     // 阅读次数
+  //     const read = await this.app.mysql.query(
+  //       'select post_id as id, real_read_count as num from post_read_count where post_id in (?) ',
+  //       [signids]
+  //     );
 
-      // 赞赏金额
-      const value = await this.app.mysql.query(
-        'select signid, sum(amount) as value from supports where status=1 and signid in (?) and symbol = ? group by signid ',
-        [signids, "EOS"]
-      );
+  //     // 赞赏金额
+  //     const value = await this.app.mysql.query(
+  //       'select signid, sum(amount) as value from supports where status=1 and signid in (?) and symbol = ? group by signid ',
+  //       [signids, "EOS"]
+  //     );
 
-      //ONT
-      const ont_value = await this.app.mysql.query(
-        'select signid, sum(amount) as value from supports where signid in (?) and symbol = ? and status=1 group by signid ',
-        [signids, "ONT"]
-      );
+  //     //ONT
+  //     const ont_value = await this.app.mysql.query(
+  //       'select signid, sum(amount) as value from supports where signid in (?) and symbol = ? and status=1 group by signid ',
+  //       [signids, "ONT"]
+  //     );
 
-      // 赞赏次数
-      const ups = await this.app.mysql.query(
-        'select signid, count(*) as ups from supports where status=1 and signid in (?) group by signid ',
-        [signids]
-      );
+  //     // 赞赏次数
+  //     const ups = await this.app.mysql.query(
+  //       'select signid, count(*) as ups from supports where status=1 and signid in (?) group by signid ',
+  //       [signids]
+  //     );
 
-      _.each(results, row => {
-        _.each(read, row2 => {
-          if (row.id === row2.id) {
-            row.read = row2.num;
-          }
-        })
-        _.each(value, row2 => {
-          if (row.id === row2.signid) {
-            row.value = row2.value;
-          }
-        })
-        _.each(ups, row2 => {
-          if (row.id === row2.signid) {
-            row.ups = row2.ups;
-          }
-        })
-        _.each(ont_value, row2 => {
-          if (row.id === row2.signid) {
-            row.ontvalue = row2.value;
-          }
-        })
+  //     _.each(results, row => {
+  //       _.each(read, row2 => {
+  //         if (row.id === row2.id) {
+  //           row.read = row2.num;
+  //         }
+  //       })
+  //       _.each(value, row2 => {
+  //         if (row.id === row2.signid) {
+  //           row.value = row2.value;
+  //         }
+  //       })
+  //       _.each(ups, row2 => {
+  //         if (row.id === row2.signid) {
+  //           row.ups = row2.ups;
+  //         }
+  //       })
+  //       _.each(ont_value, row2 => {
+  //         if (row.id === row2.signid) {
+  //           row.ontvalue = row2.value;
+  //         }
+  //       })
 
-      })
-    }
+  //     })
+  //   }
 
-    return results;
-  }
+  //   return results;
+  // }
 
   // todo：待删除
   async post() {

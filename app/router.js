@@ -15,9 +15,9 @@ module.exports = app => {
   // 此处为了使用msg模块引入了passport.verify, 以后整体修改的时候需用passport.authorize
   router.post('/edit', passport.verify, controller.post.edit);
   // 文章列表
-  router.get('/posts', controller.post.posts);
-  // 打赏过的文章
-  router.get('/supports', controller.post.supports);
+  // router.get('/posts', controller.post.posts);
+  // // 打赏过的文章
+  // router.get('/supports', controller.post.supports);
   // 单篇文章
   router.get('/post/:hash', controller.post.post);
   // 单篇文章（for 短链接）
@@ -50,12 +50,12 @@ module.exports = app => {
   router.get('/assets', controller.user.assets);
   // 设置用户nickname (need access token)
   router.post('/user/setNickname', controller.user.setNickname);
-  // 设置用户email (need access token)
-  router.post('/user/setEmail', controller.user.setEmail);
+  // // 设置用户email (need access token)
+  // router.post('/user/setEmail', controller.user.setEmail);
   // 设置用户头像 (need access token)
   router.post('/user/setAvatar', controller.user.setAvatar);
-  // 设置用户的个性签名（自我介绍），(need access token)
-  router.post('/user/setIntroduction', passport.authorize, controller.user.setIntroduction);
+  // // 设置用户的个性签名（自我介绍），(need access token)
+  // router.post('/user/setIntroduction', passport.authorize, controller.user.setIntroduction);
   // 设置用户的个人资料，包括email，昵称和自我介绍。
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
 
@@ -75,10 +75,10 @@ module.exports = app => {
   // 获取access token
   app.router.post('/auth', app.controller.auth.auth);
 
-  // 被打赏次数排行榜
-  app.router.get('/getSupportTimesRanking', app.controller.post.getSupportTimesRanking);
-  // 被打赏总额排行榜
-  app.router.get('/getSupportAmountRanking', app.controller.post.getSupportAmountRanking);
+  // // 被打赏次数排行榜
+  // app.router.get('/getSupportTimesRanking', app.controller.post.getSupportTimesRanking);
+  // // 被打赏总额排行榜
+  // app.router.get('/getSupportAmountRanking', app.controller.post.getSupportAmountRanking);
   // 按照打赏金额排序的文章列表(新, 可按照币种排序)
   app.router.get('/posts/amountRanking', passport.verify, app.controller.post.getAmountRanking);
   // 按照打赏次数排序的文章列表(新)

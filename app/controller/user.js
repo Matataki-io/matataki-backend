@@ -282,57 +282,57 @@ class UserController extends Controller {
   }
 
 
-  async setEmail() {
+  // async setEmail() {
 
-    const ctx = this.ctx;
+  //   const ctx = this.ctx;
 
-    const { email = '' } = ctx.request.body;
+  //   const { email = '' } = ctx.request.body;
 
-    const current_user = this.get_current_user();
+  //   const current_user = this.get_current_user();
 
-    try {
-      this.checkAuth(current_user);
-    } catch (err) {
-      ctx.status = 401;
-      ctx.body = err.message;
-      return;
-    }
+  //   try {
+  //     this.checkAuth(current_user);
+  //   } catch (err) {
+  //     ctx.status = 401;
+  //     ctx.body = err.message;
+  //     return;
+  //   }
 
 
-    try {
-      const user = await this.app.mysql.get('users', { email: email });
+  //   try {
+  //     const user = await this.app.mysql.get('users', { email: email });
 
-      if (user) {
-        ctx.body = {
-          msg: 'duplicate Email',
-        };
-        ctx.status = 500;
-        return;
-      }
+  //     if (user) {
+  //       ctx.body = {
+  //         msg: 'duplicate Email',
+  //       };
+  //       ctx.status = 500;
+  //       return;
+  //     }
 
-      const now = moment().format('YYYY-MM-DD HH:mm:ss');
+  //     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
-      const result = await this.app.mysql.query(
-        'INSERT INTO users (id ,username, email, create_time)'
-        + ' VALUES (null, ?, ?, ?) ON DUPLICATE KEY UPDATE email = ?',
-        [current_user, email, now, email]
-      );
+  //     const result = await this.app.mysql.query(
+  //       'INSERT INTO users (id ,username, email, create_time)'
+  //       + ' VALUES (null, ?, ?, ?) ON DUPLICATE KEY UPDATE email = ?',
+  //       [current_user, email, now, email]
+  //     );
 
-      const updateSuccess = result.affectedRows >= 1;
+  //     const updateSuccess = result.affectedRows >= 1;
 
-      if (updateSuccess) {
-        ctx.status = 201;
-      } else {
-        ctx.status = 500;
-      }
-    } catch (err) {
-      console.log(err);
-      ctx.body = {
-        msg: 'setEmail error: ' + err.sqlMessage,
-      };
-      ctx.status = 500;
-    }
-  }
+  //     if (updateSuccess) {
+  //       ctx.status = 201;
+  //     } else {
+  //       ctx.status = 500;
+  //     }
+  //   } catch (err) {
+  //     console.log(err);
+  //     ctx.body = {
+  //       msg: 'setEmail error: ' + err.sqlMessage,
+  //     };
+  //     ctx.status = 500;
+  //   }
+  // }
 
 
   async setAvatar() {
@@ -375,24 +375,24 @@ class UserController extends Controller {
     }
   }
 
-  async setIntroduction() {
-    const ctx = this.ctx;
-    const { introduction = '' } = ctx.request.body;
+  // async setIntroduction() {
+  //   const ctx = this.ctx;
+  //   const { introduction = '' } = ctx.request.body;
 
-    const updateResult = await this.service.user.setUserIntroduction(introduction, ctx.user.username);
+  //   const updateResult = await this.service.user.setUserIntroduction(introduction, ctx.user.username);
 
-    if (updateResult === 4) {
-      ctx.body = ctx.msg.userIntroductionInvalid;
-      return;
-    }
+  //   if (updateResult === 4) {
+  //     ctx.body = ctx.msg.userIntroductionInvalid;
+  //     return;
+  //   }
 
-    if (updateResult === false) {
-      ctx.body = ctx.msg.failure;
-      return;
-    }
+  //   if (updateResult === false) {
+  //     ctx.body = ctx.msg.failure;
+  //     return;
+  //   }
 
-    ctx.body = ctx.msg.success;
-  }
+  //   ctx.body = ctx.msg.success;
+  // }
 
   // 将设置用户邮箱、昵称、个性签名合而为一
   async setProfile() {
