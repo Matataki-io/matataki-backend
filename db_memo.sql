@@ -426,3 +426,23 @@ alter table follows ADD COLUMN fuid INT UNSIGNED;
 
 alter table posts ADD COLUMN uid INT UNSIGNED;
 
+
+create table tags (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name varchar(255) NOT NULL,
+  create_time timestamp,
+  PRIMARY KEY (id)
+);
+
+create table post_tag (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  sid INT UNSIGNED NOT NULL, -- sign id
+  tid INT UNSIGNED NOT NULL,  -- tag id
+  PRIMARY KEY (id),
+  UNIQUE (sid, tid)
+);
+
+insert into tags values (null, 'EOS', NOW());
+insert into tags values (null, 'ONT', NOW());
+insert into tags values (null, '小白入门', NOW());
+insert into tags values (null, '大咖解说', NOW());

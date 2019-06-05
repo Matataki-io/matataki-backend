@@ -29,7 +29,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
       publickey, sign, hash, username, fissionFactor = 2000,
-      cover, is_original = 0, platform = 'eos' } = ctx.request.body;
+      cover, is_original = 0, platform = 'eos', tags } = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username, is_original);
 
@@ -78,6 +78,9 @@ class PostController extends Controller {
       platform: platform,
       uid: ctx.user.id 
     });
+
+    let tag_arr= tags.split(",");
+    await ctx.service.post.create_tags(id, tag_arr);
 
     if (id > 0) {
       ctx.body = ctx.msg.success;

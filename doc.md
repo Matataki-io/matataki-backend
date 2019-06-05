@@ -1149,3 +1149,44 @@ curl -d "sign=SIG_K1_Kbx5MbeSZhHZhHnfhA7KD2YEZLfGbvhrWejwgHyzXQa4gvHfdCiAdMgiUJQ
 curl -d "sign=01b07c90984e0385b19f62f29f93b037a8a3c3a9d2d434229c5da315e31bdc1f573cc37c6ad27331a608a7e39a2a4299c71c786371b3790e9a77579d86f58dfedc&publickey=02f57f00790d3e368ad2bf28b08379ce01d608caaf19f862dc92541438fea6daeb&toaddress=ALStiQ9ZFZo8R8aXaHfZEPReJzv3jSz1Es&contract=AFmseVrdL9f9oyCzZefL9tG6UbvhUMqNMV&symbol=ONT&amount=30000&platform=ont" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBTFN0aVE5WkZabzhSOGFYYUhmWkVQUmVKenYzalN6MUVzIiwiZXhwIjoxNTU5MjgzNjQwODYxLCJwbGF0Zm9ybSI6Im9udCIsImlkIjozMDZ9.pcRmiN9aprhTetCIZCXY5eZNRJwOWfI3tyg_UykSlvc"  -X POST http://localhost:7001/user/withdraw
 
 ```
+
+
+
+#### get tags 获取可用标签列表
+
+* GET /tag/tags
+* 响应状态码：200
+
+* 请求示例
+
+curl http://localhost:7001/tag/tags
+
+```
+
+{
+  "msg": "success",
+  "data": [
+    {
+      "id": 1,
+      "name": "EOS"
+    },
+    {
+      "id": 2,
+      "name": "ONT"
+    },
+    {
+      "id": 3,
+      "name": "小白入门"
+    },
+    {
+      "id": 4,
+      "name": "大咖解说"
+    }
+  ]
+}
+
+```
+
+在publish一篇文章的时候，tags 参数是tag id join ',' 后传到后端。例如:
+
+tags=1,2,3,4
