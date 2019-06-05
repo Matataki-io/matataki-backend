@@ -734,10 +734,10 @@ class PostController extends Controller {
       return;
     }
 
-    const username = this.get_current_user();
+    let user;
 
     try {
-      this.checkAuth(username);
+      user = this.this.get_user();
     } catch (err) {
       ctx.status = 401;
       ctx.body = err.message;
@@ -748,7 +748,8 @@ class PostController extends Controller {
 
     try {
       const result = await this.app.mysql.insert('comments', {
-        username,
+        username: user.username,
+        uid: user.id,
         sign_id,
         comment,
         create_time: now

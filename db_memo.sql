@@ -411,3 +411,11 @@ ALTER TABLE assets_change_log ADD COLUMN toaddress varchar(255) DEFAULT "";
 ALTER TABLE assets_change_log ADD COLUMN memo varchar(255) DEFAULT "";
 ALTER TABLE assets_change_log ADD COLUMN status INT DEFAULT 2;
 ALTER TABLE assets_change_log ADD COLUMN trx varchar(255) DEFAULT "";
+
+
+---------- 06.02 -----
+
+drop index username on comments;
+alter table comments drop key username;
+alter table comments ADD COLUMN uid INT UNSIGNED;
+-- 执行迁移脚本 修改 comments的uid
