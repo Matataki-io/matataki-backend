@@ -87,6 +87,14 @@ class PostService extends Service {
       );
       post.ups = ups[0].ups;
 
+      // tags 
+      const tags = await this.app.mysql.query(
+        'select a.id, a.name from tags a left join post_tag b on a.id = b.tid where b.sid = ? ',
+        [post.id]
+      );
+
+      post.tags = tags;
+
       // 当前用户是否已赞赏
       post.support = false;
       if (userId) {
