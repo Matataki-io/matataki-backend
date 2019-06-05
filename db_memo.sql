@@ -413,12 +413,16 @@ ALTER TABLE assets_change_log ADD COLUMN status INT DEFAULT 2;
 ALTER TABLE assets_change_log ADD COLUMN trx varchar(255) DEFAULT "";
 
 
----------- 06.02 -----
+---------- 06.02 数据库更新-----
 
 drop index username on comments;
 alter table comments drop key username;
 alter table comments ADD COLUMN uid INT UNSIGNED;
--- 执行迁移脚本 修改 comments的uid
+-- 执行迁移脚本 修改 comments 的uid
 
 alter table follows ADD COLUMN uid INT UNSIGNED;
 alter table follows ADD COLUMN fuid INT UNSIGNED;
+-- 执行迁移脚本 修改 follows 的 uid 和 fuid
+
+alter table posts ADD COLUMN uid INT UNSIGNED;
+

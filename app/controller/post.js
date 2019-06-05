@@ -75,7 +75,8 @@ class PostController extends Controller {
       fission_factor: fissionFactor,
       create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
       cover: cover, // 封面url
-      platform: platform
+      platform: platform,
+      uid: ctx.user.id 
     });
 
     if (id > 0) {
