@@ -114,5 +114,8 @@ module.exports = app => {
 
   // // 邮件测试
   // app.router.get('/mailtest6a3476f5', passport.verify, app.controller.post.mailtest);
+
+  // 标签列表
+  app.router.get('/tag/tags', app.controller.tag.tags);
 };
 

@@ -33,6 +33,20 @@ class PostService extends Service {
     return 0;
   }
 
+  async create_tags(sid, tag_arr) {
+    try {
+      for (let i = 0; i < tag_arr.length; i++) {
+        let id = tag_arr[i];
+        let tag = await this.app.mysql.get('tags', { id });
+        if (tag) {
+          await this.app.mysql.insert("post_tag", { sid: sid, tid: tag.id });
+        }
+      }
+    } catch (err) {
+      this.logger.error('PostService::create_tags error: %j', err);
+    }
+  }
+
   // 根据hash获取文章
   async getByHash(hash, userId) {
     const post = await this.app.mysql.get('posts', { hash });
@@ -72,6 +86,14 @@ class PostService extends Service {
         [post.id]
       );
       post.ups = ups[0].ups;
+
+      // tags 
+      const tags = await this.app.mysql.query(
+        'select a.id, a.name from tags a left join post_tag b on a.id = b.tid where b.sid = ? ',
+        [post.id]
+      );
+
+      post.tags = tags;
 
       // 当前用户是否已赞赏
       post.support = false;

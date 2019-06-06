@@ -22,10 +22,22 @@ class FollowController extends Controller {
     try {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
-      const result = await this.app.mysql.query(
-        'INSERT INTO follows VALUES (null, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE status = 1',
-        [username, followed, 1, now]
-      );
+      let user = await this.app.mysql.get('users', { username: username });
+      let followed_user = await this.app.mysql.get('users', { username: followed });
+
+      if (!user || !followed_user) {
+        this.response(401, "user not exist");
+        return;
+      }
+
+      let result = await this.app.mysql.insert('follows', {
+        username: username,
+        followed: followed,
+        status: 1,
+        uid: user.id,
+        fuid: followed_user.id,
+        create_time: now
+      });
 
       const updateSuccess = result.affectedRows >= 1;
 
@@ -57,11 +69,19 @@ class FollowController extends Controller {
     }
 
     try {
+      let user = await this.app.mysql.get('users', { username: username });
+      let followed_user = await this.app.mysql.get('users', { username: followed });
+
+      if (!user || !followed_user) {
+        this.response(401, "user not exist");
+        return;
+      }
+
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
       const result = await this.app.mysql.query(
-        'INSERT INTO follows VALUES (null, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE status = 0',
-        [username, followed, 0, now]
+        'INSERT INTO follows(username, followed, status, uid, fuid, create_time) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE status = 0',
+        [username, followed, 1, user.id, followed_user.id, now]
       );
 
       const updateSuccess = result.affectedRows >= 1;

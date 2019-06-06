@@ -29,7 +29,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
       publickey, sign, hash, username, fissionFactor = 2000,
-      cover, is_original = 0, platform = 'eos' } = ctx.request.body;
+      cover, is_original = 0, platform = 'eos', tags } = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username, is_original);
 
@@ -75,8 +75,12 @@ class PostController extends Controller {
       fission_factor: fissionFactor,
       create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
       cover: cover, // 封面url
-      platform: platform
+      platform: platform,
+      uid: ctx.user.id 
     });
+
+    let tag_arr= tags.split(",");
+    await ctx.service.post.create_tags(id, tag_arr);
 
     if (id > 0) {
       ctx.body = ctx.msg.success;
@@ -734,10 +738,10 @@ class PostController extends Controller {
       return;
     }
 
-    const username = this.get_current_user();
+    let user;
 
     try {
-      this.checkAuth(username);
+      user = this.this.get_user();
     } catch (err) {
       ctx.status = 401;
       ctx.body = err.message;
@@ -748,7 +752,8 @@ class PostController extends Controller {
 
     try {
       const result = await this.app.mysql.insert('comments', {
-        username,
+        username: user.username,
+        uid: user.id,
         sign_id,
         comment,
         create_time: now
