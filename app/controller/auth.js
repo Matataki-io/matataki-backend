@@ -8,6 +8,7 @@ const base64url = require('base64url');
 const jwt = require('jwt-simple');
 const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
+const axios = require('axios');
 
 class AuthController extends Controller {
 
@@ -126,12 +127,34 @@ class AuthController extends Controller {
       this.ctx.body = { msg: 'invalid signature' };
       this.ctx.status = 500;
     }
-
     // curl -d "platform=ont&publickey=0205c8fff4b1d21f4b2ec3b48cf88004e38402933d7e914b2a0eda0de15e73ba61&username=helloworld&sign=010936f0693e83d5d605816ceeeb4872d8a343d4c7350ef23e49614e0302d94d6f6a4af73e20ed9c818c0be6865e6096efc7b9f98fa42a33f775ff0ea1cb17703a" -H "Authorization: Basic bXlfYXBwOm15X3NlY3JldA==" -v -X POST http://127.0.0.1:7001/auth
-
-
   }
 
+  async githubLogin() {
+    const ctx = this.ctx;
+    const { code = null } = ctx.request.body;
+    if (code === null) {
+      ctx.body = ctx.msg.paramsError;
+      // ctx.body.data = this.service.auth.generateRedirectUrl;
+      return;
+    }
+    const usertoken = await this.service.auth.verifyCode(code);
+    if (usertoken === null) {
+      ctx.body = ctx.msg.authCodeInvalid;
+      return;
+    }
+    const userinfo = await this.service.auth.getGithubUser(usertoken.access_token);
+    if (userinfo === null) {
+      ctx.body = ctx.msg.generateTokenError;
+      return;
+    }
+    const jwttoken = await this.service.auth.saveUser(userinfo.login, userinfo.name);
+    if (jwttoken === null) {
+      ctx.body = ctx.msg.generateTokenError;
+      return;
+    }
+    ctx.body = jwttoken;
+  }
 }
 
 module.exports = AuthController;

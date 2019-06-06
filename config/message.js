@@ -35,6 +35,11 @@ module.exports = {
   // 错误的ONT帐号地址
   ontAddressInvalid: 10007,
 
+  // 错误的授权信息
+  authCodeInvalid: 10008,
+  // 验证用户, 以及分发jet token时候出错
+  generateTokenError: 10009,
+
   // post相关
   postNotFound: 10100,
   postDeleteError: 10101,
@@ -62,6 +67,8 @@ module.exports = {
 
       eosAddressInvalid: { code: this.eosAddressInvalid, message: 'EOS address not avilable on mainnet' },
       ontAddressInvalid: { code: this.ontAddressInvalid, message: 'ONT address has wrong format' },
+      authCodeInvalid: { code: this.authCodeInvalid, message: 'Invalid OAuth code' },
+      generateTokenError: { code: this.generateTokenError, message: 'Error occurs when generating the token' },
 
       postNotFound: { code: this.postNotFound, message: 'post not found' },
       postDeleteError: { code: this.postDeleteError, message: 'delete post error' },
@@ -86,6 +93,8 @@ module.exports = {
 
       eosAddressInvalid: { code: this.eosAddressInvalid, message: 'EOS帐号不存在' },
       ontAddressInvalid: { code: this.ontAddressInvalid, message: 'ONT帐号有误' },
+      authCodeInvalid: { code: this.authCodeInvalid, message: '授权信息有误' },
+      generateTokenError: { code: this.generateTokenError, message: '无法生成token' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },

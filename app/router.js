@@ -109,6 +109,9 @@ module.exports = app => {
   // 发起提现
   app.router.post('/user/withdraw', passport.authorize, app.controller.user.withdraw);
 
+  // 验证OAuth回传的Code
+  app.router.post('/login/github', passport.verify, app.controller.auth.githubLogin);
+
   // // 邮件测试
   // app.router.get('/mailtest6a3476f5', passport.verify, app.controller.post.mailtest);
 };

@@ -474,6 +474,8 @@ class UserController extends Controller {
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
         const msg = ONT.utils.str2hexstr(sign_data);
         await this.ont_signature_verify(msg, sign, publickey, publickey, sign);
+      } else if (ctx.user.platform === 'github') {
+        this.logger.info('UserController:: withdraw: There is a github user withdrawing...');
       } else {
         ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
         return;
