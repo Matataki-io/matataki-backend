@@ -87,6 +87,9 @@ module.exports = app => {
   app.router.get('/posts/timeRanking', passport.verify, app.controller.post.getTimeRanking);
   // 某用户赞赏过的文章列表(新)
   app.router.get('/posts/supported', passport.verify, app.controller.post.getSupported);
+  
+  // 根据 tag 查找tag下的文章
+  app.router.get('/posts/tag/:id', passport.verify, app.controller.post.getPostByTag);
 
 
   // 草稿箱
