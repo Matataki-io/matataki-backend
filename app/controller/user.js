@@ -502,10 +502,6 @@ class UserController extends Controller {
       return this.response(401, "invalid amount");
     }
 
-    if (withdraw_amount > asset.amount) {
-      return this.response(401, "withdraw amount should less than balance");
-    }
-
     if (!toaddress) {
       return this.response(401, "withdraw address required");
     }
@@ -527,6 +523,10 @@ class UserController extends Controller {
         let result = await conn.query('SELECT * FROM assets WHERE id=? limit 1 FOR UPDATE;', [asset.id]);
 
         asset = result[0];
+
+        if (withdraw_amount > asset.amount) {
+           throw new Error("withdraw amount should less than balance");
+        }
 
         let remind_amount = asset.amount - withdraw_amount;
 
