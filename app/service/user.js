@@ -3,6 +3,7 @@
 const Service = require('egg').Service;
 const EOS = require('eosjs');
 const ONT = require('ontology-ts-sdk');
+const axios = require('axios');
 
 const introductionLengthInvalid = 4;
 const emailDuplicated = 5;
@@ -155,6 +156,23 @@ class UserService extends Service {
       this.logger.error('UserService:: setEmail error: %j', err);
     }
     return false;
+  }
+
+  async uploadAvatarFromUrl(url) {
+    let result = null;
+    try {
+      result = await axios({
+        method: 'post',
+        url: 'https://apitest.smartsignature.io/uploadUrl',
+        data: {
+          url,
+        },
+      });
+    } catch (err) {
+      this.logger.err('UserService:: uploadAvatarFromUrl error: %j', err);
+      return null;
+    }
+    return result;
   }
 
   async setNickname(nickname, current_user) {

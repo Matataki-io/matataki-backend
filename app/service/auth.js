@@ -59,7 +59,7 @@ class AuthService extends Service {
   }
 
   // 创建或登录用户, 发放jwt token
-  async saveUser(username, nickname, platform = 'github') {
+  async saveUser(username, nickname, avatarUrl, platform = 'github') {
     try {
       const userExistence = await this.app.mysql.get('users', { username, platform });
       // 用户是第一次登录, 先创建
@@ -77,9 +77,11 @@ class AuthService extends Service {
           nickname = 'github_' + nickname;
         }
 
+        const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);
+
         // 更新昵称
         await this.app.mysql.update('users',
-          { nickname },
+          { nickname, avatar },
           { where: { username, platform } }
         );
       }
