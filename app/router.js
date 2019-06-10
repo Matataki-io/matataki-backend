@@ -44,7 +44,7 @@ module.exports = app => {
   // 请注意和 获取用户信息 方法 的冲突可能
   router.get('/user/stats', passport.authorize, controller.user.getUserDetails);
   // 获取用户信息：用户名、关注数，粉丝数
-  router.get('/user/:username', controller.user.user);
+  router.get('/user/:id', passport.verify, controller.user.user);
 
   // // 获取资产历史统计、和详情列表（默认最新20条）
   // router.get('/assets', controller.user.assets);
