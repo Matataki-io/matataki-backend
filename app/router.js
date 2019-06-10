@@ -64,13 +64,13 @@ module.exports = app => {
 
 
   // follow 关注和取关动作。关注数和粉丝数在userinfo里
-  app.router.post('/follow', app.controller.follow.follow);
-  app.router.post('/unfollow', app.controller.follow.unfollow);
+  app.router.post('/follow', passport.authorize, app.controller.follow.follow);
+  app.router.post('/unfollow', passport.authorize, app.controller.follow.unfollow);
 
   // 关注列表
-  app.router.get('/follows', app.controller.follow.follows);
+  app.router.get('/follows', passport.verify, app.controller.follow.follows);
   // 粉丝列表（谁关注了我？）
-  app.router.get('/fans', app.controller.follow.fans);
+  app.router.get('/fans', passport.verify, app.controller.follow.fans);
 
   // 获取access token
   app.router.post('/auth', app.controller.auth.auth);
@@ -119,6 +119,6 @@ module.exports = app => {
   // app.router.get('/mailtest6a3476f5', passport.verify, app.controller.post.mailtest);
 
   // 标签列表
-  app.router.get('/tag/tags', app.controller.tag.tags);
+  app.router.get('/tag/tags', passport.verify, app.controller.tag.tags);
 };
 

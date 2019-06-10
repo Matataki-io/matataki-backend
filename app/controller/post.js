@@ -79,8 +79,10 @@ class PostController extends Controller {
       uid: ctx.user.id
     });
 
-    let tag_arr = tags.split(",");
-    await ctx.service.post.create_tags(id, tag_arr);
+    if (tag) {
+      let tag_arr = tags.split(",");
+      await ctx.service.post.create_tags(id, tag_arr);
+    }
 
     if (id > 0) {
       ctx.body = ctx.msg.success;
