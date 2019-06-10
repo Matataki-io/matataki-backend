@@ -518,14 +518,17 @@ class UserController extends Controller {
     }
 
     let transfer_memo = memo ? memo : "Withdraw from Smart Signature";
-    let remind_amount = asset.amount - withdraw_amount;
-
+  
     try {
       const conn = await this.app.mysql.beginTransaction();
 
       try {
         // for update 锁定table row
-        await conn.query('SELECT * FROM assets WHERE id=? limit 1 FOR UPDATE;', [asset.id]);
+        let result = await conn.query('SELECT * FROM assets WHERE id=? limit 1 FOR UPDATE;', [asset.id]);
+
+        asset = result[0];
+
+        let remind_amount = asset.amount - withdraw_amount;
 
         await conn.update("assets", {
           amount: remind_amount
