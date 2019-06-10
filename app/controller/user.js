@@ -9,58 +9,17 @@ class UserController extends Controller {
   async user() {
     const ctx = this.ctx;
 
-    const username = ctx.params.username;
+    const id = ctx.params.id;
 
-    // 2.获取某账号关注数
-    const follows = await this.app.mysql.query(
-      'select count(*) as follows from follows where username = ? and status=1',
-      [username]
-    );
-
-    // 3.获取某账号粉丝数
-    const fans = await this.app.mysql.query(
-      'select count(*) as fans from follows where followed = ? and status=1',
-      [username]
-    );
-
-    var is_follow = false;
-
-    const current_user = this.get_current_user();
-
-    if (current_user) {
-      const result = await this.app.mysql.get('follows', { username: current_user, followed: username, status: 1 });
-      if (result) {
-        is_follow = true;
-      }
+    const details = await this.service.user.getUserById(id);
+    
+    if (details === null) {
+      ctx.body = ctx.msg.userNotExist;
+      return;
     }
 
-    let email = "";
-    let nickname = "";
-    let avatar = "";
-    let introduction = '';
-    const user = await this.app.mysql.get('users', { username: username });
-    if (user) {
-      avatar = user.avatar || "";
-      email = user.email || "";
-      nickname = user.nickname || "";
-      introduction = user.introduction || '';
-    }
-
-    const result = {
-      username,
-      email,
-      nickname,
-      avatar,
-      introduction,
-      follows: follows[0].follows,
-      fans: fans[0].fans,
-      is_follow: is_follow
-    };
-
-    ctx.logger.info('debug info', result);
-
-    ctx.body = result;
-    ctx.status = 200;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = details;
   }
 
 
@@ -502,10 +461,6 @@ class UserController extends Controller {
       return this.response(401, "invalid amount");
     }
 
-    if (withdraw_amount > asset.amount) {
-      return this.response(401, "withdraw amount should less than balance");
-    }
-
     if (!toaddress) {
       return this.response(401, "withdraw address required");
     }
@@ -518,12 +473,26 @@ class UserController extends Controller {
     }
 
     let transfer_memo = memo ? memo : "Withdraw from Smart Signature";
-    let remind_amount = asset.amount - withdraw_amount;
-
+  
     try {
       const conn = await this.app.mysql.beginTransaction();
 
       try {
+        // for update 锁定table row
+        let result = await conn.query('SELECT * FROM assets WHERE id=? limit 1 FOR UPDATE;', [asset.id]);
+
+        asset = result[0];
+
+        if (withdraw_amount > asset.amount) {
+           throw new Error("withdraw amount should less than balance");
+        }
+
+        let remind_amount = asset.amount - withdraw_amount;
+
+        await conn.update("assets", {
+          amount: remind_amount
+        }, { where: { id: asset.id } });
+
         const now = moment().format('YYYY-MM-DD HH:mm:ss');
         await conn.insert("assets_change_log", {
           uid: ctx.user.id,
@@ -537,10 +506,6 @@ class UserController extends Controller {
           status: 0,
           create_time: now,
         });
-
-        await conn.update("assets", {
-          amount: remind_amount
-        }, { where: { id: asset.id } });
 
         await conn.commit();
       } catch (err) {

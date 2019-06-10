@@ -76,11 +76,13 @@ class PostController extends Controller {
       create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
       cover: cover, // 封面url
       platform: platform,
-      uid: ctx.user.id 
+      uid: ctx.user.id
     });
 
-    let tag_arr= tags.split(",");
-    await ctx.service.post.create_tags(id, tag_arr);
+    if (tag) {
+      let tag_arr = tags.split(",");
+      await ctx.service.post.create_tags(id, tag_arr);
+    }
 
     if (id > 0) {
       ctx.body = ctx.msg.success;
@@ -394,6 +396,20 @@ class PostController extends Controller {
       ctx.body = ctx.msg.success;
       ctx.body.data = postData;
     }
+  }
+
+  // 用户赞赏过的文章列表(新)
+  async getPostByTag() {
+    const ctx = this.ctx;
+
+    const { page = 1, pagesize = 20 } = this.ctx.query;
+
+    const tagid = ctx.params.id;
+
+    const postData = await this.service.post.getPostByTag(page, pagesize, tagid);
+
+    this.response(200, "success");
+    this.ctx.body.data = postData;
   }
 
   // 我赞赏过的文章列表

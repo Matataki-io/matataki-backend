@@ -44,7 +44,7 @@ module.exports = app => {
   // 请注意和 获取用户信息 方法 的冲突可能
   router.get('/user/stats', passport.authorize, controller.user.getUserDetails);
   // 获取用户信息：用户名、关注数，粉丝数
-  router.get('/user/:username', controller.user.user);
+  router.get('/user/:id', passport.verify, controller.user.user);
 
   // // 获取资产历史统计、和详情列表（默认最新20条）
   // router.get('/assets', controller.user.assets);
@@ -64,13 +64,13 @@ module.exports = app => {
 
 
   // follow 关注和取关动作。关注数和粉丝数在userinfo里
-  app.router.post('/follow', app.controller.follow.follow);
-  app.router.post('/unfollow', app.controller.follow.unfollow);
+  app.router.post('/follow', passport.authorize, app.controller.follow.follow);
+  app.router.post('/unfollow', passport.authorize, app.controller.follow.unfollow);
 
   // 关注列表
-  app.router.get('/follows', app.controller.follow.follows);
+  app.router.get('/follows', passport.verify, app.controller.follow.follows);
   // 粉丝列表（谁关注了我？）
-  app.router.get('/fans', app.controller.follow.fans);
+  app.router.get('/fans', passport.verify, app.controller.follow.fans);
 
   // 获取access token
   app.router.post('/auth', app.controller.auth.auth);
@@ -87,6 +87,9 @@ module.exports = app => {
   app.router.get('/posts/timeRanking', passport.verify, app.controller.post.getTimeRanking);
   // 某用户赞赏过的文章列表(新)
   app.router.get('/posts/supported', passport.verify, app.controller.post.getSupported);
+  
+  // 根据 tag 查找tag下的文章
+  app.router.get('/posts/tag/:id', passport.verify, app.controller.post.getPostByTag);
 
 
   // 草稿箱
@@ -116,6 +119,6 @@ module.exports = app => {
   // app.router.get('/mailtest6a3476f5', passport.verify, app.controller.post.mailtest);
 
   // 标签列表
-  app.router.get('/tag/tags', app.controller.tag.tags);
+  app.router.get('/tag/tags', passport.verify, app.controller.tag.tags);
 };
 

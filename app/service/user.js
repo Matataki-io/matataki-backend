@@ -20,11 +20,65 @@ class UserService extends Service {
   //   });
   // }
 
+  async getUserById(id) {
+    const ctx = this.ctx;
+
+    // 2.获取某账号关注数
+    const follows = await this.app.mysql.query(
+      'select count(*) as follows from follows where uid = ? and status=1',
+      [id]
+    );
+
+    // 3.获取某账号粉丝数
+    const fans = await this.app.mysql.query(
+      'select count(*) as fans from follows where fuid = ? and status=1',
+      [id]
+    );
+
+    var is_follow = false;
+
+    const current_user = ctx.user;
+
+    if (current_user) {
+      const result = await this.app.mysql.get('follows', { uid: current_user.id, fuid: id, status: 1 });
+      if (result) {
+        is_follow = true;
+      }
+    }
+
+    let email = "";
+    let nickname = "";
+    let avatar = "";
+    let introduction = '';
+    const user = await this.app.mysql.get('users', { id: id });
+    if (user) {
+      avatar = user.avatar || "";
+      email = user.email || "";
+      nickname = user.nickname || "";
+      introduction = user.introduction || '';
+    }
+
+    const result = {
+      username: user.username,
+      email,
+      nickname,
+      avatar,
+      introduction,
+      follows: follows[0].follows,
+      fans: fans[0].fans,
+      is_follow: is_follow
+    };
+
+    ctx.logger.info('debug info', result);
+
+    return result;
+  }
+
   async getUserDetails(current_user) {
 
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
+      return query.replace(/\:(\w+)/g, function (txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -46,12 +100,12 @@ class UserService extends Service {
 
     // 筛选状态为1，即有效的follow
     const counts = await this.app.mysql.query(
-      'SELECT COUNT(*) AS follows FROM follows WHERE username = :user AND status = 1;'
-      + 'SELECT COUNT(*) AS fans FROM follows WHERE followed = :user AND status = 1;'
-      + 'SELECT COUNT(*) AS articles FROM posts WHERE author = :user AND status = 0;'
+      'SELECT COUNT(*) AS follows FROM follows WHERE uid = :uid AND status = 1;'
+      + 'SELECT COUNT(*) AS fans FROM follows WHERE fuid = :uid AND status = 1;'
+      + 'SELECT COUNT(*) AS articles FROM posts WHERE uid = :uid AND status = 0;'
       + 'SELECT COUNT(*) AS drafts FROM drafts WHERE uid = :uid AND status = 0;'
       + 'SELECT COUNT(*) AS supports, signid FROM supports s INNER JOIN posts p ON s.signid = p.id WHERE s.uid = :uid AND p.status = 0',
-      { user: current_user, uid: basicInfo.id }
+      { uid: basicInfo.id }
     );
     basicInfo.follows = counts[0][0].follows;
     basicInfo.fans = counts[1][0].fans;
@@ -132,7 +186,7 @@ class UserService extends Service {
 
     const sameEmail = await this.app.mysql.query(
       'SELECT COUNT(*) AS same_count FROM users WHERE email = ?',
-      [ email ]
+      [email]
     );
 
     if (sameEmail[0].same_count) {
@@ -179,7 +233,7 @@ class UserService extends Service {
 
     const sameNickname = await this.app.mysql.query(
       'SELECT COUNT(*) AS same_count FROM users WHERE nickname = ?',
-      [ nickname ]
+      [nickname]
     );
 
     if (sameNickname[0].same_count) {

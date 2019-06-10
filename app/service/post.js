@@ -207,6 +207,27 @@ class PostService extends Service {
     return postList;
   }
 
+  async getPostByTag(page = 1, pagesize = 20, tagid) {
+    const posts = await this.app.mysql.query(
+      'select a.sid, a.tid, b.title from post_tag a left join posts b on a.sid=b.id where a.tid = ? limit ?,?',
+      [tagid, (page - 1) * pagesize, pagesize]
+    );
+
+    // 将文章id转为Array
+    const postids = [];
+    _.each(posts, row => {
+      postids.push(row.sid);
+    });
+
+    if (postids.length === 0) {
+      return [];
+    }
+
+    let postList = await this.getPostList(postids);
+
+    return postList;
+  }
+
   // 赞赏次数排序
   async supportRank(page = 1, pagesize = 20, channel = null) {
     this.app.mysql.queryFromat = function (query, values) {

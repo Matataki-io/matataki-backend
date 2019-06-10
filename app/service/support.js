@@ -25,7 +25,7 @@ class SupportService extends Service {
       'SELECT s.amount, s.platform, s.signid, s.create_time, u.username, u.nickname, u.avatar, c.comment FROM supports s '
       // 一个user在同一篇文章下的comment和support
       + 'LEFT JOIN users u ON s.uid = u.id '
-      + 'LEFT JOIN comments c ON c.sign_id = s.signid AND c.username = u.username '
+      + 'LEFT JOIN comments c ON c.sign_id = s.signid AND c.uid = u.id '
       + 'WHERE s.status = 1 AND s.signid = :signid ORDER BY s.create_time DESC limit :start, :end;',
       { signid, start: (page - 1) * pagesize, end: pagesize }
     );
