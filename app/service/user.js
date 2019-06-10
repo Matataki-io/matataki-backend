@@ -99,12 +99,12 @@ class UserService extends Service {
 
     // 筛选状态为1，即有效的follow
     const counts = await this.app.mysql.query(
-      'SELECT COUNT(*) AS follows FROM follows WHERE username = :user AND status = 1;'
-      + 'SELECT COUNT(*) AS fans FROM follows WHERE followed = :user AND status = 1;'
-      + 'SELECT COUNT(*) AS articles FROM posts WHERE author = :user AND status = 0;'
+      'SELECT COUNT(*) AS follows FROM follows WHERE uid = :uid AND status = 1;'
+      + 'SELECT COUNT(*) AS fans FROM follows WHERE fuid = :uid AND status = 1;'
+      + 'SELECT COUNT(*) AS articles FROM posts WHERE uid = :uid AND status = 0;'
       + 'SELECT COUNT(*) AS drafts FROM drafts WHERE uid = :uid AND status = 0;'
       + 'SELECT COUNT(*) AS supports, signid FROM supports s INNER JOIN posts p ON s.signid = p.id WHERE s.uid = :uid AND p.status = 0',
-      { user: current_user, uid: basicInfo.id }
+      { uid: basicInfo.id }
     );
     basicInfo.follows = counts[0][0].follows;
     basicInfo.fans = counts[1][0].fans;
