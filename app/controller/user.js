@@ -524,6 +524,13 @@ class UserController extends Controller {
       const conn = await this.app.mysql.beginTransaction();
 
       try {
+        // for update 锁定table row
+        await conn.query('SELECT * FROM assets WHERE id=? limit 1 FOR UPDATE;', [asset.id]);
+
+        await conn.update("assets", {
+          amount: remind_amount
+        }, { where: { id: asset.id } });
+
         const now = moment().format('YYYY-MM-DD HH:mm:ss');
         await conn.insert("assets_change_log", {
           uid: ctx.user.id,
@@ -537,10 +544,6 @@ class UserController extends Controller {
           status: 0,
           create_time: now,
         });
-
-        await conn.update("assets", {
-          amount: remind_amount
-        }, { where: { id: asset.id } });
 
         await conn.commit();
       } catch (err) {
