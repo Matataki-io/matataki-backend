@@ -203,7 +203,7 @@ class PostController extends Controller {
 
         if (tags) {
           let tag_arr = tags.split(",");
-          await ctx.service.post.create_tags(signId, tag_arr);
+          await ctx.service.post.create_tags(signId, tag_arr, true);
         }
 
         await conn.commit();
