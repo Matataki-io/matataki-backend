@@ -223,7 +223,7 @@ class UserService extends Service {
         },
       });
     } catch (err) {
-      this.logger.err('UserService:: uploadAvatarFromUrl error: %j', err);
+      this.logger.error('UserService:: uploadAvatarFromUrl error: %j', err);
       return null;
     }
     return result;
