@@ -795,7 +795,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const id = ctx.params.id;
 
-    const post = await this.service.post.getForEdit(id, ctx.user.username);
+    const post = await this.service.post.getForEdit(id, ctx.user.id);
 
     if (!post) {
       ctx.body = ctx.msg.postNotFound;

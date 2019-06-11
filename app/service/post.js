@@ -497,7 +497,7 @@ class PostService extends Service {
 
   async getForEdit(id, current_user) {
     const post = await this.app.mysql.get('posts', { id });
-    return this.getPostProfile(post, userId);
+    return this.getPostProfile(post, current_user);
   }
 
 }
