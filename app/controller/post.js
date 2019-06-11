@@ -29,7 +29,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
       publickey, sign, hash, fissionFactor = 2000,
-      cover, is_original = 0, platform = 'eos', tags = '1,2' } = ctx.request.body;
+      cover, is_original = 0, platform = 'eos', tags } = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, is_original);
 
@@ -92,11 +92,7 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-<<<<<<< HEAD
     const { signId, author = '', title = '', content = '', publickey, sign, hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos' } = ctx.request.body;
-=======
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, is_original = 0, platform = 'eos', tags } = ctx.request.body;
->>>>>>> 1d3cdaefdc2c1a5a2824b3500f3263d8ec3ef8d7
 
     // 编辑的时候，signId需要带上
     if (!signId) {
