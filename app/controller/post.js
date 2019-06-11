@@ -402,9 +402,7 @@ class PostController extends Controller {
   async getPostByTag() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20 } = this.ctx.query;
-
-    const tagid = ctx.params.id;
+    const { page = 1, pagesize = 20, tagid } = this.ctx.query;
 
     const postData = await this.service.post.getPostByTag(page, pagesize, tagid);
 

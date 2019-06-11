@@ -1197,9 +1197,9 @@ tags=1,2,3,4
 
 根据tagid 查找文章
 
-* GET /posts/tag/:tagid
+* GET /posts/getPostByTag
 * 响应状态码：200
 
 * 请求示例
 
-curl http://localhost:7001/posts/tag/1
+curl http://localhost:7001/posts/getPostByTag?tagid=1&page=2
