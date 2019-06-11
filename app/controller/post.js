@@ -28,18 +28,13 @@ class PostController extends Controller {
   async publish() {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
-      publickey, sign, hash, username, fissionFactor = 2000,
-      cover, is_original = 0, platform = 'eos', tags } = ctx.request.body;
+      publickey, sign, hash, fissionFactor = 2000,
+      cover, is_original = 0, platform = 'eos', tags = '1,2' } = ctx.request.body;
 
-    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, username, is_original);
+    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, is_original);
 
     if (fissionFactor > 2000) {
       ctx.body = ctx.msg.postPublishParamsError;  //msg: 'fissionFactor should >= 2000',
-      return;
-    }
-
-    if (!username) {
-      ctx.body = ctx.msg.postPublishParamsError;  //msg: 'username required',
       return;
     }
 
@@ -55,6 +50,8 @@ class PostController extends Controller {
       } else if ('ont' === platform) {
         const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
         this.ont_signature_verify(msg, sign, publickey);
+      } else if (platform === 'github') {
+        this.logger.info('There is a GitHub user publishing...');
       } else {
         ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
         return;
@@ -66,7 +63,7 @@ class PostController extends Controller {
 
     const id = await ctx.service.post.publish({
       author,
-      username,
+      username: ctx.user.username,
       title,
       public_key: publickey,
       sign,
@@ -79,7 +76,7 @@ class PostController extends Controller {
       uid: ctx.user.id
     });
 
-    if (tag) {
+    if (tags) {
       let tag_arr = tags.split(",");
       await ctx.service.post.create_tags(id, tag_arr);
     }
@@ -95,7 +92,7 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, is_original = 0, platform = 'eos' } = ctx.request.body;
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos' } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -136,13 +133,7 @@ class PostController extends Controller {
       return;
     }
 
-    if (current_user !== post.username) {
-      ctx.status = 401;
-      ctx.body = "wrong user";
-      return;
-    }
-
-    ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash, username);
+    ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash);
 
     try {
       if ('eos' === platform) {
@@ -157,6 +148,8 @@ class PostController extends Controller {
       } else if ('ont' === platform) {
         const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
         this.ont_signature_verify(msg, sign, publickey);
+      } else if ('github' === platform) {
+        this.logger.info('There is a GitHub user editing...');
       } else {
         this.ctx.status = 401;
         this.ctx.body = 'platform not support';
@@ -575,7 +568,7 @@ class PostController extends Controller {
       post.ontvalue = ont_value[0].value || 0;
 
 
-      // nickname 
+      // nickname
       let name = post.username || post.author;
       const nickname = await this.app.mysql.get('users', { username: name });
       if (nickname) {

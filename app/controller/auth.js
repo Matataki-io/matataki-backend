@@ -148,7 +148,7 @@ class AuthController extends Controller {
       ctx.body = ctx.msg.generateTokenError;
       return;
     }
-    const jwttoken = await this.service.auth.saveUser(userinfo.login, userinfo.name);
+    const jwttoken = await this.service.auth.saveUser(userinfo.login, userinfo.name, userinfo.avatar_url);
     if (jwttoken === null) {
       ctx.body = ctx.msg.generateTokenError;
       return;

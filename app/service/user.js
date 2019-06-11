@@ -212,21 +212,21 @@ class UserService extends Service {
     return false;
   }
 
-  async uploadAvatarFromUrl(url) {
+  async uploadAvatarFromUrl(avatarurl) {
     let result = null;
     try {
       result = await axios({
         method: 'post',
-        url: 'https://apitest.smartsignature.io/uploadUrl',
+        url: 'https://apitest.smartsignature.io/ipfs/uploadUrl',
         data: {
-          url,
+          url: avatarurl,
         },
       });
     } catch (err) {
       this.logger.error('UserService:: uploadAvatarFromUrl error: %j', err);
       return null;
     }
-    return result;
+    return result.data.hash;
   }
 
   async setNickname(nickname, current_user) {
