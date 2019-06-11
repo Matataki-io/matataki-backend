@@ -39,6 +39,9 @@ module.exports = app => {
   // 隐藏文章
   app.router.delete('/post/:id', app.controller.post.delete);
 
+  // 转移文章拥有权
+  router.post('/post/transferOwner', passport.authorize, controller.post.transferOwner);
+
 
   // 获取用户个人主页的统计信息
   // 请注意和 获取用户信息 方法 的冲突可能
@@ -104,6 +107,8 @@ module.exports = app => {
   app.router.post('/draft/save', app.controller.drafts.save);
   // delete (need access token)
   app.router.delete('/draft/:id', app.controller.drafts.delete);
+  // 转移草稿拥有权
+  app.router.post('/draft/transferOwner', passport.authorize, app.controller.drafts.transferOwner);
 
   // 跨链打赏 上报接口
   app.router.post('/support', app.controller.support.support);

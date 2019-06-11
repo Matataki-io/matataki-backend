@@ -446,3 +446,14 @@ insert into tags values (null, 'EOS', NOW());
 insert into tags values (null, 'ONT', NOW());
 insert into tags values (null, '小白入门', NOW());
 insert into tags values (null, '大咖解说', NOW());
+
+-- 记录转移操作日志
+create table post_transfer_log (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  postid varchar(255) NOT NULL,
+  fromuid INT UNSIGNED NOT NULL,  -- 原主人
+  touid INT UNSIGNED NOT NULL,    -- 转移后的主人
+  type varchar(255) NOT NULL,     -- 类型 post 或 draft
+  create_time timestamp,
+  PRIMARY KEY (id)
+);

@@ -29,7 +29,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
       publickey, sign, hash, fissionFactor = 2000,
-      cover, is_original = 0, platform = 'eos', tags } = ctx.request.body;
+      cover, is_original = 0, platform = 'eos', tags = "" } = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, is_original);
 
@@ -78,6 +78,7 @@ class PostController extends Controller {
 
     if (tags) {
       let tag_arr = tags.split(",");
+      tag_arr = tag_arr.filter((x) => { return x !== "" });
       await ctx.service.post.create_tags(id, tag_arr);
     }
 
@@ -92,7 +93,7 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos' } = ctx.request.body;
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos', tags = "" } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -201,10 +202,9 @@ class PostController extends Controller {
         // 修改 post 的 hash, publickey, sign title
         await conn.update("posts", updateRow, { where: { id: signId } });
 
-        if (tag) {
-          let tag_arr = tags.split(",");
-          await ctx.service.post.create_tags(signId, tag_arr);
-        }
+        let tag_arr = tags.split(",");
+        tag_arr = tag_arr.filter((x) => { return x !== "" });
+        await ctx.service.post.create_tags(signId, tag_arr, true);
 
         await conn.commit();
       } catch (err) {
@@ -216,9 +216,9 @@ class PostController extends Controller {
       ctx.body.data = signId;
 
     } catch (err) {
-      ctx.logger.error(err.sqlMessage);
+      ctx.logger.error(err);
       ctx.body = {
-        msg: 'edit error ' + err.sqlMessage,
+        msg: 'edit error ' + err,
       };
       ctx.status = 500;
     }
@@ -812,6 +812,12 @@ class PostController extends Controller {
   //   ctx.body = ctx.msg.success;
   //   ctx.body.data = mail;
   // }
+
+  async transferOwner() {
+    const ctx = this.ctx;
+    const { uid, signid } = ctx.request.body;
+
+  }
 
 }
 
