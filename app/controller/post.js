@@ -92,7 +92,7 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos' } = ctx.request.body;
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos', tags } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
