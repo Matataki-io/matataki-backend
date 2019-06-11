@@ -33,8 +33,13 @@ class PostService extends Service {
     return 0;
   }
 
-  async create_tags(sid, tag_arr) {
+  async create_tags(sid, tag_arr, replace) {
     try {
+      // 重置文章的标签
+      if (replace) {
+        await this.app.mysql.delete('post_tag', { sid: sid });
+      }
+      
       for (let i = 0; i < tag_arr.length; i++) {
         let id = tag_arr[i];
         let tag = await this.app.mysql.get('tags', { id });

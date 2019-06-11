@@ -95,7 +95,7 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, is_original = 0, platform = 'eos' } = ctx.request.body;
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, is_original = 0, platform = 'eos', tags } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -207,6 +207,11 @@ class PostController extends Controller {
 
         // 修改 post 的 hash, publickey, sign title
         await conn.update("posts", updateRow, { where: { id: signId } });
+
+        if (tag) {
+          let tag_arr = tags.split(",");
+          await ctx.service.post.create_tags(signId, tag_arr);
+        }
 
         await conn.commit();
       } catch (err) {
