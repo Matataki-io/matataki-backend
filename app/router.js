@@ -62,7 +62,7 @@ module.exports = app => {
   // 打赏和评论列表
   router.get('/support/comments', passport.verify, controller.support.comments);
 
-  // 用户已经购买的商品列表
+  // 用户自己已经购买的商品列表
   router.get('/support/products', passport.authorize, controller.support.myProducts);
 
 
