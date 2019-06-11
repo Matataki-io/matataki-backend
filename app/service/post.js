@@ -171,7 +171,7 @@ class PostService extends Service {
     let posts = [];
     let sqlcode = '';
     if (author) {
-      sqlcode = 'SELECT p.id FROM posts p WHERE p.status = 0 AND author = :author ';
+      sqlcode = 'SELECT p.id FROM posts p WHERE p.status = 0 AND uid = :author ';
       if (channel) {
         if (isNaN(channel)) {
           return 2;
