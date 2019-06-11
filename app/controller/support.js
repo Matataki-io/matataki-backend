@@ -106,6 +106,21 @@ class SupportController extends Controller {
     ctx.body.data = shares;
   }
 
+  async myProducts() {
+
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const products = await this.service.support.getUserProducts(userid);
+
+    if (products === null) {
+      ctx.body = ctx.msg.failure;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = products;
+  }
+
 }
 
 module.exports = SupportController;

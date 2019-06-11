@@ -39,6 +39,30 @@ class SupportService extends Service {
     return results;
   }
 
+  async getUserProducts(userid) {
+
+    this.app.mysql.queryFromat = function (query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function (txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+
+    const products = await this.app.mysql.query(
+      'SELECT p.sign_id, p.digital_copy, p.support_id, p.status, r.title, s.symbol, s.amount, s.create_time '
+      + 'FROM product_stock_keys p '
+      + 'INNER JOIN supports s ON p.support_id = s.id '
+      + 'INNER JOIN product_prices r ON r.sign_id = p.sign_id AND r.symbol = \'EOS\''
+      + 'WHERE s.uid = :userid ORDER BY s.create_time DESC;',
+      { userid }
+    );
+
+    return products;
+  }
+
 }
 
 module.exports = SupportService;

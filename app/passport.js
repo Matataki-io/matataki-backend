@@ -29,7 +29,6 @@ module.exports = {
       ctx.user.username = decoded.iss;
       ctx.user.id = decoded.id;
       ctx.user.isAuthenticated = true;
-      ctx.user.id = decoded.id;
       ctx.user.platform = decoded.platform;
     } catch (err) {
       ctx.throw(401, 'The token is error.', err);

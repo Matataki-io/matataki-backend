@@ -62,6 +62,9 @@ module.exports = app => {
   // 打赏和评论列表
   router.get('/support/comments', passport.verify, controller.support.comments);
 
+  // 用户已经购买的商品列表
+  router.get('/support/products', passport.authorize, controller.support.myProducts);
+
 
   // follow 关注和取关动作。关注数和粉丝数在userinfo里
   app.router.post('/follow', passport.authorize, app.controller.follow.follow);
