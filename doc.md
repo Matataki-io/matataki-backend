@@ -1151,6 +1151,44 @@ curl -d "sign=01b07c90984e0385b19f62f29f93b037a8a3c3a9d2d434229c5da315e31bdc1f57
 ```
 
 
+#### 获取已经购买的商品列表(need access token)
+
+* GET /support/products
+* 响应状态码: 200
+
+* 请求示例: curl -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9......" http://localhost:7001/support/products
+
+```
+
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        {
+            "sign_id": 100455,
+            "digital_copy": "L9N4Q-*****-8NHT1",
+            "support_id": 604,
+            "status": 1,
+            "title": "This is not a jump game",
+            "symbol": "EOS",
+            "amount": 200,
+            "create_time": "2019-05-31T07:16:37.000Z"
+        },
+        {
+            "sign_id": 100425,
+            "digital_copy": "gggggg*****gggg-3",
+            "support_id": 519,
+            "status": 1,
+            "title": "The Legend of Forgotten: The Game of the Gods",
+            "symbol": "EOS",
+            "amount": 100,
+            "create_time": "2019-05-27T12:21:17.000Z"
+        }
+    ]
+}
+
+```
+
 
 #### get tags 获取可用标签列表
 
