@@ -216,9 +216,9 @@ class PostController extends Controller {
       ctx.body.data = signId;
 
     } catch (err) {
-      ctx.logger.error(err.sqlMessage);
+      ctx.logger.error(err);
       ctx.body = {
-        msg: 'edit error ' + err.sqlMessage,
+        msg: 'edit error ' + err,
       };
       ctx.status = 500;
     }
