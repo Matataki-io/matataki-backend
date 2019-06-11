@@ -201,7 +201,7 @@ class PostController extends Controller {
         // 修改 post 的 hash, publickey, sign title
         await conn.update("posts", updateRow, { where: { id: signId } });
 
-        if (tag) {
+        if (tags) {
           let tag_arr = tags.split(",");
           await ctx.service.post.create_tags(signId, tag_arr);
         }
