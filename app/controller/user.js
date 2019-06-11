@@ -376,7 +376,7 @@ class UserController extends Controller {
   async getUserDetails() {
     const ctx = this.ctx;
 
-    const details = await this.service.user.getUserDetails(ctx.user.username);
+    const details = await this.service.user.getUserDetails(ctx.user.id, ctx.user.platform);
     if (details === null) {
       ctx.body = ctx.msg.userNotExist;
       return;

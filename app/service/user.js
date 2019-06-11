@@ -77,7 +77,7 @@ class UserService extends Service {
     return result;
   }
 
-  async getUserDetails(current_user) {
+  async getUserDetails(current_user, platform) {
 
     this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
@@ -91,14 +91,17 @@ class UserService extends Service {
 
     const basicInfo = await this.app.mysql.get(
       'users',
-      { username: current_user }
+      { id: current_user }
     );
 
     if (basicInfo === null) {
       return null;
     }
 
-    const accountAttached = 1;
+    let accountAttached = 1;
+    if (platform === 'github') {
+      accountAttached = 0;
+    }
     basicInfo.accounts = accountAttached;
 
     // 筛选状态为1，即有效的follow
