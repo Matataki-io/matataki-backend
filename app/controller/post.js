@@ -813,6 +813,10 @@ class PostController extends Controller {
   //   ctx.body.data = mail;
   // }
 
+  async transferOwner() {
+
+  }
+
 }
 
 module.exports = PostController;

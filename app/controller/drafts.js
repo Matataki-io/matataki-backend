@@ -197,6 +197,10 @@ class DraftsController extends Controller {
 
   }
 
+  async transferOwner() {
+    
+  }
+
 }
 
 module.exports = DraftsController;
