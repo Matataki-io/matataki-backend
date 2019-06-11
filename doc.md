@@ -1190,3 +1190,16 @@ curl http://localhost:7001/tag/tags
 在publish一篇文章的时候，tags 参数是tag id join ',' 后传到后端。例如:
 
 tags=1,2,3,4
+
+
+
+#### get post by tag
+
+根据tagid 查找文章
+
+* GET /posts/tag/:tagid
+* 响应状态码：200
+
+* 请求示例
+
+curl http://localhost:7001/posts/tag/1

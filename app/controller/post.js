@@ -408,7 +408,7 @@ class PostController extends Controller {
 
     const postData = await this.service.post.getPostByTag(page, pagesize, tagid);
 
-    this.response(200, "success");
+    this.ctx.body = ctx.msg.success;
     this.ctx.body.data = postData;
   }
 
