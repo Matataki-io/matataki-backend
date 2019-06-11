@@ -92,7 +92,11 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
+<<<<<<< HEAD
     const { signId, author = '', title = '', content = '', publickey, sign, hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos' } = ctx.request.body;
+=======
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, username, fissionFactor = 2000, cover, is_original = 0, platform = 'eos', tags } = ctx.request.body;
+>>>>>>> 1d3cdaefdc2c1a5a2824b3500f3263d8ec3ef8d7
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -200,6 +204,11 @@ class PostController extends Controller {
 
         // 修改 post 的 hash, publickey, sign title
         await conn.update("posts", updateRow, { where: { id: signId } });
+
+        if (tag) {
+          let tag_arr = tags.split(",");
+          await ctx.service.post.create_tags(signId, tag_arr);
+        }
 
         await conn.commit();
       } catch (err) {
@@ -395,13 +404,11 @@ class PostController extends Controller {
   async getPostByTag() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20 } = this.ctx.query;
-
-    const tagid = ctx.params.id;
+    const { page = 1, pagesize = 20, tagid } = this.ctx.query;
 
     const postData = await this.service.post.getPostByTag(page, pagesize, tagid);
 
-    this.response(200, "success");
+    this.ctx.body = ctx.msg.success;
     this.ctx.body.data = postData;
   }
 
@@ -790,7 +797,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const id = ctx.params.id;
 
-    const post = await this.service.post.getForEdit(id, ctx.user.username);
+    const post = await this.service.post.getForEdit(id, ctx.user.id);
 
     if (!post) {
       ctx.body = ctx.msg.postNotFound;

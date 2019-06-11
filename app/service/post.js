@@ -33,8 +33,13 @@ class PostService extends Service {
     return 0;
   }
 
-  async create_tags(sid, tag_arr) {
+  async create_tags(sid, tag_arr, replace) {
     try {
+      // 重置文章的标签
+      if (replace) {
+        await this.app.mysql.delete('post_tag', { sid: sid });
+      }
+      
       for (let i = 0; i < tag_arr.length; i++) {
         let id = tag_arr[i];
         let tag = await this.app.mysql.get('tags', { id });
@@ -415,7 +420,7 @@ class PostService extends Service {
     }
     // 查询文章和作者的信息, 结果是按照时间排序
     postList = await this.app.mysql.query(
-      'SELECT a.id, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname FROM posts a '
+      'SELECT a.id, a.uid, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname FROM posts a '
       + ' LEFT JOIN users b ON a.username = b.username WHERE a.id IN (?) AND a.status = 0 ORDER BY create_time DESC;',
       [signids]
     );
@@ -496,8 +501,8 @@ class PostService extends Service {
   }
 
   async getForEdit(id, current_user) {
-    const post = await this.app.mysql.get('posts', { id, username: current_user });
-    return post;
+    const post = await this.app.mysql.get('posts', { id });
+    return this.getPostProfile(post, current_user);
   }
 
 }

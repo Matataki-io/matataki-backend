@@ -22,7 +22,7 @@ class SupportService extends Service {
     }
 
     const results = await this.app.mysql.query(
-      'SELECT s.amount, s.platform, s.signid, s.create_time, u.username, u.nickname, u.avatar, c.comment FROM supports s '
+      'SELECT s.amount, s.platform, s.signid, s.create_time, u.id, u.username, u.nickname, u.avatar, c.comment FROM supports s '
       // 一个user在同一篇文章下的comment和support
       + 'LEFT JOIN users u ON s.uid = u.id '
       + 'LEFT JOIN comments c ON c.sign_id = s.signid AND c.uid = u.id '

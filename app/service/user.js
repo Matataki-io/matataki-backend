@@ -50,12 +50,15 @@ class UserService extends Service {
     let nickname = "";
     let avatar = "";
     let introduction = '';
+    
     const user = await this.app.mysql.get('users', { id: id });
     if (user) {
       avatar = user.avatar || "";
       email = user.email || "";
       nickname = user.nickname || "";
       introduction = user.introduction || '';
+    } else {
+      return null;
     }
 
     const result = {

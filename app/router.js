@@ -89,7 +89,7 @@ module.exports = app => {
   app.router.get('/posts/supported', passport.verify, app.controller.post.getSupported);
   
   // 根据 tag 查找tag下的文章
-  app.router.get('/posts/tag/:id', passport.verify, app.controller.post.getPostByTag);
+  app.router.get('/posts/getPostByTag', passport.verify, app.controller.post.getPostByTag);
 
 
   // 草稿箱
