@@ -752,7 +752,7 @@ class PostController extends Controller {
     let user;
 
     try {
-      user = this.this.get_user();
+      user = await this.get_user();
     } catch (err) {
       ctx.status = 401;
       ctx.body = err.message;

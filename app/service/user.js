@@ -225,7 +225,7 @@ class UserService extends Service {
     try {
       result = await axios({
         method: 'post',
-        url: 'https://apitest.smartsignature.io/ipfs/uploadUrl',
+        url: 'http://localhost:3200/ipfs/uploadUrl',
         data: {
           url: avatarurl,
         },
