@@ -30,7 +30,7 @@ class DraftsController extends Controller {
   async save() {
     const ctx = this.ctx;
 
-    const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0 } = ctx.request.body;
+    const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0, tags = "" } = ctx.request.body;
 
     let user;
 
@@ -43,13 +43,13 @@ class DraftsController extends Controller {
     }
 
     if (id) {
-      await this.save_draft(user.id, id, title, content, cover, fissionFactor, is_original);
+      await this.save_draft(user.id, id, title, content, cover, fissionFactor, is_original, tags);
     } else {
-      await this.create_draft(user.id, title, content, cover, fissionFactor, is_original);
+      await this.create_draft(user.id, title, content, cover, fissionFactor, is_original, tags);
     }
   }
 
-  async save_draft(uid, id, title, content, cover, fissionFactor, is_original) {
+  async save_draft(uid, id, title, content, cover, fissionFactor, is_original, tags) {
     const draft = await this.app.mysql.get('drafts', { id: id });
 
     if (!draft) {
@@ -74,6 +74,7 @@ class DraftsController extends Controller {
         fission_factor: fissionFactor,
         update_time: now,
         is_original,
+        tags
       }, { where: { id: id } });
 
       const updateSuccess = result.affectedRows === 1;
@@ -95,7 +96,7 @@ class DraftsController extends Controller {
     }
   }
 
-  async create_draft(uid, title, content, cover, fissionFactor, is_original) {
+  async create_draft(uid, title, content, cover, fissionFactor, is_original, tags) {
 
     try {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -109,6 +110,7 @@ class DraftsController extends Controller {
         is_original,
         create_time: now,
         update_time: now,
+        tags
       });
 
       const updateSuccess = result.affectedRows === 1;
@@ -159,6 +161,17 @@ class DraftsController extends Controller {
       this.ctx.status = 500;
       return;
     }
+
+    let tag_arr = draft.tags.split(",");
+    tag_arr = tag_arr.filter((x) => { return x !== "" });
+    let tags = [];
+    if (tag_arr.length > 0) {
+      tags = await await this.app.mysql.query(
+        'select id, name from tags where id in ? ',
+        [tag_arr]
+      );
+    }
+    draft.tags = tags;
 
     this.ctx.body = draft;
     this.ctx.status = 200;
