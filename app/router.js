@@ -56,7 +56,7 @@ module.exports = app => {
   // // 设置用户email (need access token)
   // router.post('/user/setEmail', controller.user.setEmail);
   // 设置用户头像 (need access token)
-  router.post('/user/setAvatar', controller.user.setAvatar);
+  router.post('/user/setAvatar', passport.authorize, controller.user.setAvatar);
   // // 设置用户的个性签名（自我介绍），(need access token)
   // router.post('/user/setIntroduction', passport.authorize, controller.user.setIntroduction);
   // 设置用户的个人资料，包括email，昵称和自我介绍。
@@ -93,7 +93,7 @@ module.exports = app => {
   app.router.get('/posts/timeRanking', passport.verify, app.controller.post.getTimeRanking);
   // 某用户赞赏过的文章列表(新)
   app.router.get('/posts/supported', passport.verify, app.controller.post.getSupported);
-  
+
   // 根据 tag 查找tag下的文章
   app.router.get('/posts/getPostByTag', passport.verify, app.controller.post.getPostByTag);
 

@@ -300,37 +300,27 @@ class UserController extends Controller {
 
     const { avatar = '' } = ctx.request.body;
 
-    const current_user = this.get_current_user();
-
-    try {
-      this.checkAuth(current_user);
-    } catch (err) {
-      ctx.status = 401;
-      ctx.body = err.message;
-      return;
-    }
+    const userid = ctx.user.id;
 
     try {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
+      // 如果ID不存在, 会以此ID创建一条新的用户数据, 不过因为jwt secret不会被知道, 所以对外不会发生
       const result = await this.app.mysql.query(
-        'INSERT INTO users (username, avatar, create_time) VALUES ( ?, ?, ?) ON DUPLICATE KEY UPDATE avatar = ?',
-        [current_user, avatar, now, avatar]
+        'INSERT INTO users (id, avatar, create_time) VALUES ( ?, ?, ?) ON DUPLICATE KEY UPDATE avatar = ?',
+        [ userid, avatar, now, avatar ]
       );
 
       const updateSuccess = result.affectedRows >= 1;
 
       if (updateSuccess) {
-        ctx.status = 201;
+        ctx.body = ctx.msg.success;
       } else {
-        ctx.status = 500;
+        ctx.body = ctx.msg.failure;
       }
     } catch (err) {
-      ctx.logger.error(err.sqlMessage);
-      ctx.body = {
-        msg: 'setAvatar error: ' + err.sqlMessage,
-      };
-      ctx.status = 500;
+      this.logger.error('UserController:: updateAvatar Error: %j', err);
+      ctx.body = ctx.msg.failure;
     }
   }
 
@@ -358,7 +348,7 @@ class UserController extends Controller {
     const ctx = this.ctx;
     const { email = null, nickname = null, introduction = null, accept = false } = ctx.request.body;
 
-    const setResult = await this.service.user.setProfile(ctx.user.username, email, nickname, introduction, accept);
+    const setResult = await this.service.user.setProfile(ctx.user.id, email, nickname, introduction, accept);
     if (setResult === 4) {
       ctx.body = ctx.msg.userIntroductionInvalid;
       return;
