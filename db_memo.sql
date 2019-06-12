@@ -457,3 +457,5 @@ create table post_transfer_log (
   create_time timestamp,
   PRIMARY KEY (id)
 );
+
+ALTER TABLE users ADD COLUMN accept tinyint(1)  DEFAULT 0; -- 是否接受转移
