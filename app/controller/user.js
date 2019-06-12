@@ -308,7 +308,7 @@ class UserController extends Controller {
       // 如果ID不存在, 会以此ID创建一条新的用户数据, 不过因为jwt secret不会被知道, 所以对外不会发生
       const result = await this.app.mysql.query(
         'INSERT INTO users (id, avatar, create_time) VALUES ( ?, ?, ?) ON DUPLICATE KEY UPDATE avatar = ?',
-        [ userid, avatar, now, avatar ]
+        [userid, avatar, now, avatar]
       );
 
       const updateSuccess = result.affectedRows >= 1;
@@ -509,6 +509,30 @@ class UserController extends Controller {
       ctx.logger.error(err.sqlMessage);
       this.response(500, 'withdraw error ' + err.sqlMessage)
     }
+  }
+
+  async search() {
+    const { q = "" } = this.ctx.query;
+
+    let user = await this.app.mysql.get("users", { nickname: q });
+    if (!user) {
+      user = await this.app.mysql.get("users", { username: q });
+    }
+    
+    if (!user) {
+      this.ctx.body = ctx.msg.userNotExist;
+      return;
+    }
+
+    let result = {
+      id: user.id,
+      avatar: user.avatar || "",
+      nickname: user.nickname,
+      username: user.username
+    };
+
+    this.ctx.body = this.ctx.msg.success;
+    this.ctx.body.data = result;
   }
 
 }
