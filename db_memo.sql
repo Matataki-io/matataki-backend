@@ -461,3 +461,6 @@ create table post_transfer_log (
 ALTER TABLE users ADD COLUMN accept tinyint(1)  DEFAULT 0; -- 是否接受转移
 
 ALTER TABLE drafts ADD COLUMN tags varchar(255) DEFAULT "";
+
+-- 修改comments.comment字段的字符集 chenhao
+ALTER TABLE comments CHANGE `comment` `comment` VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;  
