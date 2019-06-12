@@ -70,6 +70,11 @@ class AuthService extends Service {
           create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
         });
 
+        // 若没有昵称, 先把username给nickname
+        if (nickname === null) {
+          nickname = username;
+        }
+
         // 判断昵称是否重复, 重复就加前缀
         const duplicatedNickname = await this.app.mysql.get('users', { nickname });
 
