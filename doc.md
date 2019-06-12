@@ -1353,3 +1353,14 @@ curl -d "signid=1&uid=10" -X POST  http://127.0.0.1:7001/post/transferOwner
 
 curl -d "draftid=1&uid=10" -X POST  http://127.0.0.1:7001/draft/transferOwner
 
+
+#### 用户搜索
+
+* GET /search
+* 响应状态码：200
+
+* 参数 
+* q : 搜索的字段：昵称或用户名
+
+curl -X GET  http://127.0.0.1:7001/search?q=xiaotiandada
+

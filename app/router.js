@@ -48,6 +48,8 @@ module.exports = app => {
   router.get('/user/stats', passport.authorize, controller.user.getUserDetails);
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
+  // 用户搜索
+  router.get('/search' , passport.verify, controller.user.search);
 
   // // 获取资产历史统计、和详情列表（默认最新20条）
   // router.get('/assets', controller.user.assets);
