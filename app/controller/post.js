@@ -817,6 +817,13 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { uid, signid } = ctx.request.body;
 
+    const success = await this.service.post.transferOwner(uid, signid, ctx.user.id);
+
+    if (success) {
+      ctx.body = ctx.msg.success;
+    } else {
+      this.response(500, "transferOwner error")
+    }
   }
 
 }

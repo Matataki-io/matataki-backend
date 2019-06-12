@@ -3,6 +3,7 @@ const consts = require('./consts');
 
 const Service = require('egg').Service;
 const _ = require('lodash');
+const moment = require('moment');
 
 class PostService extends Service {
 
@@ -503,6 +504,59 @@ class PostService extends Service {
   async getForEdit(id, current_user) {
     const post = await this.app.mysql.get('posts', { id });
     return this.getPostProfile(post, current_user);
+  }
+
+  async transferOwner(uid, signid, current_uid) {
+    let post = await this.app.mysql.get('posts', { id: signid });
+    if(!post){
+      throw new Error("post not found");
+    }
+
+    if(post.uid !== current_uid){
+      throw new Error("not your post");
+    }
+
+    let user = await this.app.mysql.get('users', { id : uid });
+    if(!user){
+      throw new Error("user not found");
+    }
+
+    if(!user.accept){
+      throw new Error("target user not accept owner transfer");
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      let result = await conn.query('SELECT * FROM posts WHERE id=? limit 1 FOR UPDATE;', [signid]);
+
+      let target_to_modify;
+      if (result && result.length > 0) {
+        target_to_modify = result[0];
+      }
+
+      await conn.update("posts", {
+        username: user.username,
+        author: user.username,
+        uid: user.id,
+        platform: user.platform
+      }, { where: { id: target_to_modify.id } });
+
+      await conn.insert("post_transfer_log", {
+        postid: signid,
+        fromuid: current_uid,
+        touid: uid,
+        type: "post",
+        create_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      });
+
+      await conn.commit();
+    } catch (err) {
+      await conn.rollback();
+      this.ctx.logger.error(err);
+      return false;
+    }
+
+    return true;
   }
 
 }

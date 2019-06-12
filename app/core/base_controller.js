@@ -47,7 +47,7 @@ class BaseController extends Controller {
 
   response(code, msg) {
     this.ctx.status = code;
-    this.ctx.body = { msg: msg };
+    this.ctx.body = { msg: msg, code: code };
   }
 
   checkAuth(username) {
