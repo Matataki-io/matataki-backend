@@ -10,15 +10,40 @@
 
 #### 获取文章列表
 
-* GET /posts
+* GET /posts/timeRanking
 
 * 参数 
 * page: 页数，默认第一页
-* author: 作者，默认返回全部author的文章，传入author参数，则只返回指定author的文章。
+* author: 作者id，默认返回全部author的文章，传入author参数，则只返回指定author的文章。
 
-* curl -X GET https://api.smartsignature.io/posts
-* curl -X GET https://api.smartsignature.io/posts?page=2
-* curl -X GET https://api.smartsignature.io/posts?author=minakokojima
+* curl -X GET https://api.smartsignature.io/posts/timeRanking
+* curl -X GET https://api.smartsignature.io/posts/timeRanking?page=2
+* curl -X GET https://api.smartsignature.io/posts/timeRanking?author=998
+
+```$xslt
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        {
+            "id": 100455,
+            "uid": 38,
+            "author": "linklinkguan",
+            "title": "【游戏精选】这不是个跳跃游戏！This is not a jump game",
+            "short_content": null,
+            "hash": "QmRpvUwMLCMyA6EJWo2hQtFqGh4ZzWfvp8Dz5vPDyYJVFZ",
+            "create_time": "2019-05-30T13:22:03.000Z",
+            "cover": "QmWDUvT3vBt5rqnfr4bU8TQnt1h2RNQJjqqc6nnCwwonNb",
+            "nickname": "林可可",
+            "read": 234,
+            "eosvalue": 200,
+            "ups": 2,
+            "ontvalue": 20000
+        },
+    ]
+}
+```
+
 
 
 #### 获取用户信息 
@@ -36,6 +61,35 @@
 请求示例: 
 
 * curl -X GET https://api.smartsignature.io/user/minakokojima
+
+#### 获取用户个人主页的统计信息 (need access token)
+
+* GET /user/stats
+* 正常状态码: 200
+* 响应体: 
+
+```$xslt
+{
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "id": 170,
+        "username": "joetothemoon",
+        "email": null,
+        "nickname": "nicknameNo2",
+        "avatar": null,
+        "create_time": "2019-04-26T09:34:33.000Z",
+        "introduction": null,
+        "accounts": 1,
+        "follow": 6,
+        "fan": 3,
+        "articles": 20,
+        "drafts": 4,
+        "supports": 7
+    }
+}
+```
+
 
 #### 文章分享上报
 
@@ -261,18 +315,43 @@ http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
 #### 获取支持过的文章列表
 
-* GET /supports
+* GET /supported
 
 * 参数 :
 * page: 页数，默认第一页
-* user: 指定用户
+* user: 指定用户的id
 
 获取支持过的文章列表，支持使用user进行筛选。
 
 请求示例: 
-* curl -X GET https://api.smartsignature.io/supports?user=flyovergross
+* curl -X GET https://api.smartsignature.io/supported?page=2&user=998
 
+成功返回示例:
 
+```$xslt
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        {
+            "id": 100366,
+            "uid": 234,
+            "author": "AS8aW2K4MNhPk9Wn93QQVYvYLF1QV9wNBt",
+            "title": "123",
+            "short_content": null,
+            "hash": "QmbG8fS91qfDLn71svgqC6tgAVLtwSPEFQvva12dESGrik",
+            "create_time": "2019-05-16T08:04:25.000Z",
+            "cover": "",
+            "nickname": null,
+            "read": 8,
+            "eosvalue": 100,
+            "ups": 2,
+            "ontvalue": 30000,
+            "support_time": "2019-05-16T00:05:09.000Z"
+        },
+    ]
+}
+```
 
 #### 获取关注列表
 
@@ -906,10 +985,19 @@ Body参数（application/x-www-form-urlencoded）：
 
 * DELETE /post/:id
 * 响应状态码：200
+* id: 需要删除的文章的id
 
 请求示例: 
 
 * curl  -H "x-access-token: access-token"  -X DELETE https://api.smartsignature.io/post/100010
+
+成功返回示例: 
+```$xslt
+{
+    "code": 0,
+    "message": "成功"
+}
+```
 
 
 #### 编辑文章 (need access_token)
