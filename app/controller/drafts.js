@@ -167,7 +167,7 @@ class DraftsController extends Controller {
     let tags = [];
     if (tag_arr.length > 0) {
       tags = await await this.app.mysql.query(
-        'select id, name from tags where id in ? ',
+        'select id, name from tags where id in (?) ',
         [tag_arr]
       );
     }
