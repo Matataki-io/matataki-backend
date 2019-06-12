@@ -36,8 +36,8 @@ module.exports = app => {
   // 添加评论
   router.post('/post/comment', controller.post.comment);
 
-  // 隐藏文章
-  app.router.delete('/post/:id', app.controller.post.delete);
+  // // 隐藏文章
+  // app.router.delete('/post/:id', app.controller.post.delete);
 
   // 转移文章拥有权
   router.post('/post/transferOwner', passport.authorize, controller.post.transferOwner);

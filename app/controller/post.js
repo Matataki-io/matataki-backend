@@ -664,81 +664,80 @@ class PostController extends Controller {
       return;
     }
 
-    const result = await this.service.post.delete(id, ctx.user.username);
+    const result = await this.service.post.delete(id, ctx.user.id);
     if (!result) {
       ctx.body = ctx.msg.postDeleteError;
-    }
-    else {
+    } else {
       ctx.body = ctx.msg.success;
     }
   }
 
-  async delete() {
-    const ctx = this.ctx;
-    const id = ctx.params.id;
+  // async delete() {
+  //   const ctx = this.ctx;
+  //   const id = ctx.params.id;
 
-    if (!id) {
-      ctx.status = 500;
-      ctx.body = "sign_id required";
-      return;
-    }
+  //   if (!id) {
+  //     ctx.status = 500;
+  //     ctx.body = "sign_id required";
+  //     return;
+  //   }
 
-    const username = this.get_current_user();
+  //   const username = this.get_current_user();
 
-    try {
-      this.checkAuth(username);
-    } catch (err) {
-      ctx.status = 401;
-      ctx.body = err.message;
-      return;
-    }
+  //   try {
+  //     this.checkAuth(username);
+  //   } catch (err) {
+  //     ctx.status = 401;
+  //     ctx.body = err.message;
+  //     return;
+  //   }
 
-    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+  //   const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    try {
+  //   try {
 
-      // 检查是否是自己的文章
-      const post = await this.app.mysql.get('posts', { id });
+  //     // 检查是否是自己的文章
+  //     const post = await this.app.mysql.get('posts', { id });
 
-      if (!post) {
-        ctx.status = 500;
-        ctx.body = "post not found";
-        return;
-      } else {
-        if (post.author !== username) {
-          ctx.status = 500;
-          ctx.body = "only post owner can delete";
-          return;
-        }
-      }
+  //     if (!post) {
+  //       ctx.status = 500;
+  //       ctx.body = "post not found";
+  //       return;
+  //     } else {
+  //       if (post.author !== username) {
+  //         ctx.status = 500;
+  //         ctx.body = "only post owner can delete";
+  //         return;
+  //       }
+  //     }
 
-      const row = {
-        status: 1,
-      };
+  //     const row = {
+  //       status: 1,
+  //     };
 
-      const options = {
-        where: {
-          id: id,
-        },
-      };
+  //     const options = {
+  //       where: {
+  //         id: id,
+  //       },
+  //     };
 
-      let result = await this.app.mysql.update('posts', row, options);
+  //     let result = await this.app.mysql.update('posts', row, options);
 
-      const updateSuccess = result.affectedRows === 1;
+  //     const updateSuccess = result.affectedRows === 1;
 
-      if (updateSuccess) {
-        ctx.status = 200;
-      } else {
-        ctx.status = 500;
-      }
-    } catch (err) {
-      ctx.logger.error(err);
-      ctx.body = {
-        msg: 'delete error' + err.sqlMessage,
-      };
-      ctx.status = 500;
-    }
-  }
+  //     if (updateSuccess) {
+  //       ctx.status = 200;
+  //     } else {
+  //       ctx.status = 500;
+  //     }
+  //   } catch (err) {
+  //     ctx.logger.error(err);
+  //     ctx.body = {
+  //       msg: 'delete error' + err.sqlMessage,
+  //     };
+  //     ctx.status = 500;
+  //   }
+  // }
 
   async comment() {
     const ctx = this.ctx;

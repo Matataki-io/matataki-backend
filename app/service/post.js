@@ -350,7 +350,7 @@ class PostService extends Service {
   }
 
   // 获取用户赞赏过的文章
-  async supportedPosts(page = 1, pagesize = 20, username = null) {
+  async supportedPosts(page = 1, pagesize = 20, userid = null) {
     this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function (txt, key) {
@@ -362,21 +362,14 @@ class PostService extends Service {
     };
 
     // 没写用户
-    if (username === null) {
+    if (userid === null) {
       return 2;
-    }
-
-    const user = await this.app.mysql.get('users', { username });
-
-    // 不存在的用户
-    if (!user) {
-      return 3;
     }
 
     const posts = await this.app.mysql.query(
       'SELECT s.create_time, signid FROM supports s INNER JOIN posts p ON s.signid = p.id'
       + ' WHERE s.status = 1 AND p.status = 0 AND s.uid = :uid ORDER BY s.create_time DESC LIMIT :start, :end;',
-      { uid: user.id, start: (page - 1) * pagesize, end: pagesize }
+      { uid: userid, start: (page - 1) * pagesize, end: pagesize }
     );
 
     const postids = [];
@@ -479,7 +472,7 @@ class PostService extends Service {
   }
 
   // 删除文章
-  async delete(id, username) {
+  async delete(id, userid) {
     try {
       const row = {
         status: 1,
@@ -488,7 +481,7 @@ class PostService extends Service {
       const options = {
         where: {
           id,
-          username, // 只能自己的文章
+          uid: userid, // 只能自己的文章
         },
       };
 
