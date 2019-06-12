@@ -122,7 +122,7 @@ class UserService extends Service {
     return basicInfo;
   }
 
-  async setProfile(current_user, email, nickname, introduction) {
+  async setProfile(current_user, email, nickname, introduction, accept) {
 
     if (current_user === null) {
       return false;
@@ -147,6 +147,8 @@ class UserService extends Service {
       }
       row.introduction = introduction;
     }
+
+    row.accept = accept;
 
     const options = {
       where: {

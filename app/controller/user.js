@@ -12,7 +12,7 @@ class UserController extends Controller {
     const id = ctx.params.id;
 
     const details = await this.service.user.getUserById(id);
-    
+
     if (details === null) {
       ctx.body = ctx.msg.userNotExist;
       return;
@@ -356,9 +356,9 @@ class UserController extends Controller {
   // 将设置用户邮箱、昵称、个性签名合而为一
   async setProfile() {
     const ctx = this.ctx;
-    const { email = null, nickname = null, introduction = null } = ctx.request.body;
+    const { email = null, nickname = null, introduction = null, accept = false } = ctx.request.body;
 
-    const setResult = await this.service.user.setProfile(ctx.user.username, email, nickname, introduction);
+    const setResult = await this.service.user.setProfile(ctx.user.username, email, nickname, introduction, accept);
     if (setResult === 4) {
       ctx.body = ctx.msg.userIntroductionInvalid;
       return;
@@ -473,7 +473,7 @@ class UserController extends Controller {
     }
 
     let transfer_memo = memo ? memo : "Withdraw from Smart Signature";
-  
+
     try {
       const conn = await this.app.mysql.beginTransaction();
 
@@ -484,7 +484,7 @@ class UserController extends Controller {
         asset = result[0];
 
         if (withdraw_amount > asset.amount) {
-           throw new Error("withdraw amount should less than balance");
+          throw new Error("withdraw amount should less than balance");
         }
 
         let remind_amount = asset.amount - withdraw_amount;
