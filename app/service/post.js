@@ -520,19 +520,12 @@ class PostService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      let result = await conn.query('SELECT * FROM posts WHERE id=? limit 1 FOR UPDATE;', [signid]);
-
-      let target_to_modify;
-      if (result && result.length > 0) {
-        target_to_modify = result[0];
-      }
-
       await conn.update("posts", {
         username: user.username,
         author: user.username,
-        uid: user.id,
+        uid: uid,
         platform: user.platform
-      }, { where: { id: target_to_modify.id } });
+      }, { where: { id: post.id } });
 
       await conn.insert("post_transfer_log", {
         postid: signid,

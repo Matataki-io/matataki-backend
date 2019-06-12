@@ -28,16 +28,9 @@ class DraftService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      let result = await conn.query('SELECT * FROM drafts WHERE id=? limit 1 FOR UPDATE;', [draftid]);
-
-      let target_to_modify;
-      if (result && result.length > 0) {
-        target_to_modify = result[0];
-      }
-
       await conn.update("drafts", {
         uid: user.id,
-      }, { where: { id: target_to_modify.id } });
+      }, { where: { id: draft.id } });
 
       await conn.insert("post_transfer_log", {
         postid: draftid,
