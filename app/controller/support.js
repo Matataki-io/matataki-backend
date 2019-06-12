@@ -111,7 +111,9 @@ class SupportController extends Controller {
     const ctx = this.ctx;
     const userid = ctx.user.id;
 
-    const products = await this.service.support.getUserProducts(userid);
+    const { page = 1, pagesize = 20 } = ctx.query;
+
+    const products = await this.service.support.getUserProducts(page, pagesize, userid);
 
     if (products === null) {
       ctx.body = ctx.msg.failure;

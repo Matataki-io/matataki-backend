@@ -1243,8 +1243,9 @@ curl -d "sign=01b07c90984e0385b19f62f29f93b037a8a3c3a9d2d434229c5da315e31bdc1f57
 
 * GET /support/products
 * 响应状态码: 200
+* URL参数: page 第几页； pagesize 每页显示数量
 
-* 请求示例: curl -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9......" http://localhost:7001/support/products
+* 请求示例: curl -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9......" http://localhost:7001/support/products?page=1&pagesize=4
 
 ```
 

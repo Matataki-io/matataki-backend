@@ -39,7 +39,7 @@ class SupportService extends Service {
     return results;
   }
 
-  async getUserProducts(userid) {
+  async getUserProducts(page = 1, pagesize = 20, userid = null) {
 
     this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
@@ -51,13 +51,17 @@ class SupportService extends Service {
       }.bind(this));
     };
 
+    if (userid === null) {
+      return null;
+    }
+
     const products = await this.app.mysql.query(
       'SELECT p.sign_id, p.digital_copy, p.support_id, p.status, r.title, s.symbol, s.amount, s.create_time '
       + 'FROM product_stock_keys p '
       + 'INNER JOIN supports s ON p.support_id = s.id '
       + 'INNER JOIN product_prices r ON r.sign_id = p.sign_id AND r.symbol = \'EOS\''
-      + 'WHERE s.uid = :userid ORDER BY s.create_time DESC;',
-      { userid }
+      + 'WHERE s.uid = :userid ORDER BY s.create_time DESC LIMIT :start, :end;',
+      { userid, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
     return products;
