@@ -198,7 +198,16 @@ class DraftsController extends Controller {
   }
 
   async transferOwner() {
-    
+    const ctx = this.ctx;
+    const { uid, draftid } = ctx.request.body;
+
+    const success = await this.service.draft.transferOwner(uid, draftid, ctx.user.id);
+
+    if (success) {
+      ctx.body = ctx.msg.success;
+    } else {
+      this.response(500, "transferOwner error")
+    }
   }
 
 }
