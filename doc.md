@@ -1260,8 +1260,8 @@ curl -d "signid=1&uid=10" -X POST  http://127.0.0.1:7001/post/transferOwner
 * 响应状态码：201
 
 * 参数 
-* signid : 要转移的草稿的id
+* draftid : 要转移的草稿的id
 * uid: 接收者的user id
 
-curl -d "signid=1&uid=10" -X POST  http://127.0.0.1:7001/draft/transferOwner
+curl -d "draftid=1&uid=10" -X POST  http://127.0.0.1:7001/draft/transferOwner
 
