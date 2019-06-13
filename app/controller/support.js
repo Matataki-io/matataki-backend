@@ -52,12 +52,14 @@ class SupportController extends Controller {
       referreruid = 0;
     }
 
-    if (referreruid === user.id) {
-      return this.response(401, "referrer can't be yourself");
-    }
-    const ref = await this.get_referrer(referreruid);
-    if (ref === null) {
-      return this.response(401, 'referrer does not exist');
+    if (referrer) {
+      if (referreruid === user.id) {
+        return this.response(401, "referrer can't be yourself");
+      }
+      const ref = await this.get_referrer(referreruid);
+      if (ref === null) {
+        return this.response(401, 'referrer does not exist');
+      }
     }
 
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
