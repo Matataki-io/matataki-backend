@@ -116,17 +116,10 @@ class BaseController extends Controller {
     return user;
   }
 
-  async get_or_create_referrer(referrer) {
+  async get_referrer(referrer) {
+    let user = null;
     try {
-      let user = await this.app.mysql.get('users', { username: referrer });
-
-      if (!user) {
-        let newuser = await this.app.mysql.insert('users', {
-          username: referrer,
-          create_time: moment().format('YYYY-MM-DD HH:mm:ss')
-        });
-        user = await this.app.mysql.get('users', { username: referrer });
-      }
+      user = await this.app.mysql.get('users', { id: referrer });
       return user;
     } catch (err) {
       return null;
