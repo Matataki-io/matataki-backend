@@ -13,6 +13,11 @@ class FollowController extends Controller {
 
     const user = ctx.user;
 
+    if (user.id === parseInt(uid)) {
+      this.response(401, 'Not able to follow yourself!');
+      return;
+    }
+
     try {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
@@ -40,7 +45,7 @@ class FollowController extends Controller {
         ctx.status = 500;
       }
 
-      
+
     } catch (err) {
       ctx.logger.error(err.sqlMessage);
       ctx.body = {
