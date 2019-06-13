@@ -46,7 +46,11 @@ class SupportController extends Controller {
       return this.response(401, "platform not support")
     }
 
-    const referreruid = parseInt(referrer);
+    let referreruid = parseInt(referrer);
+
+    if (isNaN(referreruid)) {
+      referreruid = 0;
+    }
 
     if (referreruid === user.id) {
       return this.response(401, "referrer can't be yourself");
