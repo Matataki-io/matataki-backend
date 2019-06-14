@@ -225,7 +225,7 @@ class UserService extends Service {
     try {
       result = await axios({
         method: 'post',
-        url: this.ctx.app.config.ipfs.site + '/uploadUrl',
+        url: this.ctx.app.config.ipfs_service.site + '/uploadUrl',
         data: {
           url: avatarurl,
         },
