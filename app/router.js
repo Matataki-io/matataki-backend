@@ -34,7 +34,7 @@ module.exports = app => {
   // 文章阅读事件上报
   router.post('/post/show/:hash', controller.post.show);
   // 添加评论
-  router.post('/post/comment', controller.post.comment);
+  router.post('/post/comment', passport.authorize, controller.post.comment);
 
   // // 隐藏文章
   // app.router.delete('/post/:id', app.controller.post.delete);
@@ -102,18 +102,18 @@ module.exports = app => {
 
   // 草稿箱
   // 获取我的草稿箱列表 (need access token)
-  app.router.get('/drafts', app.controller.drafts.drafts);
+  app.router.get('/drafts', passport.authorize, app.controller.drafts.drafts);
   // 获取单篇草稿内容 (need access token)
-  app.router.get('/draft/:id', app.controller.drafts.draft);
+  app.router.get('/draft/:id', passport.authorize, app.controller.drafts.draft);
   // create or update (need access token)
-  app.router.post('/draft/save', app.controller.drafts.save);
+  app.router.post('/draft/save', passport.authorize, app.controller.drafts.save);
   // delete (need access token)
-  app.router.delete('/draft/:id', app.controller.drafts.delete);
+  app.router.delete('/draft/:id', passport.authorize, app.controller.drafts.delete);
   // 转移草稿拥有权
   app.router.post('/draft/transferOwner', passport.authorize, app.controller.drafts.transferOwner);
 
   // 跨链打赏 上报接口
-  app.router.post('/support', app.controller.support.support);
+  app.router.post('/support', passport.authorize, app.controller.support.support);
 
   // 个人资产
   app.router.get('/balance', passport.authorize, app.controller.user.balance);

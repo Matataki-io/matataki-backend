@@ -25,40 +25,40 @@ class UserController extends Controller {
   async tokens() {
     const { page = 1, symbol = "EOS" } = this.ctx.query;
     let pagesize = 20;
-    let user;
+    // let user;
 
-    try {
-      user = await this.get_user();
-    } catch (err) {
-      this.ctx.status = 401;
-      this.ctx.body = err.message;
-      return;
-    }
+    // try {
+    //   user = await this.get_user();
+    // } catch (err) {
+    //   this.ctx.status = 401;
+    //   this.ctx.body = err.message;
+    //   return;
+    // }
 
     // 1. 历史总创作收入 (sign income)
     const tokens = await this.app.mysql.query(
       'select id, contract, symbol, amount, platform from assets where uid = ? and symbol= ? ',
-      [user.id, symbol]
+      [ this.ctx.user.id, symbol ]
     );
 
     const logs = await this.app.mysql.query(
       'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, a.trx, a.toaddress, a.memo, a.status, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc limit ? ,? ',
-      [user.id, symbol, (page - 1) * pagesize, pagesize]
+      [ this.ctx.user.id, symbol, (page - 1) * pagesize, pagesize ]
     );
 
     let totalSignIncome = await this.app.mysql.query(
       'select sum(amount) as totalSignIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
-      ["sign income", user.id, symbol]
+      [ "sign income", this.ctx.user.id, symbol ]
     );
 
     let totalShareIncome = await this.app.mysql.query(
       'select sum(amount) as totalShareIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
-      ["share income", user.id, symbol]
+      [ "share income", this.ctx.user.id, symbol ]
     );
 
     let totalShareExpenses = await this.app.mysql.query(
       'select sum(amount) as totalShareExpenses from assets_change_log where type = ? and uid = ? and symbol = ?',
-      ["support expenses", user.id, symbol]
+      [ "support expenses", this.ctx.user.id, symbol ]
     );
 
     let balance = 0;
@@ -79,28 +79,28 @@ class UserController extends Controller {
   }
 
   async balance() {
-    const ctx = this.ctx;
+    // const ctx = this.ctx;
 
-    let user;
+    // let user;
 
-    try {
-      user = await this.get_user();
-    } catch (err) {
-      this.ctx.status = 401;
-      this.ctx.body = err.message;
-      return;
-    }
+    // try {
+    //   user = await this.get_user();
+    // } catch (err) {
+    //   this.ctx.status = 401;
+    //   this.ctx.body = err.message;
+    //   return;
+    // }
 
     const tokens = await this.app.mysql.query(
       'select contract, symbol, amount, platform from assets where uid = ? ',
-      [user.id]
+      [ this.ctx.user.id ]
     );
 
     for (let i = 0; i < tokens.length; i++) {
       let token = tokens[i];
       let value = await this.app.mysql.query(
         'select sum(amount) as value from assets_change_log where uid = ? and symbol = ? and type in (?)',
-        [user.id, token.symbol, ["sign income", "share income"]]
+        [ this.ctx.user.id, token.symbol, [ "sign income", "share income" ]]
       );
 
       tokens[i].totalIncome = value[0].value || 0;

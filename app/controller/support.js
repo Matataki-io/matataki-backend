@@ -10,15 +10,15 @@ class SupportController extends Controller {
   }
 
   async support() {
-    let user;
+    // let user;
 
-    try {
-      user = await this.get_user();
-    } catch (err) {
-      this.ctx.status = 401;
-      this.ctx.body = err.message;
-      return;
-    }
+    // try {
+    //   user = await this.get_user();
+    // } catch (err) {
+    //   this.ctx.status = 401;
+    //   this.ctx.body = err.message;
+    //   return;
+    // }
 
     const { signId,
       contract,
@@ -53,7 +53,7 @@ class SupportController extends Controller {
     }
 
     if (referrer) {
-      if (referreruid === user.id) {
+      if (referreruid === this.ctx.user.id) {
         return this.response(401, "referrer can't be yourself");
       }
       const ref = await this.get_referrer(referreruid);
@@ -73,7 +73,7 @@ class SupportController extends Controller {
 
       const result = await this.app.mysql.query(
         'INSERT INTO supports (uid, signid, contract, symbol, amount, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ? ,?, ?)',
-        [user.id, signId, contract, symbol, amount_copy, referreruid, platform, 0, now]
+        [ this.ctx.user.id, signId, contract, symbol, amount_copy, referreruid, platform, 0, now ]
       );
 
       const updateSuccess = result.affectedRows === 1;
@@ -84,7 +84,7 @@ class SupportController extends Controller {
         this.response(500, "support error")
       }
     } catch (err) {
-      this.ctx.logger.error('support error', err, user, signId, symbol, amount);
+      this.ctx.logger.error('support error', err, this.ctx.user.id, signId, symbol, amount);
       this.response(500, "support error, you have supported this post before");
     }
   }
