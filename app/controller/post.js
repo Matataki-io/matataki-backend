@@ -482,25 +482,25 @@ class PostController extends Controller {
       return;
     }
 
-    let user;
+    // let user;
 
-    try {
-      user = await this.get_user();
-    } catch (err) {
-      ctx.status = 401;
-      ctx.body = err.message;
-      return;
-    }
+    // try {
+    //   user = await this.get_user();
+    // } catch (err) {
+    //   ctx.status = 401;
+    //   ctx.body = err.message;
+    //   return;
+    // }
 
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
     try {
       const result = await this.app.mysql.insert('comments', {
-        username: user.username,
-        uid: user.id,
+        username: this.ctx.user.username,
+        uid: this.ctx.user.id,
         sign_id,
         comment,
-        create_time: now
+        create_time: now,
       });
 
       const updateSuccess = result.affectedRows === 1;
