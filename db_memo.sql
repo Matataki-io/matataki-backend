@@ -442,11 +442,6 @@ create table post_tag (
   UNIQUE (sid, tid)
 );
 
-insert into tags values (null, 'EOS', NOW());
-insert into tags values (null, 'ONT', NOW());
-insert into tags values (null, '小白入门', NOW());
-insert into tags values (null, '大咖解说', NOW());
-
 -- 记录转移操作日志
 create table post_transfer_log (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -472,3 +467,27 @@ ALTER TABLE users CHANGE `introduction` `introduction` VARCHAR(20) CHARACTER SET
 DROP INDEX username ON users;
 
 CREATE UNIQUE INDEX idx_users_username_platform ON users(username, platform);
+
+insert into tags values (null, '大咖解说', NOW());
+insert into tags values (null, '认真脑洞', NOW());
+insert into tags values (null, '别地没有', NOW());
+insert into tags values (null, '大声哔哔', NOW());
+insert into tags values (null, '这是证据', NOW());
+
+insert into tags values (null, '挖掘知识', NOW());
+insert into tags values (null, '行业热点', NOW());
+insert into tags values (null, '显摆显摆', NOW());
+insert into tags values (null, '评测评测', NOW());
+
+insert into tags values (null, '我看不行', NOW());
+insert into tags values (null, '硬派技术', NOW());
+insert into tags values (null, '智能签名', NOW());
+
+
+
+
+
+
+
+
+
