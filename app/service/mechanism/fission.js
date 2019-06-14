@@ -88,17 +88,17 @@ class FissionService extends Service {
         }
 
         // get author uid
-        const author = await this.app.mysql.get('users', { username: post.username });
+        // const author = await this.app.mysql.get('users', { username: post.username });
 
         // 处理文章作者
         await conn.query(
           'INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
-          [ author.id, support.contract, support.symbol, amount, support.platform, amount ]
+          [ post.uid, support.contract, support.symbol, amount, support.platform, amount ]
         );
 
         // 记录作者者资产变动log
         await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [ author.id, support.signid, support.contract, support.symbol, amount, support.platform, 'sign income', now ]
+          [ post.uid, support.signid, support.contract, support.symbol, amount, support.platform, 'sign income', now ]
         );
 
         // 把当前support 改为已处理状态
