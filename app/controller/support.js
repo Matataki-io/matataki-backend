@@ -46,14 +46,20 @@ class SupportController extends Controller {
       return this.response(401, "platform not support")
     }
 
-    let referreruid = 0;
+    let referreruid = parseInt(referrer);
 
-    if (referrer && referrer.trim() !== "") {
-      let ref = await this.get_or_create_referrer(referrer);
-      if (ref.id === user.id) {
-        return this.response(401, "referrer can't be yourself")
+    if (isNaN(referreruid)) {
+      referreruid = 0;
+    }
+
+    if (referrer) {
+      if (referreruid === user.id) {
+        return this.response(401, "referrer can't be yourself");
       }
-      referreruid = ref.id;
+      const ref = await this.get_referrer(referreruid);
+      if (ref === null) {
+        return this.response(401, 'referrer does not exist');
+      }
     }
 
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -64,7 +70,7 @@ class SupportController extends Controller {
       if (platform === 'ont') {
         amount_copy = amount * 10000;
       }
-      
+
       const result = await this.app.mysql.query(
         'INSERT INTO supports (uid, signid, contract, symbol, amount, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ? ,?, ?)',
         [user.id, signId, contract, symbol, amount_copy, referreruid, platform, 0, now]
@@ -111,7 +117,9 @@ class SupportController extends Controller {
     const ctx = this.ctx;
     const userid = ctx.user.id;
 
-    const products = await this.service.support.getUserProducts(userid);
+    const { page = 1, pagesize = 20 } = ctx.query;
+
+    const products = await this.service.support.getUserProducts(page, pagesize, userid);
 
     if (products === null) {
       ctx.body = ctx.msg.failure;
