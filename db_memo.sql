@@ -464,3 +464,9 @@ ALTER TABLE drafts ADD COLUMN tags varchar(255) DEFAULT "";
 
 -- 修改comments.comment字段的字符集 chenhao
 ALTER TABLE comments CHANGE `comment` `comment` VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;  
+
+-- 2019/06/14 sprint4-v2.2.0
+-- 改username单unique为 username+platform双unique
+DROP INDEX username ON users;
+
+CREATE UNIQUE INDEX idx_users_username_platform ON users(username, platform);
