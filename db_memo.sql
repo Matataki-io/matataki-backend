@@ -483,6 +483,18 @@ insert into tags values (null, '我看不行', NOW());
 insert into tags values (null, '硬派技术', NOW());
 insert into tags values (null, '智能签名', NOW());
 
+-- 2019/06/18 spinrt5-v2.3.0
+-- 增加字段: 是否是被推荐的文章/商品
+ALTER TABLE posts ADD COLUMN is_recommend TINYINT(1) DEFAULT 0;
+ALTER TABLE posts MODIFY is_recommend COMMENT '是否是被推荐的商品,默认为0,不被推荐';
+
+-- 增加字段: 商品的类别
+ALTER TABLE posts ADD COLUMN category_id INT DEFAULT 0;
+ALTER TABLE posts MODIFY category_id INT COMMENT '商品的类别,默认为0无类别,只对商品文章有效';
+
+-- 增加字段: 商品销量
+ALTER TABLE post_read_count ADD COLUMN sale_count INT UNSIGNED DEFAULT 0;
+ALTER TABLE post_read_count MODIFY sale_count INT UNSIGNED COMMENT '商品销量统计,只对商品文章有效';
 
 
 
