@@ -15,10 +15,48 @@
 * 参数 
 * page: 页数，默认第一页
 * author: 作者id，默认返回全部author的文章，传入author参数，则只返回指定author的文章。
+* channel: 频道id, 1为普通文章, 2为商品文章, 不带则不筛选, 返回所有文章
 
 * curl -X GET https://api.smartsignature.io/posts/timeRanking
 * curl -X GET https://api.smartsignature.io/posts/timeRanking?page=2
 * curl -X GET https://api.smartsignature.io/posts/timeRanking?author=998
+* curl -X GET https://api.smartsignature.io/posts/timeRanking?channel=1
+
+```$xslt
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        {
+            "id": 100455,
+            "uid": 38,
+            "author": "linklinkguan",
+            "title": "【游戏精选】这不是个跳跃游戏！This is not a jump game",
+            "short_content": null,
+            "hash": "QmRpvUwMLCMyA6EJWo2hQtFqGh4ZzWfvp8Dz5vPDyYJVFZ",
+            "create_time": "2019-05-30T13:22:03.000Z",
+            "cover": "QmWDUvT3vBt5rqnfr4bU8TQnt1h2RNQJjqqc6nnCwwonNb",
+            "nickname": "林可可",
+            "read": 234,
+            "eosvalue": 200,
+            "ups": 2,
+            "ontvalue": 20000
+        },
+    ]
+}
+```
+
+#### 获取按照赞赏次数排行的文章列表
+
+* GET /posts/supportsRanking
+
+* 参数 
+* page: 页数，默认第一页
+* channel: 频道id, 1为普通文章, 2为商品文章, 不带则不筛选, 返回所有文章
+
+* curl -X GET https://api.smartsignature.io/posts/supportsRanking
+* curl -X GET https://api.smartsignature.io/posts/supportsRanking?page=2
+* curl -X GET https://api.smartsignature.io/posts/supportsRanking?channel=1
 
 ```$xslt
 {
