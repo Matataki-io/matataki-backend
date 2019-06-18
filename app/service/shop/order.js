@@ -53,7 +53,8 @@ class OrderService extends Service {
 
     // 统计商品销量+1
     await this.app.mysql.query(
-      'INSERT INTO post_read_count(post_id, sale_count) VALUES (?, ?) ON DUPLICATE KEY UPDATE sale_count = sale_count + 1;',
+      'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count)'
+      + ' VALUES (?, 0, ?, 0, 0, 0) ON DUPLICATE KEY UPDATE sale_count = sale_count + 1;',
       [ support.signid, 1 ]
     );
 

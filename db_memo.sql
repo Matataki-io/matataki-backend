@@ -522,9 +522,11 @@ ALTER TABLE post_read_count MODIFY ont_value_count INT UNSIGNED COMMENT 'ONTèµžè
 UPDATE post_read_count c
 SET c.eos_value_count = (SELECT SUM(amount) AS sum FROM supports s
 WHERE s.signid = c.post_id AND s.platform = 'eos' AND s.status = 1);
+UPDATE post_read_count c SET c.eos_value_count = 0 WHERE c.eos_value_count IS NULL;
 
 UPDATE post_read_count c
 SET c.ont_value_count = (SELECT SUM(amount) AS sum FROM supports s
 WHERE s.signid = c.post_id AND s.platform = 'ont' AND s.status = 1);
+UPDATE post_read_count c SET c.ont_value_count = 0 WHERE c.ont_value_count IS NULL;
 
 
