@@ -51,6 +51,12 @@ class OrderService extends Service {
       return false;
     }
 
+    // 统计商品销量+1
+    await this.app.mysql.query(
+      'INSERT INTO post_read_count(post_id, sale_count) VALUES (?, ?) ON DUPLICATE KEY UPDATE sale_count = sale_count + 1;',
+      [ support.signid, 1 ]
+    );
+
     return true;
   }
 

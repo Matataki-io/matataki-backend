@@ -44,7 +44,41 @@
 }
 ```
 
+#### 获取推荐文章
 
+* GET /posts/recommend
+
+* 参数:
+* channel, URL参数, 必须包含, 区别是普通文章(1)还是商品文章(2).
+
+* 请求示例
+* curl -x GET https://api.smartsignature.io/posts/recommend?channel=2
+
+* 返回示例
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        {
+            "id": 100455,
+            "uid": 38,
+            "author": "linklinkguan",
+            "title": "【游戏精选】这不是个跳跃游戏！This is not a jump game",
+            "short_content": null,
+            "hash": "QmRpvUwMLCMyA6EJWo2hQtFqGh4ZzWfvp8Dz5vPDyYJVFZ",
+            "create_time": "2019-05-30T13:22:03.000Z",
+            "cover": "QmWDUvT3vBt5rqnfr4bU8TQnt1h2RNQJjqqc6nnCwwonNb",
+            "nickname": "林可可",
+            "read": 280,
+            "eosvalue": 200,
+            "ups": 2,
+            "ontvalue": 20000,
+            "sale": 0
+        }
+    ]
+}
+```
 
 #### 获取用户信息 
     

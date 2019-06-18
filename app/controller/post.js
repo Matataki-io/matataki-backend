@@ -308,7 +308,22 @@ class PostController extends Controller {
     }
   }
 
-  // 用户赞赏过的文章列表(新)
+  // 获取推荐的文章/商品, 必须带channel
+  async getRecommend() {
+    const ctx = this.ctx;
+    const { channel = null } = ctx.query;
+
+    const postData = await this.service.post.recommendPosts(channel);
+
+    if (postData === 3) {
+      ctx.body = ctx.msg.paramsError;
+    } else {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = postData;
+    }
+  }
+
+  // 获取某个标签下的文章
   async getPostByTag() {
     const ctx = this.ctx;
 
