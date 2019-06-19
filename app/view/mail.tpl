@@ -18,13 +18,19 @@
 <strong><span style="font-family:Microsoft YaHei;">感谢您近期在 <a href="https://smartsignature.io" target="_blank">智能签名</a> 上的交易！</span></strong><br />
 <br />
 <span style="font-family:Microsoft YaHei;"> 您购买的 {{ productname }}&nbsp; 已添加到您的 智能签名 购买记录中。</span><br />
-<span style="font-family:Microsoft YaHei;"> 您可以在 智能签名 中对应的商品页面中找到激活码信息。</span><br />
+<span style="font-family:Microsoft YaHei;"> 您可以在 智能签名 中对应的商品页面中找到相应的商品信息。</span><br />
 	<p>
 		<br/>
 	</p>
 	<p style="font-family:&quot;">
-		<span style="font-family:&quot;"><span style="font-family:Microsoft YaHei;">您需要在 Steam 中使用激活码来游玩 {{ productname }} 。</span> <br />
-		<span style="font-family:&quot;"><span style="font-family:Microsoft YaHei;">如果您未曾使用过 Steam，您可以</span><a href="https://store.steampowered.com/" target="_blank"><span style="font-family:Microsoft YaHei;">在此</span></a><span style="font-family:Microsoft YaHei;">获得免费的 Steam 程序。</span></span> 
+		{% if category == 1 %}
+			<span style="font-family:&quot;"><span style="font-family:Microsoft YaHei;">您需要在 Steam 中使用激活码来游玩 {{ productname }} 。</span> <br />
+			<span style="font-family:&quot;"><span style="font-family:Microsoft YaHei;">如果您未曾使用过 Steam，您可以</span><a href="https://store.steampowered.com/" target="_blank"><span style="font-family:Microsoft YaHei;">在此</span></a><span style="font-family:Microsoft YaHei;">获得免费的 Steam 程序。</span></span> 
+		{% elif category == 2 %}
+			<span style="font-family:&quot;"><span style="font-family:Microsoft YaHei;">您可以在 {{ productname }} 中输入以下的激活码来使用/游玩 {{ productname }} 。</span> <br />
+		{% elif category == 3 %}
+			<span style="font-family:&quot;"><span style="font-family:Microsoft YaHei;">您可以访问下面商品信息中的链接, 前往百度网盘来下载 {{ productname }} 。</span> <br />
+		{% endif %}
 	</p>
 	<p>
 		<br/>
@@ -39,10 +45,8 @@
 		<span style="font-size: 20px; "><span style="font-family:Microsoft YaHei;">商品名：{{ productname }} </span> 
 	</p>
 	<p>
-		<span style="font-size: 20px;"><span style="font-family:Microsoft YaHei;">激活码：{{ key }}</span> 
+		<span style="font-size: 20px;"><span style="font-family:Microsoft YaHei;">{% if category == 1 %}Steam激活码{% elif category == 2 %}激活码{% elif category == 3 %}链接{% endif %}：{{ key }}</span> 
 	</p>
-	<iframe src="https://store.steampowered.com/widget/745890/?t=%E8%BF%99%E5%B0%B1%E6%98%AF%E4%B8%80%E4%B8%AA%E8%AE%A9%E4%BD%A0%E8%A7%89%E5%BE%97%E5%BC%80%E5%BF%83%E7%9A%84%E6%B8%B8%E6%88%8F%E3%80%82%E6%97%8B%E8%BD%AC%EF%BC%8C%E8%B7%B3%E8%B7%83%EF%BC%8C%E4%BA%8C%E5%93%88%E7%9D%81%E7%9D%80%E7%9C%BC%E2%8A%99%E2%8A%99%0A%E8%80%8C%E4%B8%94%EF%BC%8C%E8%BF%99%E6%98%AF%E5%9C%A8%E6%99%BA%E8%83%BD%E7%AD%BE%E5%90%8D%E4%B8%8A%E9%94%80%E5%94%AE%E7%9A%84%E7%AC%AC%E4%B8%80%E6%AC%BE%E5%95%86%E5%93%81%E5%93%A6%EF%BC%81%0A%E4%B9%B0~%E6%B1%AA~%E6%B1%AA~%E6%B1%AA~%EF%BC%81" frameborder="0"  width="500" height="192">
-	</iframe>
     <br />
     <br />
      <br />

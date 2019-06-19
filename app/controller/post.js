@@ -557,8 +557,9 @@ class PostController extends Controller {
   //   const { supportid = 505 } = ctx.query;
 
   //   const mail = await this.service.mail.sendMail(supportid);
-  //   ctx.body = ctx.msg.success;
-  //   ctx.body.data = mail;
+  //   // ctx.body = ctx.msg.success;
+  //   // ctx.body.data = mail;
+  //   ctx.body = mail;
   // }
 
   async transferOwner() {
