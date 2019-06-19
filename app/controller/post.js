@@ -73,7 +73,9 @@ class PostController extends Controller {
       create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
       cover: cover, // 封面url
       platform: platform,
-      uid: ctx.user.id
+      uid: ctx.user.id,
+      is_recommend: 0,
+      category_id: 0,
     });
 
     if (tags) {
