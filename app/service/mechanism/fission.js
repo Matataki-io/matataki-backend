@@ -104,6 +104,22 @@ class FissionService extends Service {
         // 把当前support 改为已处理状态
         await conn.update('supports', { status: 1 }, { where: { id: support.id } });
 
+        // 更新count表的support次数统计数据
+        if (support.platform === 'eos') {
+          await conn.query(
+            'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count) VALUES (?, 0, 0, ?, ?, 0) '
+            + 'ON DUPLICATE KEY UPDATE support_count = support_count + 1, eos_value_count = eos_value_count + ?;',
+            [ support.signid, 1, support.amount, support.amount ]
+          );
+        } else if (support.platform === 'ont') {
+          await conn.query(
+            'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count) VALUES (?, 0, 0, ?, 0, ?) '
+            + 'ON DUPLICATE KEY UPDATE support_count = support_count + 1, ont_value_count = ont_value_count + ?;',
+            [ support.signid, 1, support.amount, support.amount ]
+          );
+        }
+
+
         // 提交事务
         await conn.commit();
 

@@ -442,11 +442,6 @@ create table post_tag (
   UNIQUE (sid, tid)
 );
 
-insert into tags values (null, 'EOS', NOW());
-insert into tags values (null, 'ONT', NOW());
-insert into tags values (null, '小白入门', NOW());
-insert into tags values (null, '大咖解说', NOW());
-
 -- 记录转移操作日志
 create table post_transfer_log (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -472,3 +467,66 @@ ALTER TABLE users CHANGE `introduction` `introduction` VARCHAR(20) CHARACTER SET
 DROP INDEX username ON users;
 
 CREATE UNIQUE INDEX idx_users_username_platform ON users(username, platform);
+
+insert into tags values (null, '大咖解说', NOW());
+insert into tags values (null, '认真脑洞', NOW());
+insert into tags values (null, '别地没有', NOW());
+insert into tags values (null, '大声哔哔', NOW());
+insert into tags values (null, '这是证据', NOW());
+
+insert into tags values (null, '挖掘知识', NOW());
+insert into tags values (null, '行业热点', NOW());
+insert into tags values (null, '显摆显摆', NOW());
+insert into tags values (null, '评测评测', NOW());
+
+insert into tags values (null, '我看不行', NOW());
+insert into tags values (null, '硬派技术', NOW());
+insert into tags values (null, '智能签名', NOW());
+
+-- 2019/06/18 spinrt5-v2.3.0
+-- 增加字段: 是否是被推荐的文章/商品
+ALTER TABLE posts ADD COLUMN is_recommend TINYINT(1) DEFAULT 0;
+ALTER TABLE posts MODIFY is_recommend COMMENT '是否是被推荐的商品,默认为0,不被推荐';
+
+-- 增加字段: 商品的类别
+ALTER TABLE posts ADD COLUMN category_id INT DEFAULT 0;
+ALTER TABLE posts MODIFY category_id INT COMMENT '商品的类别,默认为0无类别,只对商品文章有效';
+
+-- 增加字段: 商品销量
+ALTER TABLE post_read_count ADD COLUMN sale_count INT UNSIGNED DEFAULT 0;
+ALTER TABLE post_read_count MODIFY sale_count INT UNSIGNED COMMENT '商品销量统计,只对商品文章有效';
+
+-- 同步销量数据到表
+UPDATE post_read_count c INNER JOIN posts p
+SET sale_count = (SELECT COUNT(*) AS counts FROM product_stock_keys s
+WHERE s.sign_id = c.post_id AND s.status = 1)
+WHERE p.channel_id = 2;
+
+-- 增加字段: 文章赞赏次数统计
+ALTER TABLE post_read_count ADD COLUMN support_count INT UNSIGNED DEFAULT 0;
+ALTER TABLE post_read_count MODIFY support_count INT UNSIGNED COMMENT '文章赞赏统计';
+
+-- 同步文章赞赏数据到表, 主代码修正之后需要再次同步
+UPDATE post_read_count c
+SET c.support_count = (SELECT COUNT(*) AS counts FROM supports s 
+WHERE s.signid = c.post_id AND s.status = 1);
+
+-- 增加字段: EOS以及ONT赞赏金额统计
+ALTER TABLE post_read_count ADD COLUMN eos_value_count INT UNSIGNED DEFAULT 0;
+ALTER TABLE post_read_count MODIFY eos_value_count INT UNSIGNED COMMENT 'EOS赞赏金额统计';
+
+ALTER TABLE post_read_count ADD COLUMN ont_value_count INT UNSIGNED DEFAULT 0;
+ALTER TABLE post_read_count MODIFY ont_value_count INT UNSIGNED COMMENT 'ONT赞赏金额统计';
+
+-- 同步EOS和ONT赞赏金额到表, 主代码修正之后需要再次同步
+UPDATE post_read_count c
+SET c.eos_value_count = (SELECT SUM(amount) AS sum FROM supports s
+WHERE s.signid = c.post_id AND s.platform = 'eos' AND s.status = 1);
+UPDATE post_read_count c SET c.eos_value_count = 0 WHERE c.eos_value_count IS NULL;
+
+UPDATE post_read_count c
+SET c.ont_value_count = (SELECT SUM(amount) AS sum FROM supports s
+WHERE s.signid = c.post_id AND s.platform = 'ont' AND s.status = 1);
+UPDATE post_read_count c SET c.ont_value_count = 0 WHERE c.ont_value_count IS NULL;
+
+

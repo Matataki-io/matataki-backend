@@ -394,6 +394,47 @@ class PostService extends Service {
     return postList;
   }
 
+  async recommendPosts(channel = null) {
+    this.app.mysql.queryFromat = function (query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function (txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+
+    // 必须要加channel, 就没有做区分
+    const channelid = parseInt(channel);
+    if (isNaN(channelid)) {
+      return 3;
+    }
+
+    const posts = await this.app.mysql.query(
+      'SELECT id FROM posts WHERE channel_id = :channelid AND is_recommend = 1 AND status = 0'
+      + ' ORDER BY id DESC LIMIT 5;',
+      { channelid }
+    );
+
+    const postids = [];
+    _.each(posts, row => {
+      postids.push(row.id);
+    });
+
+    if (postids.length === 0) {
+      return [];
+    }
+
+    let postList = await this.getPostList(postids);
+
+    postList = postList.sort((a, b) => {
+      return b.id - a.id;
+    });
+
+    return postList;
+  }
+
   // 获取文章的列表, 用于成片展示文章时, 会被其他函数调用
   async getPostList(signids) {
 
@@ -432,7 +473,7 @@ class PostService extends Service {
 
     // 有关阅读次数,赞赏金额,赞赏次数的统计
     const stats = await this.app.mysql.query(
-      'SELECT post_id AS id, real_read_count AS num FROM post_read_count WHERE post_id IN (:signid);'
+      'SELECT post_id AS id, real_read_count AS num, sale_count AS sale FROM post_read_count WHERE post_id IN (:signid);'
       + 'SELECT signid, sum(amount) AS value FROM supports WHERE signid IN (:signid) AND symbol = \'EOS\' AND status = 1 GROUP BY signid;'
       + 'SELECT signid, sum(amount) AS value FROM supports WHERE signid IN (:signid) AND symbol = \'ONT\' AND status = 1 GROUP BY signid;'
       + 'SELECT signid, count(*) AS ups FROM supports WHERE status=1 AND signid IN (:signid) GROUP BY signid;',
@@ -450,6 +491,7 @@ class PostService extends Service {
       _.each(read, row2 => {
         if (row.id === row2.id) {
           row.read = row2.num;
+          row.sale = row2.sale;
         }
       });
       _.each(eosvalue, row2 => {

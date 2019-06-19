@@ -26,10 +26,10 @@ module.exports = app => {
   // 单篇文章（for 短链接），统一返回格式示例
   router.get('/p/:id', passport.verify, controller.post.p);
   // 隐藏文章，统一返回格式示例
-  router.delete('/post/:id', passport.authorize, app.controller.post.delete2);
+  router.delete('/post/:id', passport.authorize, controller.post.delete2);
 
   // 编辑时获取我的文章
-  router.get('/mypost/:id', passport.authorize, app.controller.post.mypost);
+  router.get('/mypost/:id', passport.authorize, controller.post.mypost);
 
   // 文章阅读事件上报
   router.post('/post/show/:hash', controller.post.show);
@@ -37,7 +37,7 @@ module.exports = app => {
   router.post('/post/comment', passport.authorize, controller.post.comment);
 
   // // 隐藏文章
-  // app.router.delete('/post/:id', app.controller.post.delete);
+  // router.delete('/post/:id', controller.post.delete);
 
   // 转移文章拥有权
   router.post('/post/transferOwner', passport.authorize, controller.post.transferOwner);
@@ -72,63 +72,65 @@ module.exports = app => {
 
 
   // follow 关注和取关动作。关注数和粉丝数在userinfo里
-  app.router.post('/follow', passport.authorize, app.controller.follow.follow);
-  app.router.post('/unfollow', passport.authorize, app.controller.follow.unfollow);
+  router.post('/follow', passport.authorize, controller.follow.follow);
+  router.post('/unfollow', passport.authorize, controller.follow.unfollow);
 
   // 关注列表
-  app.router.get('/follows', passport.verify, app.controller.follow.follows);
+  router.get('/follows', passport.verify, controller.follow.follows);
   // 粉丝列表（谁关注了我？）
-  app.router.get('/fans', passport.verify, app.controller.follow.fans);
+  router.get('/fans', passport.verify, controller.follow.fans);
 
   // 获取access token
-  app.router.post('/auth', app.controller.auth.auth);
+  router.post('/auth', controller.auth.auth);
 
   // // 被打赏次数排行榜
-  // app.router.get('/getSupportTimesRanking', app.controller.post.getSupportTimesRanking);
+  // router.get('/getSupportTimesRanking', controller.post.getSupportTimesRanking);
   // // 被打赏总额排行榜
-  // app.router.get('/getSupportAmountRanking', app.controller.post.getSupportAmountRanking);
+  // router.get('/getSupportAmountRanking', controller.post.getSupportAmountRanking);
   // 按照打赏金额排序的文章列表(新, 可按照币种排序)
-  app.router.get('/posts/amountRanking', passport.verify, app.controller.post.getAmountRanking);
+  router.get('/posts/amountRanking', passport.verify, controller.post.getAmountRanking);
   // 按照打赏次数排序的文章列表(新)
-  app.router.get('/posts/supportsRanking', passport.verify, app.controller.post.getSupportsRanking);
+  router.get('/posts/supportsRanking', passport.verify, controller.post.getSupportsRanking);
   // 按照发布时间排序的文章列表(新)
-  app.router.get('/posts/timeRanking', passport.verify, app.controller.post.getTimeRanking);
+  router.get('/posts/timeRanking', passport.verify, controller.post.getTimeRanking);
   // 某用户赞赏过的文章列表(新)
-  app.router.get('/posts/supported', passport.verify, app.controller.post.getSupported);
+  router.get('/posts/supported', passport.verify, controller.post.getSupported);
+  // 推荐文章列表(仅5条, 不分页)
+  router.get('/posts/recommend', passport.verify, controller.post.getRecommend);
 
   // 根据 tag 查找tag下的文章
-  app.router.get('/posts/getPostByTag', passport.verify, app.controller.post.getPostByTag);
+  router.get('/posts/getPostByTag', passport.verify, controller.post.getPostByTag);
 
 
   // 草稿箱
   // 获取我的草稿箱列表 (need access token)
-  app.router.get('/drafts', passport.authorize, app.controller.drafts.drafts);
+  router.get('/drafts', passport.authorize, controller.drafts.drafts);
   // 获取单篇草稿内容 (need access token)
-  app.router.get('/draft/:id', passport.authorize, app.controller.drafts.draft);
+  router.get('/draft/:id', passport.authorize, controller.drafts.draft);
   // create or update (need access token)
-  app.router.post('/draft/save', passport.authorize, app.controller.drafts.save);
+  router.post('/draft/save', passport.authorize, controller.drafts.save);
   // delete (need access token)
-  app.router.delete('/draft/:id', passport.authorize, app.controller.drafts.delete);
+  router.delete('/draft/:id', passport.authorize, controller.drafts.delete);
   // 转移草稿拥有权
-  app.router.post('/draft/transferOwner', passport.authorize, app.controller.drafts.transferOwner);
+  router.post('/draft/transferOwner', passport.authorize, controller.drafts.transferOwner);
 
   // 跨链打赏 上报接口
-  app.router.post('/support', passport.authorize, app.controller.support.support);
+  router.post('/support', passport.authorize, controller.support.support);
 
   // 个人资产
-  app.router.get('/balance', passport.authorize, app.controller.user.balance);
+  router.get('/balance', passport.authorize, controller.user.balance);
   // 资产明细
-  app.router.get('/tokens', passport.authorize, app.controller.user.tokens);
+  router.get('/tokens', passport.authorize, controller.user.tokens);
   // 发起提现
-  app.router.post('/user/withdraw', passport.authorize, app.controller.user.withdraw);
+  router.post('/user/withdraw', passport.authorize, controller.user.withdraw);
 
   // 验证OAuth回传的Code
-  app.router.post('/login/github', passport.verify, app.controller.auth.githubLogin);
+  router.post('/login/github', passport.verify, controller.auth.githubLogin);
 
   // // 邮件测试
-  // app.router.get('/mailtest6a3476f5', passport.verify, app.controller.post.mailtest);
+  // router.get('/mailtest6a3476f5', passport.verify, controller.post.mailtest);
 
   // 标签列表
-  app.router.get('/tag/tags', passport.verify, app.controller.tag.tags);
+  router.get('/tag/tags', passport.verify, controller.tag.tags);
 };
 

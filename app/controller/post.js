@@ -308,7 +308,22 @@ class PostController extends Controller {
     }
   }
 
-  // 用户赞赏过的文章列表(新)
+  // 获取推荐的文章/商品, 必须带channel
+  async getRecommend() {
+    const ctx = this.ctx;
+    const { channel = null } = ctx.query;
+
+    const postData = await this.service.post.recommendPosts(channel);
+
+    if (postData === 3) {
+      ctx.body = ctx.msg.paramsError;
+    } else {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = postData;
+    }
+  }
+
+  // 获取某个标签下的文章
   async getPostByTag() {
     const ctx = this.ctx;
 
@@ -429,8 +444,9 @@ class PostController extends Controller {
       }
 
       const result = await this.app.mysql.query(
-        'INSERT INTO post_read_count(post_id, real_read_count) VALUES (?, ?) ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
-        [post.id, 1]
+        'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count) VALUES (?, ?, 0, 0, 0, 0)'
+        + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
+        [ post.id, 1 ]
       );
 
       const updateSuccess = (result.affectedRows !== 0);
