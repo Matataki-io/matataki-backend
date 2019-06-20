@@ -1437,3 +1437,30 @@ curl -d "draftid=1&uid=10" -X POST  http://127.0.0.1:7001/draft/transferOwner
 
 curl -X GET  http://127.0.0.1:7001/search?q=xiaotiandada
 
+#### 购买商品
+
+
+* POST /order/create
+* 响应状态码：201
+
+* 参数 
+* signId : 文章id
+* contract: 打赏货币的合约名
+* symbol: 货币符号
+* amount: 货币数量（ 无精度的，如1EOS，就传10000 ）
+* platform: 平台 eos或ont
+* referrer: 推荐人
+* num: 商品数量
+
+* 请求示例：
+
+```
+curl -d "num=10&signId=100418&contract=eosio.token&symbol=EOS&amount=1&platform=eos&referrer=65" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NjE2MDQ4MjY2NjYsInBsYXRmb3JtIjoiZW9zIiwiaWQiOjE3MH0.Ph73nBjvsz-3Sj79JhotA-tGSYxXHkXyvTrRkH5xDo0" -X POST  http://localhost:7001/order/create
+```
+
+购买流程: 
+
+1. 前端调用后端的 order/create， 参数和打赏差不多，多了一个num（商品数量），成功后返回一个 orderid，
+2. 拿到ordreid后， 转账给合约，格式就是 buy orderid 推荐人 , 比如（buy 1 xiaotiandada）
+3. 后端验证了后，处理发货（现在留空了）
+4. 修改order状态
