@@ -85,9 +85,11 @@
 #### 获取推荐文章
 
 * GET /posts/recommend
+* 不分页, 返回最新的数条
 
 * 参数:
-* channel, URL参数, 必须包含, 区别是普通文章(1)还是商品文章(2).
+* channel, URL参数, 区别是普通文章(1)还是商品文章(2), 不带则不筛选
+* amount, URL参数, 返回的推荐数量, 不带则默认为5
 
 * 请求示例
 * curl -x GET https://api.smartsignature.io/posts/recommend?channel=2
