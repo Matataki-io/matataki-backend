@@ -80,20 +80,22 @@ class PostService extends Service {
       }
 
       // 阅读次数
-      const read = await this.app.mysql.query(
-        'select real_read_count num from post_read_count where post_id = ? ',
-        [post.id]
+      const count = await this.app.mysql.query(
+        'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue'
+        + ' FROM post_read_count WHERE post_id = ?;',
+        [ post.id ]
       );
-      post.read = read[0] ? read[0].num : 0;
+      if (count.length) {
+        post.read = count[0].num;
+        post.sale = count[0].sale;
+        post.ups = count[0].ups;
+        post.value = count[0].eosvalue;
+        post.ontvalue = count[0].ontvalue;
+      } else {
+        post.read = post.sale = post.ups = post.value = post.ontvalue = 0;
+      }
 
-      // 被赞次数
-      const ups = await this.app.mysql.query(
-        'select count(*) as ups from supports where signid = ? and status = 1 ',
-        [post.id]
-      );
-      post.ups = ups[0].ups;
-
-      // tags 
+      // tags
       const tags = await this.app.mysql.query(
         'select a.id, a.name from tags a left join post_tag b on a.id = b.tid where b.sid = ? ',
         [post.id]
@@ -122,20 +124,6 @@ class PostService extends Service {
 
         post.product = product;
       }
-
-      // 被赞总金额
-      const value = await this.app.mysql.query(
-        'select sum(amount) as value from supports where signid = ? and symbol = ? and status = 1 ',
-        [post.id, 'EOS']
-      );
-      post.value = value[0].value || 0;
-
-      // ONT value
-      const ont_value = await this.app.mysql.query(
-        'select signid, sum(amount) as value from supports where signid = ? and symbol = ? and status=1  ',
-        [post.id, 'ONT']
-      );
-      post.ontvalue = ont_value[0].value || 0;
 
       // nickname
       const name = post.username || post.author;
@@ -171,33 +159,22 @@ class PostService extends Service {
     // 再分为带作者和不带作者的情况.
     let posts = [];
     let sqlcode = '';
+    sqlcode = 'SELECT p.id FROM posts p WHERE p.status = 0 ';
     if (author) {
-      sqlcode = 'SELECT p.id FROM posts p WHERE p.status = 0 AND uid = :author ';
-      if (channel) {
-        if (isNaN(channel)) {
-          return 2;
-        }
-        sqlcode += 'AND p.channel_id = ' + channel + ' ';
-      }
-      sqlcode += 'GROUP BY p.id ORDER BY p.create_time DESC LIMIT :start, :end;';
-      posts = await this.app.mysql.query(
-        sqlcode,
-        { author, start: (page - 1) * pagesize, end: 1 * pagesize }
-      );
-    } else {
-      sqlcode = 'SELECT p.id FROM posts p WHERE p.status = 0 ';
-      if (channel) {
-        if (isNaN(channel)) {
-          return 2;
-        }
-        sqlcode += 'AND p.channel_id = ' + channel + ' ';
-      }
-      sqlcode += 'GROUP BY p.id ORDER BY p.create_time DESC LIMIT :start, :end;';
-      posts = await this.app.mysql.query(
-        sqlcode,
-        { start: (page - 1) * pagesize, end: 1 * pagesize }
-      );
+      sqlcode += 'AND uid = :author ';
     }
+    const channelid = parseInt(channel);
+    if (channel !== null) {
+      if (isNaN(channelid)) {
+        return 2;
+      }
+      sqlcode += 'AND p.channel_id = ' + channelid + ' ';
+    }
+    sqlcode += 'ORDER BY p.id DESC LIMIT :start, :end;';
+    posts = await this.app.mysql.query(
+      sqlcode,
+      { author, start: (page - 1) * pagesize, end: 1 * pagesize }
+    );
 
     if (posts.length === 0) {
       return [];
@@ -248,16 +225,19 @@ class PostService extends Service {
 
     let posts = null;
     let sqlcode = '';
-    sqlcode = 'SELECT p.id, count(*) AS total FROM posts p '
-      + 'LEFT JOIN supports s ON s.signid = p.id AND s.status = 1 '
+
+    // 获取文章id列表, 按照统计表的赞赏次数排序
+    sqlcode = 'SELECT p.id, c.support_count FROM posts p '
+      + 'LEFT JOIN post_read_count c ON c.post_id = p.id '
       + 'WHERE p.status = 0 ';
-    if (channel) {
-      if (isNaN(channel)) {
+    const channelid = parseInt(channel);
+    if (channel !== null) {
+      if (isNaN(channelid)) {
         return 2;
       }
-      sqlcode += 'AND p.channel_id = ' + channel + ' ';
+      sqlcode += 'AND p.channel_id = ' + channelid + ' ';
     }
-    sqlcode += 'GROUP BY p.id ORDER BY total DESC LIMIT :start, :end;';
+    sqlcode += 'ORDER BY c.support_count DESC, p.id DESC LIMIT :start, :end;';
     // 在support表中, 由赞赏次数获得一个文章的排序, 并且已经确保文章是没有被删除的
     posts = await this.app.mysql.query(
       sqlcode,
@@ -279,6 +259,9 @@ class PostService extends Service {
     // 由赞赏次数进行排序
     // 还没加上时间降序
     postList = postList.sort((a, b) => {
+      if (a.ups === b.ups) {
+        return a.id > b.id ? -1 : 1;
+      }
       return a.ups > b.ups ? -1 : 1;
     });
 
@@ -300,17 +283,24 @@ class PostService extends Service {
 
     let posts = null;
     let sqlcode = '';
-    sqlcode = 'SELECT p.id, sum(amount) AS total FROM posts p '
-      + 'LEFT JOIN supports s ON s.signid = p.id AND s.symbol = :symbol '
+
+    // 获取文章id列表, 按照指定的币种赞赏金额排序
+    if (symbol.toUpperCase() === 'EOS') {
+      sqlcode = 'SELECT p.id, c.eos_value_count AS count ';
+    } else {
+      sqlcode = 'SELECT p.id, c.ont_value_count AS count ';
+    }
+    sqlcode += 'FROM posts p '
+      + 'LEFT JOIN post_read_count c ON c.post_id = p.id '
       + 'WHERE p.status = 0 ';
-    if (channel) {
-      if (isNaN(channel)) {
+    const channelid = parseInt(channel);
+    if (channel !== null) {
+      if (isNaN(channelid)) {
         return 2;
       }
-      sqlcode += 'AND p.channel_id = ' + channel + ' ';
+      sqlcode += 'AND p.channel_id = ' + channelid + ' ';
     }
-    sqlcode += 'GROUP BY p.id ORDER BY total DESC LIMIT :start, :end;';
-    // 在support表中, 由币种赞赏总量获得一个文章的排序, 并且已经确保文章是没有被删除的
+    sqlcode += 'ORDER BY count DESC, p.id DESC LIMIT :start, :end;';
     posts = await this.app.mysql.query(
       sqlcode,
       { start: (page - 1) * pagesize, end: 1 * pagesize, symbol: symbol.toUpperCase() }
@@ -335,12 +325,18 @@ class PostService extends Service {
     switch (symbol.toUpperCase()) {
       case 'EOS':
         postList = postList.sort((a, b) => {
+          if (a.eosvalue === b.eosvalue) {
+            return a.id > b.id ? -1 : 1;
+          }
           return a.eosvalue > b.eosvalue ? -1 : 1;
         });
         break;
 
       case 'ONT':
         postList = postList.sort((a, b) => {
+          if (a.ontvalue === b.ontvalue) {
+            return a.id > b.id ? -1 : 1;
+          }
           return a.ontvalue > b.ontvalue ? -1 : 1;
         });
         break;
@@ -388,13 +384,13 @@ class PostService extends Service {
     });
 
     postList = postList.sort((a, b) => {
-      return b.support_time - a.support_time;
+      return b.id - a.id;
     });
 
     return postList;
   }
 
-  async recommendPosts(channel = null) {
+  async recommendPosts(channel = null, amount = 5) {
     this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function (txt, key) {
@@ -405,16 +401,24 @@ class PostService extends Service {
       }.bind(this));
     };
 
-    // 必须要加channel, 就没有做区分
+    let sqlcode = '';
+    sqlcode = 'SELECT id FROM posts '
+    + 'WHERE is_recommend = 1 AND status = 0 ';
     const channelid = parseInt(channel);
-    if (isNaN(channelid)) {
-      return 3;
+    if (channel !== null) {
+      if (isNaN(channelid)) {
+        return 2;
+      }
+      sqlcode += 'AND channel_id = ' + channelid + ' ';
     }
-
+    sqlcode += 'ORDER BY id DESC LIMIT :amountnum;';
+    const amountnum = parseInt(amount);
+    if (isNaN(amountnum)) {
+      return 2;
+    }
     const posts = await this.app.mysql.query(
-      'SELECT id FROM posts WHERE channel_id = :channelid AND is_recommend = 1 AND status = 0'
-      + ' ORDER BY id DESC LIMIT 5;',
-      { channelid }
+      sqlcode,
+      { amountnum }
     );
 
     const postids = [];
@@ -426,11 +430,7 @@ class PostService extends Service {
       return [];
     }
 
-    let postList = await this.getPostList(postids);
-
-    postList = postList.sort((a, b) => {
-      return b.id - a.id;
-    });
+    const postList = await this.getPostList(postids);
 
     return postList;
   }
@@ -454,9 +454,10 @@ class PostService extends Service {
       return postList;
     }
     // 查询文章和作者的信息, 结果是按照时间排序
+    // 如果上层也需要按照时间排序的, 则无需再排, 需要其他排序方式则需再排
     postList = await this.app.mysql.query(
       'SELECT a.id, a.uid, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname FROM posts a '
-      + ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (?) AND a.status = 0 ORDER BY create_time DESC;',
+      + ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (?) AND a.status = 0 ORDER BY id DESC;',
       [signids]
     );
 
@@ -473,40 +474,20 @@ class PostService extends Service {
 
     // 有关阅读次数,赞赏金额,赞赏次数的统计
     const stats = await this.app.mysql.query(
-      'SELECT post_id AS id, real_read_count AS num, sale_count AS sale FROM post_read_count WHERE post_id IN (:signid);'
-      + 'SELECT signid, sum(amount) AS value FROM supports WHERE signid IN (:signid) AND symbol = \'EOS\' AND status = 1 GROUP BY signid;'
-      + 'SELECT signid, sum(amount) AS value FROM supports WHERE signid IN (:signid) AND symbol = \'ONT\' AND status = 1 GROUP BY signid;'
-      + 'SELECT signid, count(*) AS ups FROM supports WHERE status=1 AND signid IN (:signid) GROUP BY signid;',
+      'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue'
+      + ' FROM post_read_count WHERE post_id IN (:signid);',
       { signid: signids }
     );
 
-    // 分门类填充
-    const read = stats[0];
-    const eosvalue = stats[1];
-    const ontvalue = stats[2];
-    const ups = stats[3];
-
     // 分配数值到每篇文章
     _.each(postList, row => {
-      _.each(read, row2 => {
+      _.each(stats, row2 => {
         if (row.id === row2.id) {
           row.read = row2.num;
           row.sale = row2.sale;
-        }
-      });
-      _.each(eosvalue, row2 => {
-        if (row.id === row2.signid) {
-          row.eosvalue = row2.value;
-        }
-      });
-      _.each(ups, row2 => {
-        if (row.id === row2.signid) {
+          row.eosvalue = row2.eosvalue;
           row.ups = row2.ups;
-        }
-      });
-      _.each(ontvalue, row2 => {
-        if (row.id === row2.signid) {
-          row.ontvalue = row2.value;
+          row.ontvalue = row2.ontvalue;
         }
       });
     });

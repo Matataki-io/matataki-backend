@@ -313,9 +313,9 @@ class PostController extends Controller {
   // 获取推荐的文章/商品, 必须带channel
   async getRecommend() {
     const ctx = this.ctx;
-    const { channel = null } = ctx.query;
+    const { channel = null, amount = 5 } = ctx.query;
 
-    const postData = await this.service.post.recommendPosts(channel);
+    const postData = await this.service.post.recommendPosts(channel, amount);
 
     if (postData === 3) {
       ctx.body = ctx.msg.paramsError;
