@@ -29,6 +29,11 @@ void smartsignature::handle_transfer(name from, name to, asset quantity, string 
     {
         support(from, code, quantity, signid, ref);
     }
+
+    if (action == "buy")
+    {
+        buy(from, code, quantity, signid, ref);
+    }
 }
 
 void smartsignature::support(name from, name code, asset quantity, uint64_t signid, name ref)
@@ -50,6 +55,27 @@ void smartsignature::support(name from, name code, asset quantity, uint64_t sign
         s.create_time = create_time;
     });
 }
+
+void smartsignature::buy(name from, name code, asset quantity, uint64_t oid, name ref)
+{
+    static const time_point_sec create_time{current_time_point().sec_since_epoch()};
+
+    orders order_table(_self, from.value);
+
+    auto order = order_table.find(oid);
+
+    check(order == order_table.end(), "the order was created");
+
+    order_table.emplace(_self, [&](auto &s) {
+        s.oid = oid;
+        s.user = from;
+        s.contract = code;
+        s.amount = quantity;
+        s.ref = ref;
+        s.create_time = create_time;
+    });
+}
+
 
 void smartsignature::record(st_log log)
 {

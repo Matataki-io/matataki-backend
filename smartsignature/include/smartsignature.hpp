@@ -46,10 +46,27 @@ CONTRACT smartsignature : public contract
             EOSLIB_SERIALIZE(global_var, (key)(val))
       };
 
+      TABLE order_info
+      {
+            uint64_t oid;
+            name user;
+            name contract;
+            asset amount;
+            name ref;
+            time_point_sec create_time;
+
+            uint64_t primary_key() const { return oid; }
+
+            EOSLIB_SERIALIZE(order_info, (oid)(user)(contract)(amount)(ref)(create_time))
+      };
+
       typedef multi_index<"supports"_n, support_info> supports;
 
       typedef multi_index<"globals"_n, global_var> globals;
       globals _globals;
+
+      typedef multi_index<"orders"_n, order_info> orders;
+
 
       // 用户表格，记录收入
       // scope 为用户账户
@@ -88,6 +105,8 @@ CONTRACT smartsignature : public contract
       void init();
 
       void support(name from, name code, asset quantity, uint64_t signid, name ref);
+      
+      void buy(name from, name code, asset quantity, uint64_t signid, name ref);
 
       uint64_t next_oid();
 

@@ -530,3 +530,21 @@ WHERE s.signid = c.post_id AND s.platform = 'ont' AND s.status = 1);
 UPDATE post_read_count c SET c.ont_value_count = 0 WHERE c.ont_value_count IS NULL;
 
 
+-- 06.19 
+-- 订单表： 记录 "谁" 从 "哪篇文章" 中买了多少商品，付款多少币（合约、符号、数量、平台）。
+create table orders (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  uid INT UNSIGNED NOT NULL,  
+  signid varchar(255) NOT NULL,
+  referreruid INT UNSIGNED DEFAULT 0,   
+  num INT UNSIGNED NOT NULL,    
+  contract varchar(255) NOT NULL,
+  symbol varchar(255) NOT NULL,
+  amount INT UNSIGNED DEFAULT 0, 
+  platform varchar(255) NOT NULL,
+  status INT UNSIGNED DEFAULT 0, 
+  create_time timestamp,
+  PRIMARY KEY (id)
+);
+
+
