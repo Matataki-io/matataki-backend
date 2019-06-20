@@ -132,5 +132,8 @@ module.exports = app => {
 
   // 标签列表
   router.get('/tag/tags', passport.verify, controller.tag.tags);
+
+  // 商品订单
+  router.post('/order/create', passport.authorize, controller.order.create);
 };
 
