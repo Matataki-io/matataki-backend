@@ -12,16 +12,18 @@ class DraftsController extends Controller {
   }
 
   async drafts() {
+    const ctx = this.ctx;
     const pagesize = 20;
 
-    const { page = 1 } = this.ctx.query;
+    const { page = 1 } = ctx.query;
 
     const results = await this.app.mysql.query(
       'select * from drafts where uid = ? order by update_time desc limit ?, ?',
-      [ this.ctx.user.id, (page - 1) * pagesize, pagesize ]
+      [ ctx.user.id, (page - 1) * pagesize, pagesize ]
     );
 
-    this.ctx.body = results;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = results;
   }
 
 

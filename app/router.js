@@ -19,7 +19,7 @@ module.exports = app => {
   // // 打赏过的文章
   // router.get('/supports', controller.post.supports);
   // 单篇文章
-  router.get('/post/:hash', controller.post.post);
+  router.get('/post/:hash', passport.verify, controller.post.postByHash);
   // 单篇文章（for 短链接）
   // router.get('/p/:id', controller.post.p);
 
