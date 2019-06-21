@@ -38,14 +38,14 @@ class PostService extends Service {
     try {
       // 重置文章的标签
       if (replace) {
-        await this.app.mysql.delete('post_tag', { sid: sid });
+        await this.app.mysql.delete('post_tag', { sid });
       }
-      
+
       for (let i = 0; i < tag_arr.length; i++) {
-        let id = tag_arr[i];
-        let tag = await this.app.mysql.get('tags', { id });
+        const id = tag_arr[i];
+        const tag = await this.app.mysql.get('tags', { id });
         if (tag) {
-          await this.app.mysql.insert("post_tag", { sid: sid, tid: tag.id });
+          await this.app.mysql.insert('post_tag', { sid, tid: tag.id });
         }
       }
     } catch (err) {
@@ -70,10 +70,10 @@ class PostService extends Service {
     if (post) {
 
       // 如果是商品，返回价格
-      if (post.channel_id === consts.channels.product) {
+      if (post.channel_id === consts.postChannels.product) {
         const prices = await this.app.mysql.select('product_prices', {
           where: { sign_id: post.id, status: 1 },
-          columns: ['platform', 'symbol', 'price', 'decimals', 'stock_quantity'],
+          columns: [ 'platform', 'symbol', 'price', 'decimals', 'stock_quantity' ],
         });
 
         post.prices = prices;
@@ -98,7 +98,7 @@ class PostService extends Service {
       // tags
       const tags = await this.app.mysql.query(
         'select a.id, a.name from tags a left join post_tag b on a.id = b.tid where b.sid = ? ',
-        [post.id]
+        [ post.id ]
       );
 
       post.tags = tags;
@@ -113,13 +113,14 @@ class PostService extends Service {
       }
 
       // 如果是商品，并且已经赞过查询出digital_copy，todo：适用数字copy类的商品，posts表还需要增加商品分类
-      if (post.channel_id === consts.channels.product && post.support) {
+      // todo：从orders订单表查询 2019-6-20，product_stock_keys.support_id =>order_id
+      if (post.channel_id === consts.postChannels.product && post.support) {
         const product = await this.app.mysql.query(
           'select pp.title,digital_copy from product_stock_keys ps '
           + 'inner join supports s on s.id = ps.support_id '
           + 'inner join product_prices pp on pp.sign_id = ps.sign_id and pp.platform = s.platform and pp.symbol = s.symbol '
           + 'where s.uid=? and ps.sign_id=?;',
-          [userId, post.id]
+          [ userId, post.id ]
         );
 
         post.product = product;
@@ -145,9 +146,9 @@ class PostService extends Service {
 
   // 发布时间排序(默认方法)
   async timeRank(page = 1, pagesize = 20, author = null, channel = null) {
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
+      return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -193,7 +194,7 @@ class PostService extends Service {
   async getPostByTag(page = 1, pagesize = 20, tagid) {
     const posts = await this.app.mysql.query(
       'select a.sid, a.tid, b.title from post_tag a left join posts b on a.sid=b.id where a.tid = ? limit ?,?',
-      [tagid, (page - 1) * pagesize, pagesize]
+      [ tagid, (page - 1) * pagesize, pagesize ]
     );
 
     // 将文章id转为Array
@@ -206,16 +207,16 @@ class PostService extends Service {
       return [];
     }
 
-    let postList = await this.getPostList(postids);
+    const postList = await this.getPostList(postids);
 
     return postList;
   }
 
   // 赞赏次数排序
   async supportRank(page = 1, pagesize = 20, channel = null) {
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
+      return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -271,9 +272,9 @@ class PostService extends Service {
   // 分币种的赞赏金额排序
   // 请注意因为"后筛选"导致的不满20条,进而前端无法加载的问题.
   async amountRank(page = 1, pagesize = 20, symbol = 'EOS', channel = null) {
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
+      return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -347,9 +348,9 @@ class PostService extends Service {
 
   // 获取用户赞赏过的文章
   async supportedPosts(page = 1, pagesize = 20, userid = null) {
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
+      return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -391,9 +392,9 @@ class PostService extends Service {
   }
 
   async recommendPosts(channel = null, amount = 5) {
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
+      return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -403,7 +404,7 @@ class PostService extends Service {
 
     let sqlcode = '';
     sqlcode = 'SELECT id FROM posts '
-    + 'WHERE is_recommend = 1 AND status = 0 ';
+      + 'WHERE is_recommend = 1 AND status = 0 ';
     const channelid = parseInt(channel);
     if (channel !== null) {
       if (isNaN(channelid)) {
@@ -438,9 +439,9 @@ class PostService extends Service {
   // 获取文章的列表, 用于成片展示文章时, 会被其他函数调用
   async getPostList(signids) {
 
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
+      return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -458,7 +459,7 @@ class PostService extends Service {
     postList = await this.app.mysql.query(
       'SELECT a.id, a.uid, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname FROM posts a '
       + ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (?) AND a.status = 0 ORDER BY id DESC;',
-      [signids]
+      [ signids ]
     );
 
     const hashs = [];
@@ -523,39 +524,39 @@ class PostService extends Service {
   }
 
   async transferOwner(uid, signid, current_uid) {
-    let post = await this.app.mysql.get('posts', { id: signid });
-    if(!post){
-      throw new Error("post not found");
+    const post = await this.app.mysql.get('posts', { id: signid });
+    if (!post) {
+      throw new Error('post not found');
     }
 
-    if(post.uid !== current_uid){
-      throw new Error("not your post");
+    if (post.uid !== current_uid) {
+      throw new Error('not your post');
     }
 
-    let user = await this.app.mysql.get('users', { id : uid });
-    if(!user){
-      throw new Error("user not found");
+    const user = await this.app.mysql.get('users', { id: uid });
+    if (!user) {
+      throw new Error('user not found');
     }
 
-    if(!user.accept){
-      throw new Error("target user not accept owner transfer");
+    if (!user.accept) {
+      throw new Error('target user not accept owner transfer');
     }
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.update("posts", {
+      await conn.update('posts', {
         username: user.username,
         author: user.username,
-        uid: uid,
-        platform: user.platform
+        uid,
+        platform: user.platform,
       }, { where: { id: post.id } });
 
-      await conn.insert("post_transfer_log", {
+      await conn.insert('post_transfer_log', {
         postid: signid,
         fromuid: current_uid,
         touid: uid,
-        type: "post",
-        create_time: moment().format('YYYY-MM-DD HH:mm:ss')
+        type: 'post',
+        create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
       });
 
       await conn.commit();

@@ -5,57 +5,76 @@ const Service = require('egg').Service;
 // 商城订单类
 class OrderService extends Service {
 
-  // 处理发货，todo：适用数字copy类的商品，posts表还需要增加商品分类
-  async shipped(post, support, conn) {
+  // todo：处理购买多个
+  // 发邮件的地方，购买多个，发邮件使用orders
+  // 显示的地方，购买多个
+  // 购买的地方判断必须是商品频道
+  // 处理历史订单数据，supports-》orders
+  // product_stock_keys.support_id 要使用orders表的id，
+  // 返回文章详情属性使用orders
+  // 文章赞赏列表怎么办，supports+orders
+  // 用户购买列表使用orders
+
+  // 处理发货
+  async shipped(post, payment, conn) {
     // 判断文章所属频道，不是商品直接返回true
-    if (post.channel_id !== consts.channels.product) { return true; }
+    if (post.channel_id !== consts.postChannels.product) {
+      return true;
+    }
+
+    // 判断数量是否正确
+    if (payment.amount < payment.num * payment.price) {
+      return false;
+    }
+
 
     // 判断金额是否满足商品定价
     const product_price = await conn.query(
       'SELECT price, decimals FROM product_prices WHERE sign_id = ? AND platform = ? AND symbol = ? AND status=1;',
-      [ support.signid, support.platform, support.symbol ]
+      [ payment.signid, payment.platform, payment.symbol ]
     );
     // 配置错误，没有商品价格信息
     if (!product_price || product_price.length === 0) {
-      console.log('商品配置错误，sign_id:' + support.signid);
+      console.log('商品配置错误，sign_id:' + payment.signid);
       return false;
     }
     // 判断付款金额
-    if (product_price[0].price > support.amount) {
-      console.log('商品付款金额错误，amount:' + support.amount);
+    if (product_price[0].price > payment.amount) {
+      console.log('商品付款金额错误，amount:' + payment.amount);
       return false;
     }
 
+
     // 减库存数量
     const resultStockQuantity = await conn.query(
-      'UPDATE product_prices SET stock_quantity = stock_quantity - 1 WHERE sign_id = ? AND stock_quantity > 0;',
-      [ support.signid ]
+      'UPDATE product_prices SET stock_quantity = stock_quantity - ? WHERE sign_id = ? AND stock_quantity >= ?;',
+      [ payment.num, payment.signid, payment.num ]
     );
 
     // 没有库存，失败
     if (resultStockQuantity.affectedRows === 0) {
-      console.log('商品库存不足，sign_id:' + support.signid);
+      console.log('商品库存不足，sign_id:' + payment.signid);
       return false;
     }
 
-    // 锁定商品
+    // 锁定商品，可能有bug
     const resultKeys = await conn.query(
       'UPDATE product_stock_keys SET status=1, support_id = ? '
-      + 'WHERE id = (SELECT id FROM (SELECT id FROM product_stock_keys WHERE sign_id=? AND status=0 LIMIT 1) t);',
-      [ support.id, support.signid ]
+      + 'WHERE id IN (SELECT id FROM (SELECT id FROM product_stock_keys WHERE sign_id=? AND status=0 LIMIT ?) t);',
+      [ payment.id, payment.signid, payment.num ]
     );
 
-    // 没有库存，失败
-    if (resultKeys.affectedRows === 0) {
-      console.log('商品库存不足，sign_id:' + support.signid);
+    // 库存不够，失败
+    if (resultKeys.affectedRows < payment.num) {
+      console.log('商品库存不足，sign_id:' + payment.signid);
       return false;
     }
 
-    // 统计商品销量+1
+    // 统计商品销量+payment.num
     await conn.query(
       'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count)'
-      + ' VALUES (?, 0, ?, 0, 0, 0) ON DUPLICATE KEY UPDATE sale_count = sale_count + 1;',
-      [ support.signid, 1 ]
+      + ' VALUES (?, 0, ?, 0, 0, 0) ON DUPLICATE KEY UPDATE sale_count = sale_count + ?;',
+      [ payment.signid, payment.num, payment.num ]
     );
 
     return true;
