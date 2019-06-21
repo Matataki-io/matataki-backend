@@ -126,16 +126,6 @@ class PostController extends Controller {
       return;
     }
 
-    const current_user = this.get_current_user();
-
-    try {
-      this.checkAuth(current_user);
-    } catch (err) {
-      ctx.status = 401;
-      ctx.body = err.message;
-      return;
-    }
-
     ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash);
 
     try {
@@ -447,9 +437,6 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const hash = ctx.params.hash;
 
-    const current_user = this.get_current_user() || "anonymous";
-    const now = moment().format('YYYY-MM-DD HH:mm:ss');
-
     try {
       const post = await this.app.mysql.get('posts', { hash });
 
@@ -515,16 +502,6 @@ class PostController extends Controller {
       ctx.body = "sign_id required";
       return;
     }
-
-    // let user;
-
-    // try {
-    //   user = await this.get_user();
-    // } catch (err) {
-    //   ctx.status = 401;
-    //   ctx.body = err.message;
-    //   return;
-    // }
 
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
