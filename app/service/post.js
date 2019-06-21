@@ -25,6 +25,12 @@ class PostService extends Service {
       const result = await this.app.mysql.insert('posts', data);
 
       if (result.affectedRows === 1) {
+        // 创建统计表栏目
+        await this.app.mysql.query(
+          'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count)'
+          + ' VALUES(?, 0, 0, 0 ,0, 0);',
+          [ result.insertId ]
+        );
         return result.insertId;
       }
     } catch (err) {

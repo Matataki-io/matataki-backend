@@ -25,15 +25,6 @@ class UserController extends Controller {
   async tokens() {
     const { page = 1, symbol = "EOS" } = this.ctx.query;
     let pagesize = 20;
-    // let user;
-
-    // try {
-    //   user = await this.get_user();
-    // } catch (err) {
-    //   this.ctx.status = 401;
-    //   this.ctx.body = err.message;
-    //   return;
-    // }
 
     // 1. 历史总创作收入 (sign income)
     const tokens = await this.app.mysql.query(
@@ -79,17 +70,6 @@ class UserController extends Controller {
   }
 
   async balance() {
-    // const ctx = this.ctx;
-
-    // let user;
-
-    // try {
-    //   user = await this.get_user();
-    // } catch (err) {
-    //   this.ctx.status = 401;
-    //   this.ctx.body = err.message;
-    //   return;
-    // }
 
     const tokens = await this.app.mysql.query(
       'select contract, symbol, amount, platform from assets where uid = ? ',

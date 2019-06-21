@@ -10,15 +10,6 @@ class SupportController extends Controller {
   }
 
   async support() {
-    // let user;
-
-    // try {
-    //   user = await this.get_user();
-    // } catch (err) {
-    //   this.ctx.status = 401;
-    //   this.ctx.body = err.message;
-    //   return;
-    // }
 
     const { signId,
       contract,

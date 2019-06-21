@@ -12,16 +12,18 @@ class DraftsController extends Controller {
   }
 
   async drafts() {
+    const ctx = this.ctx;
     const pagesize = 20;
 
-    const { page = 1 } = this.ctx.query;
+    const { page = 1 } = ctx.query;
 
     const results = await this.app.mysql.query(
       'select * from drafts where uid = ? order by update_time desc limit ?, ?',
-      [ this.ctx.user.id, (page - 1) * pagesize, pagesize ]
+      [ ctx.user.id, (page - 1) * pagesize, pagesize ]
     );
 
-    this.ctx.body = results;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = results;
   }
 
 
@@ -29,16 +31,6 @@ class DraftsController extends Controller {
     const ctx = this.ctx;
 
     const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0, tags = "" } = ctx.request.body;
-
-    // let user;
-
-    // try {
-    //   user = await this.get_user();
-    // } catch (err) {
-    //   this.ctx.status = 401;
-    //   this.ctx.body = err.message;
-    //   return;
-    // }
 
     if (id) {
       await this.save_draft(this.ctx.user.id, id, title, content, cover, fissionFactor, is_original, tags);
@@ -134,18 +126,6 @@ class DraftsController extends Controller {
   async draft() {
     const id = this.ctx.params.id;
 
-    // let user;
-
-    // try {
-    //   user = await this.get_user();
-
-    // } catch (err) {
-
-    //   this.ctx.status = 401;
-    //   this.ctx.body = err.message;
-    //   return;
-    // }
-
     const draft = await this.app.mysql.get('drafts', { id: id });
 
     if (!draft) {
@@ -177,8 +157,6 @@ class DraftsController extends Controller {
 
   async delete() {
     const id = this.ctx.params.id;
-
-    // const user = await this.get_user();
 
     const draft = await this.app.mysql.get('drafts', { id: id });
 

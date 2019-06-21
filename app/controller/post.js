@@ -126,16 +126,6 @@ class PostController extends Controller {
       return;
     }
 
-    const current_user = this.get_current_user();
-
-    try {
-      this.checkAuth(current_user);
-    } catch (err) {
-      ctx.status = 401;
-      ctx.body = err.message;
-      return;
-    }
-
     ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash);
 
     try {
@@ -338,79 +328,79 @@ class PostController extends Controller {
   }
 
   // todo：待删除
-  async post() {
-    const ctx = this.ctx;
-    const hash = ctx.params.hash;
+  // async post() {
+  //   const ctx = this.ctx;
+  //   const hash = ctx.params.hash;
 
-    const post = await this.app.mysql.get('posts', { hash });
+  //   const post = await this.app.mysql.get('posts', { hash });
 
-    if (post) {
-      // 阅读次数
-      const read = await this.app.mysql.query(
-        'select real_read_count num from post_read_count where post_id = ? ',
-        [post.id]
-      );
+  //   if (post) {
+  //     // 阅读次数
+  //     const read = await this.app.mysql.query(
+  //       'select real_read_count num from post_read_count where post_id = ? ',
+  //       [post.id]
+  //     );
 
-      post.read = read[0] ? read[0].num : 0
+  //     post.read = read[0] ? read[0].num : 0
 
-      const current_user = this.get_current_user();
-      let user = await this.app.mysql.get("users", { username: current_user });
-      post.support = false;
-      if (user) {
-        let support = await this.app.mysql.get('supports', { signid: post.id, uid: user.id, status: 1 });
-        if (support) {
-          post.support = true;
-        }
-      }
+  //     const current_user = this.get_current_user();
+  //     let user = await this.app.mysql.get("users", { username: current_user });
+  //     post.support = false;
+  //     if (user) {
+  //       let support = await this.app.mysql.get('supports', { signid: post.id, uid: user.id, status: 1 });
+  //       if (support) {
+  //         post.support = true;
+  //       }
+  //     }
 
-      // 被赞次数
-      const ups = await this.app.mysql.query(
-        'select count(*) as ups from supports where signid = ? and status = 1 ',
-        [post.id]
-      );
+  //     // 被赞次数
+  //     const ups = await this.app.mysql.query(
+  //       'select count(*) as ups from supports where signid = ? and status = 1 ',
+  //       [post.id]
+  //     );
 
-      post.ups = ups[0].ups;
+  //     post.ups = ups[0].ups;
 
-      // 被赞总金额
-      const value = await this.app.mysql.query(
-        'select sum(amount) as value from supports where signid = ? and symbol = ? and status = 1 ',
-        [post.id, "EOS"]
-      );
+  //     // 被赞总金额
+  //     const value = await this.app.mysql.query(
+  //       'select sum(amount) as value from supports where signid = ? and symbol = ? and status = 1 ',
+  //       [post.id, "EOS"]
+  //     );
 
-      post.value = value[0].value || 0;
+  //     post.value = value[0].value || 0;
 
-      //ONT value
-      const ont_value = await this.app.mysql.query(
-        'select signid, sum(amount) as value from supports where signid = ? and symbol = ? and status=1  ',
-        [post.id, "ONT"]
-      );
+  //     //ONT value
+  //     const ont_value = await this.app.mysql.query(
+  //       'select signid, sum(amount) as value from supports where signid = ? and symbol = ? and status=1  ',
+  //       [post.id, "ONT"]
+  //     );
 
-      post.ontvalue = ont_value[0].value || 0;
+  //     post.ontvalue = ont_value[0].value || 0;
 
 
-      // nickname
-      let name = post.username || post.author;
-      const nickname = await this.app.mysql.get('users', { username: name });
-      if (nickname) {
-        post.nickname = nickname.nickname;
-      }
+  //     // nickname
+  //     let name = post.username || post.author;
+  //     const nickname = await this.app.mysql.get('users', { username: name });
+  //     if (nickname) {
+  //       post.nickname = nickname.nickname;
+  //     }
 
-      // update cahce
-      this.app.read_cache[post.id] = post.read;
-      this.app.value_cache[post.id] = post.value;
-      this.app.ups_cache[post.id] = post.ups;
+  //     // update cahce
+  //     this.app.read_cache[post.id] = post.read;
+  //     this.app.value_cache[post.id] = post.value;
+  //     this.app.ups_cache[post.id] = post.ups;
 
-      this.app.post_cache[post.id] = post;
+  //     this.app.post_cache[post.id] = post;
 
-      ctx.body = post;
-      ctx.status = 200;
-    } else {
-      ctx.body = {
-        msg: 'post not found',
-      };
-      ctx.status = 404;
-    }
-  }
+  //     ctx.body = post;
+  //     ctx.status = 200;
+  //   } else {
+  //     ctx.body = {
+  //       msg: 'post not found',
+  //     };
+  //     ctx.status = 404;
+  //   }
+  // }
 
   async p() {
     const ctx = this.ctx;
@@ -427,12 +417,25 @@ class PostController extends Controller {
     ctx.body.data = post;
   }
 
-  async show() {
+  async postByHash() {
     const ctx = this.ctx;
     const hash = ctx.params.hash;
 
-    const current_user = this.get_current_user() || "anonymous";
-    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    const post = await this.service.post.getByHash(hash, ctx.user.id);
+
+    if (!post) {
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = post;
+
+  }
+
+  async show() {
+    const ctx = this.ctx;
+    const hash = ctx.params.hash;
 
     try {
       const post = await this.app.mysql.get('posts', { hash });
@@ -499,16 +502,6 @@ class PostController extends Controller {
       ctx.body = "sign_id required";
       return;
     }
-
-    // let user;
-
-    // try {
-    //   user = await this.get_user();
-    // } catch (err) {
-    //   ctx.status = 401;
-    //   ctx.body = err.message;
-    //   return;
-    // }
 
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
