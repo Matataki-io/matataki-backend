@@ -547,4 +547,7 @@ create table orders (
   PRIMARY KEY (id)
 );
 
-
+-- 2019/06/24 spinrt5-v2.3.0
+-- 修改关注表的unique index
+DROP INDEX username ON follows;
+CREATE UNIQUE INDEX idx_follows_uid_fuid ON follows(uid, fuid);
