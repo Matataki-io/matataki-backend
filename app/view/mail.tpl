@@ -17,7 +17,7 @@
 	</h1>
 <strong><span style="font-family:Microsoft YaHei;">感谢您近期在 <a href="https://smartsignature.io" target="_blank">智能签名</a> 上的交易！</span></strong><br />
 <br />
-<span style="font-family:Microsoft YaHei;"> 您购买的 {{ productname }}&nbsp; 已添加到您的 智能签名 购买记录中。</span><br />
+<span style="font-family:Microsoft YaHei;"> 您购买的 {{ productamount }}份 {{ productname }}&nbsp; 已添加到您的 智能签名 购买记录中。</span><br />
 <span style="font-family:Microsoft YaHei;"> 您可以在 智能签名 中对应的商品页面中找到相应的商品信息。</span><br />
 	<p>
 		<br/>
@@ -27,7 +27,7 @@
 			<span style="font-family:&quot;"><span style="font-family:Microsoft YaHei;">您需要在 Steam 中使用激活码来游玩 {{ productname }} 。</span> <br />
 			<span style="font-family:&quot;"><span style="font-family:Microsoft YaHei;">如果您未曾使用过 Steam，您可以</span><a href="https://store.steampowered.com/" target="_blank"><span style="font-family:Microsoft YaHei;">在此</span></a><span style="font-family:Microsoft YaHei;">获得免费的 Steam 程序。</span></span> 
 		{% elif category == 2 %}
-			<span style="font-family:&quot;"><span style="font-family:Microsoft YaHei;">您可以在 {{ productname }} 中输入以下的激活码来使用/游玩 {{ productname }} 。</span> <br />
+			<span style="font-family:&quot;"><span style="font-family:Microsoft YaHei;">您可以在 {{ productname }} 中输入以下的激活码来使用/游玩 。</span> <br />
 		{% elif category == 3 %}
 			<span style="font-family:&quot;"><span style="font-family:Microsoft YaHei;">您可以访问下面商品信息中的链接, 前往百度网盘来下载 {{ productname }} 。</span> <br />
 		{% endif %}
@@ -42,16 +42,28 @@
       </h2>
 	</p>
 	<p>
-		<span style="font-size: 20px; "><span style="font-family:Microsoft YaHei;">商品名：{{ productname }} </span> 
+		<span style="font-size: 20px; "><span style="font-family:Microsoft YaHei;">商品名：{{ productname }}</span>
 	</p>
 	<p>
-		<span style="font-size: 20px;"><span style="font-family:Microsoft YaHei;">{% if category == 1 %}Steam激活码{% elif category == 2 %}激活码{% elif category == 3 %}链接{% endif %}：{{ key }}</span> 
+		<span style="font-size: 20px; "><span style="font-family:Microsoft YaHei;">数量：{{ productamount }}</span> 
+	</p>
+	<p>
+		{% if category == 1 %}
+			<span style="font-size: 20px;"><span style="font-family:Microsoft YaHei;">Steam激活码：</span>
+		{% elif category == 2 %}
+			<span style="font-size: 20px;"><span style="font-family:Microsoft YaHei;">激活码：</span>
+		{% elif category == 3 %}
+			<span style="font-size: 20px;"><span style="font-family:Microsoft YaHei;">链接：</span>
+		{% endif %}
+		{% for stock in stocks %}
+			<br><span style="font-size: 20px;"><span style="font-family:Microsoft YaHei;">{{ stock.digital_copy }}</span>
+		{% endfor %}
 	</p>
     <br />
     <br />
      <br />
     <span style="font-family:Microsoft YaHei;"> 帐户名称：{{ username }}</span><span> </span><br />
-    <span style="font-family:Microsoft YaHei;"> 共支付：{{ amount }} {{ symbol }}</span><br />
+    <span style="font-family:Microsoft YaHei;"> 共支付：{{ totalprice }} {{ symbol }}</span><br />
     <!-- <span style="font-family:Microsoft YaHei;"> 交易哈希 </span><span> </span><br /> -->
     <span style="font-family:Microsoft YaHei;"> 创建日期：{{ time }} 北京时间</span><span> </span><br />
     <span style="font-family:Microsoft YaHei;"> 支付方式： {{ symbol }} 钱包</span><span> </span><br />

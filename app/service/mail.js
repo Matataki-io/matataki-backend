@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer');
 
 class MailService extends Service {
 
-  async sendMail(supportid) {
+  async sendMail(orderid) {
 
     this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
@@ -17,11 +17,12 @@ class MailService extends Service {
     };
 
     const product = await this.app.mysql.query(
-      'SELECT u.username, u.email, s.amount, s.symbol, s.create_time FROM supports s INNER JOIN users u ON s.uid = u.id WHERE s.id = :supportid;'
-      + 'SELECT s.digital_copy, p.title FROM product_stock_keys s INNER JOIN product_prices p ON s.sign_id = p.sign_id WHERE s.support_id = :supportid LIMIT 1;'
-      + 'SELECT p.category_id FROM posts p INNER JOIN supports s ON p.id = s.signid WHERE s.id = :supportid;',
-      { supportid }
+      'SELECT u.username, u.email, o.amount, o.symbol, o.create_time FROM orders o INNER JOIN users u ON o.uid = u.id WHERE o.id = :orderid;'
+      + 'SELECT s.digital_copy, p.title FROM product_stock_keys s INNER JOIN product_prices p ON s.sign_id = p.sign_id AND p.platform = \'eos\' WHERE s.order_id = :orderid;'
+      + 'SELECT p.category_id FROM posts p INNER JOIN orders o ON p.id = o.signid WHERE o.id = :orderid;',
+      { orderid }
     );
+
     const user = product[0];
     const stock = product[1];
     const category = product[2];
@@ -34,8 +35,9 @@ class MailService extends Service {
       // 配置以及发送邮件
       const mailData = { username: user[0].username,
         productname: stock[0].title,
-        key: stock[0].digital_copy,
-        amount: (user[0].amount / 10000),
+        productamount: stock.length,
+        stocks: stock,
+        totalprice: (user[0].amount / 10000),
         time: user[0].create_time.toLocaleString(),
         symbol: user[0].symbol,
         category: category[0].category_id };
