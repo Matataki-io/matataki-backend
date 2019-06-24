@@ -1,15 +1,15 @@
 'use strict';
 
 const Service = require('egg').Service;
-var _ = require('lodash');
+const _ = require('lodash');
 
 class SupportService extends Service {
 
   async commentList(signid, page = 1, pagesize = 20) {
 
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
+      return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -21,12 +21,22 @@ class SupportService extends Service {
       return null;
     }
 
-    const results = await this.app.mysql.query(
-      'SELECT s.amount, s.platform, s.signid, s.create_time, u.id, u.username, u.nickname, u.avatar, c.comment FROM supports s '
-      // 一个user在同一篇文章下的comment和support
+    const sql = 'SELECT s.amount, s.platform, s.signid, s.create_time,s.action, u.id, u.username, u.nickname, u.avatar, c.comment '
+      + 'FROM ( '
+      + 'SELECT id,uid,signId,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid '
+      + 'UNION ALL '
+      + 'SELECT id,uid,signId,amount,0 AS num,platform,create_time,status,1 AS action FROM supports WHERE signId = :signid '
+      + ') s '
       + 'LEFT JOIN users u ON s.uid = u.id '
-      + 'LEFT JOIN comments c ON c.sign_id = s.signid AND c.uid = u.id '
-      + 'WHERE s.status = 1 AND s.signid = :signid ORDER BY s.create_time DESC limit :start, :end;',
+      + 'LEFT JOIN comments c ON c.sign_id = s.signid  AND c.uid = s.uid AND s.action=1 '
+      + 'WHERE s.status = 1 ORDER BY s.create_time DESC LIMIT :start, :end;';
+    const results = await this.app.mysql.query(
+      sql,
+      // 'SELECT s.amount, s.platform, s.signid, s.create_time, u.id, u.username, u.nickname, u.avatar, c.comment FROM supports s '
+      // // 一个user在同一篇文章下的comment和support
+      // + 'LEFT JOIN users u ON s.uid = u.id '
+      // + 'LEFT JOIN comments c ON c.sign_id = s.signid AND c.uid = u.id '
+      // + 'WHERE s.status = 1 AND s.signid = :signid ORDER BY s.create_time DESC limit :start, :end;',
       { signid, start: (page - 1) * pagesize, end: pagesize }
     );
 
@@ -41,9 +51,9 @@ class SupportService extends Service {
 
   async getUserProducts(page = 1, pagesize = 20, userid = null) {
 
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
+      return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }

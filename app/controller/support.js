@@ -19,22 +19,22 @@ class SupportController extends Controller {
       referrer } = this.ctx.request.body;
 
     if (!signId) {
-      return this.response(401, "signId required")
+      return this.response(401, 'signId required');
     }
     if (!contract) {
-      return this.response(401, "contract required")
+      return this.response(401, 'contract required');
     }
     if (!symbol) {
-      return this.response(401, "symbol required")
+      return this.response(401, 'symbol required');
     }
     if (!amount) {
-      return this.response(401, "amount required")
+      return this.response(401, 'amount required');
     }
     if (!platform) {
-      return this.response(401, "platform required")
+      return this.response(401, 'platform required');
     }
-    if (!("eos" === platform || "ont" === platform)) {
-      return this.response(401, "platform not support")
+    if (!(platform === 'eos' || platform === 'ont')) {
+      return this.response(401, 'platform not support');
     }
 
     let referreruid = parseInt(referrer);
@@ -70,13 +70,13 @@ class SupportController extends Controller {
       const updateSuccess = result.affectedRows === 1;
 
       if (updateSuccess) {
-        this.response(201, "success")
+        this.response(201, 'success');
       } else {
-        this.response(500, "support error")
+        this.response(500, 'support error');
       }
     } catch (err) {
       this.ctx.logger.error('support error', err, this.ctx.user.id, signId, symbol, amount);
-      this.response(500, "support error, you have supported this post before");
+      this.response(500, 'support error, you have supported this post before');
     }
   }
 
@@ -92,7 +92,7 @@ class SupportController extends Controller {
       return;
     }
 
-    const shares = await this.service.support.commentList(signid, page, pagesize);
+    const shares = await this.service.support.commentList(parseInt(signid), parseInt(page), parseInt(pagesize));
 
     if (shares === null) {
       ctx.body = ctx.msg.paramsError;
