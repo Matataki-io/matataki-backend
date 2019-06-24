@@ -107,6 +107,73 @@ class VerifyOrder extends Subscription {
 
   async ont_verify(order) {
     // TODO 等待本体合约的实现
+    
+    // https://dev-docs.ont.io/#/docs-cn/ontology-cli/05-rpc-specification?id=getstorage
+    // 根据本体文档说明 取合约中的值，需要传入两个参数： hex_contract_address：以十六进制字符串表示智能合约哈希地址 key：以十六进制字符串表示的存储键值
+    // 所以，key 就用 （signId + uid or user address ）的 hex , 对应的value， 和eos版本类似，存储 转账代币合约、数量、符号，推荐人，供这里做二次验证和数据库中是否相符合。
+
+    // 做本体合约数据验证
+    const scriptHash = '36df9722fc0ff5fa3979f2a844a012cabe1d4c56'; // this.ctx.app.config.ont.scriptHash;
+    const httpEndpoint = this.ctx.app.config.ont.httpEndpoint;
+
+    const sponsor = await this.app.mysql.get('users', { id: order.uid });
+
+    // let key_origin = `${sponsor.username}${order.signid}`;
+    // let keyhex = "01" + Buffer.from(key_origin).toString('hex');
+
+    const oid = `oId:${order.oid}`
+    const key_origin = `${sponsor.username}${oid + ''}`;
+    const keyhex = '01' + Buffer.from(key_origin).toString('hex');
+
+    const { data } = await axios.get(`${httpEndpoint}/api/v1/storage/${scriptHash}/${keyhex}`);
+    if (data && data.Result) {
+      // console.log(key_origin)
+      // console.log(keyhex)
+      // console.log(data)
+
+      const ontMap = ONT.ScriptBuilder.deserializeItem(new ONT.utils.StringReader(data.Result));
+      const entries = ontMap.entries();
+      let obj = entries.next();
+      const row = {};
+
+      try {
+        while (!obj.done) {
+          const key = obj.value[0];
+          let value = obj.value[1];
+          if (typeof value === 'string') {
+            value = ONT.utils.hexstr2str(value);
+          }
+          row[key] = value;
+          obj = entries.next();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
+      let reffer = 0;
+      if (order.referreruid !== 0) {
+        const user = await this.app.mysql.get('users', { id: order.referreruid });
+        if (user) {
+          reffer = user.username;
+        }
+      }
+
+      const verifyPass = (
+        row.contract === order.contract
+        && row.symbol === order.symbol
+        && parseInt(row.amount2) === (order.amount / 10000)
+        && row.sponsor === reffer
+      );
+
+      console.log('contract,', row);
+      console.log('mysql', order);
+      console.log('verifyPass', verifyPass);
+
+      if (verifyPass) {
+        await this.passVerify(order);
+      }
+
+    }
   }
 
   async passVerify(order) {

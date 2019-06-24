@@ -1442,7 +1442,7 @@ curl -X GET  http://127.0.0.1:7001/search?q=xiaotiandada
 #### 购买商品
 
 
-* POST /order/create
+* POST /order
 * 响应状态码：201
 
 * 参数 
@@ -1455,10 +1455,17 @@ curl -X GET  http://127.0.0.1:7001/search?q=xiaotiandada
 * num: 商品数量
 
 * 请求示例：
-
 ```
 curl -d "num=10&signId=100418&contract=eosio.token&symbol=EOS&amount=1&platform=eos&referrer=65" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NjE2MDQ4MjY2NjYsInBsYXRmb3JtIjoiZW9zIiwiaWQiOjE3MH0.Ph73nBjvsz-3Sj79JhotA-tGSYxXHkXyvTrRkH5xDo0" -X POST  http://localhost:7001/order/create
 ```
+* 返回示例：
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"orderId": 23
+	}
+}
 
 购买流程: 
 

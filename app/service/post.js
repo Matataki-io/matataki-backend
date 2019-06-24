@@ -77,12 +77,7 @@ class PostService extends Service {
 
       // 如果是商品，返回价格
       if (post.channel_id === consts.postChannels.product) {
-        const prices = await this.app.mysql.select('product_prices', {
-          where: { sign_id: post.id, status: 1 },
-          columns: [ 'platform', 'symbol', 'price', 'decimals', 'stock_quantity' ],
-        });
-
-        post.prices = prices;
+        post.prices = await this.getPrices(post.id);
       }
 
       // 阅读次数
@@ -148,6 +143,16 @@ class PostService extends Service {
     }
 
     return post;
+  }
+
+  // 获取商品价格
+  async getPrices(signId) {
+    const prices = await this.app.mysql.select('product_prices', {
+      where: { sign_id: signId, status: 1 },
+      columns: [ 'platform', 'symbol', 'price', 'decimals', 'stock_quantity' ],
+    });
+
+    return prices;
   }
 
   // 发布时间排序(默认方法)
