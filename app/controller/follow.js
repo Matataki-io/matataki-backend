@@ -28,14 +28,19 @@ class FollowController extends Controller {
         return;
       }
 
-      let result = await this.app.mysql.insert('follows', {
-        username: user.username,
-        followed: followed_user.followed,
-        status: 1,
-        uid: user.id,
-        fuid: followed_user.id,
-        create_time: now
-      });
+      // let result = await this.app.mysql.insert('follows', {
+      //   username: user.username,
+      //   followed: followed_user.followed,
+      //   status: 1,
+      //   uid: user.id,
+      //   fuid: followed_user.id,
+      //   create_time: now
+      // });
+
+      const result = await this.app.mysql.query(
+        'INSERT INTO follows(username, followed, status, uid, fuid, create_time) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE status = 1, create_time = ?;',
+        [ user.username, followed_user.username, 1, user.id, followed_user.id, now, now ]
+      );
 
       const updateSuccess = result.affectedRows >= 1;
 
@@ -73,8 +78,8 @@ class FollowController extends Controller {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
       const result = await this.app.mysql.query(
-        'INSERT INTO follows(username, followed, status, uid, fuid, create_time) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE status = 0',
-        [user.username, followed_user.username, 1, user.id, followed_user.id, now]
+        'INSERT INTO follows(username, followed, status, uid, fuid, create_time) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE status = 0, create_time = ?;',
+        [ user.username, followed_user.username, 0, user.id, followed_user.id, now, now ]
       );
 
       const updateSuccess = result.affectedRows >= 1;
