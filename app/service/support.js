@@ -66,7 +66,7 @@ class SupportService extends Service {
 
     // 获取用户所有的订单
     const orders = await this.app.mysql.query(
-      'SELECT o.id, o.symbol, o.amount, o.create_time, r.title FROM orders o '
+      'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, r.title FROM orders o '
       + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.symbol = \'EOS\' '
       + 'WHERE o.uid = :userid ORDER BY o.id DESC LIMIT :start, :end;',
       { userid, start: (page - 1) * pagesize, end: 1 * pagesize }
@@ -79,8 +79,8 @@ class SupportService extends Service {
     // 取出订单的id列表
     const orderids = [];
     _.each(orders, row => {
-      row.keystring = '';
-      orderids.push(row.id);
+      row.digital_copy = '';
+      orderids.push(row.order_id);
     });
 
     // 取出订单对应的keys
@@ -93,15 +93,15 @@ class SupportService extends Service {
     // todo: 链接只需要塞一次, 这里还没有做修改
     _.each(keys, row => {
       _.each(orders, row2 => {
-        if (row.order_id === row2.id) {
-          row2.keystring = row2.keystring + row.digital_copy + ',';
+        if (row.order_id === row2.order_id) {
+          row2.digital_copy = row2.digital_copy + row.digital_copy + ',';
         }
       });
     });
 
     // 去除小尾巴
     _.each(orders, row => {
-      row.keystring = row.keystring.substring(0, row.keystring.length - 1);
+      row.digital_copy = row.digital_copy.substring(0, row.digital_copy.length - 1);
     });
 
     return orders;
