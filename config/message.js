@@ -49,6 +49,7 @@ module.exports = {
   referrerNotExist: 10105,
   referrerNoYourself: 10106,
   postPriceError: 10107,
+  postCannotBuy: 10108,
 
 
   returnObj(lang) {
@@ -80,6 +81,7 @@ module.exports = {
       referrerNotExist: { code: this.referrerNotExist, message: 'referrer does not exist' },
       referrerNoYourself: { code: this.referrerNoYourself, message: 'referrer can not be yourself' },
       postPriceError: { code: this.postPriceError, message: 'the price of the product is wrong' },
+      postCannotBuy: { code: this.postCannotBuy, message: 'the post can not buy' },
     };
 
     const zh = {
@@ -109,6 +111,7 @@ module.exports = {
       referrerNotExist: { code: this.referrerNotExist, message: '推荐人不存在' },
       referrerNoYourself: { code: this.referrerNoYourself, message: '推荐人不能是自己' },
       postPriceError: { code: this.postPriceError, message: '商品价格错误' },
+      postCannotBuy: { code: this.postCannotBuy, message: '不能购买' },
     };
 
     let message;

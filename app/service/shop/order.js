@@ -34,6 +34,10 @@ class OrderService extends Service {
     // 校验商品价格
     const prices = await this.service.post.getPrices(signId);
     const price = prices.find(p => p.platform === platform);
+    if (!price) {
+      return message.postCannotBuy;
+    }
+    // 总价错误
     if (amount !== price.price * num) {
       return message.postPriceError;
     }
