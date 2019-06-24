@@ -101,7 +101,7 @@ module.exports = app => {
   // 跨链打赏 上报接口
   router.post('/support', passport.authorize, controller.support.support);
   // 商品订单
-  router.post('/order/create', passport.authorize, controller.order.create);
+  router.post('/order', passport.authorize, controller.order.create);
 
   // // 邮件测试
   // router.get('/mailtest6a3476f5', passport.verify, controller.post.mailtest);

@@ -46,7 +46,9 @@ module.exports = {
   postPublishParamsError: 10102,
   postPublishSignVerifyError: 10103,
   postPublishError: 10104,
-
+  referrerNotExist: 10105,
+  referrerNoYourself: 10106,
+  postPriceError: 10107,
 
 
   returnObj(lang) {
@@ -75,6 +77,9 @@ module.exports = {
       postPublishParamsError: { code: this.postPublishParamsError, message: 'parameters error' },
       postPublishSignVerifyError: { code: this.postPublishSignVerifyError, message: 'signature error' },
       postPublishError: { code: this.postPublishError, message: 'publish error' },
+      referrerNotExist: { code: this.referrerNotExist, message: 'referrer does not exist' },
+      referrerNoYourself: { code: this.referrerNoYourself, message: 'referrer can not be yourself' },
+      postPriceError: { code: this.postPriceError, message: 'the price of the product is wrong' },
     };
 
     const zh = {
@@ -101,6 +106,9 @@ module.exports = {
       postPublishParamsError: { code: this.postPublishParamsError, message: '参数错误' },
       postPublishSignVerifyError: { code: this.postPublishSignVerifyError, message: '签名验证失败' },
       postPublishError: { code: this.postPublishError, message: '发布失败' },
+      referrerNotExist: { code: this.referrerNotExist, message: '推荐人不存在' },
+      referrerNoYourself: { code: this.referrerNoYourself, message: '推荐人不能是自己' },
+      postPriceError: { code: this.postPriceError, message: '商品价格错误' },
     };
 
     let message;

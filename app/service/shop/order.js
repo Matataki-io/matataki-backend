@@ -1,10 +1,10 @@
 'use strict';
 const consts = require('../consts');
+const moment = require('moment');
 const Service = require('egg').Service;
 
 // 商城订单类
 class OrderService extends Service {
-
   // todo：处理购买多个
   // 发邮件的地方，购买多个，发邮件使用orders
   // 显示的地方，购买多个
@@ -14,6 +14,60 @@ class OrderService extends Service {
   // 返回文章详情属性使用orders
   // 文章赞赏列表怎么办，supports+orders
   // 用户购买列表使用orders
+
+  // 创建订单
+  async create(signId, contract, symbol, amount, platform, num = 0, referreruid) {
+    const { ctx } = this;
+    const message = ctx.msg;
+
+    // 判断推荐人
+    if (referreruid > 0) {
+      if (referreruid === this.ctx.user.id) {
+        return message.referrNoYourself;
+      }
+      const ref = await this.get_referrer(referreruid);
+      if (ref === null) {
+        return message.referrerNotExist;
+      }
+    }
+
+    // 校验商品价格
+    const prices = await this.service.post.getPrices(signId);
+    const price = prices.find(p => p.platform === platform);
+    if (amount !== price.price * num) {
+      return message.postPriceError;
+    }
+
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    try {
+      let amount_copy = amount;
+
+      if (platform === 'ont') {
+        amount_copy = amount * 10000;
+      }
+
+      const result = await this.app.mysql.query(
+        'INSERT INTO orders (uid, signid, contract, symbol, num, amount, price, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?)',
+        [ this.ctx.user.id, signId, contract, symbol, num, amount_copy, price.price, referreruid, platform, 0, now ]
+      );
+
+      const updateSuccess = result.affectedRows === 1;
+
+      const oid = result.insertId;
+
+      if (updateSuccess) {
+        const ret = message.success;
+        ret.data = { orderId: oid };
+        return ret;
+      }
+      return ctx.msg.failure;
+
+    } catch (err) {
+      this.ctx.logger.error('create order error', err, this.ctx.user.id, signId, symbol, amount);
+      return message.serverError;
+    }
+  }
 
   // 处理发货
   async shipped(post, payment, conn) {
