@@ -17,17 +17,20 @@ class MailService extends Service {
     };
 
     const product = await this.app.mysql.query(
-      'SELECT u.username, u.email, o.amount, o.symbol, o.create_time FROM orders o INNER JOIN users u ON o.uid = u.id WHERE o.id = :orderid;'
+      'SELECT u.username, u.email, o.num, o.amount, o.symbol, o.create_time FROM orders o INNER JOIN users u ON o.uid = u.id WHERE o.id = :orderid;'
       + 'SELECT s.digital_copy, p.title FROM product_stock_keys s INNER JOIN product_prices p ON s.sign_id = p.sign_id AND p.platform = \'eos\' WHERE s.order_id = :orderid;'
       + 'SELECT p.category_id FROM posts p INNER JOIN orders o ON p.id = o.signid WHERE o.id = :orderid;',
       { orderid }
     );
 
     const user = product[0];
-    const stock = product[1];
+    let stock = product[1];
     const category = product[2];
     if (user.length === 0 || stock.length === 0) {
       return null;
+    }
+    if (category[0].category_id === 3) {
+      stock = [ stock[0] ];
     }
 
     let result = null;
@@ -35,7 +38,7 @@ class MailService extends Service {
       // 配置以及发送邮件
       const mailData = { username: user[0].username,
         productname: stock[0].title,
-        productamount: stock.length,
+        productamount: user[0].num,
         stocks: stock,
         totalprice: (user[0].amount / 10000),
         time: user[0].create_time.toLocaleString(),
