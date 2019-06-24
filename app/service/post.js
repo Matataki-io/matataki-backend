@@ -77,7 +77,7 @@ class PostService extends Service {
 
       // 如果是商品，返回价格
       if (post.channel_id === consts.postChannels.product) {
-        post.prices = this.getPrices(post.id);
+        post.prices = await this.getPrices(post.id);
       }
 
       // 阅读次数
