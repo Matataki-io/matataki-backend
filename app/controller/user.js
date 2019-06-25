@@ -183,7 +183,7 @@ class UserController extends Controller {
       if ('eos' === ctx.user.platform) {
         // EOS最小提现 (测试先不限制)
         // if(amount < 10000){
-        //   return this.response(401, "EOS withdtaw amount must greater than 1 ");
+        //   return this.response(403, "EOS withdtaw amount must greater than 1 ");
         // }
 
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
@@ -195,7 +195,7 @@ class UserController extends Controller {
       } else if ('ont' === ctx.user.platform) {
         // ONT最小提现 (测试先不限制)
         // if(amount < 30000){
-        //   return this.response(401, "ONT withdtaw amount must greater than 3 ONT");
+        //   return this.response(403, "ONT withdtaw amount must greater than 3 ONT");
         // }
 
         let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
@@ -216,27 +216,27 @@ class UserController extends Controller {
     let asset = await this.app.mysql.get('assets', { uid: ctx.user.id, symbol: symbol, platform: platform, contract: contract });
 
     if (!asset) {
-      return this.response(401, "not available asset can withdtaw");
+      return this.response(403, "not available asset can withdtaw");
     }
 
     let withdraw_amount = parseInt(amount);
 
     if (!withdraw_amount) {
-      return this.response(401, "invalid amount");
+      return this.response(403, "invalid amount");
     }
 
     if (withdraw_amount <= 0) {
-      return this.response(401, "invalid amount");
+      return this.response(403, "invalid amount");
     }
 
     if (!toaddress) {
-      return this.response(401, "withdraw address required");
+      return this.response(403, "withdraw address required");
     }
 
     if ('ont' === platform) {
       let num = withdraw_amount / 10000;
       if (!this.isInteger(num)) {
-        return this.response(401, "ONT withdraw only support Integer");
+        return this.response(403, "ONT withdraw only support Integer");
       }
     }
 

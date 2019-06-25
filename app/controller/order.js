@@ -21,26 +21,26 @@ class OrderController extends Controller {
 
     if (!signId) {
       console.log('create order', signId);
-      return this.response(401, 'signId required');
+      return this.response(403, 'signId required');
     }
     console.log('create order');
     if (!contract) {
-      return this.response(401, 'contract required');
+      return this.response(403, 'contract required');
     }
     if (!symbol) {
-      return this.response(401, 'symbol required');
+      return this.response(403, 'symbol required');
     }
     if (!amount) {
-      return this.response(401, 'amount required');
+      return this.response(403, 'amount required');
     }
     if (num === 0) {
-      return this.response(401, 'num required');
+      return this.response(403, 'num required');
     }
     if (!platform) {
-      return this.response(401, 'platform required');
+      return this.response(403, 'platform required');
     }
     if (!(platform === 'eos' || platform === 'ont')) {
-      return this.response(401, 'platform not support');
+      return this.response(403, 'platform not support');
     }
 
     let referreruid = parseInt(referrer);

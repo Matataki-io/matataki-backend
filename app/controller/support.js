@@ -19,22 +19,22 @@ class SupportController extends Controller {
       referrer } = this.ctx.request.body;
 
     if (!signId) {
-      return this.response(401, 'signId required');
+      return this.response(403, 'signId required');
     }
     if (!contract) {
-      return this.response(401, 'contract required');
+      return this.response(403, 'contract required');
     }
     if (!symbol) {
-      return this.response(401, 'symbol required');
+      return this.response(403, 'symbol required');
     }
     if (!amount) {
-      return this.response(401, 'amount required');
+      return this.response(403, 'amount required');
     }
     if (!platform) {
-      return this.response(401, 'platform required');
+      return this.response(403, 'platform required');
     }
     if (!(platform === 'eos' || platform === 'ont')) {
-      return this.response(401, 'platform not support');
+      return this.response(403, 'platform not support');
     }
 
     let referreruid = parseInt(referrer);
@@ -45,11 +45,11 @@ class SupportController extends Controller {
 
     if (referrer) {
       if (referreruid === this.ctx.user.id) {
-        return this.response(401, "referrer can't be yourself");
+        return this.response(403, "referrer can't be yourself");
       }
       const ref = await this.get_referrer(referreruid);
       if (ref === null) {
-        return this.response(401, 'referrer does not exist');
+        return this.response(403, 'referrer does not exist');
       }
     }
 

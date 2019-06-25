@@ -33,7 +33,7 @@ class AuthController extends Controller {
     } else if ('ont' === platform) {
       await this.ont_auth(sign, username, publickey, user);
     } else {
-      this.ctx.status = 401;
+      this.ctx.status = 403;
       this.ctx.body = 'platform not support';
     }
 

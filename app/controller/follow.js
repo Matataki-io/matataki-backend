@@ -14,7 +14,7 @@ class FollowController extends Controller {
     const user = ctx.user;
 
     if (user.id === parseInt(uid)) {
-      this.response(401, 'Not able to follow yourself!');
+      this.response(403, 'Not able to follow yourself!');
       return;
     }
 
@@ -24,7 +24,7 @@ class FollowController extends Controller {
       let followed_user = await this.app.mysql.get('users', { id: uid });
 
       if (!user || !followed_user) {
-        this.response(401, "user not exist");
+        this.response(403, "user not exist");
         return;
       }
 
@@ -71,7 +71,7 @@ class FollowController extends Controller {
       let followed_user = await this.app.mysql.get('users', { id: uid });
 
       if (!user || !followed_user) {
-        this.response(401, "user not exist");
+        this.response(403, "user not exist");
         return;
       }
 

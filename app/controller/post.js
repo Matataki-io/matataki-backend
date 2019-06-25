@@ -144,12 +144,12 @@ class PostController extends Controller {
       } else if ('github' === platform) {
         this.logger.info('There is a GitHub user editing...');
       } else {
-        this.ctx.status = 401;
+        this.ctx.status = 403;
         this.ctx.body = 'platform not support';
         return;
       }
     } catch (err) {
-      ctx.status = 401;
+      ctx.status = 403;
       ctx.body = err.message;
       return;
     }
