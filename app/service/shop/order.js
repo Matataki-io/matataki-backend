@@ -5,15 +5,15 @@ const Service = require('egg').Service;
 
 // 商城订单类
 class OrderService extends Service {
-  // todo：处理购买多个
-  // 发邮件的地方，购买多个，发邮件使用orders
-  // 显示的地方，购买多个
-  // 购买的地方判断必须是商品频道
+  // todo：处理购买、赞赏分开，可以购买多个
+  // √ 云芝新 发邮件的地方，购买多个，发邮件使用orders
+  // √ 云芝新 用户购买列表使用orders
+  // √ 陈浩 购买的地方判断必须是商品频道
+  // √ 陈浩 文章赞赏列表怎么办，supports+orders
+
+  // product_stock_keys.support_id 要使用orders表的id，还需要再排查下
+  // getPostProfile 返回文章详情属性使用orders，从orders里面查询是否已经买过，去掉查询key的代码，显示的地方，购买多个待删除
   // 处理历史订单数据，supports-》orders
-  // product_stock_keys.support_id 要使用orders表的id，
-  // 返回文章详情属性使用orders
-  // 文章赞赏列表怎么办，supports+orders
-  // 用户购买列表使用orders
 
   // 创建订单
   async create(signId, contract, symbol, amount, platform, num = 0, referreruid) {

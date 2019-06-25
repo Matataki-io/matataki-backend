@@ -21,7 +21,7 @@ class SupportService extends Service {
       return null;
     }
 
-    const sql = 'SELECT s.amount, s.platform, s.signid, s.create_time,s.action, u.id, u.username, u.nickname, u.avatar, c.comment '
+    const sql = 'SELECT s.amount, s.platform, s.signid, s.create_time, s.num, s.action, u.id, u.username, u.nickname, u.avatar, c.comment '
       + 'FROM ( '
       + 'SELECT id,uid,signId,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid '
       + 'UNION ALL '
