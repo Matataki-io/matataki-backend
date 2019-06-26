@@ -551,3 +551,16 @@ create table orders (
 -- 修改关注表的unique index
 DROP INDEX username ON follows;
 CREATE UNIQUE INDEX idx_follows_uid_fuid ON follows(uid, fuid);
+
+-- 橙皮书 action同步
+create table orange_actions (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  act_account varchar(100),
+  act_name varchar(100),
+  act_receiver varchar(100),
+  act_data text,
+  user varchar(100),
+  amount varchar(100),
+  create_time timestamp,
+  PRIMARY KEY (id)
+);
