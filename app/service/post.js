@@ -113,9 +113,9 @@ class PostService extends Service {
         }
       }
 
-      // 当前用户是否已购买
-      post.is_buy = false;
+      // 如果是商品，当前用户是否已购买
       if (userId && post.channel_id === consts.postChannels.product) {
+        post.is_buy = false;
         const buy = await this.app.mysql.get('orders', { signid: post.id, uid: userId, status: 1 });
         if (buy) {
           post.is_buy = true;
