@@ -105,11 +105,20 @@ class PostService extends Service {
       post.tags = tags;
 
       // 当前用户是否已赞赏
-      post.support = false;
+      post.is_support = false;
       if (userId) {
         const support = await this.app.mysql.get('supports', { signid: post.id, uid: userId, status: 1 });
         if (support) {
-          post.support = true;
+          post.is_support = true;
+        }
+      }
+
+      // 当前用户是否已购买
+      post.is_buy = false;
+      if (userId) {
+        const buy = await this.app.mysql.get('orders', { signid: post.id, uid: userId, status: 1 });
+        if (buy) {
+          post.is_buy = true;
         }
       }
 
