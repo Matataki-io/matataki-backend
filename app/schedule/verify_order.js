@@ -20,7 +20,7 @@ class VerifyOrder extends Subscription {
 
   static get schedule() {
     return {
-      interval: '5s',
+      interval: '50s',
       type: 'all',
     };
   }
@@ -28,7 +28,7 @@ class VerifyOrder extends Subscription {
   async subscribe() {
     // if (this.ctx.app.config.isDebug) return;
 
-    const expire = moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss');
+    const expire = moment().subtract(12, 'hours').format('YYYY-MM-DD HH:mm:ss');
 
     const results = await this.app.mysql.query(`select * from orders where status=0 and create_time>'${expire}' limit 10`);
     console.log(results);
