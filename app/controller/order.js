@@ -17,6 +17,7 @@ class OrderController extends Controller {
       amount,
       platform,
       num = 0,
+      comment,
       referrer } = this.ctx.request.body;
 
     if (!signId) {
@@ -49,7 +50,9 @@ class OrderController extends Controller {
       referreruid = 0;
     }
 
-    this.ctx.body = await this.service.shop.order.create(signId, contract, symbol, amount, platform, num, referrer);
+    const result = await this.service.shop.order.create(signId, contract, symbol, amount, platform, num, referreruid);
+    // todo：处理评论内容
+    this.ctx.body = result;
   }
 
 }

@@ -60,7 +60,7 @@ module.exports = {
       failure: { code: this.failure, message: 'failure' },
       paramsError: { code: this.paramsError, message: 'parameter error' },
       unauthorized: { code: this.unauthorized, message: 'unauthorized' },
-      serverError: { code: this.exception, message: 'internal server error' },
+      serverError: { code: this.serverError, message: 'internal server error' },
 
       userIntroductionInvalid: { code: this.userIntroductionInvalid, message: 'introduction too long' },
       userNotExist: { code: this.userNotExist, message: 'user does not exist' },
@@ -90,7 +90,7 @@ module.exports = {
       failure: { code: this.failure, message: '失败' },
       paramsError: { code: this.paramsError, message: '参数错误' },
       unauthorized: { code: this.unauthorized, message: '未授权' },
-      serverError: { code: this.exception, message: 'internal server error' },
+      serverError: { code: this.serverError, message: 'internal server error' },
 
       userIntroductionInvalid: { code: this.userIntroductionInvalid, message: '个性签名不能超过20个字!' },
       userNotExist: { code: this.userNotExist, message: '所请求的用户不存在' },

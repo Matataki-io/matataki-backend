@@ -18,7 +18,7 @@ class OrderService extends Service {
   // 已经购买的商品bug
 
   // 创建订单
-  async create(signId, contract, symbol, amount, platform, num = 0, referreruid) {
+  async create(signId, contract, symbol, amount, platform, num, referreruid) {
     const { ctx } = this;
     const message = ctx.msg;
 
@@ -27,8 +27,8 @@ class OrderService extends Service {
       if (referreruid === this.ctx.user.id) {
         return message.referrNoYourself;
       }
-      const ref = await this.get_referrer(referreruid);
-      if (ref === null) {
+      const refUser = await this.app.mysql.get('users', { id: referreruid });
+      if (refUser === null) {
         return message.referrerNotExist;
       }
     }
@@ -48,7 +48,7 @@ class OrderService extends Service {
 
     try {
       const result = await this.app.mysql.query(
-        'INSERT INTO orders (uid, signid, contract, symbol, num, amount, price, decimals, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?)',
+        'INSERT INTO orders (uid, signid, contract, symbol, num, amount, price, decimals, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?, ?)',
         [ this.ctx.user.id, signId, contract, symbol, num, amount, price.price, price.decimals, referreruid, platform, 0, now ]
       );
 
@@ -61,7 +61,7 @@ class OrderService extends Service {
         ret.data = { orderId: oid };
         return ret;
       }
-      return ctx.msg.failure;
+      return message.failure;
 
     } catch (err) {
       this.ctx.logger.error('create order error', err, this.ctx.user.id, signId, symbol, amount);
