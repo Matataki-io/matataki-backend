@@ -1,8 +1,21 @@
 'use strict';
 const consts = require('../consts');
+const moment = require('moment');
 const Service = require('egg').Service;
 
 class PayContextService extends Service {
+
+  async test() {
+    const expire = moment().subtract(12, 'hours').format('YYYY-MM-DD HH:mm:ss');
+
+    const results = await this.app.mysql.query(`select * from orders where status=0 and create_time>'${expire}' limit 10`);
+    console.log(results);
+    if (results.length === 0) { return; }
+
+    const order = results[0];
+    order.action = consts.payActions.buy;
+    await this.service.mechanism.payContext.handling(order);
+  }
 
   async handling(payment) {
     this.ctx.logger.info('PayContextService.handling start. %j', payment);
@@ -15,7 +28,20 @@ class PayContextService extends Service {
         return;
       }
 
-      // 2. 开始分账
+      // 2. 把当前support/order改为已处理状态
+      // 首先锁定数据，防止高并发
+      let updateResult;
+      if (payment.action === consts.payActions.support) {
+        updateResult = await conn.update('supports', { status: 1 }, { where: { id: payment.id } });
+      } else {
+        updateResult = await conn.update('orders', { status: 1 }, { where: { id: payment.id } });
+      }
+      if (updateResult.affectedRows !== 1) {
+        conn.rollback();
+        return;
+      }
+
+      // 3. 开始分账
       /*
       - 有推荐人
         - 推荐人quota是否满了
@@ -43,12 +69,12 @@ class PayContextService extends Service {
         this.service.mechanism.general.divide(payment, post, conn);
       }
 
-      // 3. 赞赏行为，添加赞赏者的裂变quota
+      // 4. 赞赏行为，添加赞赏者的裂变quota
       if (payment.action === consts.payActions.support) {
         this.service.mechanism.fission.addQuota(payment, post, conn);
       }
 
-      // 4. 购买行为，处理发货
+      // 5. 购买行为，处理发货
       if (payment.action === consts.payActions.buy) {
         const is_shipped = await this.service.shop.order.shipped(post, payment, conn);
         if (!is_shipped) {
@@ -56,13 +82,6 @@ class PayContextService extends Service {
           console.log(`发货失败，sign_id: ${post.id}, order_id: ${payment.id}`);
           return;
         }
-      }
-
-      // 5. 把当前support/order改为已处理状态
-      if (payment.action === consts.payActions.support) {
-        await conn.update('supports', { status: 1 }, { where: { id: payment.id } });
-      } else {
-        await conn.update('orders', { status: 1 }, { where: { id: payment.id } });
       }
 
       // 6. 更新count表统计数据

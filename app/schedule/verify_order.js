@@ -73,7 +73,7 @@ class VerifyOrder extends Subscription {
         }
 
         const strs = row.amount.split(' ');
-        const amount = parseFloat(strs[0]) * 10000;
+        const amount = parseFloat(strs[0]) * 10000; // todo: 10000 = 10 ** order.decimals
         const symbol = strs[1];
 
         if (row.contract === order.contract
@@ -107,7 +107,7 @@ class VerifyOrder extends Subscription {
 
   async ont_verify(order) {
     // TODO 等待本体合约的实现
-    
+
     // https://dev-docs.ont.io/#/docs-cn/ontology-cli/05-rpc-specification?id=getstorage
     // 根据本体文档说明 取合约中的值，需要传入两个参数： hex_contract_address：以十六进制字符串表示智能合约哈希地址 key：以十六进制字符串表示的存储键值
     // 所以，key 就用 （signId + uid or user address ）的 hex , 对应的value， 和eos版本类似，存储 转账代币合约、数量、符号，推荐人，供这里做二次验证和数据库中是否相符合。
@@ -120,8 +120,7 @@ class VerifyOrder extends Subscription {
 
     // let key_origin = `${sponsor.username}${order.signid}`;
     // let keyhex = "01" + Buffer.from(key_origin).toString('hex');
-
-    const oid = `oId:${order.oid}`
+    const oid = `oId:${order.id}`;
     const key_origin = `${sponsor.username}${oid + ''}`;
     const keyhex = '01' + Buffer.from(key_origin).toString('hex');
 
@@ -161,7 +160,7 @@ class VerifyOrder extends Subscription {
       const verifyPass = (
         row.contract === order.contract
         && row.symbol === order.symbol
-        && parseInt(row.amount2) === (order.amount / 10000)
+        && parseInt(row.amount2) * 10000 === order.amount // todo: 10000 = 10 ** order.decimals
         && row.sponsor === reffer
       );
 
@@ -178,7 +177,7 @@ class VerifyOrder extends Subscription {
 
   async passVerify(order) {
     order.action = consts.payActions.buy;
-    this.service.mechanism.payContext.handling(order);
+    await this.service.mechanism.payContext.handling(order);
   }
 
 }

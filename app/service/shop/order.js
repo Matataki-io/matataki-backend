@@ -14,6 +14,8 @@ class OrderService extends Service {
   // product_stock_keys.support_id 要使用orders表的id，还需要再排查下
   // getPostProfile 返回文章详情属性使用orders，从orders里面查询是否已经买过，去掉查询key的代码，显示的地方，购买多个待删除
   // 处理历史订单数据，supports-》orders
+  // 订单的评论
+  // 已经购买的商品bug
 
   // 创建订单
   async create(signId, contract, symbol, amount, platform, num = 0, referreruid) {
@@ -45,15 +47,9 @@ class OrderService extends Service {
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
     try {
-      let amount_copy = amount;
-
-      if (platform === 'ont') {
-        amount_copy = amount * 10000;
-      }
-
       const result = await this.app.mysql.query(
-        'INSERT INTO orders (uid, signid, contract, symbol, num, amount, price, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?)',
-        [ this.ctx.user.id, signId, contract, symbol, num, amount_copy, price.price, referreruid, platform, 0, now ]
+        'INSERT INTO orders (uid, signid, contract, symbol, num, amount, price, decimals, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?)',
+        [ this.ctx.user.id, signId, contract, symbol, num, amount, price.price, price.decimals, referreruid, platform, 0, now ]
       );
 
       const updateSuccess = result.affectedRows === 1;
@@ -80,28 +76,11 @@ class OrderService extends Service {
       return true;
     }
 
-    // 判断数量是否正确
+    // 判断金额、数量、单价是否正确
     if (payment.amount < payment.num * payment.price) {
+      this.ctx.logger.error('发货失败，订单金额、数量、单价不正确 %j', payment);
       return false;
     }
-
-
-    // 判断金额是否满足商品定价
-    const product_price = await conn.query(
-      'SELECT price, decimals FROM product_prices WHERE sign_id = ? AND platform = ? AND symbol = ? AND status=1;',
-      [ payment.signid, payment.platform, payment.symbol ]
-    );
-    // 配置错误，没有商品价格信息
-    if (!product_price || product_price.length === 0) {
-      console.log('商品配置错误，sign_id:' + payment.signid);
-      return false;
-    }
-    // 判断付款金额
-    if (product_price[0].price > payment.amount) {
-      console.log('商品付款金额错误，amount:' + payment.amount);
-      return false;
-    }
-
 
     // 减库存数量
     const resultStockQuantity = await conn.query(
@@ -115,15 +94,15 @@ class OrderService extends Service {
       return false;
     }
 
-    // 锁定商品，可能有bug
+    // 根据购买数量num锁定商品
     const resultKeys = await conn.query(
-      'UPDATE product_stock_keys SET status=1, support_id = ? '
+      'UPDATE product_stock_keys SET status=1, order_id = ? '
       + 'WHERE id IN (SELECT id FROM (SELECT id FROM product_stock_keys WHERE sign_id=? AND status=0 LIMIT ?) t);',
       [ payment.id, payment.signid, payment.num ]
     );
 
     // 库存不够，失败
-    if (resultKeys.affectedRows < payment.num) {
+    if (resultKeys.affectedRows !== payment.num) {
       console.log('商品库存不足，sign_id:' + payment.signid);
       return false;
     }

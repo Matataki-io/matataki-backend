@@ -113,20 +113,6 @@ class PostService extends Service {
         }
       }
 
-      // 如果是商品，并且已经赞过查询出digital_copy，todo：适用数字copy类的商品，posts表还需要增加商品分类
-      // todo：从orders订单表查询 2019-6-20，product_stock_keys.support_id =>order_id
-      // if (post.channel_id === consts.postChannels.product && post.support) {
-      //   const product = await this.app.mysql.query(
-      //     'select pp.title,digital_copy from product_stock_keys ps '
-      //     + 'inner join supports s on s.id = ps.support_id '
-      //     + 'inner join product_prices pp on pp.sign_id = ps.sign_id and pp.platform = s.platform and pp.symbol = s.symbol '
-      //     + 'where s.uid=? and ps.sign_id=?;',
-      //     [ userId, post.id ]
-      //   );
-
-      //   post.product = product;
-      // }
-
       // nickname
       const name = post.username || post.author;
       const user = await this.app.mysql.get('users', { username: name });
