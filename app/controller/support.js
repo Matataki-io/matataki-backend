@@ -56,15 +56,15 @@ class SupportController extends Controller {
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
     try {
-      let amount_copy = amount;
+      // let amount_copy = amount;
 
-      if (platform === 'ont') {
-        amount_copy = amount * 10000;
-      }
+      // if (platform === 'ont') {
+      //   amount_copy = amount * 10000;
+      // }
 
       const result = await this.app.mysql.query(
         'INSERT INTO supports (uid, signid, contract, symbol, amount, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ? ,?, ?)',
-        [ this.ctx.user.id, signId, contract, symbol, amount_copy, referreruid, platform, 0, now ]
+        [ this.ctx.user.id, signId, contract, symbol, amount, referreruid, platform, 0, now ]
       );
 
       const updateSuccess = result.affectedRows === 1;
