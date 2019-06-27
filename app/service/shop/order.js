@@ -17,31 +17,20 @@ class OrderService extends Service {
   // 订单的评论
   // 已经购买的商品bug
 
+  // 创建订单处理订单的评论
+  // 创建support时，处理评论
+
   // 创建订单
-  async create(signId, contract, symbol, amount, platform, num, referreruid) {
-    const { ctx } = this;
-    const message = ctx.msg;
-
-    // 判断推荐人
-    if (referreruid > 0) {
-      if (referreruid === this.ctx.user.id) {
-        return message.referrNoYourself;
-      }
-      const refUser = await this.app.mysql.get('users', { id: referreruid });
-      if (refUser === null) {
-        return message.referrerNotExist;
-      }
-    }
-
+  async create(userId, signId, contract, symbol, amount, platform, num, referreruid) {
     // 校验商品价格
     const prices = await this.service.post.getPrices(signId);
     const price = prices.find(p => p.platform === platform);
     if (!price) {
-      return message.postCannotBuy;
+      return -1; // message.postCannotBuy;
     }
     // 总价错误
     if (amount !== price.price * num) {
-      return message.postPriceError;
+      return -2; // message.postPriceError;
     }
 
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -49,23 +38,21 @@ class OrderService extends Service {
     try {
       const result = await this.app.mysql.query(
         'INSERT INTO orders (uid, signid, contract, symbol, num, amount, price, decimals, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?, ?)',
-        [ this.ctx.user.id, signId, contract, symbol, num, amount, price.price, price.decimals, referreruid, platform, 0, now ]
+        [ userId, signId, contract, symbol, num, amount, price.price, price.decimals, referreruid, platform, 0, now ]
       );
 
       const updateSuccess = result.affectedRows === 1;
 
-      const oid = result.insertId;
+      const orderId = result.insertId;
 
       if (updateSuccess) {
-        const ret = message.success;
-        ret.data = { orderId: oid };
-        return ret;
+        return orderId;
       }
-      return message.failure;
+      return -3; // message.failure;
 
     } catch (err) {
-      this.ctx.logger.error('create order error', err, this.ctx.user.id, signId, symbol, amount);
-      return message.serverError;
+      this.ctx.logger.error('create order error', err, userId, signId, symbol, amount);
+      return -99; // message.serverError;
     }
   }
 
@@ -115,6 +102,75 @@ class OrderService extends Service {
     );
 
     return true;
+  }
+
+  // 获取用户已经购买的商品
+  async getUserProducts(page = 1, pagesize = 20, userid = null) {
+
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+
+    if (userid === null) {
+      return null;
+    }
+
+    // const products = await this.app.mysql.query(
+    //   'SELECT p.sign_id, p.digital_copy, p.support_id, p.status, r.title, s.symbol, s.amount, s.create_time '
+    //   + 'FROM product_stock_keys p '
+    //   + 'INNER JOIN supports s ON p.support_id = s.id '
+    //   + 'INNER JOIN product_prices r ON r.sign_id = p.sign_id AND r.symbol = \'EOS\''
+    //   + 'WHERE s.uid = :userid ORDER BY s.create_time DESC LIMIT :start, :end;',
+    //   { userid, start: (page - 1) * pagesize, end: 1 * pagesize }
+    // );
+
+    // 获取用户所有的订单
+    const orders = await this.app.mysql.query(
+      'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, r.title FROM orders o '
+      + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.symbol = \'EOS\' '
+      + 'WHERE o.uid = :userid ORDER BY o.id DESC LIMIT :start, :end;',
+      { userid, start: (page - 1) * pagesize, end: 1 * pagesize }
+    );
+
+    if (orders.length === 0) {
+      return [];
+    }
+
+    // 取出订单的id列表
+    const orderids = [];
+    _.each(orders, row => {
+      row.digital_copy = '';
+      orderids.push(row.order_id);
+    });
+
+    // 取出订单对应的keys
+    const keys = await this.app.mysql.query(
+      'SELECT digital_copy, order_id FROM product_stock_keys WHERE order_id IN (:orderids);',
+      { orderids }
+    );
+
+    // 给每个订单塞上key string
+    // todo: 链接只需要塞一次, 这里还没有做修改
+    _.each(keys, row => {
+      _.each(orders, row2 => {
+        if (row.order_id === row2.order_id) {
+          row2.digital_copy = row2.digital_copy + row.digital_copy + ',';
+        }
+      });
+    });
+
+    // 去除小尾巴
+    _.each(orders, row => {
+      row.digital_copy = row.digital_copy.substring(0, row.digital_copy.length - 1);
+    });
+
+    return orders;
   }
 
 }

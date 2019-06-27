@@ -5,7 +5,7 @@ const Controller = require('../core/base_controller');
 const EOS = require('eosjs');
 const ecc = require('eosjs-ecc');
 const moment = require('moment');
-var _ = require('lodash');
+const _ = require('lodash');
 const ONT = require('ontology-ts-sdk');
 
 
@@ -14,9 +14,9 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
 
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
+      return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -29,17 +29,17 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
       publickey, sign, hash, fissionFactor = 2000,
-      cover, is_original = 0, platform = 'eos', tags = "" } = ctx.request.body;
+      cover, is_original = 0, platform = 'eos', tags = '' } = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, is_original);
 
     if (fissionFactor > 2000) {
-      ctx.body = ctx.msg.postPublishParamsError;  //msg: 'fissionFactor should >= 2000',
+      ctx.body = ctx.msg.postPublishParamsError; // msg: 'fissionFactor should >= 2000',
       return;
     }
 
     try {
-      if ('eos' === platform) {
+      if (platform === 'eos') {
         const hash_piece1 = hash.slice(0, 12);
         const hash_piece2 = hash.slice(12, 24);
         const hash_piece3 = hash.slice(24, 36);
@@ -47,17 +47,17 @@ class PostController extends Controller {
 
         const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
         await this.eos_signature_verify(author, sign_data, sign, publickey);
-      } else if ('ont' === platform) {
+      } else if (platform === 'ont') {
         const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
         this.ont_signature_verify(msg, sign, publickey);
       } else if (platform === 'github') {
         this.logger.info('There is a GitHub user publishing...');
       } else {
-        ctx.body = ctx.msg.postPublishSignVerifyError;  //'platform not support';
+        ctx.body = ctx.msg.postPublishSignVerifyError; // 'platform not support';
         return;
       }
     } catch (err) {
-      ctx.body = ctx.msg.postPublishSignVerifyError;  //err.message;
+      ctx.body = ctx.msg.postPublishSignVerifyError; // err.message;
       return;
     }
 
@@ -71,31 +71,30 @@ class PostController extends Controller {
       is_original,
       fission_factor: fissionFactor,
       create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-      cover: cover, // 封面url
-      platform: platform,
+      cover, // 封面url
+      platform,
       uid: ctx.user.id,
       is_recommend: 0,
       category_id: 0,
     });
 
     if (tags) {
-      let tag_arr = tags.split(",");
-      tag_arr = tag_arr.filter((x) => { return x !== "" });
+      let tag_arr = tags.split(',');
+      tag_arr = tag_arr.filter(x => { return x !== ''; });
       await ctx.service.post.create_tags(id, tag_arr);
     }
 
     if (id > 0) {
       ctx.body = ctx.msg.success;
       ctx.body.data = id;
-    }
-    else {
-      ctx.body = ctx.msg.postPublishError; //todo 可以再细化失败的原因
+    } else {
+      ctx.body = ctx.msg.postPublishError; // todo 可以再细化失败的原因
     }
   }
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos', tags = "" } = ctx.request.body;
+    const { signId, author = '', title = '', content = '', publickey, sign, hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos', tags = '' } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -129,7 +128,7 @@ class PostController extends Controller {
     ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash);
 
     try {
-      if ('eos' === platform) {
+      if (platform === 'eos') {
         const hash_piece1 = hash.slice(0, 12);
         const hash_piece2 = hash.slice(12, 24);
         const hash_piece3 = hash.slice(24, 36);
@@ -138,10 +137,10 @@ class PostController extends Controller {
         const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
 
         await this.eos_signature_verify(author, sign_data, sign, publickey);
-      } else if ('ont' === platform) {
+      } else if (platform === 'ont') {
         const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
         this.ont_signature_verify(msg, sign, publickey);
-      } else if ('github' === platform) {
+      } else if (platform === 'github') {
         this.logger.info('There is a GitHub user editing...');
       } else {
         this.ctx.status = 403;
@@ -160,7 +159,7 @@ class PostController extends Controller {
       try {
         // insert edit history
         const now = moment().format('YYYY-MM-DD HH:mm:ss');
-        await conn.insert("edit_history", {
+        await conn.insert('edit_history', {
           sign_id: signId,
           hash: post.hash,
           title: post.title,
@@ -171,11 +170,11 @@ class PostController extends Controller {
           create_time: now,
         });
 
-        let updateRow = {
-          hash: hash,
+        const updateRow = {
+          hash,
           public_key: publickey,
-          sign: sign,
-        }
+          sign,
+        };
 
         if (title) {
           updateRow.title = title;
@@ -192,10 +191,10 @@ class PostController extends Controller {
         // console.log("cover!!!", cover , typeof cover);
 
         // 修改 post 的 hash, publickey, sign title
-        await conn.update("posts", updateRow, { where: { id: signId } });
+        await conn.update('posts', updateRow, { where: { id: signId } });
 
-        let tag_arr = tags.split(",");
-        tag_arr = tag_arr.filter((x) => { return x !== "" });
+        let tag_arr = tags.split(',');
+        tag_arr = tag_arr.filter(x => { return x !== ''; });
         await ctx.service.post.create_tags(signId, tag_arr, true);
 
         await conn.commit();
@@ -493,13 +492,14 @@ class PostController extends Controller {
     }
   }
 
+  // 待删除，合并到OrderController、SupportController，以后可增加独立的comment模块
   async comment() {
     const ctx = this.ctx;
     const { comment = '', sign_id } = ctx.request.body;
 
     if (!sign_id) {
       ctx.status = 500;
-      ctx.body = "sign_id required";
+      ctx.body = 'sign_id required';
       return;
     }
 
@@ -530,7 +530,7 @@ class PostController extends Controller {
     }
   }
 
-  //获取我的文章，不是我的文章会报401
+  // 获取我的文章，不是我的文章会报401
   // 新创建的没有id， 用的hash问题
   async mypost() {
     const ctx = this.ctx;
@@ -566,7 +566,7 @@ class PostController extends Controller {
     if (success) {
       ctx.body = ctx.msg.success;
     } else {
-      this.response(500, "transferOwner error")
+      this.response(500, 'transferOwner error');
     }
   }
 
