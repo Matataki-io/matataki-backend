@@ -1,6 +1,7 @@
 'use strict';
 const consts = require('../consts');
 const moment = require('moment');
+const _ = require('lodash');
 const Service = require('egg').Service;
 
 // 商城订单类
@@ -17,8 +18,8 @@ class OrderService extends Service {
   // 订单的评论
   // 已经购买的商品bug
 
-  // 创建订单处理订单的评论
-  // 创建support时，处理评论
+  // √ 陈浩 创建订单处理订单的评论
+  // √ 陈浩 创建support时，处理评论
 
   // 创建订单
   async create(userId, signId, contract, symbol, amount, platform, num, referreruid) {

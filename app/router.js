@@ -103,7 +103,7 @@ module.exports = app => {
   // 商品订单
   router.post('/order', passport.authorize, controller.order.create);
   // 用户自己已经购买的商品列表
-  router.get('/order/products', passport.authorize, controller.support.myProducts);
+  router.get('/order/products', passport.authorize, controller.order.myProducts);
 
   // // 邮件测试
   // router.get('/mailtest6a3476f5', passport.verify, controller.post.mailtest);
