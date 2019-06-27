@@ -12,14 +12,22 @@ class OrderService extends Service {
   // √ 陈浩 购买的地方判断必须是商品频道
   // √ 陈浩 文章赞赏列表怎么办，supports+orders
 
-  // product_stock_keys.support_id 要使用orders表的id，还需要再排查下
-  // getPostProfile 返回文章详情属性使用orders，从orders里面查询是否已经买过，去掉查询key的代码，显示的地方，购买多个待删除
-  // 处理历史订单数据，supports-》orders
-  // 订单的评论
-  // 已经购买的商品bug
+  // √ 陈浩 product_stock_keys.support_id 要使用orders表的id，还需要再排查下
+
+  // √ 陈浩 getPostProfile 返回文章详情属性使用orders，从orders里面查询是否已经买过，去掉查询key的代码，显示的地方，购买多个待删除
+
+  // √ 陈浩 处理历史订单数据，supports-》orders
+
+  // √ 陈浩 订单的评论
+  // √ 陈浩 已经购买的商品bug
 
   // √ 陈浩 创建订单处理订单的评论
   // √ 陈浩 创建support时，处理评论
+
+  // √ 陈浩 推荐返利，必须是消费过的人
+
+  // 验证eos合约
+  // 验证ont合约
 
   // 创建订单
   async create(userId, signId, contract, symbol, amount, platform, num, referreruid) {
@@ -55,6 +63,10 @@ class OrderService extends Service {
       this.ctx.logger.error('create order error', err, userId, signId, symbol, amount);
       return -99; // message.serverError;
     }
+  }
+
+  async getByUserId(userId, signId) {
+    return await this.app.mysql.get('orders', { uid: userId, signid: signId, status: 1 });
   }
 
   // 处理发货

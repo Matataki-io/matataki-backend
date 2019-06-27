@@ -27,6 +27,9 @@ class SupportService extends Service {
     }
   }
 
+  async getByUserId(userId, signId) {
+    return await this.app.mysql.get('supports', { uid: userId, signid: signId, status: 1 });
+  }
 
   // 转移到CommentService，待删除
   async commentList(signid, page = 1, pagesize = 20) {

@@ -40,12 +40,17 @@ class OrderController extends Controller {
     }
     // 判断推荐人
     if (referreruid > 0) {
+      // 不能是自己
       if (referreruid === this.ctx.user.id) {
-        return ctx.msg.referrNoYourself;
+        this.ctx.body = ctx.msg.referrerNoYourself;
+        return;
       }
-      const refUser = await this.service.user.find(referreruid);
-      if (refUser === null) {
-        return ctx.msg.referrerNotExist;
+
+      // 判断是否可以当推荐人
+      const flag = await this.service.mechanism.payContext.canBeReferrer(referreruid, signId);
+      if (!flag) {
+        this.ctx.body = ctx.msg.referrerNotExist;
+        return;
       }
     }
 

@@ -26,6 +26,7 @@ class VerifyOrder extends Subscription {
   }
 
   async subscribe() {
+    return;
     // if (this.ctx.app.config.isDebug) return;
 
     const expire = moment().subtract(12, 'hours').format('YYYY-MM-DD HH:mm:ss');
