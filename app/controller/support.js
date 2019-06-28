@@ -1,7 +1,8 @@
 'use strict';
 
 const Controller = require('../core/base_controller');
-const moment = require('moment');
+const _ = require('lodash');
+const consts = require('../service/consts');
 
 class SupportController extends Controller {
 
@@ -10,13 +11,8 @@ class SupportController extends Controller {
   }
 
   async support() {
-
-    const { signId,
-      contract,
-      symbol,
-      amount,
-      platform,
-      referrer } = this.ctx.request.body;
+    const { ctx } = this;
+    const { signId, contract, symbol, amount, platform, referrer, comment } = this.ctx.request.body;
 
     if (!signId) {
       return this.response(403, 'signId required');
@@ -44,42 +40,40 @@ class SupportController extends Controller {
     }
 
     if (referrer) {
+      // 不能是自己
       if (referreruid === this.ctx.user.id) {
-        return this.response(403, "referrer can't be yourself");
+        this.ctx.body = ctx.msg.referrerNoYourself;
+        return;
       }
-      const ref = await this.get_referrer(referreruid);
-      if (ref === null) {
-        return this.response(403, 'referrer does not exist');
+
+      // 判断是否可以当推荐人
+      const flag = await this.service.mechanism.payContext.canBeReferrer(referreruid, signId);
+      if (!flag) {
+        this.ctx.body = ctx.msg.referrerNotExist;
+        return;
       }
     }
 
-    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    // 保存赞赏
+    const supportId = await this.service.support.create(this.ctx.user.id, signId, contract, symbol, amount, referreruid, platform);
 
-    try {
-      // let amount_copy = amount;
-
-      // if (platform === 'ont') {
-      //   amount_copy = amount * 10000;
-      // }
-
-      const result = await this.app.mysql.query(
-        'INSERT INTO supports (uid, signid, contract, symbol, amount, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ? ,?, ?)',
-        [ this.ctx.user.id, signId, contract, symbol, amount, referreruid, platform, 0, now ]
-      );
-
-      const updateSuccess = result.affectedRows === 1;
-
-      if (updateSuccess) {
-        this.response(201, 'success');
-      } else {
-        this.response(500, 'support error');
-      }
-    } catch (err) {
-      this.ctx.logger.error('support error', err, this.ctx.user.id, signId, symbol, amount);
-      this.response(500, 'support error, you have supported this post before');
+    // 失败
+    if (supportId <= 0) {
+      this.ctx.body = ctx.msg.serverError;
+      return;
     }
+
+    // 处理评论内容
+    if (comment && _.trim(comment).length > 0 && supportId > 0) {
+      await this.service.comment.create(ctx.user.id, ctx.user.username, signId, _.trim(comment), consts.commentTypes.support, supportId);
+    }
+
+    const ret = ctx.msg.success;
+    ret.data = { supportId };
+    this.ctx.body = ret;
   }
 
+  // 待删除，转移到comment.js
   async comments() {
 
     const ctx = this.ctx;
@@ -103,6 +97,7 @@ class SupportController extends Controller {
     ctx.body.data = shares;
   }
 
+  // 待删除，转移到order.js
   async myProducts() {
 
     const ctx = this.ctx;

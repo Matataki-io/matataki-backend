@@ -127,6 +127,20 @@ class PayContextService extends Service {
     this.ctx.logger.info('PayContextService.handling end. %j', payment);
   }
 
+  async canBeReferrer(uid, signId) {
+    const support = await this.service.support.getByUserId(uid, signId);
+    if (support && support.id > 0) {
+      return true;
+    }
+
+    const order = await this.service.shop.order.getByUserId(uid, signId);
+    if (order && order.id > 0) {
+      return true;
+    }
+
+    return false;
+  }
+
 }
 
 module.exports = PayContextService;

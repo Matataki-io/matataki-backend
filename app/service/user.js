@@ -20,22 +20,27 @@ class UserService extends Service {
   //   });
   // }
 
+
+  async find(id) {
+    return await this.app.mysql.get('users', { id });
+  }
+
   async getUserById(id) {
     const ctx = this.ctx;
 
     // 2.获取某账号关注数
     const follows = await this.app.mysql.query(
       'select count(*) as follows from follows where uid = ? and status=1',
-      [id]
+      [ id ]
     );
 
     // 3.获取某账号粉丝数
     const fans = await this.app.mysql.query(
       'select count(*) as fans from follows where fuid = ? and status=1',
-      [id]
+      [ id ]
     );
 
-    var is_follow = false;
+    let is_follow = false;
 
     const current_user = ctx.user;
 
@@ -46,16 +51,16 @@ class UserService extends Service {
       }
     }
 
-    let email = "";
-    let nickname = "";
-    let avatar = "";
+    let email = '';
+    let nickname = '';
+    let avatar = '';
     let introduction = '';
-    
-    const user = await this.app.mysql.get('users', { id: id });
+
+    const user = await this.app.mysql.get('users', { id });
     if (user) {
-      avatar = user.avatar || "";
-      email = user.email || "";
-      nickname = user.nickname || "";
+      avatar = user.avatar || '';
+      email = user.email || '';
+      nickname = user.nickname || '';
       introduction = user.introduction || '';
     } else {
       return null;
@@ -69,7 +74,7 @@ class UserService extends Service {
       introduction,
       follows: follows[0].follows,
       fans: fans[0].fans,
-      is_follow: is_follow
+      is_follow,
     };
 
     ctx.logger.info('debug info', result);
@@ -79,9 +84,9 @@ class UserService extends Service {
 
   async getUserDetails(current_user, platform) {
 
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
+      return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -194,7 +199,7 @@ class UserService extends Service {
 
     const sameEmail = await this.app.mysql.query(
       'SELECT COUNT(*) AS same_count FROM users WHERE email = ?',
-      [email]
+      [ email ]
     );
 
     if (sameEmail[0].same_count) {
@@ -241,7 +246,7 @@ class UserService extends Service {
 
     const sameNickname = await this.app.mysql.query(
       'SELECT COUNT(*) AS same_count FROM users WHERE nickname = ?',
-      [nickname]
+      [ nickname ]
     );
 
     if (sameNickname[0].same_count) {

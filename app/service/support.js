@@ -1,10 +1,37 @@
 'use strict';
-
-const Service = require('egg').Service;
+const moment = require('moment');
 const _ = require('lodash');
+const Service = require('egg').Service;
 
 class SupportService extends Service {
 
+  async create(userId, signId, contract, symbol, amount, referreruid, platform) {
+    try {
+      const now = moment().format('YYYY-MM-DD HH:mm:ss');
+      const result = await this.app.mysql.query(
+        'INSERT INTO supports (uid, signid, contract, symbol, amount, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ? ,?, ?)',
+        [ userId, signId, contract, symbol, amount, referreruid, platform, 0, now ]
+      );
+
+      const updateSuccess = result.affectedRows === 1;
+
+      if (updateSuccess) {
+        return result.insertId;
+      }
+
+      return -1;
+
+    } catch (err) {
+      this.ctx.logger.error('support error', err, userId, signId, symbol, amount);
+      return -99;
+    }
+  }
+
+  async getByUserId(userId, signId) {
+    return await this.app.mysql.get('supports', { uid: userId, signid: signId, status: 1 });
+  }
+
+  // 转移到CommentService，待删除
   async commentList(signid, page = 1, pagesize = 20) {
 
     this.app.mysql.queryFromat = function(query, values) {
@@ -49,6 +76,7 @@ class SupportService extends Service {
     return results;
   }
 
+  // 转移到order下面，待删除
   async getUserProducts(page = 1, pagesize = 20, userid = null) {
 
     this.app.mysql.queryFromat = function(query, values) {

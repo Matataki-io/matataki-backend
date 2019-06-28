@@ -22,4 +22,9 @@ module.exports = {
     withdraw: 'withdraw', // 提现
   },
 
+  commentTypes: {
+    support: 1,
+    order: 2,
+  },
+
 };

@@ -95,16 +95,20 @@ module.exports = app => {
 
   // -------------------------------- 点赞和购买 --------------------------------
   // 打赏和评论列表
-  router.get('/support/comments', passport.verify, controller.support.comments);
+  // router.get('/support/comments', passport.verify, controller.support.comments);
   // 用户自己已经购买的商品列表
-  router.get('/support/products', passport.authorize, controller.support.myProducts);
+  // router.get('/support/products', passport.authorize, controller.support.myProducts);
   // 跨链打赏 上报接口
   router.post('/support', passport.authorize, controller.support.support);
   // 商品订单
   router.post('/order', passport.authorize, controller.order.create);
+  // 用户自己已经购买的商品列表
+  router.get('/order/products', passport.authorize, controller.order.myProducts);
 
   // // 邮件测试
   // router.get('/mailtest6a3476f5', passport.verify, controller.post.mailtest);
 
+  // -------------------------------- 评论 --------------------------------
+  router.get('/comments', passport.verify, controller.comment.comments);
 };
 

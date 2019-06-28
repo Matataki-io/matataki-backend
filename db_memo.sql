@@ -532,20 +532,22 @@ WHERE s.signid = c.post_id AND s.platform = 'ont' AND s.status = 1), 0);
 
 -- 06.19 
 -- 订单表： 记录 "谁" 从 "哪篇文章" 中买了多少商品，付款多少币（合约、符号、数量、平台）。
-create table orders (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  uid INT UNSIGNED NOT NULL,  
-  signid varchar(255) NOT NULL,
-  referreruid INT UNSIGNED DEFAULT 0,   
-  num INT UNSIGNED NOT NULL,    
-  contract varchar(255) NOT NULL,
-  symbol varchar(255) NOT NULL,
-  amount INT UNSIGNED DEFAULT 0, 
-  platform varchar(255) NOT NULL,
-  status INT UNSIGNED DEFAULT 0, 
-  create_time timestamp,
-  PRIMARY KEY (id)
-);
+CREATE TABLE `orders`  (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uid` int(10) UNSIGNED NOT NULL,
+  `signid` int(10) UNSIGNED NOT NULL COMMENT 'posts.id',
+  `referreruid` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '邀请人',
+  `num` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '数量',
+  `contract` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL,
+  `symbol` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `amount` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '总价',
+  `price` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '单价',
+  `decimals` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '精度',
+  `platform` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `status` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '状态：0未处理，1已验证已发货',
+  `create_time` timestamp(0) NOT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 53 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
 
 -- 2019/06/24 spinrt5-v2.3.0
 -- 修改关注表的unique index
@@ -564,3 +566,32 @@ create table orange_actions (
   create_time timestamp,
   PRIMARY KEY (id)
 );
+
+
+-- 处理comments 支持supports、orders
+-- comments表增加字段
+ALTER TABLE comments ADD COLUMN type INT UNSIGNED NOT NULL DEFAULT 1 COMMENT '类型，1support，2order';
+ALTER TABLE comments ADD COLUMN ref_id INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '关联对应表的id';
+
+-- 处理赞赏/订单分开
+-- 增加product_stock_keys.order_id字段
+ALTER TABLE product_stock_keys ADD COLUMN order_id INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '订单id';
+-- 处理历史数据
+UPDATE product_stock_keys set order_id = support_id;
+-- supports里的订单导入到orders
+insert into orders(id,uid,signid,contract,symbol,amount,platform,referreruid,`status`,create_time,price,num,decimals) select id,uid,signid,contract,symbol,amount,platform,referreruid,`status`,create_time,amount,1,4 from supports where signid in (select id from posts where channel_id=2);
+-- 删除supports里的订单
+delete from supports where id in (select id from orders);
+
+-- 更新comments.ref_id
+-- 根据supports更新ref_id
+update comments c 
+INNER JOIN supports s on c.uid=s.uid and c.sign_id=s.signid
+set ref_id = s.id, type=1;
+-- 根据orders更新ref_id
+update comments c 
+INNER JOIN orders o on c.uid=o.uid and c.sign_id=o.signid
+set ref_id = o.id, type=2;
+
+-- 查询重复的数据，手动清理下
+select type, ref_id,count(1) counts from comments group by type, ref_id having counts > 1;

@@ -129,6 +129,19 @@ module.exports = {
         break;
     }
 
+    message.get = function(code) {
+      const _this = this;
+      const keys = Object.keys(_this);
+      let ret;
+      for (const key of keys) {
+        if (_this[key].code === code) {
+          ret = _this[key];
+          break;
+        }
+      }
+      return ret;
+    };
+
     return message;
   },
 
