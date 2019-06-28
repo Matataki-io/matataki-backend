@@ -77,8 +77,7 @@ class PayContextService extends Service {
           await this.service.mechanism.fission.divide(payment, post, referrer_result[0], conn, types);
         } else {
           // 推荐人quota满了，或者没有quota，走推荐分账
-          const types = this.getAssetTypes(post, payment);
-          types.referrerAssetType = consts.assetTypes.referralIncome; // 覆盖
+          types.referrerAssetType = consts.assetTypes.referralIncome;
           await this.service.mechanism.referral.divide(payment, post, conn, types);
         }
       } else { // 没有推荐人，走普通分账
