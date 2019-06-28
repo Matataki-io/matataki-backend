@@ -100,15 +100,13 @@ class FollowController extends Controller {
 
 
   async follows() {
+    const ctx = this.ctx;
     const pagesize = 20;
 
-    const { page = 1, uid } = this.ctx.query;
+    const { page = 1, uid } = ctx.query;
 
     if (!uid) {
-      this.ctx.body = {
-        msg: 'uid require ',
-      };
-      this.ctx.status = 500;
+      ctx.body = ctx.msg.paramsError;
       return;
     }
 
@@ -171,7 +169,7 @@ class FollowController extends Controller {
       })
     }
 
-    const current_user =  this.ctx.user;
+    const current_user = ctx.user;
 
     if (current_user && users.length > 0) {
 
@@ -219,19 +217,18 @@ class FollowController extends Controller {
       list: results
     }
 
-    this.ctx.body = resp;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = resp;
   }
 
   async fans() {
     const pagesize = 20;
+    const ctx = this.ctx;
 
-    const { page = 1, uid } = this.ctx.query;
+    const { page = 1, uid } = ctx.query;
 
     if (!uid) {
-      this.ctx.body = {
-        msg: 'uid require ',
-      };
-      this.ctx.status = 500;
+      ctx.body = ctx.msg.paramsError;
       return;
     }
 
@@ -293,7 +290,7 @@ class FollowController extends Controller {
       })
     }
 
-    const current_user = this.ctx.user;
+    const current_user = ctx.user;
 
     if (current_user && users.length > 0) {
       let whereOption2 = {
@@ -342,7 +339,8 @@ class FollowController extends Controller {
       list: results
     }
 
-    this.ctx.body = resp;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = resp;
   }
 
 }
