@@ -20,13 +20,12 @@ class VerifyOrder extends Subscription {
 
   static get schedule() {
     return {
-      interval: '50s',
+      interval: '5s',
       type: 'all',
     };
   }
 
   async subscribe() {
-    return;
     // if (this.ctx.app.config.isDebug) return;
 
     const expire = moment().subtract(12, 'hours').format('YYYY-MM-DD HH:mm:ss');

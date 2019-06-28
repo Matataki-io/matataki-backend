@@ -6,7 +6,7 @@ const Service = require('egg').Service;
 class PayContextService extends Service {
 
   async test() {
-    const expire = moment().subtract(12, 'hours').format('YYYY-MM-DD HH:mm:ss');
+    const expire = moment().subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
 
     const results = await this.app.mysql.query(`select * from orders where status=0 and create_time>'${expire}' limit 10`);
     console.log(results);
@@ -32,9 +32,9 @@ class PayContextService extends Service {
       // 首先锁定数据，防止高并发
       let updateResult;
       if (payment.action === consts.payActions.support) {
-        updateResult = await conn.update('supports', { status: 1 }, { where: { id: payment.id } });
+        updateResult = await conn.query('UPDATE supports SET status=1 WHERE id=? AND status=0;', [ payment.id ]);
       } else {
-        updateResult = await conn.update('orders', { status: 1 }, { where: { id: payment.id } });
+        updateResult = await conn.query('UPDATE orders SET status=1 WHERE id=? AND status=0;', [ payment.id ]);
       }
       if (updateResult.affectedRows !== 1) {
         conn.rollback();
