@@ -595,3 +595,13 @@ set ref_id = o.id, type=2;
 
 -- 查询重复的数据，手动清理下
 select type, ref_id,count(1) counts from comments group by type, ref_id having counts > 1;
+
+-- 修正资产明细的资产类型数据
+-- 赞赏人通过裂变获得的收入
+update assets_change_log set type='fission_income' where type='share income';
+-- 赞赏人支出
+update assets_change_log set type='support_expenses' where type='support expenses';
+-- 文章作者被赞赏的收入
+update assets_change_log set type='author_supported_income' where type='sign income' and signid in (select id from posts where channel_id=1);
+-- 商品作者销售的收入
+update assets_change_log set type='author_sale_income' where type='sign income' and signid in (select id from posts where channel_id=2);
