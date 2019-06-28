@@ -16,9 +16,14 @@ class MailService extends Service {
       }.bind(this));
     };
 
+    if (!orderid) {
+      return null;
+    }
+
     const product = await this.app.mysql.query(
       'SELECT u.username, u.email, o.num, o.amount, o.symbol, o.create_time FROM orders o INNER JOIN users u ON o.uid = u.id WHERE o.id = :orderid;'
-      + 'SELECT s.digital_copy, p.title FROM product_stock_keys s INNER JOIN product_prices p ON s.sign_id = p.sign_id AND p.platform = \'eos\' WHERE s.order_id = :orderid;'
+      + 'SELECT s.digital_copy, p.title FROM product_stock_keys s INNER JOIN orders o ON o.id = s.order_id AND o.id = :orderid '
+      + 'INNER JOIN product_prices p ON s.sign_id = p.sign_id AND p.platform = o.platform;'
       + 'SELECT p.category_id FROM posts p INNER JOIN orders o ON p.id = o.signid WHERE o.id = :orderid;',
       { orderid }
     );
@@ -26,9 +31,20 @@ class MailService extends Service {
     const user = product[0];
     let stock = product[1];
     const category = product[2];
-    if (user.length === 0 || stock.length === 0) {
+    if (stock.length === 0 || category.length === 0) {
+      this.logger.info('MailService:: sendMail info: Wrong stock data');
       return null;
     }
+    if (user.length === 0) {
+      this.logger.info('MailService:: sendMail info: User does not exist');
+      return null;
+    }
+    if (!user[0].email) {
+      this.logger.info('MailService:: sendMail info: User haven\'t set email');
+      return null;
+    }
+
+    // 如果是链接商品, 只提供一份数据
     if (category[0].category_id === 3) {
       stock = [ stock[0] ];
     }
@@ -46,9 +62,9 @@ class MailService extends Service {
         category: category[0].category_id };
       const mailContent = await this.ctx.renderView('mail.tpl', mailData, { viewEngine: 'nunjucks' });
       // 不发送邮件, 只返回预览
-      // if (this.ctx.app.config.mailPreview === true) {
-      //   return mailContent;
-      // }
+      if (this.ctx.app.config.mailPreview === true) {
+        return mailContent;
+      }
       const mailOptions = {
         //   from: this.config.mail.auth.user,
         from: `Smart Signature<${this.config.mail.auth.user}>`,
