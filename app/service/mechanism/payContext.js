@@ -50,28 +50,28 @@ class PayContextService extends Service {
       - 无推荐人，走普通分账
       */
       let referrer_result;
+
+      // 有推荐人，（在提交order/support时已经判断是付费用户，并且前端/合约控制必须是同一个platform才能当推荐人）
       if (payment.referreruid > 0) {
         // 使用FOR UPDATE锁定推荐人的quota数据避免高并发问题
         referrer_result = await conn.query('SELECT id, quota FROM support_quota WHERE uid=? AND signid=? FOR UPDATE;',
           [ payment.referreruid, payment.signid ]
         );
-      }
-      if (referrer_result && referrer_result.length > 0) {
-        if (referrer_result[0].quota > 0) {
-          // 推荐人quota未满，走裂变分账
-          this.service.mechanism.fission.divide(payment, post, referrer_result[0], conn);
+
+        // 推荐人有quota并且未满，走裂变分账
+        if (referrer_result && referrer_result.length > 0 && referrer_result[0].quota > 0) {
+          await this.service.mechanism.fission.divide(payment, post, referrer_result[0], conn);
         } else {
-          // 推荐人quota满了，走推荐分账
-          this.service.mechanism.referral.divide(payment, post, referrer_result[0], conn);
+          // 推荐人quota满了，或者没有quota，走推荐分账
+          await this.service.mechanism.referral.divide(payment, post, conn);
         }
-      } else {
-        // 走普通分账
-        this.service.mechanism.general.divide(payment, post, conn);
+      } else { // 没有推荐人，走普通分账
+        await this.service.mechanism.general.divide(payment, post, conn);
       }
 
       // 4. 赞赏行为，添加赞赏者的裂变quota
       if (payment.action === consts.payActions.support) {
-        this.service.mechanism.fission.addQuota(payment, post, conn);
+        await this.service.mechanism.fission.addQuota(payment, post, conn);
       }
 
       // 5. 购买行为，处理发货
