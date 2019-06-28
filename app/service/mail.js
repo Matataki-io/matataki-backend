@@ -62,9 +62,9 @@ class MailService extends Service {
         category: category[0].category_id };
       const mailContent = await this.ctx.renderView('mail.tpl', mailData, { viewEngine: 'nunjucks' });
       // 不发送邮件, 只返回预览
-      if (this.ctx.app.config.mailPreview === true) {
-        return mailContent;
-      }
+      // if (this.ctx.app.config.mailPreview === true) {
+      //   return mailContent;
+      // }
       const mailOptions = {
         //   from: this.config.mail.auth.user,
         from: `Smart Signature<${this.config.mail.auth.user}>`,
