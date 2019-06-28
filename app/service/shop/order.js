@@ -6,7 +6,7 @@ const Service = require('egg').Service;
 
 // 商城订单类
 class OrderService extends Service {
-  // todo：处理购买、赞赏分开，可以购买多个
+  // 处理购买、赞赏分开，可以购买多个
   // √ 云芝新 发邮件的地方，购买多个，发邮件使用orders
   // √ 云芝新 用户购买列表使用orders
   // √ 陈浩 购买的地方判断必须是商品频道
@@ -26,8 +26,8 @@ class OrderService extends Service {
 
   // √ 陈浩 推荐返利，必须是消费过的人
 
-  // 验证eos合约
-  // 验证ont合约
+  // √ 陈浩 验证eos合约
+  // √ 陈浩 验证ont合约
 
   // 创建订单
   async create(userId, signId, contract, symbol, amount, platform, num, referreruid) {
@@ -139,7 +139,7 @@ class OrderService extends Service {
       'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, r.title, p.category_id FROM orders o '
       + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.platform = o.platform '
       + 'INNER JOIN posts p ON p.id = o.signid '
-      + 'WHERE o.uid = :userid ORDER BY o.id DESC LIMIT :start, :end;',
+      + 'WHERE o.uid = :userid AND o.status=1 ORDER BY o.id DESC LIMIT :start, :end;',
       { userid, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
