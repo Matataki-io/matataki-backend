@@ -599,8 +599,10 @@ select type, ref_id,count(1) counts from comments group by type, ref_id having c
 -- 修正资产明细的资产类型数据
 -- 赞赏人通过裂变获得的收入
 update assets_change_log set type='fission_income' where type='share income';
--- 赞赏人支出
-update assets_change_log set type='support_expenses' where type='support expenses';
+-- 赞赏支出
+update assets_change_log set type='support_expenses' where type='support expenses' and signid in (select id from posts where channel_id=1);
+-- 购买支出
+update assets_change_log set type='buy_expenses' where type='support expenses' and signid in (select id from posts where channel_id=2);
 -- 文章作者被赞赏的收入
 update assets_change_log set type='author_supported_income' where type='sign income' and signid in (select id from posts where channel_id=1);
 -- 商品作者销售的收入
