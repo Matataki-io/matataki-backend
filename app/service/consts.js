@@ -13,12 +13,15 @@ module.exports = {
   },
 
   assetTypes: {
-    buy: 'buy expenses', // 购买消费
-    support: 'support expenses', // 赞赏消费
-    income: 'sign income', // 作者收入???
-    sale: 'sale income', // 销售收入
-    fissionShare: 'fission income', // 裂变分享收入
-    referralShare: 'referral income', // 推荐分享收入
+    supportExpenses: 'support_expenses', // 赞赏/投资支出
+    buyExpenses: 'buy_expenses', // 购买支出
+
+    fissionIncome: 'fission_income', // 赞赏/投资裂变收入
+    referralIncome: 'referral_income', // 推荐收入
+
+    authorSaleIncome: 'author_sale_income', // 作者 销售收入
+    authorSupportedIncome: 'author_supported_income', // 作者 被投资收入
+
     withdraw: 'withdraw', // 提现
   },
 

@@ -51,6 +51,19 @@ class PayContextService extends Service {
       */
       let referrer_result;
 
+      let types;
+      if (payment.action === consts.payActions.buy) {
+        types = {
+          payerAssetType: consts.assetTypes.buyExpenses,
+          authorAssetType: consts.assetTypes.authorSaleIncome,
+        };
+      } else {
+        types = {
+          payerAssetType: consts.assetTypes.supportExpenses,
+          authorAssetType: consts.assetTypes.authorSupportedIncome,
+        };
+      }
+
       // 有推荐人，（在提交order/support时已经判断是付费用户，并且前端/合约控制必须是同一个platform才能当推荐人）
       if (payment.referreruid > 0) {
         // 使用FOR UPDATE锁定推荐人的quota数据避免高并发问题
@@ -60,13 +73,16 @@ class PayContextService extends Service {
 
         // 推荐人有quota并且未满，走裂变分账
         if (referrer_result && referrer_result.length > 0 && referrer_result[0].quota > 0) {
-          await this.service.mechanism.fission.divide(payment, post, referrer_result[0], conn);
+          types.referrerAssetType = consts.assetTypes.fissionIncome;
+          await this.service.mechanism.fission.divide(payment, post, referrer_result[0], conn, types);
         } else {
           // 推荐人quota满了，或者没有quota，走推荐分账
-          await this.service.mechanism.referral.divide(payment, post, conn);
+          const types = this.getAssetTypes(post, payment);
+          types.referrerAssetType = consts.assetTypes.referralIncome; // 覆盖
+          await this.service.mechanism.referral.divide(payment, post, conn, types);
         }
       } else { // 没有推荐人，走普通分账
-        await this.service.mechanism.general.divide(payment, post, conn);
+        await this.service.mechanism.general.divide(payment, post, conn, types);
       }
 
       // 4. 赞赏行为，添加赞赏者的裂变quota

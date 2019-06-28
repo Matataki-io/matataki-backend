@@ -13,7 +13,7 @@ const Service = require('egg').Service;
 class FissionService extends Service {
 
   // 分账，行为相关者: 作者，付费人、推荐人
-  async divide(payment, post, referrer_support_quota, conn) {
+  async divide(payment, post, referrer_support_quota, conn, assetTypes) {
     this.ctx.logger.info('FissionService.divide start. %j', payment);
 
     let amount = payment.amount;
@@ -23,7 +23,9 @@ class FissionService extends Service {
 
     // 1. 记录当前赞赏用户资产变动log
     await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [ payment.uid, payment.signid, payment.contract, payment.symbol, 0 - payment.amount, payment.platform, 'support expenses', now ]
+      [ payment.uid, payment.signid, payment.contract, payment.symbol, 0 - payment.amount, payment.platform,
+        assetTypes.payerAssetType, // 'support expenses'
+        now ]
     );
 
 
@@ -38,7 +40,9 @@ class FissionService extends Service {
     );
     // 记录推荐人资产变动log
     await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [ refuid, payment.signid, payment.contract, payment.symbol, delta, payment.platform, 'share income', now ]
+      [ refuid, payment.signid, payment.contract, payment.symbol, delta, payment.platform,
+        assetTypes.referrerAssetType, // 'share income'
+        now ]
     );
 
     // 更新推荐人的quota
@@ -59,7 +63,9 @@ class FissionService extends Service {
     );
     // 记录作者资产变动log
     await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [ post.uid, payment.signid, payment.contract, payment.symbol, amount, payment.platform, 'sign income', now ]
+      [ post.uid, payment.signid, payment.contract, payment.symbol, amount, payment.platform,
+        assetTypes.authorAssetType, // 'sign income'
+        now ]
     );
 
     this.ctx.logger.info('FissionService.divide end.');
