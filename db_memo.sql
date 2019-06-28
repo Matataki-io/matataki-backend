@@ -607,3 +607,8 @@ update assets_change_log set type='buy_expenses' where type='support expenses' a
 update assets_change_log set type='author_supported_income' where type='sign income' and signid in (select id from posts where channel_id=1);
 -- 商品作者销售的收入
 update assets_change_log set type='author_sale_income' where type='sign income' and signid in (select id from posts where channel_id=2);
+
+-- 只为生产环境使用, 更新商品的category_id
+UPDATE posts SET category_id = 1 WHERE id IN (527);
+UPDATE posts SET category_id = 2 WHERE id IN (599, 600, 601, 611, 613, 622, 623, 624, 626);
+UPDATE posts SET category_id = 3 WHERE id IN (557, 558, 559, 615);
