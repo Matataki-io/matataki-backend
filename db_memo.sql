@@ -523,11 +523,11 @@ WHERE s.signid = c.post_id AND s.status = 1);
 
 -- 同步EOS和ONT赞赏金额到表, 主代码修正之后需要再次同步
 UPDATE post_read_count c
-SET c.eos_value_count = ISNULL((SELECT SUM(amount) AS sum FROM supports s
+SET c.eos_value_count = IFNULL((SELECT SUM(amount) AS sum FROM supports s
 WHERE s.signid = c.post_id AND s.platform = 'eos' AND s.status = 1), 0);
 
 UPDATE post_read_count c
-SET c.ont_value_count = ISNULL((SELECT SUM(amount) AS sum FROM supports s
+SET c.ont_value_count = IFNULL((SELECT SUM(amount) AS sum FROM supports s
 WHERE s.signid = c.post_id AND s.platform = 'ont' AND s.status = 1), 0);
 
 -- 06.19 
