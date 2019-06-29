@@ -38,37 +38,22 @@ class UserController extends Controller {
     );
 
     // 作者收入
-    const authorSaleIncome = await this.app.mysql.query(
-      'select sum(amount) as totalSignIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
-      [ 'author_sale_income', this.ctx.user.id, symbol ]
+    const totalSignIncome = await this.app.mysql.query(
+      'select sum(amount) as totalSignIncome from assets_change_log where type in (?) and uid = ? and symbol = ?',
+      [[ 'author_sale_income', 'author_supported_income' ], this.ctx.user.id, symbol ]
     );
-    const authorSupportedIncome = await this.app.mysql.query(
-      'select sum(amount) as totalSignIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
-      [ 'author_supported_income', this.ctx.user.id, symbol ]
-    );
-    const totalSignIncome = authorSaleIncome + authorSupportedIncome;
 
     // 分享者收入
-    const fissionIncome = await this.app.mysql.query(
-      'select sum(amount) as totalShareIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
-      [ 'fission_income', this.ctx.user.id, symbol ]
+    const totalShareIncome = await this.app.mysql.query(
+      'select sum(amount) as totalShareIncome from assets_change_log where type in (?) and uid = ? and symbol = ?',
+      [[ 'fission_income', 'referral_income' ], this.ctx.user.id, symbol ]
     );
-    const referralIncome = await this.app.mysql.query(
-      'select sum(amount) as totalShareIncome from assets_change_log where type = ? and uid = ? and symbol = ?',
-      [ 'referral_income', this.ctx.user.id, symbol ]
-    );
-    const totalShareIncome = fissionIncome + referralIncome;
 
     // 投资/购买支出
-    const supportExpenses = await this.app.mysql.query(
-      'select sum(amount) as totalShareExpenses from assets_change_log where type = ? and uid = ? and symbol = ?',
-      [ 'support_expenses', this.ctx.user.id, symbol ]
+    const totalShareExpenses = await this.app.mysql.query(
+      'select sum(amount) as totalShareExpenses from assets_change_log where type in (?) and uid = ? and symbol = ?',
+      [[ 'support_expenses', 'buy_expenses' ], this.ctx.user.id, symbol ]
     );
-    const buyExpenses = await this.app.mysql.query(
-      'select sum(amount) as totalShareExpenses from assets_change_log where type = ? and uid = ? and symbol = ?',
-      [ 'buy_expenses', this.ctx.user.id, symbol ]
-    );
-    const totalShareExpenses = supportExpenses + buyExpenses;
 
     let balance = 0;
     if (tokens && tokens.length > 0) {
