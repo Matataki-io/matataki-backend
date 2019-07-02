@@ -2,6 +2,8 @@ const Subscription = require('egg').Subscription;
 const EOS = require('eosjs');
 var _ = require('lodash');
 
+const consts = require('../service/consts');
+
 const moment = require('moment');
 
 /**
@@ -18,7 +20,7 @@ class ActionReader extends Subscription {
 
     this.config = {
       startAt: 0,
-      step: 1,
+      step: 5,
       watchAccount: ctx.app.config.eos.orange_contract,
     }
   }
@@ -75,23 +77,74 @@ class ActionReader extends Subscription {
         let block_time = x.block_time;
         block_time = moment(block_time).add(8, "hours").format("YYYY-MM-DD HH:mm:ss");
 
-
         if (act_account === this.config.watchAccount
-          && act_name === "earn"
+          && act_name === "incomelog"
           && act_receiver === this.config.watchAccount) {
 
-          // TODO 
+          act_data = x.action_trace.act.data;
 
-          // var sql = `INSERT INTO orange_actions VALUES (${seq}, '${act_account}', '${act_name}', '${act_data}','${author}', '${memo}', '${amount}', '${sign_id}', '${type}', '${block_time}') ';`
-          // await this.app.mysql.query(sql);
+          let action_type = act_data.type;
+          let username = act_data.user;
 
-          // await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
-          //   [user.id, "eosio.token", "EOS", amount, "eos", amount]
-          // );
+          let quantity = act_data.income.quantity;
+          let contract = act_data.income.contract;
 
-          // await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          //   [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "support expenses", block_time]
-          // );
+          let amount = parseFloat(quantity) * 10000;
+          let symbol = quantity.split(" ")[1];
+
+          let ad_hash = act_data.ad_hash;
+
+          let user = await this.app.mysql.get('users', { username: username });
+
+          if (!user) {
+            let newuser = await this.app.mysql.insert('users', {
+              username: username,
+              platform: "eos",
+              create_time: moment().format('YYYY-MM-DD HH:mm:ss')
+            });
+            user = await this.app.mysql.get('users', { username: username });
+          }
+
+          if (action_type === "buyad") {
+            // 仅记录支出log
+            const conn = await this.app.mysql.beginTransaction();
+            try {
+              await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [user.id, 0, "eosio.token", "EOS", amount, "eos", consts.assetTypes.buyad, block_time]
+              );
+
+              var sql = `INSERT INTO orange_actions VALUES (${seq}, '${act_account}', '${act_name}', '${act_receiver}', '${ad_hash}', '${username}', '${amount}', '${block_time}');`
+              await conn.query(sql);
+
+              await conn.commit();
+              console.log("record success");
+            } catch (err) {
+              await conn.rollback();
+            }
+          }
+
+          if (action_type === "earn") {
+            const conn = await this.app.mysql.beginTransaction();
+            try {
+              await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [user.id, 0, "eosio.token", "EOS", amount, "eos", consts.assetTypes.earn, block_time]
+              );
+
+              await conn.query(
+                'INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+                [user.id, "eosio.token", "EOS", amount, "eos", amount]
+              );
+
+              var sql = `INSERT INTO orange_actions VALUES (${seq}, '${act_account}', '${act_name}', '${act_receiver}', '${ad_hash}', '${username}', '${amount}', '${block_time}');`
+              await conn.query(sql);
+
+              await conn.commit();
+              console.log("record success");
+            } catch (err) {
+              await conn.rollback();
+            }
+          }
+
         } else {
           let user = null
           let amount = 0;
@@ -99,20 +152,13 @@ class ActionReader extends Subscription {
           try {
             await this.app.mysql.query(sql);
           } catch (err) {
-            // console.log(err);
           }
-
         }
-
-
       }
-
     } catch (err) {
       console.log(err);
     }
-
   }
-
 }
 
 module.exports = ActionReader;

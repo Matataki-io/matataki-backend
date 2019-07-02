@@ -23,6 +23,8 @@ module.exports = {
     authorSupportedIncome: 'author_supported_income', // 作者 被投资收入
 
     withdraw: 'withdraw', // 提现
+    buyad: "buyad", //橙皮书买广告
+    earn: "earn", // 橙皮书收入
   },
 
   commentTypes: {
