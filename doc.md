@@ -1473,3 +1473,24 @@ curl -d "num=10&signId=100418&contract=eosio.token&symbol=EOS&amount=1&platform=
 2. 拿到ordreid后， 转账给合约，格式就是 buy orderid 推荐人 , 比如（buy 1 xiaotiandada）
 3. 后端验证了后，处理发货（现在留空了）
 4. 修改order状态
+
+
+
+#### 橙皮书人次统计
+
+* GET /ads/statistics
+* 响应状态码：200
+
+```
+{
+  "code": 0,
+  "message": "成功",
+  "data": {
+    "play_count": 1,
+    "user_count": 1
+  }
+}
+
+```
+
+curl -X GET  http://localhost:7001/ads/statistics
