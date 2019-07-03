@@ -1494,3 +1494,51 @@ curl -d "num=10&signId=100418&contract=eosio.token&symbol=EOS&amount=1&platform=
 ```
 
 curl -X GET  http://localhost:7001/ads/statistics
+
+
+
+#### 橙皮书 广告上传（最高出价者才能调用成功）
+
+* POST /ads/submit
+* 响应状态码：200
+
+* 参数 （预留字段，没有的话可以不传）
+* title : 广告标题
+* url: 广告图片url
+* link: 广告点击跳转链接
+* content: 广告文案
+
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+
+```
+
+curl -d "title=牛逼" -H "x-access-token: xxxx" -X POST  http://localhost:7001/ads/submit
+
+
+
+#### 橙皮书 广告获取
+
+* GET /ads/ad
+* 响应状态码：200
+
+```
+{
+  "code": 0,
+  "message": "成功",
+  "data": {
+    "title": "",
+    "url": "",
+    "link": "",
+    "content": "",
+    "username": "joetothemoon",
+    "uid": 170
+  }
+}
+```
+
+curl -X GET  http://localhost:7001/ads/ad
+

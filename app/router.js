@@ -111,7 +111,13 @@ module.exports = app => {
   // -------------------------------- 评论 --------------------------------
   router.get('/comments', passport.verify, controller.comment.comments);
 
+  
+  
   // 橙皮书合约广告人、次统计
   router.get('/ads/statistics', passport.verify, controller.ads.statistics);
+  // 获取广告
+  router.get('/ads/ad', passport.verify, controller.ads.ad);
+  // 最高出价者 上传广告资料
+  router.post('/ads/submit', passport.authorize, controller.ads.submit);
 };
 

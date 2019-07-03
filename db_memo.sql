@@ -612,3 +612,18 @@ update assets_change_log set type='author_sale_income' where type='sign income' 
 UPDATE posts SET category_id = 1 WHERE id IN (527);
 UPDATE posts SET category_id = 2 WHERE id IN (599, 600, 601, 611, 613, 622, 623, 624, 626);
 UPDATE posts SET category_id = 3 WHERE id IN (557, 558, 559, 615);
+
+-------------------- 
+
+-- 2019.07.03 橙皮书 广告
+create table ads (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  uid int(10) UNSIGNED NOT NULL,
+  title varchar(255),
+  url varchar(255),
+  link varchar(255),
+  content text,
+  create_time timestamp,
+  update_time timestamp,
+  PRIMARY KEY (id)
+);
