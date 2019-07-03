@@ -36,10 +36,10 @@ class AdsController extends Controller {
         limit: 1
       });
 
-      let global = result[0];
+      let global = result.rows[0];
       const user = ctx.user;
 
-      console.log("submit ad", global, user.username, title, url, link);
+      // console.log("submit ad", global, user.username, title, url, link);
 
       if (global && global.last_buyer == user.username) {
 
