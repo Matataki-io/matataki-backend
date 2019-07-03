@@ -39,6 +39,8 @@ class AdsController extends Controller {
       let global = result[0];
       const user = ctx.user;
 
+      console.log("submit ad", global, user.username, title, url, link);
+
       if (global && global.last_buyer == user.username) {
 
         const now = moment().format('YYYY-MM-DD HH:mm:ss');
