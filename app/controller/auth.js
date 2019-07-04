@@ -23,10 +23,10 @@ class AuthController extends Controller {
   async auth() {
 
     // 1. 取出签名
-    const { username, publickey, sign, platform = 'eos'} = this.ctx.request.body;
+    const { username, publickey, sign, platform = 'eos', source = "ss"} = this.ctx.request.body;
 
     // create user if not exit
-    let user = await this.get_or_create_user(username, platform);
+    let user = await this.get_or_create_user(username, platform, source);
 
     if ('eos' === platform) {
       await this.eos_auth(sign, username, publickey, user);

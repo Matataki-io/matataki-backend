@@ -627,3 +627,15 @@ create table ads (
   update_time timestamp,
   PRIMARY KEY (id)
 );
+
+-- user表增加 source 字段
+ALTER TABLE users ADD COLUMN source varchar(255) DEFAULT "ss";
+
+create table users_login_log (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  uid int(10) UNSIGNED NOT NULL,
+  ip varchar(255),
+  source varchar(255),
+  login_time timestamp,
+  PRIMARY KEY (id)
+);

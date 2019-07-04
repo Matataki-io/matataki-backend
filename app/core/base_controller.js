@@ -126,7 +126,7 @@ class BaseController extends Controller {
     }
   }
 
-  async get_or_create_user(username, platform) {
+  async get_or_create_user(username, platform, source) {
     try {
       let user = await this.app.mysql.get('users', { username: username });
 
@@ -134,10 +134,20 @@ class BaseController extends Controller {
         let newuser = await this.app.mysql.insert('users', {
           username: username,
           platform: platform,
+          source: source,
           create_time: moment().format('YYYY-MM-DD HH:mm:ss')
         });
         user = await this.app.mysql.get('users', { username: username });
       }
+
+      // login log 
+      await this.app.mysql.insert('users_login_log', {
+        uid: user.id,
+        ip: this.ctx.ip,
+        source: source,
+        login_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      });
+
       return user;
     } catch (err) {
       return null;
