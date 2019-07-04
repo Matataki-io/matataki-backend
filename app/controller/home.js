@@ -7,7 +7,7 @@ class HomeController extends Controller {
     // await this.service.mechanism.payContext.test();
     // return;
 
-    this.ctx.body = 'hi, egg, version=1.6.7, ' + this.ctx.header['x-real-ip'];
+    this.ctx.body = 'hi, egg, version=1.6.8, ' + this.ctx.header['x-real-ip'];
   }
 }
 
