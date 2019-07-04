@@ -143,7 +143,7 @@ class BaseController extends Controller {
       // login log 
       await this.app.mysql.insert('users_login_log', {
         uid: user.id,
-        ip: this.ctx.ip,
+        ip: this.ctx.header['x-real-ip'],
         source: source,
         login_time: moment().format('YYYY-MM-DD HH:mm:ss')
       });
