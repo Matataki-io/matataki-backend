@@ -639,3 +639,23 @@ create table users_login_log (
   login_time timestamp,
   PRIMARY KEY (id)
 );
+
+
+alter table tags ADD COLUMN type varchar(255) DEFAULT "post";
+
+insert into tags values (null, '商品标签1', NOW(), "product");
+insert into tags values (null, '商品标签2', NOW(), "product");
+insert into tags values (null, '商品标签3', NOW(), "product");
+insert into tags values (null, '商品标签4', NOW(), "product");
+
+-- 手动新增商品标签示例，生产环境 id 要改。
+
+insert into post_tag values (null, 100418, 17);
+insert into post_tag values (null, 100418, 18);
+insert into post_tag values (null, 100418, 19);
+insert into post_tag values (null, 100418, 10);
+
+insert into post_tag values (null, 100548, 17);
+insert into post_tag values (null, 100548, 18);
+insert into post_tag values (null, 100548, 19);
+insert into post_tag values (null, 100548, 10);

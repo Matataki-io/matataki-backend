@@ -8,7 +8,7 @@ class TagController extends Controller {
 
   async tags() {
     try {
-      const tags = await this.app.mysql.query('select id, name from tags');
+      const tags = await this.app.mysql.query("select id, name from tags where type = 'post'");
 
       this.ctx.body = this.ctx.msg.success;
       this.ctx.body.data = tags;
