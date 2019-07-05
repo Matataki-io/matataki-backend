@@ -285,9 +285,9 @@ class PostController extends Controller {
   // 用户赞赏过的文章列表(新)
   async getSupported() {
     const ctx = this.ctx;
-    const { page = 1, pagesize = 20, user = null } = this.ctx.query;
+    const { page = 1, pagesize = 20, user = null, channel = null } = this.ctx.query;
 
-    const postData = await this.service.post.supportedPosts(page, pagesize, user);
+    const postData = await this.service.post.supportedPosts(page, pagesize, user, channel);
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;

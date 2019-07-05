@@ -353,7 +353,7 @@ class PostService extends Service {
   }
 
   // 获取用户赞赏过的文章
-  async supportedPosts(page = 1, pagesize = 20, userid = null) {
+  async supportedPosts(page = 1, pagesize = 20, userid = null, channel = null) {
     this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function(txt, key) {
@@ -369,9 +369,21 @@ class PostService extends Service {
       return 2;
     }
 
+    let sqlcode = 'SELECT s.create_time, signid FROM supports s INNER JOIN posts p ON s.signid = p.id'
+      + ' WHERE s.status = 1 AND p.status = 0 AND s.uid = :uid ';
+
+    const channelid = parseInt(channel);
+    if (channel) {
+      if (isNaN(channelid)) {
+        return 2;
+      }
+      sqlcode += 'AND p.channel_id = ' + channelid;
+    }
+
+    sqlcode += ' ORDER BY s.create_time DESC LIMIT :start, :end;';
+
     const posts = await this.app.mysql.query(
-      'SELECT s.create_time, signid FROM supports s INNER JOIN posts p ON s.signid = p.id'
-      + ' WHERE s.status = 1 AND p.status = 0 AND s.uid = :uid ORDER BY s.create_time DESC LIMIT :start, :end;',
+      sqlcode,
       { uid: userid, start: (page - 1) * pagesize, end: pagesize }
     );
 
@@ -463,7 +475,7 @@ class PostService extends Service {
     // 查询文章和作者的信息, 结果是按照时间排序
     // 如果上层也需要按照时间排序的, 则无需再排, 需要其他排序方式则需再排
     postList = await this.app.mysql.query(
-      'SELECT a.id, a.uid, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname FROM posts a '
+      'SELECT a.id, a.uid, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname, b.avatar FROM posts a '
       + ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (?) AND a.status = 0 ORDER BY id DESC;',
       [ signids ]
     );
