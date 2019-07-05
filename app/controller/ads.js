@@ -8,7 +8,7 @@ class AdsController extends Controller {
 
   async statistics() {
     try {
-      const count = await this.app.mysql.query("select count(*) as count from orange_actions where act_name='incomelog' ");
+      const count = await this.app.mysql.query("select count(*) as count from orange_actions where act_name='incomelog' and amount < 0;");
 
       const users = await this.app.mysql.query("select distinct user from orange_actions where user is not null");
 
