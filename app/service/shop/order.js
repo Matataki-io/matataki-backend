@@ -136,7 +136,7 @@ class OrderService extends Service {
 
     // 获取用户所有的订单
     const orders = await this.app.mysql.query(
-      'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, o.price, o.amount, r.title, p.category_id FROM orders o '
+      'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, o.price, o.amount, r.title, p.category_id, p.cover FROM orders o '
       + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.platform = o.platform '
       + 'INNER JOIN posts p ON p.id = o.signid '
       + 'WHERE o.uid = :userid AND o.status=1 ORDER BY o.id DESC LIMIT :start, :end;',
