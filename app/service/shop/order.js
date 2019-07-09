@@ -136,7 +136,7 @@ class OrderService extends Service {
 
     // 获取用户所有的订单
     const orders = await this.app.mysql.query(
-      'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, r.title, p.category_id FROM orders o '
+      'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, o.price, o.amount, r.title, p.category_id FROM orders o '
       + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.platform = o.platform '
       + 'INNER JOIN posts p ON p.id = o.signid '
       + 'WHERE o.uid = :userid AND o.status=1 ORDER BY o.id DESC LIMIT :start, :end;',
@@ -150,7 +150,7 @@ class OrderService extends Service {
     // 取出订单的id列表
     const orderids = [];
     _.each(orders, row => {
-      row.digital_copy = '';
+      row.digital_copy = [];
       orderids.push(row.order_id);
     });
 
@@ -165,19 +165,14 @@ class OrderService extends Service {
       for (let key_index = 0; key_index < keys.length; key_index += 1) {
         if (orders[order_index].order_id === keys[key_index].order_id) {
           if (orders[order_index].category_id === 3) {
-            orders[order_index].digital_copy = keys[key_index].digital_copy + ',';
+            orders[order_index].digital_copy.push(keys[key_index].digital_copy);
             break;
           } else {
-            orders[order_index].digital_copy += (keys[key_index].digital_copy + ',');
+            orders[order_index].digital_copy.push(keys[key_index].digital_copy);
           }
         }
       }
     }
-
-    // 去除小尾巴
-    _.each(orders, row => {
-      row.digital_copy = row.digital_copy.substring(0, row.digital_copy.length - 1);
-    });
 
     return orders;
   }
