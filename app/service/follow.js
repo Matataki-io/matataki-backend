@@ -108,7 +108,7 @@ class FollowService extends Service {
       + 'SELECT COUNT(*) AS fans FROM follows WHERE fuid = :uid AND status = 1;'
       + 'SELECT a.fuid, a.uid, a.followed, b.nickname, b.avatar FROM follows a '
       + 'LEFT JOIN users b ON a.fuid = b.id WHERE a.uid = :uid AND a.status = 1 ORDER BY a.id DESC LIMIT :start, :end;',
-      { uid, start: (page - 1) * pagesize, end: pagesize }
+      { uid, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
     const follows = infos[0];
@@ -202,7 +202,7 @@ class FollowService extends Service {
       + 'SELECT COUNT(*) AS fans FROM follows WHERE fuid = :uid AND status = 1;'
       + 'SELECT a.uid, a.fuid, a.username, b.nickname, b.avatar FROM follows a '
       + 'LEFT JOIN users b on a.uid = b.id WHERE a.fuid = :uid AND a.status = 1 ORDER BY a.id DESC LIMIT :start, :end;',
-      { uid, start: (page - 1) * pagesize, end: pagesize }
+      { uid, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
     const follows = infos[0];
