@@ -40,6 +40,9 @@ module.exports = {
   // 验证用户, 以及分发jet token时候出错
   generateTokenError: 10009,
 
+  // 用户不能关注自己
+  followYourself: 10010,
+
   // post相关
   postNotFound: 10100,
   postDeleteError: 10101,
@@ -73,6 +76,8 @@ module.exports = {
       authCodeInvalid: { code: this.authCodeInvalid, message: 'Invalid OAuth code' },
       generateTokenError: { code: this.generateTokenError, message: 'Error occurs when generating the token' },
 
+      followYourself: { code: this.followYourself, message: 'You can\'t follow yourself' },
+
       postNotFound: { code: this.postNotFound, message: 'post not found' },
       postDeleteError: { code: this.postDeleteError, message: 'delete post error' },
       postPublishParamsError: { code: this.postPublishParamsError, message: 'parameters error' },
@@ -102,6 +107,8 @@ module.exports = {
       ontAddressInvalid: { code: this.ontAddressInvalid, message: 'ONT帐号有误' },
       authCodeInvalid: { code: this.authCodeInvalid, message: '授权信息有误' },
       generateTokenError: { code: this.generateTokenError, message: '无法生成token' },
+
+      followYourself: { code: this.followYourself, message: '不能关注自己' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },
