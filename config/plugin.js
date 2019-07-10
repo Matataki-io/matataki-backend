@@ -14,4 +14,15 @@ module.exports = {
     enable: true,
     package: 'egg-view-nunjucks',
   },
+
+  // 增加限流控制
+  ratelimiter: {
+    enable: true,
+    package: 'egg-ratelimiter',
+  },
+
+  redis: {
+    enable: true,
+    package: 'egg-redis',
+  },
 };
