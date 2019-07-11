@@ -17,5 +17,15 @@ module.exports = {
   oss: {
     enable: true,
     package: 'egg-oss',
+
+  // 增加限流控制
+  ratelimiter: {
+    enable: true,
+    package: 'egg-ratelimiter',
+  },
+
+  redis: {
+    enable: true,
+    package: 'egg-redis',
   },
 };
