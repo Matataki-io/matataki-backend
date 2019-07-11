@@ -14,9 +14,11 @@ module.exports = {
     enable: true,
     package: 'egg-view-nunjucks',
   },
+
   oss: {
     enable: true,
     package: 'egg-oss',
+  },
 
   // 增加限流控制
   ratelimiter: {
