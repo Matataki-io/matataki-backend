@@ -18,6 +18,8 @@ module.exports = app => {
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
   router.post('/publish', passport.authorize, controller.post.publish);
+  // 上传图片
+  router.post('/post/uploadImage', passport.verify, controller.post.uploadImage);
   // 文章编辑
   router.post('/edit', passport.authorize, controller.post.edit);
   // 单篇文章 (by 文章hash)
@@ -74,6 +76,8 @@ module.exports = app => {
   router.get('/search', passport.verify, controller.user.search);
   // 设置用户头像 (need access token)
   router.post('/user/setAvatar', passport.authorize, controller.user.setAvatar);
+  // 上传用户头像, 并自动设置
+  router.post('/user/uploadAvatar', passport.authorize, controller.user.uploadAvatar);
   // 设置用户的个人资料，包括email，昵称和自我介绍。
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
   // 个人资产
@@ -111,8 +115,6 @@ module.exports = app => {
   // -------------------------------- 评论 --------------------------------
   router.get('/comments', passport.verify, controller.comment.comments);
 
-  
-  
   // 橙皮书合约广告人、次统计
   router.get('/ads/statistics', passport.verify, controller.ads.statistics);
   // 获取广告

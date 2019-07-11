@@ -4,6 +4,8 @@ const Controller = require('../core/base_controller');
 const moment = require('moment');
 const _ = require('lodash');
 const ONT = require('ontology-ts-sdk');
+const md5 = require('crypto-js/md5');
+
 class UserController extends Controller {
 
   async user() {
@@ -122,6 +124,30 @@ class UserController extends Controller {
       this.logger.error('UserController:: updateAvatar Error: %j', err);
       ctx.body = ctx.msg.failure;
     }
+  }
+
+  async uploadAvatar() {
+    const ctx = this.ctx;
+    const file = ctx.request.files[0];
+    const filetype = file.filename.split('.');
+
+    // 文件上OSS的路径
+    const filename = moment().format('YYYY/MM/DD/')
+      + md5(file.filepath).toString()
+      + '.' + filetype[filetype.length - 1];
+
+    // // 文件在本地的缓存路径
+    // const filelocation = 'uploads/' + path.basename(file.filename);
+
+    // filepath需要再改
+    const uploadStatus = await this.service.user.uploadAvatar(filename, file.filepath);
+
+    if (uploadStatus !== 0) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
   }
 
   // 将设置用户邮箱、昵称、个性签名合而为一

@@ -4,6 +4,11 @@ const Service = require('egg').Service;
 const EOS = require('eosjs');
 const ONT = require('ontology-ts-sdk');
 const axios = require('axios');
+const fs = require('fs');
+const moment = require('moment');
+const downloader = require('image-downloader');
+const md5 = require('crypto-js/md5');
+const filetype = require('file-type');
 
 const introductionLengthInvalid = 4;
 const emailDuplicated = 5;
@@ -226,20 +231,97 @@ class UserService extends Service {
   }
 
   async uploadAvatarFromUrl(avatarurl) {
-    let result = null;
+    const ctx = this.ctx;
+    // 由URL抓到图片
+    let imageFile;
     try {
-      result = await axios({
-        method: 'post',
-        url: this.ctx.app.config.ipfs_service.site + '/uploadUrl',
-        data: {
-          url: avatarurl,
-        },
+      imageFile = await downloader.image({
+        url: avatarurl,
+        dest: './uploads',
       });
     } catch (err) {
       this.logger.error('UserService:: uploadAvatarFromUrl error: %j', err);
       return null;
     }
-    return result.data.hash;
+
+    // 判断图片的类型, 设置后缀名
+    const fileext = filetype(imageFile.image).ext;
+
+    // 生成随机文件名
+    const filename = moment().format('YYYY/MM/DD/')
+      + md5(imageFile.filename + moment().toLocaleString())
+      + '.' + fileext;
+
+    this.logger.info('UserService:: uploadAvatarFromUrl info: downloaded: ', avatarurl);
+
+    let result = null;
+    try {
+      // 上传至OSS
+      result = await ctx.oss.put('avatar/' + filename, imageFile.image);
+      // 删除本地文件
+      await fs.unlinkSync(imageFile.filename);
+    } catch (err) {
+      this.logger.error('UserService:: uploadAvatarFromUrl error: %j', err);
+      return null;
+    }
+
+    if (!result) {
+      return null;
+    }
+
+    return filename;
+  }
+
+  async uploadAvatar(filename, filelocation) {
+    const ctx = this.ctx;
+
+    let result = null;
+    try {
+      // 上传至OSS
+      result = await ctx.oss.put('avatar/' + filename, filelocation);
+      // 删除本地文件
+      await fs.unlinkSync(filelocation);
+    } catch (err) {
+      this.logger.error('UserService:: uploadAvatar error: %j', err);
+      return 2;
+    }
+
+    if (!result) {
+      return 3;
+    }
+
+    const setStatus = await this.service.user.setAvatar(filename, ctx.user.id);
+
+    if (setStatus !== 0) {
+      return 4;
+    }
+
+    return 0;
+  }
+
+  async setAvatar(filelocation, userid) {
+    let updateSuccess = false;
+    try {
+      const now = moment().format('YYYY-MM-DD HH:mm:ss');
+
+      // 如果ID不存在, 会以此ID创建一条新的用户数据, 不过因为jwt secret不会被知道, 所以对外不会发生
+      const result = await this.app.mysql.query(
+        'INSERT INTO users (id, avatar, create_time) VALUES ( ?, ?, ?) ON DUPLICATE KEY UPDATE avatar = ?',
+        [ userid, filelocation, now, filelocation ]
+      );
+
+      updateSuccess = result.affectedRows >= 1;
+
+    } catch (err) {
+      this.logger.error('UserService:: setAvatar error: %j', err);
+      return 2;
+    }
+
+    if (updateSuccess) {
+      return 0;
+    }
+
+    return 3;
   }
 
   async setNickname(nickname, current_user) {

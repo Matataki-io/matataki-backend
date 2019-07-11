@@ -4,6 +4,7 @@ const consts = require('./consts');
 const Service = require('egg').Service;
 const _ = require('lodash');
 const moment = require('moment');
+const fs = require('fs');
 
 class PostService extends Service {
 
@@ -585,6 +586,26 @@ class PostService extends Service {
     }
 
     return true;
+  }
+
+  async uploadImage(filename, filelocation) {
+    const ctx = this.ctx;
+
+    let result = null;
+    try {
+      result = await ctx.oss.put('image/' + filename, filelocation);
+      await fs.unlinkSync(filelocation);
+    } catch (err) {
+      this.app.logger.error('PostService:: uploadImage error: %j', err);
+      return 2;
+    }
+
+    if (!result) {
+      return 3;
+    }
+
+    this.app.logger.info('PostService:: uploadImage success: ' + filename);
+    return 0;
   }
 
 }
