@@ -19,7 +19,7 @@ module.exports = app => {
   // 发布文章
   router.post('/publish', passport.authorize, controller.post.publish);
   // 上传图片
-  router.post('/post/uploadImage', passport.verify, controller.post.uploadImage);
+  router.post('/post/uploadImage', passport.authorize, controller.post.uploadImage);
   // 文章编辑
   router.post('/edit', passport.authorize, controller.post.edit);
   // 单篇文章 (by 文章hash)

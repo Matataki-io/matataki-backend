@@ -248,7 +248,8 @@ class UserService extends Service {
     const fileext = filetype(imageFile.image).ext;
 
     // 生成随机文件名
-    const filename = moment().format('YYYY/MM/DD/')
+    const filename = 'avatar/'
+      + moment().format('YYYY/MM/DD/')
       + md5(imageFile.filename + moment().toLocaleString())
       + '.' + fileext;
 
@@ -257,7 +258,7 @@ class UserService extends Service {
     let result = null;
     try {
       // 上传至OSS
-      result = await ctx.oss.put('avatar/' + filename, imageFile.image);
+      result = await ctx.oss.put(filename, imageFile.image);
       // 删除本地文件
       await fs.unlinkSync(imageFile.filename);
     } catch (err) {
@@ -278,7 +279,7 @@ class UserService extends Service {
     let result = null;
     try {
       // 上传至OSS
-      result = await ctx.oss.put('avatar/' + filename, filelocation);
+      result = await ctx.oss.put(filename, filelocation);
       // 删除本地文件
       await fs.unlinkSync(filelocation);
     } catch (err) {

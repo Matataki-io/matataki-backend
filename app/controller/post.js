@@ -577,7 +577,8 @@ class PostController extends Controller {
     const filetype = file.filename.split('.');
 
     // 文件上OSS的路径
-    const filename = moment().format('YYYY/MM/DD/')
+    const filename = 'image/'
+      + moment().format('YYYY/MM/DD/')
       + md5(file.filepath).toString()
       + '.' + filetype[filetype.length - 1];
 
@@ -593,7 +594,7 @@ class PostController extends Controller {
     }
 
     ctx.body = ctx.msg.success;
-    ctx.body.data = { hash: filename };
+    ctx.body.data = { cover: filename };
   }
 
 }

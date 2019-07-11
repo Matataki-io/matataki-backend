@@ -132,7 +132,8 @@ class UserController extends Controller {
     const filetype = file.filename.split('.');
 
     // 文件上OSS的路径
-    const filename = moment().format('YYYY/MM/DD/')
+    const filename = 'avatar/'
+      + moment().format('YYYY/MM/DD/')
       + md5(file.filepath).toString()
       + '.' + filetype[filetype.length - 1];
 

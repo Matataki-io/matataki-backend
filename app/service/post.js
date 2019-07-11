@@ -593,7 +593,7 @@ class PostService extends Service {
 
     let result = null;
     try {
-      result = await ctx.oss.put('image/' + filename, filelocation);
+      result = await ctx.oss.put(filename, filelocation);
       await fs.unlinkSync(filelocation);
     } catch (err) {
       this.app.logger.error('PostService:: uploadImage error: %j', err);
