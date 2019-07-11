@@ -18,7 +18,8 @@ class DraftsController extends Controller {
     const { page = 1 } = ctx.query;
 
     const results = await this.app.mysql.query(
-      'select * from drafts where uid = ? order by update_time desc limit ?, ?',
+      'select d.id, d.uid, d.title, d.status, d.create_time, d.update_time, d.fission_factor, d.cover, d.is_original, d.tags, u.nickname, u.avatar from drafts d '
+      + 'INNER JOIN users u ON d.uid = u.id WHERE u.id = ? order by d.update_time desc limit ?, ?',
       [ ctx.user.id, (page - 1) * pagesize, pagesize ]
     );
 
