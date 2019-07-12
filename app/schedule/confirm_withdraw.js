@@ -25,6 +25,7 @@ class ConfirmWithdraw extends Subscription {
   }
 
   async subscribe() {
+    if (this.ctx.app.config.isDebug) return;
     const results = await this.app.mysql.query(`select * from assets_change_log where type='withdraw' and status=1 limit 10`);
 
     if (results.length === 0)

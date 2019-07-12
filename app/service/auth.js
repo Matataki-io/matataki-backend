@@ -104,7 +104,6 @@ class AuthService extends Service {
       return jwttoken;
 
     } catch (err) {
-      console.log(err);
       this.logger.error('AuthService:: getUserinfo failed: %j', err);
       return null;
     }
