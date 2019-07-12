@@ -4,17 +4,20 @@ const nodemailer = require('nodemailer');
 
 class MailService extends Service {
 
-  async sendMail(orderid) {
-
-    this.app.mysql.queryFromat = function (query, values) {
+  constructor(ctx, app) {
+    super(ctx, app);
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
+      return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
         return txt;
       }.bind(this));
     };
+  }
+
+  async sendMail(orderid) {
 
     if (!orderid) {
       return null;

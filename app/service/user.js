@@ -3,7 +3,6 @@
 const Service = require('egg').Service;
 const EOS = require('eosjs');
 const ONT = require('ontology-ts-sdk');
-const axios = require('axios');
 const fs = require('fs');
 const moment = require('moment');
 const downloader = require('image-downloader');
@@ -17,14 +16,18 @@ const nicknameInvalid = 7;
 
 class UserService extends Service {
 
-  // constructor(ctx) {
-  //   super(ctx);
-  //   this.eosClient = EOS({
-  //     chainId: ctx.app.config.eos.chainId,
-  //     httpEndpoint: ctx.app.config.eos.httpEndpoint,
-  //   });
-  // }
-
+  constructor(ctx, app) {
+    super(ctx, app);
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+  }
 
   async find(id) {
     return await this.app.mysql.get('users', { id });
@@ -88,16 +91,6 @@ class UserService extends Service {
   }
 
   async getUserDetails(current_user, platform) {
-
-    this.app.mysql.queryFromat = function(query, values) {
-      if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
-        if (values.hasOwnProperty(key)) {
-          return this.escape(values[key]);
-        }
-        return txt;
-      }.bind(this));
-    };
 
     const basicInfo = await this.app.mysql.get(
       'users',

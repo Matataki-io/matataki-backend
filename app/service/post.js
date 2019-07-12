@@ -8,18 +8,18 @@ const fs = require('fs');
 
 class PostService extends Service {
 
-  // constructor(ctx, app) {
-  //   super(ctx, app);
-  //   app.mysql.queryFromat = function(query, values) {
-  //     if (!values) return query;
-  //     return query.replace(/\:(\w+)/g, function(txt, key) {
-  //       if (values.hasOwnProperty(key)) {
-  //         return this.escape(values[key]);
-  //       }
-  //       return txt;
-  //     }.bind(this));
-  //   };
-  // }
+  constructor(ctx, app) {
+    super(ctx, app);
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+  }
 
   async publish(data) {
     try {
@@ -153,15 +153,6 @@ class PostService extends Service {
 
   // 发布时间排序(默认方法)
   async timeRank(page = 1, pagesize = 20, author = null, channel = null) {
-    this.app.mysql.queryFromat = function(query, values) {
-      if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
-        if (values.hasOwnProperty(key)) {
-          return this.escape(values[key]);
-        }
-        return txt;
-      }.bind(this));
-    };
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
@@ -221,15 +212,6 @@ class PostService extends Service {
 
   // 赞赏次数排序
   async supportRank(page = 1, pagesize = 20, channel = null) {
-    this.app.mysql.queryFromat = function(query, values) {
-      if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
-        if (values.hasOwnProperty(key)) {
-          return this.escape(values[key]);
-        }
-        return txt;
-      }.bind(this));
-    };
 
     let posts = null;
     let sqlcode = '';
@@ -279,15 +261,6 @@ class PostService extends Service {
   // 分币种的赞赏金额排序
   // 请注意因为"后筛选"导致的不满20条,进而前端无法加载的问题.
   async amountRank(page = 1, pagesize = 20, symbol = 'EOS', channel = null) {
-    this.app.mysql.queryFromat = function(query, values) {
-      if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
-        if (values.hasOwnProperty(key)) {
-          return this.escape(values[key]);
-        }
-        return txt;
-      }.bind(this));
-    };
 
     let posts = null;
     let sqlcode = '';
@@ -355,15 +328,6 @@ class PostService extends Service {
 
   // 获取用户赞赏过的文章
   async supportedPosts(page = 1, pagesize = 20, userid = null, channel = null) {
-    this.app.mysql.queryFromat = function(query, values) {
-      if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
-        if (values.hasOwnProperty(key)) {
-          return this.escape(values[key]);
-        }
-        return txt;
-      }.bind(this));
-    };
 
     // 没写用户
     if (userid === null) {
@@ -411,15 +375,6 @@ class PostService extends Service {
   }
 
   async recommendPosts(channel = null, amount = 5) {
-    this.app.mysql.queryFromat = function(query, values) {
-      if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
-        if (values.hasOwnProperty(key)) {
-          return this.escape(values[key]);
-        }
-        return txt;
-      }.bind(this));
-    };
 
     let sqlcode = '';
     sqlcode = 'SELECT id FROM posts '
@@ -457,16 +412,6 @@ class PostService extends Service {
 
   // 获取文章的列表, 用于成片展示文章时, 会被其他函数调用
   async getPostList(signids) {
-
-    this.app.mysql.queryFromat = function(query, values) {
-      if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
-        if (values.hasOwnProperty(key)) {
-          return this.escape(values[key]);
-        }
-        return txt;
-      }.bind(this));
-    };
 
     let postList = [];
 

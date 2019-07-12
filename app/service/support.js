@@ -76,66 +76,6 @@ class SupportService extends Service {
     return results;
   }
 
-  // 转移到order下面，待删除
-  // async getUserProducts(page = 1, pagesize = 20, userid = null) {
-
-  //   this.app.mysql.queryFromat = function(query, values) {
-  //     if (!values) return query;
-  //     return query.replace(/\:(\w+)/g, function(txt, key) {
-  //       if (values.hasOwnProperty(key)) {
-  //         return this.escape(values[key]);
-  //       }
-  //       return txt;
-  //     }.bind(this));
-  //   };
-
-  //   if (userid === null) {
-  //     return null;
-  //   }
-
-  //   // 获取用户所有的订单
-  //   const orders = await this.app.mysql.query(
-  //     'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, r.title FROM orders o '
-  //     + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.platform = o.platform '
-  //     + 'WHERE o.uid = :userid ORDER BY o.id DESC LIMIT :start, :end;',
-  //     { userid, start: (page - 1) * pagesize, end: 1 * pagesize }
-  //   );
-
-  //   if (orders.length === 0) {
-  //     return [];
-  //   }
-
-  //   // 取出订单的id列表
-  //   const orderids = [];
-  //   _.each(orders, row => {
-  //     row.digital_copy = '';
-  //     orderids.push(row.order_id);
-  //   });
-
-  //   // 取出订单对应的keys
-  //   const keys = await this.app.mysql.query(
-  //     'SELECT digital_copy, order_id FROM product_stock_keys WHERE order_id IN (:orderids);',
-  //     { orderids }
-  //   );
-
-  //   // 给每个订单塞上key string
-  //   // todo: 链接只需要塞一次, 这里还没有做修改
-  //   _.each(keys, row => {
-  //     _.each(orders, row2 => {
-  //       if (row.order_id === row2.order_id) {
-  //         row2.digital_copy = row2.digital_copy + row.digital_copy + ',';
-  //       }
-  //     });
-  //   });
-
-  //   // 去除小尾巴
-  //   _.each(orders, row => {
-  //     row.digital_copy = row.digital_copy.substring(0, row.digital_copy.length - 1);
-  //   });
-
-  //   return orders;
-  // }
-
 }
 
 module.exports = SupportService;

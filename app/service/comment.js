@@ -5,6 +5,19 @@ const Service = require('egg').Service;
 
 class CommentService extends Service {
 
+  constructor(ctx, app) {
+    super(ctx, app);
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+  }
+
   // 创建评论
   async create(userId, username, signId, comment, type, refId) {
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -23,16 +36,6 @@ class CommentService extends Service {
 
   // 评论列表
   async commentList(signid, page = 1, pagesize = 20) {
-
-    this.app.mysql.queryFromat = function(query, values) {
-      if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
-        if (values.hasOwnProperty(key)) {
-          return this.escape(values[key]);
-        }
-        return txt;
-      }.bind(this));
-    };
 
     if (!signid) {
       return null;
