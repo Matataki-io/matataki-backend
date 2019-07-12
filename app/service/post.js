@@ -444,18 +444,51 @@ class PostService extends Service {
       { signid: signids }
     );
 
-    // 分配数值到每篇文章
-    _.each(postList, row => {
-      _.each(stats, row2 => {
-        if (row.id === row2.id) {
-          row.read = row2.num;
-          row.sale = row2.sale;
-          row.eosvalue = row2.eosvalue;
-          row.ups = row2.ups;
-          row.ontvalue = row2.ontvalue;
-        }
+    const products = await this.app.mysql.query(
+      'SELECT sign_id, symbol, price, decimals FROM product_prices WHERE sign_id IN (:signid); ',
+      { signid: signids }
+    );
+
+    // 分配数值到每篇文章 分为有包括商品和没有包阔商品
+    if (products.length) {
+      _.each(postList, row => {
+        // 基础统计数据
+        _.each(stats, row2 => {
+          if (row.id === row2.id) {
+            row.read = row2.num;
+            row.sale = row2.sale;
+            row.eosvalue = row2.eosvalue;
+            row.ups = row2.ups;
+            row.ontvalue = row2.ontvalue;
+          }
+        });
+        _.each(products, row3 => {
+          if (row.id === row3.sign_id) {
+            if (row3.symbol === 'EOS') {
+              row.eosprice = row3.price;
+              row.eosdecimals = row3.decimals;
+            } else if (row3.symbol === 'ONT') {
+              row.ontprice = row3.price;
+              row.ontdecimals = row3.decimals;
+            }
+          }
+        });
       });
-    });
+    } else {
+      _.each(postList, row => {
+        // 基础统计数据
+        _.each(stats, row2 => {
+          if (row.id === row2.id) {
+            row.read = row2.num;
+            row.sale = row2.sale;
+            row.eosvalue = row2.eosvalue;
+            row.ups = row2.ups;
+            row.ontvalue = row2.ontvalue;
+          }
+        });
+      });
+    }
+
     return postList;
   }
 
