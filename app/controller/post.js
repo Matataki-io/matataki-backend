@@ -502,7 +502,7 @@ class PostController extends Controller {
     const filetype = file.filename.split('.');
 
     // 文件上OSS的路径
-    const filename = 'image/'
+    const filename = '/image/'
       + moment().format('YYYY/MM/DD/')
       + md5(file.filepath).toString()
       + '.' + filetype[filetype.length - 1];

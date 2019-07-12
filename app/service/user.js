@@ -241,7 +241,7 @@ class UserService extends Service {
     const fileext = filetype(imageFile.image).ext;
 
     // 生成随机文件名
-    const filename = 'avatar/'
+    const filename = '/avatar/'
       + moment().format('YYYY/MM/DD/')
       + md5(imageFile.filename + moment().toLocaleString())
       + '.' + fileext;
