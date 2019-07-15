@@ -54,6 +54,12 @@ module.exports = {
   postPriceError: 10107,
   postCannotBuy: 10108,
 
+  // draft 草稿箱相关
+  // 找不到草稿
+  draftNotFound: 10201,
+  // 无权操作别人的草稿
+  notYourDraft: 10202,
+
 
   returnObj(lang) {
 
@@ -87,6 +93,9 @@ module.exports = {
       referrerNoYourself: { code: this.referrerNoYourself, message: 'referrer can not be yourself' },
       postPriceError: { code: this.postPriceError, message: 'the price of the product is wrong' },
       postCannotBuy: { code: this.postCannotBuy, message: 'the post can not buy' },
+
+      draftNotFound: { code: this.draftNotFound, message: 'Cannot find the draft' },
+      notYourDraft: { code: this.notYourDraft, message: 'It is not your draft' },
     };
 
     const zh = {
@@ -119,6 +128,9 @@ module.exports = {
       referrerNoYourself: { code: this.referrerNoYourself, message: '推荐人不能是自己' },
       postPriceError: { code: this.postPriceError, message: '商品价格错误' },
       postCannotBuy: { code: this.postCannotBuy, message: '不能购买' },
+
+      draftNotFound: { code: this.draftNotFound, message: '找不到这篇草稿' },
+      notYourDraft: { code: this.notYourDraft, message: '无权操作别人的草稿' },
     };
 
     let message;

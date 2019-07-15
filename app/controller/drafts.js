@@ -44,14 +44,12 @@ class DraftsController extends Controller {
     const draft = await this.app.mysql.get('drafts', { id: id });
 
     if (!draft) {
-      this.ctx.body = { msg: 'draft not found ' };
-      this.ctx.status = 500;
+      this.ctx.body = this.ctx.msg.draftNotFound;
       return;
     }
 
     if (draft.uid !== uid) {
-      this.ctx.body = { msg: 'can modify other user draft' };
-      this.ctx.status = 500;
+      this.ctx.body = this.ctx.msg.notYourDraft;
       return;
     }
 
@@ -71,19 +69,15 @@ class DraftsController extends Controller {
       const updateSuccess = result.affectedRows === 1;
 
       if (updateSuccess) {
-        this.ctx.logger.info('save draft success ..');
-        this.ctx.body = { msg: 'success' };
-        this.ctx.status = 201;
+        this.ctx.body = this.ctx.msg.success;
       } else {
-        this.ctx.logger.error('save draft err ', err);
-        this.ctx.body = { msg: 'save draft fail' };
-        this.ctx.status = 500;
+        this.ctx.logger.error('save draft err ');
+        this.ctx.body = this.ctx.msg.failure;
       }
 
     } catch (err) {
       this.ctx.logger.error(err.sqlMessage);
-      this.ctx.body = { msg: 'save draft ' + err.sqlMessage };
-      this.ctx.status = 500;
+      this.ctx.body = this.ctx.msg.failure;
     }
   }
 
@@ -108,19 +102,16 @@ class DraftsController extends Controller {
 
       if (updateSuccess) {
         this.ctx.logger.info('create draft success ..');
-        this.ctx.body = { msg: 'success' };
-        this.ctx.status = 201;
+        this.ctx.body = this.ctx.msg.success;
 
       } else {
-        this.ctx.logger.error('create draft err ', err);
-        this.ctx.body = { msg: 'create draft fail' };
-        this.ctx.status = 500;
+        this.ctx.logger.error('create draft err ');
+        this.ctx.body = this.ctx.msg.failure;
       }
 
     } catch (err) {
       this.ctx.logger.error(err.sqlMessage);
-      this.ctx.body = { msg: 'create draft ' + err.sqlMessage };
-      this.ctx.status = 500;
+      this.ctx.body = this.ctx.msg.failure;
     }
   }
 
@@ -130,14 +121,12 @@ class DraftsController extends Controller {
     const draft = await this.app.mysql.get('drafts', { id: id });
 
     if (!draft) {
-      this.ctx.body = { msg: 'draft not found ' };
-      this.ctx.status = 404;
+      this.ctx.body = this.ctx.msg.draftNotFound;
       return;
     }
 
     if (draft.uid !== this.ctx.user.id) {
-      this.ctx.body = { msg: 'can get other user draft' };
-      this.ctx.status = 500;
+      this.ctx.body = this.ctx.msg.notYourDraft;
       return;
     }
 
@@ -152,8 +141,8 @@ class DraftsController extends Controller {
     }
     draft.tags = tags;
 
+    this.ctx.body = this.ctx.msg.success;
     this.ctx.body = draft;
-    this.ctx.status = 200;
   }
 
   async delete() {
@@ -162,14 +151,12 @@ class DraftsController extends Controller {
     const draft = await this.app.mysql.get('drafts', { id: id });
 
     if (!draft) {
-      this.ctx.body = { msg: 'draft not found' };
-      this.ctx.status = 404;
+      this.ctx.body = this.ctx.msg.draftNotFound;
       return;
     }
 
     if (draft.uid !== this.ctx.user.id) {
-      this.ctx.body = { msg: 'can delete other user draft' };
-      this.ctx.status = 500;
+      this.ctx.body = this.ctx.msg.notYourDraft;
       return;
     }
 
@@ -178,11 +165,9 @@ class DraftsController extends Controller {
     const updateSuccess = result.affectedRows === 1;
 
     if (updateSuccess) {
-      this.ctx.body = { msg: 'delete success' };
-      this.ctx.status = 200;
+      this.ctx.body = this.ctx.msg.success;
     } else {
-      this.ctx.body = { msg: 'delete fail' };
-      this.ctx.status = 500;
+      this.ctx.body = this.ctx.msg.failure;
     }
 
   }
@@ -196,7 +181,7 @@ class DraftsController extends Controller {
     if (success) {
       ctx.body = ctx.msg.success;
     } else {
-      this.response(500, "transferOwner error")
+      ctx.body = ctx.msg.failure;
     }
   }
 
