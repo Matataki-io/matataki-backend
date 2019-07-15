@@ -43,6 +43,9 @@ module.exports = {
   // 用户不能关注自己
   followYourself: 10010,
 
+  // 不支持的登录平台
+  unsupportedPlatform: 10011,
+
   // post相关
   postNotFound: 10100,
   postDeleteError: 10101,
@@ -53,6 +56,7 @@ module.exports = {
   referrerNoYourself: 10106,
   postPriceError: 10107,
   postCannotBuy: 10108,
+  badFissionFactor: 10109,
 
   // draft 草稿箱相关
   // 找不到草稿
@@ -83,6 +87,7 @@ module.exports = {
       generateTokenError: { code: this.generateTokenError, message: 'Error occurs when generating the token' },
 
       followYourself: { code: this.followYourself, message: 'You can\'t follow yourself' },
+      unsupportedPlatform: { code: this.unsupportedPlatform, message: 'Unsupported platform' },
 
       postNotFound: { code: this.postNotFound, message: 'post not found' },
       postDeleteError: { code: this.postDeleteError, message: 'delete post error' },
@@ -93,6 +98,7 @@ module.exports = {
       referrerNoYourself: { code: this.referrerNoYourself, message: 'referrer can not be yourself' },
       postPriceError: { code: this.postPriceError, message: 'the price of the product is wrong' },
       postCannotBuy: { code: this.postCannotBuy, message: 'the post can not buy' },
+      badFissionFactor: { code: this.badFissionFactor, message: 'bad fassion factor' },
 
       draftNotFound: { code: this.draftNotFound, message: 'Cannot find the draft' },
       notYourDraft: { code: this.notYourDraft, message: 'It is not your draft' },
@@ -118,6 +124,7 @@ module.exports = {
       generateTokenError: { code: this.generateTokenError, message: '无法生成token' },
 
       followYourself: { code: this.followYourself, message: '不能关注自己' },
+      unsupportedPlatform: { code: this.unsupportedPlatform, message: '不支持的授权平台' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },
@@ -128,6 +135,7 @@ module.exports = {
       referrerNoYourself: { code: this.referrerNoYourself, message: '推荐人不能是自己' },
       postPriceError: { code: this.postPriceError, message: '商品价格错误' },
       postCannotBuy: { code: this.postCannotBuy, message: '不能购买' },
+      badFissionFactor: { code: this.badFissionFactor, message: '不好的裂变系数' },
 
       draftNotFound: { code: this.draftNotFound, message: '找不到这篇草稿' },
       notYourDraft: { code: this.notYourDraft, message: '无权操作别人的草稿' },

@@ -2,10 +2,7 @@
 
 const Controller = require('../core/base_controller');
 
-const EOS = require('eosjs');
-const ecc = require('eosjs-ecc');
 const moment = require('moment');
-const _ = require('lodash');
 const ONT = require('ontology-ts-sdk');
 
 const md5 = require('crypto-js/md5');
@@ -99,30 +96,19 @@ class PostController extends Controller {
 
     // 编辑的时候，signId需要带上
     if (!signId) {
-      ctx.body = {
-        msg: 'signId require',
-      };
-      ctx.status = 500;
-
+      ctx.body = ctx.msg.paramsError;
       return;
     }
 
     if (fissionFactor > 2000) {
-      ctx.body = {
-        msg: 'fissionFactor should >= 2000',
-      };
-      ctx.status = 500;
+      ctx.body = ctx.msg.badFissionFactor;
       return;
     }
 
     const post = await this.app.mysql.get('posts', { id: signId });
 
     if (!post) {
-      ctx.body = {
-        msg: 'post not found',
-      };
-      ctx.status = 404;
-
+      ctx.body = ctx.msg.postNotFound;
       return;
     }
 
@@ -144,13 +130,11 @@ class PostController extends Controller {
       } else if (platform === 'github') {
         this.logger.info('There is a GitHub user editing...');
       } else {
-        this.ctx.status = 403;
-        this.ctx.body = 'platform not support';
+        ctx.body = ctx.msg.unsupportedPlatform;
         return;
       }
     } catch (err) {
-      ctx.status = 403;
-      ctx.body = err.message;
+      ctx.body = ctx.msg.postPublishSignVerifyError;
       return;
     }
 
@@ -201,7 +185,8 @@ class PostController extends Controller {
         await conn.commit();
       } catch (err) {
         await conn.rollback();
-        throw err;
+        ctx.body = ctx.msg.failure;
+        return;
       }
 
       ctx.body = ctx.msg.success;
@@ -209,10 +194,7 @@ class PostController extends Controller {
 
     } catch (err) {
       ctx.logger.error(err);
-      ctx.body = {
-        msg: 'edit error ' + err,
-      };
-      ctx.status = 500;
+      ctx.body = ctx.msg.failure;
     }
 
   }
@@ -360,16 +342,13 @@ class PostController extends Controller {
 
   async show() {
     const ctx = this.ctx;
-    const hash = ctx.params.hash;
+    const id = ctx.params.id;
 
     try {
-      const post = await this.app.mysql.get('posts', { hash });
+      const post = await this.app.mysql.get('posts', { id });
 
       if (!post) {
-        ctx.body = {
-          msg: 'post not found',
-        };
-        ctx.status = 500;
+        ctx.body = ctx.msg.postNotFound;
         return;
       }
 
@@ -382,16 +361,13 @@ class PostController extends Controller {
       const updateSuccess = (result.affectedRows !== 0);
 
       if (updateSuccess) {
-        ctx.status = 200;
+        ctx.body = ctx.msg.success;
       } else {
-        ctx.status = 500;
+        ctx.body = ctx.msg.failure;
       }
     } catch (err) {
       ctx.logger.error(err.sqlMessage);
-      ctx.body = {
-        msg: 'insert error' + err.sqlMessage,
-      };
-      ctx.status = 500;
+      ctx.body = ctx.msg.failure;
     }
   }
 
@@ -419,13 +395,13 @@ class PostController extends Controller {
   }
 
   // 待删除，合并到OrderController、SupportController，以后可增加独立的comment模块
+  // 目前还没有转移
   async comment() {
     const ctx = this.ctx;
     const { comment = '', sign_id } = ctx.request.body;
 
     if (!sign_id) {
-      ctx.status = 500;
-      ctx.body = 'sign_id required';
+      ctx.body = ctx.msg.paramsError;
       return;
     }
 
@@ -443,16 +419,13 @@ class PostController extends Controller {
       const updateSuccess = result.affectedRows === 1;
 
       if (updateSuccess) {
-        ctx.status = 200;
+        ctx.body = ctx.msg.success;
       } else {
-        ctx.status = 500;
+        ctx.body = ctx.msg.failure;
       }
     } catch (err) {
       ctx.logger.error(err.sqlMessage);
-      ctx.body = {
-        msg: 'insert error' + err.sqlMessage,
-      };
-      ctx.status = 500;
+      ctx.body = ctx.msg.failure;
     }
   }
 
@@ -492,7 +465,7 @@ class PostController extends Controller {
     if (success) {
       ctx.body = ctx.msg.success;
     } else {
-      this.response(500, 'transferOwner error');
+      ctx.body = ctx.msg.failure;
     }
   }
 

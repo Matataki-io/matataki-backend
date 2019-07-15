@@ -48,7 +48,7 @@ module.exports = app => {
   // 编辑时获取我的文章
   router.get('/mypost/:id', passport.authorize, controller.post.mypost);
   // 文章阅读事件上报
-  router.post('/post/show/:hash', controller.post.show);
+  router.post('/post/show/:id', passport.verify, controller.post.show);
   // 添加评论
   router.post('/post/comment', passport.authorize, controller.post.comment);
   // 转移文章拥有权
