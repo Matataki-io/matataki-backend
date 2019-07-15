@@ -643,19 +643,36 @@ create table users_login_log (
 
 alter table tags ADD COLUMN type varchar(255) DEFAULT "post";
 
-insert into tags values (null, '商品标签1', NOW(), "product");
-insert into tags values (null, '商品标签2', NOW(), "product");
-insert into tags values (null, '商品标签3', NOW(), "product");
-insert into tags values (null, '商品标签4', NOW(), "product");
+-- 标签：1.门票、2.游戏、3.数字资产、4.开发工具
+-- 商品顺序：22222 21111 31144 43332
+
+insert into tags values (101, '门票', NOW(), "product");
+insert into tags values (102, '游戏', NOW(), "product");
+insert into tags values (103, '数字资产', NOW(), "product");
+insert into tags values (104, '开发工具', NOW(), "product");
 
 -- 手动新增商品标签示例，生产环境 id 要改。
 
-insert into post_tag values (null, 100418, 17);
-insert into post_tag values (null, 100418, 18);
-insert into post_tag values (null, 100418, 19);
-insert into post_tag values (null, 100418, 10);
+insert into post_tag values (null, 647, 102);
+insert into post_tag values (null, 646, 102);
+insert into post_tag values (null, 645, 102);
+insert into post_tag values (null, 644, 102);
+insert into post_tag values (null, 643, 102);
 
-insert into post_tag values (null, 100548, 17);
-insert into post_tag values (null, 100548, 18);
-insert into post_tag values (null, 100548, 19);
-insert into post_tag values (null, 100548, 10);
+insert into post_tag values (null, 631, 102);
+insert into post_tag values (null, 626, 101);
+insert into post_tag values (null, 624, 101);
+insert into post_tag values (null, 623, 101);
+insert into post_tag values (null, 622, 101);
+
+insert into post_tag values (null, 615, 103);
+insert into post_tag values (null, 613, 101);
+insert into post_tag values (null, 611, 101);
+insert into post_tag values (null, 601, 104);
+insert into post_tag values (null, 600, 104);
+
+insert into post_tag values (null, 599, 104);
+insert into post_tag values (null, 559, 103);
+insert into post_tag values (null, 558, 103);
+insert into post_tag values (null, 557, 103);
+insert into post_tag values (null, 527, 102);
