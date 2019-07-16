@@ -33,8 +33,7 @@ class AuthController extends Controller {
     } else if ('ont' === platform) {
       await this.ont_auth(sign, username, publickey, user);
     } else {
-      this.ctx.status = 403;
-      this.ctx.body = 'platform not support';
+      this.ctx.body = this.ctx.msg.unsupportedPlatform;
     }
 
   }
@@ -45,14 +44,12 @@ class AuthController extends Controller {
       const recover = ecc.recover(sign, username);
 
       if (recover !== publickey) {
-        this.ctx.body = { msg: 'invalid signature' };
-        this.ctx.status = 500;
+        this.ctx.body = this.ctx.msg.invalidSignature;
         return;
       }
 
     } catch (err) {
-      this.ctx.body = { msg: 'invalid signature ' + err };
-      this.ctx.status = 500;
+      this.ctx.body = this.ctx.msg.invalidSignature;
       return;
     }
 
@@ -75,14 +72,12 @@ class AuthController extends Controller {
       }
 
       if (!pass_permission_verify) {
-        this.ctx.body = { msg: 'permission verify failure ' };
-        this.ctx.status = 500;
+        this.ctx.body = this.ctx.msg.signatureVerifyFailed;
         return;
       }
 
     } catch (err) {
-      this.ctx.body = { msg: 'eos username verify failure ' };
-      this.ctx.status = 500;
+      this.ctx.body = this.ctx.msg.signatureVerifyFailed;
       return;
     }
 
@@ -124,8 +119,7 @@ class AuthController extends Controller {
       this.ctx.body = token;
 
     } else {
-      this.ctx.body = { msg: 'invalid signature' };
-      this.ctx.status = 500;
+      this.ctx.body = this.ctx.msg.invalidSignature;
     }
     // curl -d "platform=ont&publickey=0205c8fff4b1d21f4b2ec3b48cf88004e38402933d7e914b2a0eda0de15e73ba61&username=helloworld&sign=010936f0693e83d5d605816ceeeb4872d8a343d4c7350ef23e49614e0302d94d6f6a4af73e20ed9c818c0be6865e6096efc7b9f98fa42a33f775ff0ea1cb17703a" -H "Authorization: Basic bXlfYXBwOm15X3NlY3JldA==" -v -X POST http://127.0.0.1:7001/auth
   }

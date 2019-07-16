@@ -315,7 +315,7 @@ class UserController extends Controller {
 
     } catch (err) {
       ctx.logger.error(err.sqlMessage);
-      this.response(500, 'withdraw error ' + err.sqlMessage);
+      ctx.body = ctx.msg.failure;
     }
   }
 

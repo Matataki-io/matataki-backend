@@ -11,7 +11,7 @@ module.exports = app => {
 
   // -------------------------------- 用户登录 --------------------------------
   // 获取access token
-  router.post('/auth', controller.auth.auth);
+  router.post('/auth', passport.verify, controller.auth.auth);
   // router.post('/login/auth', controller.auth.auth);
   // 验证OAuth回传的Code
   router.post('/login/github', passport.verify, controller.auth.githubLogin);

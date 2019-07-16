@@ -46,6 +46,11 @@ module.exports = {
   // 不支持的登录平台
   unsupportedPlatform: 10011,
 
+  // 错误的签名信息, 钱包签名登录用
+  invalidSignature: 10012,
+  // 签名验证失败
+  signatureVerifyFailed: 10013,
+
   // post相关
   postNotFound: 10100,
   postDeleteError: 10101,
@@ -88,6 +93,8 @@ module.exports = {
 
       followYourself: { code: this.followYourself, message: 'You can\'t follow yourself' },
       unsupportedPlatform: { code: this.unsupportedPlatform, message: 'Unsupported platform' },
+      invalidSignature: { code: this.invalidSignature, message: 'Invalid signature' },
+      signatureVerifyFailed: { code: this.signatureVerifyFailed, message: 'Signature verify failed' },
 
       postNotFound: { code: this.postNotFound, message: 'post not found' },
       postDeleteError: { code: this.postDeleteError, message: 'delete post error' },
@@ -125,6 +132,8 @@ module.exports = {
 
       followYourself: { code: this.followYourself, message: '不能关注自己' },
       unsupportedPlatform: { code: this.unsupportedPlatform, message: '不支持的授权平台' },
+      invalidSignature: { code: this.invalidSignature, message: '错误的签名信息' },
+      signatureVerifyFailed: { code: this.signatureVerifyFailed, message: '签名信息验证失败' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },
