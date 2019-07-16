@@ -22,7 +22,7 @@ class AdsController extends Controller {
       };
     } catch (err) {
       this.ctx.logger.error('get statistics error', err);
-      this.response(500, "get statistics error");
+      this.ctx.body = this.ctx.msg.getStatisticsError;
     }
   }
 
@@ -58,7 +58,8 @@ class AdsController extends Controller {
           ctx.body = ctx.msg.success;
         } else {
           ctx.logger.error("submit ad error, wrong user");
-          this.response(500, "submit ad error, wrong user");
+          this.ctx.body = this.ctx.msg.submitAdErrorOfWrongUser;
+          return;
         }
 
       } else {
@@ -93,16 +94,18 @@ class AdsController extends Controller {
             ctx.body = ctx.msg.success;
           } else {
             ctx.logger.error("submit ad error, wrong user");
-            this.response(500, "submit ad error, wrong user");
+            this.ctx.body = this.ctx.msg.submitAdErrorOfWrongUser;
+            return;
           }
         } else {
           ctx.logger.error("ad notfound in contract");
-          this.response(500, "ad notfound in contract");
+          this.ctx.body = this.ctx.msg.adNotFound;
+          return;
         }
       }
     } catch (err) {
       ctx.logger.error("submit ad error", err);
-      this.response(500, "submit ad error");
+      this.ctx.body = this.ctx.msg.submitAdError;
     }
   }
 
@@ -129,11 +132,9 @@ class AdsController extends Controller {
       this.ctx.body.data = ads[0] || null;
     } catch (err) {
       this.ctx.logger.error("get ad error", err);
-      this.response(500, "get ad error");
+      this.ctx.body = this.ctx.msg.getAdError;
     }
   }
-
-
 
 }
 

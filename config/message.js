@@ -69,6 +69,17 @@ module.exports = {
   // 无权操作别人的草稿
   notYourDraft: 10202,
 
+  // 广告牌相关
+  // 获取统计数据时候出错
+  getStatisticsError: 10501,
+  // 提交广告牌时候出错, 不是正确的用户
+  submitAdErrorOfWrongUser: 10502,
+  // 提交广告牌时候出错
+  submitAdError: 10503,
+  // 合约中没有这个广告位
+  adNotFound: 10504,
+  // 获取广告时候出错
+  getAdError: 10505,
 
   returnObj(lang) {
 
@@ -109,6 +120,12 @@ module.exports = {
 
       draftNotFound: { code: this.draftNotFound, message: 'Cannot find the draft' },
       notYourDraft: { code: this.notYourDraft, message: 'It is not your draft' },
+
+      getStatisticsError: { code: this.getStatisticsError, message: 'Get statistics error' },
+      submitAdErrorOfWrongUser: { code: this.submitAdErrorOfWrongUser, message: 'Submit ad error, wrong user' },
+      submitAdError: { code: this.submitAdError, message: 'Submit ad error' },
+      adNotFound: { code: this.adNotFound, message: 'Ad notfound in contract' },
+      getAdError: { code: this.getAdError, message: 'Get ad error' },
     };
 
     const zh = {
@@ -148,6 +165,12 @@ module.exports = {
 
       draftNotFound: { code: this.draftNotFound, message: '找不到这篇草稿' },
       notYourDraft: { code: this.notYourDraft, message: '无权操作别人的草稿' },
+
+      getStatisticsError: { code: this.getStatisticsError, message: '获取统计信息出错' },
+      submitAdErrorOfWrongUser: { code: this.submitAdErrorOfWrongUser, message: '上传广告牌错误, 不是被认可的用户' },
+      submitAdError: { code: this.submitAdError, message: '上传广告牌错误' },
+      adNotFound: { code: this.adNotFound, message: '找不到这条广告' },
+      getAdError: { code: this.getAdError, message: '获取广告错误' },
     };
 
     let message;
