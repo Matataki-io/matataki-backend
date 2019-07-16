@@ -1507,6 +1507,7 @@ curl -X GET  http://localhost:7001/ads/statistics
 * url: 广告图片url
 * link: 广告点击跳转链接
 * content: 广告文案
+* hash： (文章link的hash) 上传全局广告的话，hash不用传
 
 ```
 {
@@ -1525,6 +1526,9 @@ curl -d "title=牛逼" -H "x-access-token: xxxx" -X POST  http://localhost:7001/
 * GET /ads/ad
 * 响应状态码：200
 
+查询参数: hash (文章link的hash) ,获取全局广告的话，hash不用传
+
+
 ```
 {
   "code": 0,
@@ -1540,5 +1544,5 @@ curl -d "title=牛逼" -H "x-access-token: xxxx" -X POST  http://localhost:7001/
 }
 ```
 
-curl -X GET  http://localhost:7001/ads/ad
+curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb703954f7b4612abc5daf48d8d56b277
 

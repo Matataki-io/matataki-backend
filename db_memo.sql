@@ -676,3 +676,11 @@ insert into post_tag values (null, 559, 103);
 insert into post_tag values (null, 558, 103);
 insert into post_tag values (null, 557, 103);
 insert into post_tag values (null, 527, 102);
+
+
+
+-- 7.16 --
+
+-- 广告位
+ALTER TABLE ads ADD COLUMN hash varchar(255) DEFAULT "";
+CREATE UNIQUE INDEX idx_ads_hash ON ads(hash);
