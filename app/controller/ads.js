@@ -83,6 +83,8 @@ class AdsController extends Controller {
 
         if (response.data && response.data.rows && response.data.rows.length > 0) {
           let row = response.data.rows[0];
+          ctx.logger.info("debug submit ads", user, row);
+          
           if (row.user === user) {
             const now = moment().format('YYYY-MM-DD HH:mm:ss');
             await this.app.mysql.query(
