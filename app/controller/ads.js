@@ -85,7 +85,7 @@ class AdsController extends Controller {
           let row = response.data.rows[0];
           ctx.logger.info("debug submit ads", user, row);
 
-          if (row.user === user.username) {
+          if (row.owner === user.username) {
             const now = moment().format('YYYY-MM-DD HH:mm:ss');
             await this.app.mysql.query(
               'INSERT INTO ads(uid, title, url, link, content, create_time, update_time, hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE uid = ?, title=?, url=?, link=?, content=?, update_time = ?, hash=?;',
