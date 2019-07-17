@@ -49,6 +49,7 @@ class ConfirmWithdraw extends Subscription {
   }
 
   async refund(withdraw) {
+    this.logger.info("Refund withdraw", withdraw);
     console.log("Refund withdraw", withdraw);
     const conn = await this.app.mysql.beginTransaction();
     try {
@@ -60,6 +61,7 @@ class ConfirmWithdraw extends Subscription {
       await conn.update("assets_change_log", { status: 3 }, { where: { id: withdraw.id } });
 
       await conn.commit();
+      this.logger.info("refund success");
       console.log("refund success");
     } catch (err) {
       await conn.rollback();
@@ -75,9 +77,11 @@ class ConfirmWithdraw extends Subscription {
       let last_irreversible_block = trx.last_irreversible_block;
 
       if (last_irreversible_block >= block_num && trx.trx.receipt.status == "executed") {
+        this.logger.info("交易已确认", last_irreversible_block - block_num, trx.trx.receipt.status)
         console.log("交易已确认", last_irreversible_block - block_num, trx.trx.receipt.status)
         await this.do_confirm(withdraw);
       } else {
+        this.logger.info("交易未确认", last_irreversible_block - block_num, trx.trx.receipt.status)
         console.log("交易未确认", last_irreversible_block - block_num, trx.trx.receipt.status)
       }
     } catch (err) {
@@ -95,13 +99,14 @@ class ConfirmWithdraw extends Subscription {
       if (data.Desc === 'SUCCESS' && data.Error === 0) {
         let result = data.Result;
         if (result.Payer === this.ctx.app.config.ont.withdraw_account && result.Hash === withdraw.trx) {
+          this.logger.info("交易已确认", withdraw);
           console.log("交易已确认", withdraw);
           await this.do_confirm(withdraw);
           return;
         }
       }
     }
-
+    this.logger.info("交易未确认", withdraw)
     console.log("交易未确认", withdraw)
   }
 
@@ -115,6 +120,7 @@ class ConfirmWithdraw extends Subscription {
       //   [withdraw.uid, 0, withdraw.contract, withdraw.symbol, (0 - withdraw.amount), withdraw.platform, "withdraw", withdraw.create_time]
       // );
 
+      this.logger.info("do_confirm transfer success");
       console.log("do_confirm transfer success");
     } catch (err) {
       this.ctx.logger.error(err);

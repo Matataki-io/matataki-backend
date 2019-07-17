@@ -37,6 +37,7 @@ class ProcessWithdraw extends Subscription {
 
       let isLesshan10Min = moment(withdraw.create_time).add(10, 'm').isAfter(moment());
       if (isLesshan10Min) {
+        this.logger.info(withdraw);
         console.log(withdraw)
         // return;
         if ("eos" === withdraw.platform) {
@@ -51,6 +52,7 @@ class ProcessWithdraw extends Subscription {
   }
 
   async refund(withdraw) {
+    this.logger.info("Refund withdraw", withdraw);
     console.log("Refund withdraw", withdraw);
     const conn = await this.app.mysql.beginTransaction();
     try {
@@ -62,6 +64,7 @@ class ProcessWithdraw extends Subscription {
       await conn.update("assets_change_log", { status: 3 }, { where: { id: withdraw.id } });
 
       await conn.commit();
+      this.logger.info("refund success");
       console.log("refund success");
     } catch (err) {
       await conn.rollback();
@@ -70,6 +73,7 @@ class ProcessWithdraw extends Subscription {
   }
 
   async eos_transfer(w) {
+    this.logger.info("ProcessWithdraw EOS", w);
     console.log("ProcessWithdraw EOS", w);
     const conn = await this.app.mysql.beginTransaction();
 
@@ -81,6 +85,7 @@ class ProcessWithdraw extends Subscription {
         withdraw = result[0];
       }
 
+      this.logger.info("withdraw", withdraw, result);
       console.log("withdraw", withdraw, result);
 
       if (!withdraw) {
@@ -102,6 +107,7 @@ class ProcessWithdraw extends Subscription {
           "memo": withdraw.memo || ""
         }
       }]
+      this.logger.info("actions:", actions);
       console.log("actions:", actions);
 
       let res = await this.eosClient.transaction({
@@ -115,6 +121,7 @@ class ProcessWithdraw extends Subscription {
         trx: trx
       }, { where: { id: withdraw.id } });
 
+      this.logger.info("eos transfer success");
       console.log("eos transfer success");
 
       await conn.commit();
@@ -136,6 +143,7 @@ class ProcessWithdraw extends Subscription {
         withdraw = result[0];
       }
 
+      this.logger.info("withdraw", withdraw, result);
       console.log("withdraw", withdraw, result);
 
       if (!withdraw) {
@@ -167,6 +175,7 @@ class ProcessWithdraw extends Subscription {
       const response = await socketClient.sendRawTransaction(tx.serialize(), false, true);
       if (response && response.Desc == 'SUCCESS' && response.Result) {
         let trx = response.Result.TxHash;
+        this.logger.info("ont transfer success", trx);
         console.log("ont transfer success", trx);
         let result = await conn.update("assets_change_log", {
           status: 1,

@@ -49,11 +49,15 @@ class ActionReader extends Subscription {
       }
 
     } catch (err) {
+      this.logger.error(err);
       console.log(err)
     }
 
     this.app.cache = start;
 
+    this.logger.info('sync actions.. start from id', start);
+    // 这样打log有没有问题啊..
+    this.logger.info("to id", (this.app.cache + this.config.step));
     console.log('sync actions.. start from id', start, "to id", (this.app.cache + this.config.step));
 
     var sqls = [];
@@ -141,6 +145,7 @@ class ActionReader extends Subscription {
               let result = await this.app.mysql.query('INSERT INTO supports (uid, signid, contract, symbol, amount, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ? ,?, ?)',
                 [user.id, sign_id, "eosio.token", "EOS", amount, 0, "eos", 1, block_time]
               );
+              this.logger.info(result);
               console.log(result)
             }
           }
@@ -158,6 +163,7 @@ class ActionReader extends Subscription {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "support expenses", block_time]
               );
+              this.logger.info(result);
               console.log(result)
             }
           }
@@ -178,6 +184,7 @@ class ActionReader extends Subscription {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "sign income", block_time]
               );
+              this.logger.info(result);
               console.log(result)
               if (user.platform === "ont") {
                 await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
@@ -205,6 +212,7 @@ class ActionReader extends Subscription {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 [user.id, sign_id, "eosio.token", "EOS", amount, "eos", "share income", block_time]
               );
+              this.logger.info(result);
               console.log(result)
               if (user.platform === "ont") {
                 await this.app.mysql.query('INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
@@ -223,6 +231,7 @@ class ActionReader extends Subscription {
               let result = await this.app.mysql.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                 [user.id, 0, "eosio.token", "EOS", (0 - amount), "eos", "withdraw", block_time]
               );
+              this.logger.info(result);
               console.log(result)
             }
           }
@@ -233,6 +242,7 @@ class ActionReader extends Subscription {
       }
 
     } catch (err) {
+      this.logger.error(err);
       console.log(err);
     }
 

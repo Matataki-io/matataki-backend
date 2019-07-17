@@ -46,16 +46,20 @@ class ActionReader extends Subscription {
         if (id > start) {
           start = id;
         } else {
+          this.logger.info("in the end...will fetch last.");
           console.log("in the end...will fetch last.")
         }
       }
 
     } catch (err) {
+      this.logger.error(err);
       console.log(err)
     }
 
     this.app.cache = start;
 
+    this.logger.info('sync actions.. start from id', start);
+    this.logger.info("to id", (this.app.cache + this.config.step));
     console.log('sync actions.. start from id', start, "to id", (this.app.cache + this.config.step));
 
     try {
@@ -117,6 +121,7 @@ class ActionReader extends Subscription {
               await conn.query(sql);
 
               await conn.commit();
+              this.logger.info("record success");
               console.log("record success");
             } catch (err) {
               await conn.rollback();
@@ -139,6 +144,7 @@ class ActionReader extends Subscription {
               await conn.query(sql);
 
               await conn.commit();
+              this.logger.info("record success");
               console.log("record success");
             } catch (err) {
               await conn.rollback();
@@ -156,6 +162,7 @@ class ActionReader extends Subscription {
         }
       }
     } catch (err) {
+      this.logger.error(err);
       console.log(err);
     }
   }

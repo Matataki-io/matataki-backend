@@ -26,6 +26,7 @@ class SyncPosts extends Subscription {
     //debug不执行
     if (this.ctx.app.config.isDebug) return;
 
+    this.logger.info("sync posts..");
     console.log("sync posts..");
 
     const results = await this.app.mysql.select('posts', {

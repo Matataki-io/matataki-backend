@@ -31,6 +31,7 @@ class VerifyOrder extends Subscription {
     const expire = moment().subtract(12, 'hours').format('YYYY-MM-DD HH:mm:ss');
 
     const results = await this.app.mysql.query(`select * from orders where status=0 and create_time>'${expire}' limit 10`);
+    this.logger.info(results);
     console.log(results);
     if (results.length === 0) { return; }
 
@@ -85,10 +86,15 @@ class VerifyOrder extends Subscription {
           verifyPass = true;
         }
 
+        this.logger.info('user,', user);
         console.log('user,', user);
+        this.logger.info('reffer,', reffer);
         console.log('reffer,', reffer);
+        this.logger.info('contract,', row);
         console.log('contract,', row);
+        this.logger.info('mysql', order);
         console.log('mysql', order);
+        this.logger.info('verifyPass', verifyPass);
         console.log('verifyPass', verifyPass);
 
         if (verifyPass) {
@@ -96,10 +102,12 @@ class VerifyOrder extends Subscription {
         }
 
       } else {
+        this.logger.info('table row not found');
         console.log('table row not found');
       }
 
     } catch (err) {
+      this.logger.error('get table row err', err);
       console.log('get table row err', err);
     }
 
@@ -162,8 +170,11 @@ class VerifyOrder extends Subscription {
         && row.sponsor === reffer
       );
 
+      this.logger.info('contract,', row);
       console.log('contract,', row);
+      this.logger.info('mysql', order);
       console.log('mysql', order);
+      this.logger.info('verifyPass', verifyPass);
       console.log('verifyPass', verifyPass);
 
       if (verifyPass) {

@@ -87,10 +87,15 @@ class VerifySupport extends Subscription {
           verifyPass = true;
         }
 
+        this.logger.info('user,', user);
         console.log('user,', user);
+        this.logger.info('reffer,', reffer);
         console.log('reffer,', reffer);
+        this.logger.info('contract,', row);
         console.log('contract,', row);
+        this.logger.info('mysql', support);
         console.log('mysql', support);
+        this.logger.info('verifyPass', verifyPass);
         console.log('verifyPass', verifyPass);
 
         if (verifyPass) {
@@ -98,10 +103,12 @@ class VerifySupport extends Subscription {
         }
 
       } else {
+        this.logger.info('table row not found');
         console.log('table row not found');
       }
 
     } catch (err) {
+      this.logger.error('get table row err');
       console.log('get table row err');
     }
 
@@ -111,6 +118,7 @@ class VerifySupport extends Subscription {
     // https://dev-docs.ont.io/#/docs-cn/ontology-cli/05-rpc-specification?id=getstorage
     // 根据本体文档说明 取合约中的值，需要传入两个参数： hex_contract_address：以十六进制字符串表示智能合约哈希地址 key：以十六进制字符串表示的存储键值
     // 所以，key 就用 （signId + uid or user address ）的 hex , 对应的value， 和eos版本类似，存储 转账代币合约、数量、符号，推荐人，供这里做二次验证和数据库中是否相符合。
+    this.logger.info('ont_verify ');
     console.log('ont_verify ');
 
     // 做本体合约数据验证
@@ -149,6 +157,7 @@ class VerifySupport extends Subscription {
           obj = entries.next();
         }
       } catch (err) {
+        this.logger.error(err);
         console.log(err);
       }
 
@@ -167,8 +176,11 @@ class VerifySupport extends Subscription {
         && row.sponsor === reffer
       );
 
+      this.logger.info('contract,', row);
       console.log('contract,', row);
+      this.logger.info('mysql', support);
       console.log('mysql', support);
+      this.logger.info('verifyPass', verifyPass);
       console.log('verifyPass', verifyPass);
 
       if (verifyPass) {

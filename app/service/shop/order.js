@@ -90,6 +90,7 @@ class OrderService extends Service {
 
     // 没有库存，失败
     if (resultStockQuantity.affectedRows === 0) {
+      this.logger.info('商品库存不足，sign_id:' + payment.signid);
       console.log('商品库存不足，sign_id:' + payment.signid);
       return false;
     }
@@ -103,6 +104,7 @@ class OrderService extends Service {
 
     // 库存不够，失败
     if (resultKeys.affectedRows !== payment.num) {
+      this.logger.info('商品库存不足，sign_id:' + payment.signid);
       console.log('商品库存不足，sign_id:' + payment.signid);
       return false;
     }
