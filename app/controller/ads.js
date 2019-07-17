@@ -88,7 +88,7 @@ class AdsController extends Controller {
           if (row.owner === user.username) {
             const now = moment().format('YYYY-MM-DD HH:mm:ss');
             await this.app.mysql.query(
-              'INSERT INTO ads(uid, title, url, link, content, create_time, update_time, hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE uid = ?, title=?, url=?, link=?, content=?, update_time = ?, hash=?;',
+              'INSERT INTO ads(uid, title, url, link, content, create_time, update_time, hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE uid = ?, title=?, url=?, link=?, content=?, update_time = ?, hash=?;',
               [user.id, title, url, link, content, now, now, hash,
                 user.id, title, url, link, content, now, hash]
             );
