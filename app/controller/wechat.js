@@ -12,7 +12,8 @@ class WechatController extends Controller {
 
     const wechat_ticket = await this.app.redis.get('wechat_ticket');
 
-    const timestamp = Date.now().toString();
+    let timestamp = Date.now().toString();
+    timestamp = timestamp.substring(0, 10);
 
     const nonce = md5(timestamp + 'random1').toString();
 
