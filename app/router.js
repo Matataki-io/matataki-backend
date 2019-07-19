@@ -137,5 +137,9 @@ module.exports = app => {
   router.get('/ads/ad', passport.verify, controller.ads.ad);
   // 最高出价者 上传广告资料
   router.post('/ads/submit', passport.authorize, controller.ads.submit);
+
+  // -------------------------------- 对外API --------------------------------
+  // 获取微信API签名
+  router.get('/wx/sign', passport.verify, controller.wechat.calculateSign);
 };
 
