@@ -132,6 +132,7 @@ class AdsController extends Controller {
         const last = await this.app.mysql.query(
           `select a.title, a.url, a.link, a.content,a.hash, b.username,a.create_time, b.id as uid  from ads a left join users b on a.uid = b.id order by a.create_time desc limit 2`
         );
+        ad = last[0] || null;
       } else {
         const ads = await this.app.mysql.query(
           `select a.title, a.url, a.link, a.content,a.hash, b.username, b.id as uid  from ads a left join users b on a.uid = b.id where a.hash = '${hash}'`
