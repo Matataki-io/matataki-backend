@@ -126,16 +126,19 @@ class AdsController extends Controller {
     const { hash = '' } = this.ctx.query;
 
     try {
-      const ads = await this.app.mysql.query(
-        `select a.title, a.url, a.link, a.content,a.hash, b.username, b.id as uid  from ads a left join users b on a.uid = b.id where a.hash = '${hash}'`
-      );
-      let ad = ads[0] || null;
-      if (!ad) {
+      let ad;
+
+      if (hash === "last") {
         const last = await this.app.mysql.query(
           `select a.title, a.url, a.link, a.content,a.hash, b.username,a.create_time, b.id as uid  from ads a left join users b on a.uid = b.id order by a.create_time desc limit 2`
         );
-        ad = last[0]||null;
+      } else {
+        const ads = await this.app.mysql.query(
+          `select a.title, a.url, a.link, a.content,a.hash, b.username, b.id as uid  from ads a left join users b on a.uid = b.id where a.hash = '${hash}'`
+        );
+        ad = ads[0] || null;
       }
+
       this.ctx.body = this.ctx.msg.success;
       this.ctx.body.data = ad;
     } catch (err) {
