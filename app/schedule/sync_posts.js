@@ -22,6 +22,8 @@ class SyncPosts extends Subscription {
   }
 
   async subscribe() {
+    // 已废弃
+    return;
 
     //debug不执行
     if (this.ctx.app.config.isDebug) return;
