@@ -342,10 +342,11 @@ class PostController extends Controller {
 
   async show() {
     const ctx = this.ctx;
-    const id = ctx.params.id;
+    // const id = ctx.params.id;
+    const hash = ctx.params.hash;
 
     try {
-      const post = await this.app.mysql.get('posts', { id });
+      const post = await this.app.mysql.get('posts', { hash });
 
       if (!post) {
         ctx.body = ctx.msg.postNotFound;
