@@ -152,7 +152,7 @@ class PostService extends Service {
   }
 
   // 发布时间排序(默认方法)
-  async timeRank(page = 1, pagesize = 20, author = null, channel = null) {
+  async timeRank(page = 1, pagesize = 20, author = null, channel = null, extra = null) {
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
@@ -170,6 +170,7 @@ class PostService extends Service {
       sqlcode += 'AND p.channel_id = ' + channelid + ' ';
     }
     sqlcode += 'ORDER BY p.id DESC LIMIT :start, :end;';
+
     posts = await this.app.mysql.query(
       sqlcode,
       { author, start: (page - 1) * pagesize, end: 1 * pagesize }
@@ -184,12 +185,22 @@ class PostService extends Service {
       postids.push(row.id);
     });
 
-    const postList = await this.getPostList(postids);
+    const extraItem = {};
+    if (extra) {
+      const extraSplit = extra.split(',');
+      _.each(extraSplit, row => {
+        if (row === 'short_content') {
+          extraItem.short_content = true;
+        }
+      });
+    }
+
+    const postList = await this.getPostList(postids, extraItem);
 
     return postList;
   }
 
-  async getPostByTag(page = 1, pagesize = 20, tagid) {
+  async getPostByTag(page = 1, pagesize = 20, extra = null, tagid) {
     const posts = await this.app.mysql.query(
       'select a.sid, a.tid, b.title from post_tag a left join posts b on a.sid=b.id where a.tid = ? limit ?,?',
       [ tagid, (page - 1) * pagesize, pagesize ]
@@ -205,13 +216,23 @@ class PostService extends Service {
       return [];
     }
 
-    const postList = await this.getPostList(postids);
+    const extraItem = {};
+    if (extra) {
+      const extraSplit = extra.split(',');
+      _.each(extraSplit, row => {
+        if (row === 'short_content') {
+          extraItem.short_content = true;
+        }
+      });
+    }
+
+    const postList = await this.getPostList(postids, extraItem);
 
     return postList;
   }
 
   // 赞赏次数排序
-  async supportRank(page = 1, pagesize = 20, channel = null) {
+  async supportRank(page = 1, pagesize = 20, channel = null, extra = null) {
 
     let posts = null;
     let sqlcode = '';
@@ -244,7 +265,17 @@ class PostService extends Service {
       return [];
     }
 
-    let postList = await this.getPostList(postids);
+    const extraItem = {};
+    if (extra) {
+      const extraSplit = extra.split(',');
+      _.each(extraSplit, row => {
+        if (row === 'short_content') {
+          extraItem.short_content = true;
+        }
+      });
+    }
+
+    let postList = await this.getPostList(postids, extraItem);
 
     // 由赞赏次数进行排序
     // 还没加上时间降序
@@ -411,7 +442,7 @@ class PostService extends Service {
   }
 
   // 获取文章的列表, 用于成片展示文章时, 会被其他函数调用
-  async getPostList(signids) {
+  async getPostList(signids, extraItem) {
 
     let postList = [];
 
@@ -420,9 +451,14 @@ class PostService extends Service {
     }
     // 查询文章和作者的信息, 结果是按照时间排序
     // 如果上层也需要按照时间排序的, 则无需再排, 需要其他排序方式则需再排
+    let sqlcode = 'SELECT a.id, a.uid, a.author, a.title,';
+    if (extraItem.short_content) {
+      sqlcode += ' a.short_content,';
+    }
+    sqlcode += ' a.hash, a.create_time, a.cover, b.nickname, b.avatar FROM posts a';
+    sqlcode += ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (?) AND a.status = 0 ORDER BY id DESC;';
     postList = await this.app.mysql.query(
-      'SELECT a.id, a.uid, a.author, a.title, a.short_content, a.hash, a.create_time, a.cover, b.nickname, b.avatar FROM posts a '
-      + ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (?) AND a.status = 0 ORDER BY id DESC;',
+      sqlcode,
       [ signids ]
     );
 
@@ -434,34 +470,47 @@ class PostService extends Service {
       row.eosvalue = 0;
       row.ups = 0;
       row.ontvalue = 0;
+      row.tags = [];
       hashs.push(row.hash);
     });
 
     // 有关阅读次数,赞赏金额,赞赏次数的统计
-    const stats = await this.app.mysql.query(
+    // 还有产品信息， 标签
+    const statsQuery = await this.app.mysql.query(
       'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue'
-      + ' FROM post_read_count WHERE post_id IN (:signid);',
+      + ' FROM post_read_count WHERE post_id IN (:signid);'
+      + 'SELECT sign_id, symbol, price, decimals FROM product_prices WHERE sign_id IN (:signid);'
+      + 'SELECT sid, tid FROM post_tag WHERE sid IN (:signid);',
       { signid: signids }
     );
 
-    const products = await this.app.mysql.query(
-      'SELECT sign_id, symbol, price, decimals FROM product_prices WHERE sign_id IN (:signid); ',
-      { signid: signids }
-    );
+    const stats = statsQuery[0];
+    const products = statsQuery[1];
+    const tags = statsQuery[2];
 
-    // 分配数值到每篇文章 分为有包括商品和没有包阔商品
+    // 分配数值到每篇文章
+    _.each(postList, row => {
+      // 基础统计数据
+      _.each(stats, row2 => {
+        if (row.id === row2.id) {
+          row.read = row2.num;
+          row.sale = row2.sale;
+          row.eosvalue = row2.eosvalue;
+          row.ups = row2.ups;
+          row.ontvalue = row2.ontvalue;
+        }
+      });
+      // 如果有标签的话，其标签数据
+      _.each(tags, row4 => {
+        if (row.id === row4.sid) {
+          row.tags.push(row4.tid);
+        }
+      });
+    });
+
+    // 如果是包括产品的话，其产品数据
     if (products.length) {
       _.each(postList, row => {
-        // 基础统计数据
-        _.each(stats, row2 => {
-          if (row.id === row2.id) {
-            row.read = row2.num;
-            row.sale = row2.sale;
-            row.eosvalue = row2.eosvalue;
-            row.ups = row2.ups;
-            row.ontvalue = row2.ontvalue;
-          }
-        });
         _.each(products, row3 => {
           if (row.id === row3.sign_id) {
             if (row3.symbol === 'EOS') {
@@ -471,19 +520,6 @@ class PostService extends Service {
               row.ontprice = row3.price;
               row.ontdecimals = row3.decimals;
             }
-          }
-        });
-      });
-    } else {
-      _.each(postList, row => {
-        // 基础统计数据
-        _.each(stats, row2 => {
-          if (row.id === row2.id) {
-            row.read = row2.num;
-            row.sale = row2.sale;
-            row.eosvalue = row2.eosvalue;
-            row.ups = row2.ups;
-            row.ontvalue = row2.ontvalue;
           }
         });
       });

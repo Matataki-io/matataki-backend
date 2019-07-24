@@ -203,9 +203,9 @@ class PostController extends Controller {
   async getTimeRanking() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20, channel = null, author } = this.ctx.query;
+    const { page = 1, pagesize = 20, channel = null, author = null, extra = null } = this.ctx.query;
 
-    const postData = await this.service.post.timeRank(page, pagesize, author, channel);
+    const postData = await this.service.post.timeRank(page, pagesize, author, channel, extra);
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -225,9 +225,9 @@ class PostController extends Controller {
   async getSupportsRanking() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20, channel = null } = this.ctx.query;
+    const { page = 1, pagesize = 20, channel = null, extra = null } = this.ctx.query;
 
-    const postData = await this.service.post.supportRank(page, pagesize, channel);
+    const postData = await this.service.post.supportRank(page, pagesize, channel, extra);
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -301,9 +301,9 @@ class PostController extends Controller {
   async getPostByTag() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20, tagid } = this.ctx.query;
+    const { page = 1, pagesize = 20, extra = null, tagid } = this.ctx.query;
 
-    const postData = await this.service.post.getPostByTag(page, pagesize, tagid);
+    const postData = await this.service.post.getPostByTag(page, pagesize, extra, tagid);
 
     this.ctx.body = ctx.msg.success;
     this.ctx.body.data = postData;
