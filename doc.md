@@ -14,14 +14,17 @@
 
 * 参数 
 * page: 页数，默认第一页
+* pagesize: 每页的数量， 默认20
 * author: 作者id，默认返回全部author的文章，传入author参数，则只返回指定author的文章。
 * channel: 频道id, 1为普通文章, 2为商品文章, 不带则不筛选, 返回所有文章
+* extra: 需要额外返回的项目， 以逗号分割， 如short_content,others,aaaabc
 
 * curl -X GET https://api.smartsignature.io/posts/timeRanking
 * curl -X GET https://api.smartsignature.io/posts/timeRanking?page=2
 * curl -X GET https://api.smartsignature.io/posts/timeRanking?author=998
-* curl -X GET https://api.smartsignature.io/posts/timeRanking?channel=1
+* curl -X GET https://api.smartsignature.io/posts/timeRanking?channel=1&extra=short_content,others
 
+* 返回内容
 ```$xslt
 {
     "code": 0,
@@ -52,7 +55,9 @@
 
 * 参数 
 * page: 页数，默认第一页
+* pagesize: 每页的数量， 默认20
 * channel: 频道id, 1为普通文章, 2为商品文章, 不带则不筛选, 返回所有文章
+* extra: 需要额外返回的项目， 以逗号分割， 如short_content,others,aaaabc
 
 * curl -X GET https://api.smartsignature.io/posts/supportsRanking
 * curl -X GET https://api.smartsignature.io/posts/supportsRanking?page=2
@@ -119,6 +124,50 @@
     ]
 }
 ```
+
+#### 获取包含该tag的文章列表
+
+* GET /posts/getPostByTag
+
+* 参数 
+* page: 页数，默认第一页
+* pagesize: 每页的数量， 默认20
+* extra: 需要额外返回的项目， 以逗号分割， 如short_content,others,aaaabc
+* tagid: 标签的id
+
+请求示例：
+* curl http://localhost:7001/posts/getPostByTag?page=1&extra=aa,short_content&tagid=10
+
+响应示例：
+
+```
+{
+  "code": 0,
+  "message": "成功",
+  "data": [
+    {
+      "id": 100571,
+      "uid": 207,
+      "author": "fromnrttolax",
+      "title": "use-html",
+      "hash": "QmXLApxE7F4LFPTFWQbLXDBhvg23WQKdvbiasD2WckfWwe",
+      "create_time": "2019-07-23T07:37:24.000Z",
+      "cover": "/image/2019/07/23/52d7074a63456337c91a0e715add92d7.png",
+      "nickname": "fromnrttolax",
+      "avatar": "/avatar/2019/07/12/b8fea8566aa0b6341060c37410ea628b.png",
+      "read": 14,
+      "eosvalue": 0,
+      "ups": 0,
+      "ontvalue": 0,
+      "tags": [
+        5
+      ],
+      "sale": 0
+    }
+  ]
+}
+```
+
 
 #### 获取用户信息 
     
@@ -951,7 +1000,45 @@ curl https://api.smartsignature.io/p/123 | jq
 }
 
 ```
+#### 上传并设置头像（阿里云oss版本）（need access token）
+* POST /user/uploadAvatar
+* 响应状态码： 200
 
+* 数据： form-data 格式的图片数据， 支持jpg，png，gif等
+
+* 响应示例：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 上传图片（阿里云oss版本）（need access token）
+* POST /post/uploadImage
+* 响应状态码： 200
+
+* 数据： form-data 格式的图片数据， 支持jpg，png，gif等
+
+* 响应会带文章的文件名和地址， 示例：
+
+```
+{
+  "code": 0,
+  "message": "成功",
+  "data": {
+    "cover": "/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.png"
+  }
+}
+```
+
+#### 获取图片（阿里云oss版本）
+* GET /image/:filename  请注意填写正确的域名
+
+* 响应状态码：200
+
+请求示例： 
+https://ssimg.frontenduse.top/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.png
 
 #### 上传图像到ipfs服务器
 
@@ -1358,9 +1445,12 @@ curl -d "sign=01b07c90984e0385b19f62f29f93b037a8a3c3a9d2d434229c5da315e31bdc1f57
 * GET /tag/tags
 * 响应状态码：200
 
+* 参数： type， 带则返回某个类型下的tags， 否则返回所有的tags
+
 * 请求示例
 
 curl http://localhost:7001/tag/tags
+curl http://localhost:7001/tag/tags?type=product
 
 ```
 
