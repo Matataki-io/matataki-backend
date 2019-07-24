@@ -452,9 +452,12 @@ class PostService extends Service {
     // 查询文章和作者的信息, 结果是按照时间排序
     // 如果上层也需要按照时间排序的, 则无需再排, 需要其他排序方式则需再排
     let sqlcode = 'SELECT a.id, a.uid, a.author, a.title,';
-    if (extraItem.short_content) {
-      sqlcode += ' a.short_content,';
+    if (extraItem) {
+      if (extraItem.short_content) {
+        sqlcode += ' a.short_content,';
+      }
     }
+
     sqlcode += ' a.hash, a.create_time, a.cover, b.nickname, b.avatar FROM posts a';
     sqlcode += ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (?) AND a.status = 0 ORDER BY id DESC;';
     postList = await this.app.mysql.query(
