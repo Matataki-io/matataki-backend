@@ -442,7 +442,7 @@ class PostService extends Service {
   }
 
   // 获取文章的列表, 用于成片展示文章时, 会被其他函数调用
-  async getPostList(signids, extraItem) {
+  async getPostList(signids, extraItem = null) {
 
     let postList = [];
 
