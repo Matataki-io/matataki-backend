@@ -5,6 +5,8 @@ const Service = require('egg').Service;
 const _ = require('lodash');
 const moment = require('moment');
 const fs = require('fs');
+const removemd = require('remove-markdown');
+const IpfsHttpClientLite = require('ipfs-http-client-lite');
 
 class PostService extends Service {
 
@@ -19,6 +21,22 @@ class PostService extends Service {
         return txt;
       }.bind(this));
     };
+  }
+
+  // 洗去内容的md和html标签， 还有空格和换行等不显示字符
+  async wash(rawContent) {
+    let parsedContent = rawContent;
+    // 去除markdown图片链接
+    parsedContent = parsedContent.replace(/!\[.*?\]\((.*?)\)/gi, '');
+    // 去除video标签
+    parsedContent = parsedContent.replace(/<video.*?>\n*?.*?\n*?<\/video>/gi, '');
+    parsedContent = parsedContent.substring(0, 600);
+    // 去除markdown和html
+    parsedContent = removemd(parsedContent);
+    // 去除空格
+    parsedContent = parsedContent.replace(/\s+/g, '');
+    parsedContent = parsedContent.substring(0, 300);
+    return parsedContent;
   }
 
   async publish(data) {
@@ -623,6 +641,30 @@ class PostService extends Service {
 
     this.app.logger.info('PostService:: uploadImage success: ' + filename);
     return 0;
+  }
+
+  async ipfsUpload(data) {
+    let add = null;
+    try {
+      const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
+      add = await ipfs.add(data);
+    } catch (err) {
+      this.logger.error('PostService:: ipfsUpload Error', err);
+      return null;
+    }
+    return add[0].hash;
+  }
+
+  async ipfsCatch(hash) {
+    let data = null;
+    try {
+      const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
+      data = await ipfs.cat(hash);
+    } catch (err) {
+      this.logger.error('PostService:: ipfsUpload Error', err);
+      return null;
+    }
+    return data;
   }
 
 }

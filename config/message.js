@@ -62,6 +62,8 @@ module.exports = {
   postPriceError: 10107,
   postCannotBuy: 10108,
   badFissionFactor: 10109,
+  ipfsUploadFailed: 10110,
+  ipfsCatchFailed: 10111,
 
   // draft 草稿箱相关
   // 找不到草稿
@@ -117,6 +119,8 @@ module.exports = {
       postPriceError: { code: this.postPriceError, message: 'the price of the product is wrong' },
       postCannotBuy: { code: this.postCannotBuy, message: 'the post can not buy' },
       badFissionFactor: { code: this.badFissionFactor, message: 'bad fassion factor' },
+      ipfsUploadFailed: { code: this.ipfsUploadFailed, message: 'IPFS upload Failed' },
+      ipfsCatchFailed: { code: this.ipfsCatchFailed, message: 'IPFS catch Failed' },
 
       draftNotFound: { code: this.draftNotFound, message: 'Cannot find the draft' },
       notYourDraft: { code: this.notYourDraft, message: 'It is not your draft' },
@@ -162,6 +166,8 @@ module.exports = {
       postPriceError: { code: this.postPriceError, message: '商品价格错误' },
       postCannotBuy: { code: this.postCannotBuy, message: '不能购买' },
       badFissionFactor: { code: this.badFissionFactor, message: '不好的裂变系数' },
+      ipfsUploadFailed: { code: this.ipfsUploadFailed, message: 'IPFS上传失败' },
+      ipfsCatchFailed: { code: this.ipfsCatchFailed, message: 'IPFS获取失败' },
 
       draftNotFound: { code: this.draftNotFound, message: '找不到这篇草稿' },
       notYourDraft: { code: this.notYourDraft, message: '无权操作别人的草稿' },

@@ -4,7 +4,6 @@ const Controller = require('../core/base_controller');
 
 const moment = require('moment');
 const ONT = require('ontology-ts-sdk');
-
 const md5 = require('crypto-js/md5');
 
 class PostController extends Controller {
@@ -59,6 +58,14 @@ class PostController extends Controller {
       return;
     }
 
+    const articleData = await this.service.post.ipfsCatch(hash);
+    if (!articleData) {
+      ctx.body = ctx.msg.ipfsCatchFailed; // err.message;
+      return;
+    }
+    const articleJson = JSON.parse(articleData.toString());
+    const shortContent = await this.service.post.wash(articleJson.content);
+
     const id = await ctx.service.post.publish({
       author,
       username: ctx.user.username,
@@ -74,6 +81,7 @@ class PostController extends Controller {
       uid: ctx.user.id,
       is_recommend: 0,
       category_id: 0,
+      short_content: shortContent,
     });
 
     if (tags) {
@@ -138,6 +146,14 @@ class PostController extends Controller {
       return;
     }
 
+    const articleData = await this.service.post.ipfsCatch(hash);
+    if (!articleData) {
+      ctx.body = ctx.msg.ipfsCatchFailed; // err.message;
+      return;
+    }
+    const articleJson = JSON.parse(articleData.toString());
+    const shortContent = await this.service.post.wash(articleJson.content);
+
     try {
       const conn = await this.app.mysql.beginTransaction();
 
@@ -159,6 +175,7 @@ class PostController extends Controller {
           hash,
           public_key: publickey,
           sign,
+          short_content: shortContent,
         };
 
         if (title) {
@@ -184,6 +201,7 @@ class PostController extends Controller {
 
         await conn.commit();
       } catch (err) {
+        ctx.logger.error(err);
         await conn.rollback();
         ctx.body = ctx.msg.failure;
         return;
@@ -494,6 +512,36 @@ class PostController extends Controller {
 
     ctx.body = ctx.msg.success;
     ctx.body.data = { cover: filename };
+  }
+
+  async uploadPost() {
+    const ctx = this.ctx;
+    const { data } = ctx.request.body;
+
+    const uploadRequest = await this.service.post.ipfsUpload(JSON.stringify(data));
+
+    if (uploadRequest) {
+      ctx.body = ctx.msg.success;
+      ctx.body.hash = uploadRequest;
+      return;
+    }
+
+    ctx.body = ctx.msg.ipfsUploadFailed;
+  }
+
+  async catchPost() {
+    const ctx = this.ctx;
+    const hash = ctx.params.hash;
+
+    const catchRequest = await this.service.post.ipfsCatch(hash);
+
+    if (catchRequest) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = JSON.parse(catchRequest.toString());
+      return;
+    }
+
+    ctx.body = ctx.msg.ipfsCatchFailed;
   }
 
 }

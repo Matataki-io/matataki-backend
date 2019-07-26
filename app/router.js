@@ -20,6 +20,10 @@ module.exports = app => {
   // 发布文章
   router.post('/publish', passport.authorize, controller.post.publish);
   // router.post('/post/publish', passport.authorize, controller.post.publish);
+  // 上传文章到IPFS
+  router.post('/ipfs2/post', passport.authorize, controller.post.uploadPost);
+  // 从IPFS拿取文章内容
+  router.get('/ipfs2/post/:hash', passport.verify, controller.post.catchPost);
   // 上传图片
   router.post('/post/uploadImage', passport.authorize, controller.post.uploadImage);
   // 文章编辑
