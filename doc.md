@@ -270,7 +270,7 @@
 * curl -X GET https://api.smartsignature.io/ipfs/catJSON/QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy
 
 #### 上传文章至IPFS（新） （需要token）
-POST /ipfs2/post
+POST /post/ipfs
 
 示例：
 curl -d "data" -H "x-access-token: your_access_token" -X POST https://apitest.smartsignature.io/ipfs2/post
@@ -287,7 +287,7 @@ curl -d "data" -H "x-access-token: your_access_token" -X POST https://apitest.sm
 ```
 
 #### 从IPFS获取文章
-GET /ipfs2/post/:hash
+GET /post/ipfs/:hash
 
 示例： 
 * curl https://apitest.smartsignature.io/ipfs2/post/Qm00000000
