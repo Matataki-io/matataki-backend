@@ -58,12 +58,14 @@ class PostController extends Controller {
       return;
     }
 
+    // 从ipfs获取文章内容
     const articleData = await this.service.post.ipfsCatch(hash);
     if (!articleData) {
       ctx.body = ctx.msg.ipfsCatchFailed; // err.message;
       return;
     }
     const articleJson = JSON.parse(articleData.toString());
+    // 只清洗文章文本的标识
     const shortContent = await this.service.post.wash(articleJson.content);
 
     const id = await ctx.service.post.publish({
@@ -152,6 +154,7 @@ class PostController extends Controller {
       return;
     }
     const articleJson = JSON.parse(articleData.toString());
+    // 只清洗文章文本的标识
     const shortContent = await this.service.post.wash(articleJson.content);
 
     try {
@@ -518,6 +521,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { data } = ctx.request.body;
 
+    // 上传的data是json对象， 需要字符串化
     const uploadRequest = await this.service.post.ipfsUpload(JSON.stringify(data));
 
     if (uploadRequest) {
@@ -533,10 +537,12 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const hash = ctx.params.hash;
 
+    // 从ipfs获取内容
     const catchRequest = await this.service.post.ipfsCatch(hash);
 
     if (catchRequest) {
       ctx.body = ctx.msg.success;
+      // 字符串转为json对象
       ctx.body.data = JSON.parse(catchRequest.toString());
       return;
     }

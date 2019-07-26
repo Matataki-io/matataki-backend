@@ -646,6 +646,7 @@ class PostService extends Service {
   async ipfsUpload(data) {
     let add = null;
     try {
+      // 建立连接并上传
       const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
       add = await ipfs.add(data);
     } catch (err) {
@@ -658,6 +659,7 @@ class PostService extends Service {
   async ipfsCatch(hash) {
     let data = null;
     try {
+      // 建立连接并获取
       const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
       data = await ipfs.cat(hash);
     } catch (err) {

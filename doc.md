@@ -268,7 +268,41 @@
 * curl -d "data=xxxx" -X POST https://api.smartsignature.io/ipfs/addJSON
 * curl -X GET https://api.smartsignature.io/ipfs/cat/QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy
 * curl -X GET https://api.smartsignature.io/ipfs/catJSON/QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy
- 
+
+#### 上传文章至IPFS（新） （需要token）
+POST /ipfs2/post
+
+示例：
+curl -d "data" -H "x-access-token: your_access_token" -X POST https://apitest.smartsignature.io/ipfs2/post
+
+响应内容：
+成功时候httpstaus为200， code为0
+会携带内容的hash返回
+```
+{
+    "code": 0,
+    "msg": "success",
+    "hash": "Qm00000000"
+}
+```
+
+#### 从IPFS获取文章
+GET /ipfs2/post/:hash
+
+示例： 
+* curl https://apitest.smartsignature.io/ipfs2/post/Qm00000000
+
+响应内容：
+
+{
+  "code": 0,
+  "data": {
+    "title": "title",
+    "author": "fromnrttolax",
+    "desc": "whatever",
+    "content": "content"
+  }
+}
 
 #### 关注
 
