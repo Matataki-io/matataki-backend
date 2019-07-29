@@ -218,10 +218,65 @@ class PostService extends Service {
     return postList;
   }
 
+  // 发布时间排序(默认方法)(new format)(count-list格式)
+  async timeRank2(page = 1, pagesize = 20, author = null, channel = null, extra = null) {
+
+    // 获取文章列表, 分为商品文章和普通文章
+    // 再分为带作者和不带作者的情况.
+
+    const totalsql = 'SELECT COUNT(*) AS count FROM posts ';
+    const listsql = 'SELECT id FROM posts ';
+    let wheresql = 'WHERE status = 0 ';
+
+    if (author) {
+      wheresql += 'AND uid = :author ';
+    }
+    const channelid = parseInt(channel);
+    if (channel !== null) {
+      if (isNaN(channelid)) {
+        return 2;
+      }
+      wheresql += 'AND channel_id = ' + channelid + ' ';
+    }
+
+    const ordersql = 'ORDER BY id DESC LIMIT :start, :end';
+    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const queryResult = await this.app.mysql.query(
+      sqlcode,
+      { author, start: (page - 1) * pagesize, end: 1 * pagesize }
+    );
+
+    const amount = queryResult[0];
+    const posts = queryResult[1];
+
+    if (posts.length === 0) {
+      return [];
+    }
+
+    const postids = [];
+    _.each(posts, row => {
+      postids.push(row.id);
+    });
+
+    const extraItem = {};
+    if (extra) {
+      const extraSplit = extra.split(',');
+      _.each(extraSplit, row => {
+        if (row === 'short_content') {
+          extraItem.short_content = true;
+        }
+      });
+    }
+
+    const postList = await this.getPostList(postids, extraItem);
+
+    return { count: amount[0].count, list: postList };
+  }
+
   async getPostByTag(page = 1, pagesize = 20, extra = null, tagid) {
     const posts = await this.app.mysql.query(
       'select a.sid, a.tid, b.title from post_tag a left join posts b on a.sid=b.id where a.tid = ? limit ?,?',
-      [ tagid, (page - 1) * pagesize, pagesize ]
+      [ tagid, (page - 1) * pagesize, 1 * pagesize ]
     );
 
     // 将文章id转为Array
@@ -398,7 +453,7 @@ class PostService extends Service {
 
     const posts = await this.app.mysql.query(
       sqlcode,
-      { uid: userid, start: (page - 1) * pagesize, end: pagesize }
+      { uid: userid, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
     const postids = [];
@@ -421,6 +476,59 @@ class PostService extends Service {
     });
 
     return postList;
+  }
+
+  // 获取用户赞赏过的文章(new format)(count-list格式)
+  async supportedPosts2(page = 1, pagesize = 20, userid = null, channel = null) {
+
+    // 没写用户
+    if (userid === null) {
+      return 2;
+    }
+
+    const totalsql = 'SELECT COUNT(*) AS count FROM supports s INNER JOIN posts p ON s.signid = p.id ';
+    const listsql = 'SELECT s.create_time, signid FROM supports s INNER JOIN posts p ON s.signid = p.id ';
+
+    let wheresql = 'WHERE s.status = 1 AND p.status = 0 AND s.uid = :uid ';
+
+    const channelid = parseInt(channel);
+    if (channel) {
+      if (isNaN(channelid)) {
+        return 2;
+      }
+      wheresql += 'AND p.channel_id = ' + channelid + ' ';
+    }
+
+    const ordersql = 'ORDER BY s.create_time DESC LIMIT :start, :end';
+    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const queryResult = await this.app.mysql.query(
+      sqlcode,
+      { uid: userid, start: (page - 1) * pagesize, end: 1 * pagesize }
+    );
+
+    const amount = queryResult[0];
+    const posts = queryResult[1];
+
+    const postids = [];
+    _.each(posts, row => {
+      postids.push(row.signid);
+    });
+
+    let postList = await this.getPostList(postids);
+
+    _.each(postList, row2 => {
+      _.each(posts, row => {
+        if (row.signid === row2.id) {
+          row2.support_time = row.create_time;
+        }
+      });
+    });
+
+    postList = postList.sort((a, b) => {
+      return b.id - a.id;
+    });
+
+    return { count: amount[0].count, list: postList };
   }
 
   async recommendPosts(channel = null, amount = 5) {

@@ -242,6 +242,28 @@ class PostController extends Controller {
     ctx.body = ctx.msg.failure;
   }
 
+  // 获取按照时间排序的文章列表(基础方法)(新)(count-list格式)
+  async getTimeRanking2() {
+    const ctx = this.ctx;
+
+    const { page = 1, pagesize = 20, channel = null, author = null, extra = null } = this.ctx.query;
+
+    const postData = await this.service.post.timeRank2(page, pagesize, author, channel, extra);
+
+    if (postData === 2) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    if (postData) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = postData;
+      return;
+    }
+
+    ctx.body = ctx.msg.failure;
+  }
+
   // 获取按照赞赏次数排序的文章列表(新)
   async getSupportsRanking() {
     const ctx = this.ctx;
@@ -292,6 +314,23 @@ class PostController extends Controller {
     const { page = 1, pagesize = 20, user = null, channel = null } = this.ctx.query;
 
     const postData = await this.service.post.supportedPosts(page, pagesize, user, channel);
+
+    if (postData === 2) {
+      ctx.body = ctx.msg.paramsError;
+    } else if (postData === 3) {
+      ctx.body = ctx.msg.userNotExist;
+    } else {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = postData;
+    }
+  }
+
+  // 用户赞赏过的文章列表(新)(count-list格式)
+  async getSupported2() {
+    const ctx = this.ctx;
+    const { page = 1, pagesize = 20, user = null, channel = null } = this.ctx.query;
+
+    const postData = await this.service.post.supportedPosts2(page, pagesize, user, channel);
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
