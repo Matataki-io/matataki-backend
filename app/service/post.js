@@ -501,7 +501,7 @@ class PostService extends Service {
       'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue'
       + ' FROM post_read_count WHERE post_id IN (:signid);'
       + 'SELECT sign_id, symbol, price, decimals FROM product_prices WHERE sign_id IN (:signid);'
-      + 'SELECT p.sid, p.tid, t.name FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);',
+      + 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);',
       { signid: signids }
     );
 
@@ -524,7 +524,7 @@ class PostService extends Service {
       // 如果有标签的话，其标签数据
       _.each(tags, row4 => {
         if (row.id === row4.sid) {
-          row.tags.push({ id: row4.tid, name: row4.name });
+          row.tags.push({ id: row4.tid, name: row4.name, type: row4.type });
         }
       });
     });
