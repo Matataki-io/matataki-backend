@@ -39,12 +39,8 @@ module.exports = app => {
   router.get('/posts/supportsRanking', passport.verify, controller.post.getSupportsRanking);
   // 按照发布时间排序的文章列表(新)
   router.get('/posts/timeRanking', passport.verify, controller.post.getTimeRanking);
-  // 按照发布时间排序的文章列表(新)(count-list格式)
-  router.get('/posts/timeRanking2', passport.verify, controller.post.getTimeRanking2);
   // 某用户赞赏过的文章列表(新)
   router.get('/posts/supported', passport.verify, controller.post.getSupported);
-  // 某用户赞赏过的文章列表(新)(count-list格式)
-  router.get('/posts/supported2', passport.verify, controller.post.getSupported2);
   // 推荐文章列表(仅5条, 不分页)
   router.get('/posts/recommend', passport.verify, controller.post.getRecommend);
   // 根据 tag 查找tag下的文章
