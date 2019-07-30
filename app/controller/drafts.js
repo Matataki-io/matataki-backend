@@ -13,18 +13,18 @@ class DraftsController extends Controller {
 
   async drafts() {
     const ctx = this.ctx;
-    const pagesize = 20;
 
-    const { page = 1 } = ctx.query;
+    const { page = 1, pagesize = 20 } = ctx.query;
 
-    const results = await this.app.mysql.query(
-      'select d.id, d.uid, d.title, d.status, d.create_time, d.update_time, d.fission_factor, d.cover, d.is_original, d.tags, u.nickname, u.avatar from drafts d '
-      + 'INNER JOIN users u ON d.uid = u.id WHERE u.id = ? order by d.update_time desc limit ?, ?',
-      [ ctx.user.id, (page - 1) * pagesize, pagesize ]
-    );
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const draftList = await this.service.draft.draftList(ctx.user.id, page, pagesize);
 
     ctx.body = ctx.msg.success;
-    ctx.body.data = results;
+    ctx.body.data = draftList;
   }
 
 

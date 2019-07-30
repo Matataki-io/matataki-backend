@@ -7,6 +7,26 @@ const moment = require('moment');
 
 class DraftService extends Service {
 
+  async draftList(uid, page, pagesize) {
+    const countsql = 'SELECT COUNT(*) AS count FROM drafts d INNER JOIN users u ON d.uid = u.id ';
+    const listsql = 'SELECT d.id, d.uid, d.title, d.status, d.create_time, d.update_time, d.fission_factor,'
+      + ' d.cover, d.is_original, d.tags, u.nickname, u.avatar FROM drafts d INNER JOIN users u ON d.uid = u.id ';
+
+    const wheresql = 'WHERE u.id = :uid ';
+    const ordersql = 'ORDER BY d.id DESC LIMIT :start, :end ';
+
+    const sqlcode = countsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const queryResult = await this.app.mysql.query(
+      sqlcode,
+      { uid, start: (page - 1) * pagesize, end: 1 * pagesize }
+    );
+
+    const amount = queryResult[0];
+    const drafts = queryResult[1];
+
+    return { count: amount[0].count, list: drafts };
+  }
+
   async transferOwner(uid, draftid, current_uid) {
     let draft = await this.app.mysql.get('drafts', { id: draftid });
     if(!draft){
