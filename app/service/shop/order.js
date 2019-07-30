@@ -136,14 +136,24 @@ class OrderService extends Service {
       return null;
     }
 
+    const countsql = 'SELECT COUNT(*) AS count ';
+    const listsql = 'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, o.price, o.amount, r.title, p.category_id, p.cover ';
+    const wheresql = 'FROM orders o '
+    + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.platform = o.platform '
+    + 'INNER JOIN posts p ON p.id = o.signid '
+    + 'WHERE o.uid = :userid AND o.status = 1 ';
+    const ordersql = 'ORDER BY o.create_time DESC LIMIT :start, :end ';
+
+    const sqlcode = countsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+
     // 获取用户所有的订单
-    const orders = await this.app.mysql.query(
-      'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, o.price, o.amount, r.title, p.category_id, p.cover FROM orders o '
-      + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.platform = o.platform '
-      + 'INNER JOIN posts p ON p.id = o.signid '
-      + 'WHERE o.uid = :userid AND o.status=1 ORDER BY o.id DESC LIMIT :start, :end;',
+    const queryResult = await this.app.mysql.query(
+      sqlcode,
       { userid, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
+
+    const amount = queryResult[0];
+    const orders = queryResult[1];
 
     if (orders.length === 0) {
       return [];
@@ -176,7 +186,7 @@ class OrderService extends Service {
       }
     }
 
-    return orders;
+    return { count: amount[0].count, list: orders };
   }
 
 }

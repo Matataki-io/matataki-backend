@@ -25,8 +25,12 @@ class UserController extends Controller {
   }
 
   async tokens() {
-    const { page = 1, symbol = 'EOS' } = this.ctx.query;
-    const pagesize = 20;
+    const { page = 1, pagesize = 20, symbol = 'EOS' } = this.ctx.query;
+
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      this.ctx.body = this.ctx.msg.paramsError;
+      return;
+    }
 
     // 1. 历史总创作收入
     const tokens = await this.app.mysql.query(
@@ -34,10 +38,19 @@ class UserController extends Controller {
       [ this.ctx.user.id, symbol ]
     );
 
-    const logs = await this.app.mysql.query(
-      'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, a.trx, a.toaddress, a.memo, a.status, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc limit ? ,? ',
-      [ this.ctx.user.id, symbol, (page - 1) * pagesize, pagesize ]
+    const countsql = 'SELECT COUNT(*) AS count FROM assets_change_log a LEFT JOIN posts b ON a.signid = b.id ';
+    const listsql = 'SELECT a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, a.trx, a.toaddress, a.memo, a.status, b.title FROM assets_change_log a LEFT JOIN posts b ON a.signid = b.id ';
+    const wheresql = 'WHERE a.uid = ? AND a.symbol = ? ';
+    const ordersql = 'ORDER BY a.create_time DESC LIMIT ? ,? ';
+    const sqlcode = countsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+
+    const queryResult = await this.app.mysql.query(
+      // 'select a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, a.trx, a.toaddress, a.memo, a.status, b.title from assets_change_log a left join posts b on a.signid = b.id where a.uid = ? and a.symbol = ? order by a.create_time desc limit ? ,? ',
+      sqlcode,
+      [ this.ctx.user.id, symbol, this.ctx.user.id, symbol, (page - 1) * pagesize, 1 * pagesize ]
     );
+    const amount = queryResult[0];
+    const logs = queryResult[1];
 
     // 作者收入
     const totalSignIncome = await this.app.mysql.query(
@@ -67,6 +80,7 @@ class UserController extends Controller {
       totalSignIncome: totalSignIncome[0].totalSignIncome || 0, // 总创作收入
       totalShareIncome: totalShareIncome[0].totalShareIncome || 0, // 总打赏收入
       totalShareExpenses: totalShareExpenses[0].totalShareExpenses || 0, // 总打赏支出
+      count: amount[0].count,
       logs, // 流水（之后再来处理分页）
     };
 

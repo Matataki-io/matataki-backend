@@ -95,6 +95,11 @@ class OrderController extends Controller {
 
     const { page = 1, pagesize = 20 } = ctx.query;
 
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
     const products = await this.service.shop.order.getUserProducts(page, pagesize, userid);
 
     if (products === null) {

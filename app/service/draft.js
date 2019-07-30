@@ -13,7 +13,7 @@ class DraftService extends Service {
       + ' d.cover, d.is_original, d.tags, u.nickname, u.avatar FROM drafts d INNER JOIN users u ON d.uid = u.id ';
 
     const wheresql = 'WHERE u.id = :uid ';
-    const ordersql = 'ORDER BY d.id DESC LIMIT :start, :end ';
+    const ordersql = 'ORDER BY d.update_time DESC LIMIT :start, :end ';
 
     const sqlcode = countsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
     const queryResult = await this.app.mysql.query(
