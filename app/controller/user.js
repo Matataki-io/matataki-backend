@@ -344,7 +344,7 @@ class UserController extends Controller {
     }
 
     if (!user) {
-      this.ctx.body = ctx.msg.userNotExist;
+      this.ctx.body = this.ctx.msg.userNotExist;
       return;
     }
 
