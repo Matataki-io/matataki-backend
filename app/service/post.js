@@ -30,6 +30,7 @@ class PostService extends Service {
     parsedContent = parsedContent.replace(/!\[.*?\]\((.*?)\)/gi, '');
     // 去除video标签
     parsedContent = parsedContent.replace(/<video.*?>\n*?.*?\n*?<\/video>/gi, '');
+    parsedContent = parsedContent.replace(/<[^>]+>/gi, '');
     parsedContent = parsedContent.substring(0, 600);
     // 去除markdown和html
     parsedContent = removemd(parsedContent);
@@ -602,20 +603,20 @@ class PostService extends Service {
   async transferOwner(uid, signid, current_uid) {
     const post = await this.app.mysql.get('posts', { id: signid });
     if (!post) {
-      throw new Error('post not found');
+      return 2;
     }
 
     if (post.uid !== current_uid) {
-      throw new Error('not your post');
+      return 3;
     }
 
     const user = await this.app.mysql.get('users', { id: uid });
     if (!user) {
-      throw new Error('user not found');
+      return 4;
     }
 
     if (!user.accept) {
-      throw new Error('target user not accept owner transfer');
+      return 5;
     }
 
     const conn = await this.app.mysql.beginTransaction();
@@ -639,10 +640,10 @@ class PostService extends Service {
     } catch (err) {
       await conn.rollback();
       this.ctx.logger.error(err);
-      return false;
+      return 6;
     }
 
-    return true;
+    return 0;
   }
 
   async uploadImage(filename, filelocation) {
