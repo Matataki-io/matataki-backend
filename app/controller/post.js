@@ -484,11 +484,27 @@ class PostController extends Controller {
 
     const success = await this.service.post.transferOwner(uid, signid, ctx.user.id);
 
-    if (success) {
-      ctx.body = ctx.msg.success;
-    } else {
-      ctx.body = ctx.msg.failure;
+    if (success === 2) {
+      ctx.body = ctx.msg.postNotFound;
+      return;
     }
+    if (success === 3) {
+      ctx.body = ctx.msg.notYourPost;
+      return;
+    }
+    if (success === 4) {
+      ctx.body = ctx.msg.userNotExist;
+      return;
+    }
+    if (success === 5) {
+      ctx.body = ctx.msg.receiverNotAccept;
+      return;
+    }
+    if (success === 6) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = ctx.msg.success;
   }
 
   async uploadImage() {

@@ -64,6 +64,9 @@ module.exports = {
   badFissionFactor: 10109,
   ipfsUploadFailed: 10110,
   ipfsCatchFailed: 10111,
+  receiverNotYourself: 10112,
+  receiverNotAccept: 10113,
+  notYourPost: 10114,
 
   // draft 草稿箱相关
   // 找不到草稿
@@ -121,6 +124,9 @@ module.exports = {
       badFissionFactor: { code: this.badFissionFactor, message: 'bad fassion factor' },
       ipfsUploadFailed: { code: this.ipfsUploadFailed, message: 'IPFS upload Failed' },
       ipfsCatchFailed: { code: this.ipfsCatchFailed, message: 'IPFS catch Failed' },
+      receiverNotYourself: { code: this.receiverNotYourself, message: 'Receiver should not be yourself' },
+      receiverNotAccept: { code: this.receiverNotAccept, message: 'This user does not accept' },
+      notYourPost: { code: this.notYourPost, message: 'not your post' },
 
       draftNotFound: { code: this.draftNotFound, message: 'Cannot find the draft' },
       notYourDraft: { code: this.notYourDraft, message: 'It is not your draft' },
@@ -168,6 +174,9 @@ module.exports = {
       badFissionFactor: { code: this.badFissionFactor, message: '不好的裂变系数' },
       ipfsUploadFailed: { code: this.ipfsUploadFailed, message: 'IPFS上传失败' },
       ipfsCatchFailed: { code: this.ipfsCatchFailed, message: 'IPFS获取失败' },
+      receiverNotYourself: { code: this.receiverNotYourself, message: '不能转移文章给自己' },
+      receiverNotAccept: { code: this.receiverNotAccept, message: '用户不接受转让' },
+      notYourPost: { code: this.notYourPost, message: '不能操作别人的文章' },
 
       draftNotFound: { code: this.draftNotFound, message: '找不到这篇草稿' },
       notYourDraft: { code: this.notYourDraft, message: '无权操作别人的草稿' },
