@@ -101,7 +101,7 @@ class PostService extends Service {
 
       // 阅读次数
       const count = await this.app.mysql.query(
-        'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue, short_content'
+        'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue'
         + ' FROM post_read_count WHERE post_id = ?;',
         [ post.id ]
       );
