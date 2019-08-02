@@ -46,7 +46,7 @@ module.exports = app => {
   // 根据 tag 查找tag下的文章
   router.get('/posts/getPostByTag', passport.verify, controller.post.getPostByTag);
   // Elastic search
-  router.get('/ela/search', passport.verify, controller.search.search);
+  // router.get('/ela/search', passport.verify, controller.search.search);
 
   // -------------------------------- 编辑,转移,评论 --------------------------------
   // 隐藏文章，统一返回格式示例
