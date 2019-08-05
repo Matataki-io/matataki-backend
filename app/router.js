@@ -11,15 +11,15 @@ module.exports = app => {
 
   // -------------------------------- 用户登录 --------------------------------
   // 获取access token
-  router.post('/auth', passport.verify, controller.auth.auth);
-  // router.post('/login/auth', controller.auth.auth);
+  // router.post('/auth', passport.verify, controller.auth.auth);
+  router.post('/login/auth', controller.auth.auth);
   // 验证OAuth回传的Code
   router.post('/login/github', passport.verify, controller.auth.githubLogin);
 
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
-  router.post('/publish', passport.authorize, controller.post.publish);
-  // router.post('/post/publish', passport.authorize, controller.post.publish);
+  // router.post('/publish', passport.authorize, controller.post.publish);
+  router.post('/post/publish', passport.authorize, controller.post.publish);
   // 上传文章到IPFS
   router.post('/post/ipfs', passport.authorize, controller.post.uploadPost);
   // 从IPFS拿取文章内容
@@ -27,8 +27,8 @@ module.exports = app => {
   // 上传图片
   router.post('/post/uploadImage', passport.authorize, controller.post.uploadImage);
   // 文章编辑
-  router.post('/edit', passport.authorize, controller.post.edit);
-  // router.post('/post/edit', passport.authorize, controller.post.edit);
+  // router.post('/edit', passport.authorize, controller.post.edit);
+  router.post('/post/edit', passport.authorize, controller.post.edit);
   // 单篇文章 (by 文章hash)
   router.get('/post/:hash', passport.verify, controller.post.postByHash);
   // 单篇文章 (by 文章id, for 短链接)，统一返回格式示例
@@ -67,8 +67,8 @@ module.exports = app => {
 
   // -------------------------------- 草稿系统 --------------------------------
   // 获取我的草稿箱列表 (need access token)
-  router.get('/drafts', passport.authorize, controller.drafts.drafts);
-  // router.get('/draft/drafts', passport.authorize, controller.drafts.drafts);
+  // router.get('/drafts', passport.authorize, controller.drafts.drafts);
+  router.get('/draft/drafts', passport.authorize, controller.drafts.drafts);
   // 获取单篇草稿内容 (need access token)
   router.get('/draft/:id', passport.authorize, controller.drafts.draft);
   // create or update (need access token)
@@ -81,51 +81,51 @@ module.exports = app => {
   // -------------------------------- 用户系统 --------------------------------
   // 获取用户个人主页的统计信息, 请注意和 获取用户信息 方法 的冲突可能
   router.get('/user/stats', passport.authorize, controller.user.getUserDetails);
+  // 用户搜索
+  // router.get('/search', passport.verify, controller.user.search);
+  router.get('/user/search', passport.verify, controller.user.search);
+  // 个人资产
+  // router.get('/balance', passport.authorize, controller.user.balance);
+  router.get('/user/balance', passport.authorize, controller.user.balance);
+  // 资产明细
+  // router.get('/tokens', passport.authorize, controller.user.tokens);
+  router.get('/user/tokens', passport.authorize, controller.user.tokens);
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
-  // 用户搜索
-  router.get('/search', passport.verify, controller.user.search);
-  // router.get('/user/search', passport.verify, controller.user.search);
   // 设置用户头像 (need access token)
   router.post('/user/setAvatar', passport.authorize, controller.user.setAvatar);
   // 上传用户头像, 并自动设置
   router.post('/user/uploadAvatar', passport.authorize, controller.user.uploadAvatar);
   // 设置用户的个人资料，包括email，昵称和自我介绍。
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
-  // 个人资产
-  router.get('/balance', passport.authorize, controller.user.balance);
-  // router.get('/user/balance', passport.authorize, controller.user.balance);
-  // 资产明细
-  router.get('/tokens', passport.authorize, controller.user.tokens);
-  // router.get('/user/tokens', passport.authorize, controller.user.tokens);
   // 发起提现
   router.post('/user/withdraw', passport.authorize, controller.user.withdraw);
 
   // -------------------------------- 粉丝系统 --------------------------------
   // follow 关注和取关动作。关注数和粉丝数在userinfo里
-  router.post('/follow', passport.authorize, controller.follow.follow);
-  // router.post('/follow/follow', passport.authorize, controller.follow.follow);
+  // router.post('/follow', passport.authorize, controller.follow.follow);
+  router.post('/follow/follow', passport.authorize, controller.follow.follow);
   // 取消关注
-  router.post('/unfollow', passport.authorize, controller.follow.unfollow);
-  // router.post('/follow/unfollow', passport.authorize, controller.follow.unfollow);
+  // router.post('/unfollow', passport.authorize, controller.follow.unfollow);
+  router.post('/follow/unfollow', passport.authorize, controller.follow.unfollow);
   // 关注列表
-  router.get('/follows', passport.verify, controller.follow.follows);
-  // router.get('/follow/follows', passport.verify, controller.follow.follows);
+  // router.get('/follows', passport.verify, controller.follow.follows);
+  router.get('/follow/follows', passport.verify, controller.follow.follows);
   // 粉丝列表（谁关注了我？）
-  router.get('/fans', passport.verify, controller.follow.fans);
-  // router.get('/follow/fans', passport.verify, controller.follow.fans);
+  // router.get('/fans', passport.verify, controller.follow.fans);
+  router.get('/follow/fans', passport.verify, controller.follow.fans);
 
   // -------------------------------- 点赞和购买 --------------------------------
-  // 打赏和评论列表
+  // 打赏和评论列表(已被替代)
   // router.get('/support/comments', passport.verify, controller.support.comments);
-  // 用户自己已经购买的商品列表
+  // 用户自己已经购买的商品列表(已被替代)
   // router.get('/support/products', passport.authorize, controller.support.myProducts);
   // 跨链打赏 上报接口
-  router.post('/support', passport.authorize, controller.support.support);
-  // router.post('/order/support', passport.authorize, controller.support.support);
+  // router.post('/support', passport.authorize, controller.support.support);
+  router.post('/support/support', passport.authorize, controller.support.support);
   // 商品订单
-  router.post('/order', passport.authorize, controller.order.create);
-  // router.post('/order/order', passport.authorize, controller.order.create);
+  // router.post('/order', passport.authorize, controller.order.create);
+  router.post('/order/order', passport.authorize, controller.order.create);
   // 用户自己已经购买的商品列表
   router.get('/order/products', passport.authorize, controller.order.myProducts);
 
@@ -134,8 +134,8 @@ module.exports = app => {
 
   // -------------------------------- 评论 --------------------------------
   // 评论列表
-  router.get('/comments', passport.verify, controller.comment.comments);
-  // router.get('/comment/comments', passport.verify, controller.comment.comments);
+  // router.get('/comments', passport.verify, controller.comment.comments);
+  router.get('/comment/comments', passport.verify, controller.comment.comments);
 
   // -------------------------------- 橙皮书 --------------------------------
   // 橙皮书合约广告人、次统计

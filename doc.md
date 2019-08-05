@@ -2,10 +2,10 @@
 
 #### 发布文章
 
-* POST /publish
+* POST /post/publish
 * 响应状态码：200
 
-* curl -d "author=tengavinwood&title=xxxxx&publickey=EOS8QP2Z6tApaUYPEC6hm9f1pZrSEMmZ7n5SsvjzA3VTnRXUyra9E&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy&sign=SIG_K1_KZU9PyXP8YAePjCfCcmBjGHARkvTVDjKpKvVgS6XL8o2FXTXUdhP3rqrL38dJYgJo2WNBdYubsY9LKTo47RUUE4N3ZHjZQ" -X POST https://api.smartsignature.io/publish
+* curl -d "author=tengavinwood&title=xxxxx&publickey=EOS8QP2Z6tApaUYPEC6hm9f1pZrSEMmZ7n5SsvjzA3VTnRXUyra9E&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy&sign=SIG_K1_KZU9PyXP8YAePjCfCcmBjGHARkvTVDjKpKvVgS6XL8o2FXTXUdhP3rqrL38dJYgJo2WNBdYubsY9LKTo47RUUE4N3ZHjZQ" -X POST https://api.smartsignature.io/post/publish
 
 
 #### 获取文章列表
@@ -306,7 +306,7 @@ GET /post/ipfs/:hash
 
 #### 关注
 
-* POST /follow
+* POST /follow/follow
 * 响应状态码：200
 
 参数：
@@ -314,11 +314,11 @@ GET /post/ipfs/:hash
 * followed: 关注的用户
 
 请求示例: 
-* curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.smartsignature.io/follow
+* curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.smartsignature.io/follow/follow
 
 #### 取消关注
 
-* POST /unfollow
+* POST /follow/unfollow
 * 响应状态码：200
 
 参数：
@@ -326,12 +326,12 @@ GET /post/ipfs/:hash
 * followed: 关注的用户
 
 请求示例: 
-* curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.smartsignature.io/unfollow
+* curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.smartsignature.io/follow/unfollow
 
 
 #### Auth (请求获取 access token)
 
-* POST /auth
+* POST /login/auth
 * 响应状态码：200
 
 参数：
@@ -386,8 +386,8 @@ API.authSignature(function(username, publickey, sign){
 function auth({
   username, publickey, sign
 }, callback) {
-  // const url = `${apiServer}/auth`;
-  const url = `http://localhost:7001/auth`;
+  // const url = `${apiServer}/login/auth`;
+  const url = `http://localhost:7001/login/auth`;
   return request({
     uri: url,
     rejectUnauthorized: false,
@@ -408,8 +408,8 @@ function auth({
 const accessToken = localStorage.getItem("ACCESS_TOKEN");
 request({
     // uri: "some api url that need auth",
-    // uri: "http://localhost:7001/follow",
-    uri: "http://localhost:7001/unfollow",
+    // uri: "http://localhost:7001/follow/follow",
+    uri: "http://localhost:7001/follow/unfollow",
     rejectUnauthorized: false,
     json: true,
     headers: { Accept: '*/*', "x-access-token": accessToken },
@@ -470,9 +470,38 @@ http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 * curl -d "comment=this is comment&sign_id=1" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTM3NDQ2MzM0NjF9.hLHem3JxZrJxDDwDiYrs4YLKLT7Y5g0Bz_h7bDTu5zY"  -X POST https://api.smartsignature.io/post/comment
 
 
+#### 获取评论列表
+* GET /comment/comments
+* 响应状态码： 200
+curl https://apitest.smartsignature.io/comments?signid=100591
+响应示例： 
+```
+{
+  "code": 0,
+  "message": "成功",
+  "data": [
+    {
+      "payId": 437591,
+      "amount": 100,
+      "platform": "eos",
+      "signid": 100591,
+      "create_time": "2019-08-02T12:56:57.000Z",
+      "num": 0,
+      "action": 1,
+      "id": 38,
+      "username": "linklinkguan",
+      "nickname": "林可可",
+      "avatar": "/avatar/2019/08/01/fc2dc5791798301febcd65836be93061.png",
+      "comment": "123"
+    }
+  ]
+}
+```
+
+
 #### 获取支持过的文章列表
 
-* GET /supported
+* GET /posts/supported
 
 * 参数 :
 * page: 页数，默认第一页
@@ -481,7 +510,7 @@ http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 获取支持过的文章列表，支持使用user进行筛选。
 
 请求示例: 
-* curl -X GET https://api.smartsignature.io/supported?page=2&user=998
+* curl -X GET https://api.smartsignature.io/posts/supported?page=2&user=998
 
 成功返回示例:
 
@@ -512,7 +541,7 @@ http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
 #### 获取关注列表
 
-* GET /follows
+* GET /follow/follows
 
 * 参数 :
 * page: 页数，默认第一页
@@ -524,7 +553,7 @@ ps: 如果有传 access token, 服务端会检索 access token所属用户，是
 
 
 请求示例: 
-curl https://api.smartsignature.io/follows?user=xiaotiandada | jq
+curl https://api.smartsignature.io/follow/follows?user=xiaotiandada | jq
 
 ```
 {
@@ -574,7 +603,7 @@ curl https://api.smartsignature.io/follows?user=xiaotiandada | jq
 
 #### 获取粉丝列表
 
-* GET /fans
+* GET /follow/fans
 
 * 参数 :
 * page: 页数，默认第一页
@@ -584,7 +613,7 @@ ps: 如果有传 access token, 服务端会检索 access token所属用户，是
 根据 is_follow， 去表示UI界面上 “关注” 按钮的状态。
 
 请求示例: 
-curl https://api.smartsignature.io/fans?user=xiaotiandada | jq
+curl https://api.smartsignature.io/follow/fans?user=xiaotiandada | jq
 
 
 ```
@@ -837,7 +866,7 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 
 ```
 
-#### 获取打赏次数排行榜
+#### ~~获取打赏次数排行榜~~
 
 * GET /getSupportTimesRanking
 
@@ -922,7 +951,7 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 ```
 
 
-#### 获取打赏金额排行榜
+#### ~~获取打赏金额排行榜~~
 
 * GET /getSupportAmountRanking
 
@@ -1074,7 +1103,7 @@ curl https://api.smartsignature.io/p/123 | jq
 请求示例： 
 https://ssimg.frontenduse.top/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.png
 
-#### 上传图像到ipfs服务器
+#### ~~上传图像到ipfs服务器~~
 
 * POST /ipfs/upload
 * 响应状态码：200
@@ -1125,7 +1154,7 @@ https://ssimg.frontenduse.top/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.
 
 ```
 
-#### 展示上传的图片
+#### ~~展示上传的图片~~
 
 * GET /image/:hash
 * 响应状态码：200
@@ -1197,7 +1226,7 @@ Body参数（application/x-www-form-urlencoded）：
 
 #### 编辑文章 (need access_token)
 
-* POST /edit
+* POST /post/edit
 * 响应状态码：201
 
 参数: (和publish相比，多了一个signId)
@@ -1214,14 +1243,14 @@ Body参数（application/x-www-form-urlencoded）：
 
 ```
 
-curl -H "x-access-token: access-token" -d "signId=1&author=joetothemoon&title=ddasdasd&publickey=EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C&hash=QmPtcBBEU5JdVy3yBtUfRMx7F2UDQs9V3KdqrcmGppc5VX&sign=SIG_K1_KdWVRnpoYUh1XH1QhhyisAoqGysSLmue46r1J2pJjgSMN9944YADea3WSBnW2ify9BVsk2ipRVAXqRkaxkKernojX9Mfed" -X POST https://api.smartsignature.io/edit
+curl -H "x-access-token: access-token" -d "signId=1&author=joetothemoon&title=ddasdasd&publickey=EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C&hash=QmPtcBBEU5JdVy3yBtUfRMx7F2UDQs9V3KdqrcmGppc5VX&sign=SIG_K1_KdWVRnpoYUh1XH1QhhyisAoqGysSLmue46r1J2pJjgSMN9944YADea3WSBnW2ify9BVsk2ipRVAXqRkaxkKernojX9Mfed" -X POST https://api.smartsignature.io/post/edit
 
 ```
 
 
 #### draft list
 
-* GET /drafts
+* GET /draft/drafts
 * 响应状态码：201
 
 * 参数 
@@ -1230,7 +1259,7 @@ curl -H "x-access-token: access-token" -d "signId=1&author=joetothemoon&title=dd
 * 请求示例
 
 ```
-curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io/drafts 
+curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io/draft/drafts 
 
 ```
 
@@ -1324,7 +1353,7 @@ curl -H "x-access-token: access-token"  -X DELETE https://apitest.smartsignature
 
 #### support 跨链打赏
 
-* POST /support
+* POST /support/support
 * 响应状态码：201
 
 * 参数 
@@ -1338,7 +1367,7 @@ curl -H "x-access-token: access-token"  -X DELETE https://apitest.smartsignature
 * 请求示例：
 
 ```
-curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referrer=joetothemoon" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTc5NzE5MDUwNTR9.9BxHyx9T1Tw-_a8-yX-cNO72R45YEIrRuzJh5jMI3ko"  -X POST http://localhost:7001/support 
+curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referrer=joetothemoon" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTc5NzE5MDUwNTR9.9BxHyx9T1Tw-_a8-yX-cNO72R45YEIrRuzJh5jMI3ko"  -X POST http://localhost:7001/support/support 
 
 ```
 
@@ -1346,7 +1375,7 @@ curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referr
 
 返回EOS、ONT的待提现、历史总打赏收入、历史总创作收入、总支出、以及流水数据
 
-* GET /tokens
+* GET /user/tokens
 * 响应状态码：200
 
 响应示例
@@ -1387,6 +1416,34 @@ curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referr
   }
 }
 
+```
+
+#### 个人资产明细(need access token)
+
+* GET /user/balance
+* 响应状态码： 200
+* 响应示例：
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        {
+            "contract": "AFmseVrdL9f9oyCzZefL9tG6UbvhUMqNMV",
+            "symbol": "ONT",
+            "amount": 20000,
+            "platform": "ont",
+            "totalIncome": 14590000
+        },
+        {
+            "contract": "eosio.token",
+            "symbol": "EOS",
+            "amount": 61940,
+            "platform": "eos",
+            "totalIncome": 1000
+        }
+    ]
+}
 ```
 
 
@@ -1555,18 +1612,18 @@ curl -d "draftid=1&uid=10" -X POST  http://127.0.0.1:7001/draft/transferOwner
 
 #### 用户搜索
 
-* GET /search
+* GET /user/search
 * 响应状态码：200
 
 * 参数 
 * q : 搜索的字段：昵称或用户名
 
-curl -X GET  http://127.0.0.1:7001/search?q=xiaotiandada
+curl -X GET  http://127.0.0.1:7001/user/search?q=xiaotiandada
 
 #### 购买商品
 
 
-* POST /order
+* POST /order/order
 * 响应状态码：201
 
 * 参数 
@@ -1580,7 +1637,7 @@ curl -X GET  http://127.0.0.1:7001/search?q=xiaotiandada
 
 * 请求示例：
 ```
-curl -d "num=10&signId=100418&contract=eosio.token&symbol=EOS&amount=1&platform=eos&referrer=65" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NjE2MDQ4MjY2NjYsInBsYXRmb3JtIjoiZW9zIiwiaWQiOjE3MH0.Ph73nBjvsz-3Sj79JhotA-tGSYxXHkXyvTrRkH5xDo0" -X POST  http://localhost:7001/order/create
+curl -d "num=10&signId=100418&contract=eosio.token&symbol=EOS&amount=1&platform=eos&referrer=65" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NjE2MDQ4MjY2NjYsInBsYXRmb3JtIjoiZW9zIiwiaWQiOjE3MH0.Ph73nBjvsz-3Sj79JhotA-tGSYxXHkXyvTrRkH5xDo0" -X POST  http://localhost:7001/order/order/create
 ```
 * 返回示例：
 {
