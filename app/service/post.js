@@ -81,13 +81,25 @@ class PostService extends Service {
 
   // 根据hash获取文章
   async getByHash(hash, userId) {
-    const post = await this.app.mysql.get('posts', { hash });
+    // const post = await this.app.mysql.get('posts', { hash });
+    const posts = await this.app.mysql.query(
+      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id FROM posts WHERE hash = ?;',
+      [ hash ]
+    );
+    const post = posts[0];
     return this.getPostProfile(post, userId);
   }
 
   // 根据id获取文章
   async getById(id, userId) {
-    const post = await this.app.mysql.get('posts', { id });
+    // const post = await this.app.mysql.get('posts', { id });
+    const posts = await this.app.mysql.query(
+      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id FROM posts WHERE id = ?;',
+      [ id ]
+    );
+    const post = posts[0];
     return this.getPostProfile(post, userId);
   }
 
@@ -596,7 +608,13 @@ class PostService extends Service {
   }
 
   async getForEdit(id, current_user) {
-    const post = await this.app.mysql.get('posts', { id });
+    // const post = await this.app.mysql.get('posts', { id });
+    const posts = await this.app.mysql.query(
+      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id FROM posts WHERE id = ?;',
+      [ id ]
+    );
+    const post = posts[0];
     return this.getPostProfile(post, current_user);
   }
 

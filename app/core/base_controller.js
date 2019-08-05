@@ -94,39 +94,40 @@ class BaseController extends Controller {
     }
   }
 
-  async get_user() {
-    const current_user = this.get_current_user();
+  // 待删除...
+  // async get_user() {
+  //   const current_user = this.get_current_user();
 
-    try {
-      this.checkAuth(current_user);
-    } catch (err) {
-      throw err;
-    }
+  //   try {
+  //     this.checkAuth(current_user);
+  //   } catch (err) {
+  //     throw err;
+  //   }
 
-    let user = await this.app.mysql.get('users', { username: current_user });
+  //   let user = await this.app.mysql.get('users', { username: current_user });
 
-    if (!user) {
+  //   if (!user) {
 
-      let newuser = await this.app.mysql.insert('users', {
-        username: current_user,
-        create_time: moment().format('YYYY-MM-DD HH:mm:ss')
-      });
+  //     let newuser = await this.app.mysql.insert('users', {
+  //       username: current_user,
+  //       create_time: moment().format('YYYY-MM-DD HH:mm:ss')
+  //     });
 
-      user = await this.app.mysql.get('users', { username: current_user });
-    }
+  //     user = await this.app.mysql.get('users', { username: current_user });
+  //   }
 
-    return user;
-  }
+  //   return user;
+  // }
 
-  async get_referrer(referrer) {
-    let user = null;
-    try {
-      user = await this.app.mysql.get('users', { id: referrer });
-      return user;
-    } catch (err) {
-      return null;
-    }
-  }
+  // async get_referrer(referrer) {
+  //   let user = null;
+  //   try {
+  //     user = await this.app.mysql.get('users', { id: referrer });
+  //     return user;
+  //   } catch (err) {
+  //     return null;
+  //   }
+  // }
 
   async get_or_create_user(username, platform, source) {
     try {
