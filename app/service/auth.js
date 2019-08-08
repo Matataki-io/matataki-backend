@@ -125,7 +125,7 @@ class AuthService extends Service {
   }
 
   async verifyUser(username) {
-    const user = this.app.mysql.query(
+    const user = await this.app.mysql.query(
       'SELECT id FROM users WHERE username = :username;',
       { username }
     );
@@ -165,14 +165,17 @@ class AuthService extends Service {
     // 生成需要存放的数据： 验证码， 时间戳， 状态
     const storeItems = { captcha, timestamp, status: 3 };
     const storeString = JSON.stringify(storeItems);
-    await this.app.redis.set(mailhash, storeString, 'EX', 1000);
+    await this.app.redis.set(mailhash, storeString, 'EX', 1800);
     // await this.app.redis.hmset(mailhash, storeItems);
 
     // const captchaStatus = await this.app.redis.get(mailhash);
     // console.log(captchaStatus);
 
     const sendResult = await this.service.mail.sendCaptcha(email, captcha);
-    return sendResult;
+    if (sendResult) {
+      return 0;
+    }
+    return 1;
   }
 
   async doReg(email, captcha, password, ipaddress) {
@@ -190,6 +193,7 @@ class AuthService extends Service {
     // 验证码不对， 减少有效次数
     if (captchaInfo.captcha !== captcha) {
       captchaInfo.status -= 1;
+      // 已经错误3次， 验证码失效
       if (captchaInfo.status === 0) {
         await this.app.redis.del(mailhash);
         return 2;
@@ -197,20 +201,20 @@ class AuthService extends Service {
       const storeString = JSON.stringify(captchaInfo);
       // 获取剩余TTL
       const remainTime = await this.app.redis.call('TTL', mailhash);
-      // 更新生于次数， 并维持TTL
+      // 更新剩余次数， 并维持TTL
       await this.app.redis.set(mailhash, storeString, 'EX', remainTime);
       return 3;
     }
 
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    const passwordHash2 = sha256(password).toString();
+    const passwordHash = sha256(password).toString();
     const createAccount = await this.app.mysql.query(
       'INSERT INTO users (username, email, create_time, last_login_time, platform, source, reg_ip, password_hash) '
       + 'VALUES (:username, :email, :now, :now, \'email\', \'ss\', :ipaddress, :password);',
-      { username: email, email, ipaddress, password: passwordHash2, now }
+      { username: email, email, ipaddress, password: passwordHash, now }
     );
 
-    if (createAccount) {
+    if (createAccount.affectedRows === 1) {
       return 0;
     }
     return 5;

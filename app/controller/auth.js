@@ -164,10 +164,10 @@ class AuthController extends Controller {
     const result = await this.service.auth.verifyUser(email);
     if (result > 0) {
       ctx.body = ctx.msg.success;
-      ctx.body.data.reg = 1;
+      ctx.body.data = true;
     } else {
       ctx.body = ctx.msg.success;
-      ctx.body.data.rag = 0;
+      ctx.body.data = false;
     }
   }
 
@@ -185,13 +185,17 @@ class AuthController extends Controller {
     }
     const emailCheck = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
     if (!emailCheck.test(email)) {
-      ctx.body = ctx.msg.paramsError;
+      ctx.body = ctx.msg.alreadyRegisted;
       return;
     }
     // const isBanned = this.service.auth.
     const mail = await this.service.auth.sendCaptchaMail(email);
     // ctx.body = ctx.msg.success;
-    ctx.body = mail;
+    if (mail === 0) {
+      ctx.body = ctx.msg.success;
+      return;
+    }
+    ctx.body = ctx.msg.failure;
   }
 
   async regUser() {
@@ -206,13 +210,13 @@ class AuthController extends Controller {
     const regResult = await this.service.auth.doReg(email, captcha, password, ipaddress);
     switch (regResult) {
       case 1:
-        ctx.body = ctx.msg.failure;
+        ctx.body = ctx.msg.captchaWrong;
         break;
       case 2:
-        ctx.body = ctx.msg.failure;
+        ctx.body = ctx.msg.captchaWrong;
         break;
       case 3:
-        ctx.body = ctx.msg.failure;
+        ctx.body = ctx.msg.captchaWrong;
         break;
       case 5:
         ctx.body = ctx.msg.failure;
@@ -235,7 +239,8 @@ class AuthController extends Controller {
     }
     const loginResult = await this.service.auth.verifyLogin(username, password, ipaddress);
     if (loginResult) {
-      ctx.body = loginResult;
+      ctx.body = ctx.msg.success;
+      ctx.body.data = loginResult;
       return;
     }
     ctx.body = ctx.msg.failure;

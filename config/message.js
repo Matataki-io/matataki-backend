@@ -51,6 +51,13 @@ module.exports = {
   // 签名验证失败
   signatureVerifyFailed: 10013,
 
+  // 验证码获取过于频密， 没到1分钟间隔
+  captchaRatelimit: 10014,
+  // 验证码错误
+  captchaWrong: 10015,
+  // 用户已经注册， 不能再次注册
+  alreadyRegisted: 10016,
+
   // post相关
   postNotFound: 10100,
   postDeleteError: 10101,
@@ -112,6 +119,10 @@ module.exports = {
       invalidSignature: { code: this.invalidSignature, message: 'Invalid signature' },
       signatureVerifyFailed: { code: this.signatureVerifyFailed, message: 'Signature verify failed' },
 
+      captchaRatelimit: { code: this.captchaRatelimit, message: 'Captcha rate limit' },
+      captchaWrong: { code: this.captchaWrong, message: 'wrong captcha' },
+      alreadyRegisted: { code: this.alreadyRegisted, message: 'Already registed' },
+
       postNotFound: { code: this.postNotFound, message: 'post not found' },
       postDeleteError: { code: this.postDeleteError, message: 'delete post error' },
       postPublishParamsError: { code: this.postPublishParamsError, message: 'parameters error' },
@@ -161,6 +172,10 @@ module.exports = {
       unsupportedPlatform: { code: this.unsupportedPlatform, message: '不支持的授权平台' },
       invalidSignature: { code: this.invalidSignature, message: '错误的签名信息' },
       signatureVerifyFailed: { code: this.signatureVerifyFailed, message: '签名信息验证失败' },
+
+      captchaRatelimit: { code: this.captchaRatelimit, message: '获取验证码操作次数过多' },
+      captchaWrong: { code: this.captchaWrong, message: '验证码错误' },
+      alreadyRegisted: { code: this.alreadyRegisted, message: '用户已经注册' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },

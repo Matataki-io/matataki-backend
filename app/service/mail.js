@@ -98,7 +98,9 @@ class MailService extends Service {
 
       const mailContent = await this.ctx.renderView('regist.html', mailData, { viewEngine: 'nunjucks' });
       // 不发送邮件, 只返回预览
-      return mailContent;
+      // if (this.ctx.app.config.mailPreview === true) {
+      //   return mailContent;
+      // }
       const mailOptions = {
         from: `Smart Signature<${this.config.mail.auth.user}>`,
         to: email,
