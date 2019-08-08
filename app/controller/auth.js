@@ -149,6 +149,97 @@ class AuthController extends Controller {
     }
     ctx.body = jwttoken;
   }
+
+  async verifyReg() {
+    const ctx = this.ctx;
+    const { email = null } = ctx.request.query;
+    if (!email) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    // if (email.match(/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/)) {
+    //   ctx.body = ctx.msg.paramsError;
+    //   return;
+    // }
+    const result = await this.service.auth.verifyUser(email);
+    if (result > 0) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data.reg = 1;
+    } else {
+      ctx.body = ctx.msg.success;
+      ctx.body.data.rag = 0;
+    }
+  }
+
+  async sendCaptcha() {
+    const ctx = this.ctx;
+    const { email = null } = ctx.request.query;
+    if (!email) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    const userExistence = await this.service.auth.verifyUser(email);
+    if (userExistence) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    const emailCheck = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
+    if (!emailCheck.test(email)) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    // const isBanned = this.service.auth.
+    const mail = await this.service.auth.sendCaptchaMail(email);
+    // ctx.body = ctx.msg.success;
+    ctx.body = mail;
+  }
+
+  async regUser() {
+    const ctx = this.ctx;
+    const ipaddress = ctx.header['x-real-ip'];
+    const { email = null, captcha = null, password = null } = ctx.request.body;
+    if (!email || !captcha || !password) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const regResult = await this.service.auth.doReg(email, captcha, password, ipaddress);
+    switch (regResult) {
+      case 1:
+        ctx.body = ctx.msg.failure;
+        break;
+      case 2:
+        ctx.body = ctx.msg.failure;
+        break;
+      case 3:
+        ctx.body = ctx.msg.failure;
+        break;
+      case 5:
+        ctx.body = ctx.msg.failure;
+        break;
+      case 0:
+        ctx.body = ctx.msg.success;
+        break;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
+  }
+
+  async accountLogin() {
+    const ctx = this.ctx;
+    const ipaddress = ctx.header['x-real-ip'];
+    const { username = null, password = null } = ctx.request.body;
+    if (!username || !password) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    const loginResult = await this.service.auth.verifyLogin(username, password, ipaddress);
+    if (loginResult) {
+      ctx.body = loginResult;
+      return;
+    }
+    ctx.body = ctx.msg.failure;
+  }
 }
 
 module.exports = AuthController;

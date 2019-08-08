@@ -85,6 +85,35 @@ class MailService extends Service {
     return result;
   }
 
+  async sendCaptcha(email, captcha) {
+    if (!email || !captcha) {
+      return null;
+    }
+
+    let result = null;
+    try {
+      const mailData = {
+        captcha,
+      };
+
+      const mailContent = await this.ctx.renderView('regist.html', mailData, { viewEngine: 'nunjucks' });
+      // 不发送邮件, 只返回预览
+      return mailContent;
+      const mailOptions = {
+        from: `Smart Signature<${this.config.mail.auth.user}>`,
+        to: email,
+        subject: '智能签名:用户注册',
+        html: mailContent,
+      };
+      const transpoter = await nodemailer.createTransport(this.config.mail);
+      result = await transpoter.sendMail(mailOptions);
+    } catch (err) {
+      this.logger.error('MailService:: sendCaptcha error: %j', err);
+      return null;
+    }
+    return result;
+  }
+
 }
 
 module.exports = MailService;

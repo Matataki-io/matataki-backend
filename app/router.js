@@ -15,6 +15,14 @@ module.exports = app => {
   router.post('/login/auth', passport.verify, controller.auth.auth);
   // 验证OAuth回传的Code
   router.post('/login/github', passport.verify, controller.auth.githubLogin);
+  // 验证用户存在性， 是否已经注册
+  router.get('/login/verify', passport.verify, controller.auth.verifyReg);
+  // 发送注册码邮件
+  router.get('/login/captcha', passport.verify, controller.auth.sendCaptcha);
+  // 注册用户
+  router.post('/login/regist', passport.verify, controller.auth.regUser);
+  // 进行账密登录
+  router.post('/login/account', passport.verify, controller.auth.accountLogin);
 
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
