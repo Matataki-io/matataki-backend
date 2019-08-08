@@ -146,6 +146,7 @@ class AuthService extends Service {
       const lastSentInfo = JSON.parse(lastSentQuery);
       // 上个验证码的生成时间不到60000ms
       if (timestamp - lastSentInfo.timestamp < 60000) {
+        this.logger.info('AuthService:: sendCaptchaMail: Captcha rate limit for Email', email);
         return 1;
       }
     }
@@ -166,6 +167,7 @@ class AuthService extends Service {
     const storeItems = { captcha, timestamp, status: 3 };
     const storeString = JSON.stringify(storeItems);
     await this.app.redis.set(mailhash, storeString, 'EX', 1800);
+    this.logger.info('AuthService:: sendCaptchaMail: Captcha generated: ', email);
     // await this.app.redis.hmset(mailhash, storeItems);
 
     // const captchaStatus = await this.app.redis.get(mailhash);
@@ -175,7 +177,7 @@ class AuthService extends Service {
     if (sendResult) {
       return 0;
     }
-    return 1;
+    return 2;
   }
 
   async doReg(email, captcha, password, ipaddress) {
@@ -183,6 +185,7 @@ class AuthService extends Service {
     const captchaQuery = await this.app.redis.get(mailhash);
     // 从未获取过验证码
     if (!captchaQuery) {
+      this.logger.info('AuthService:: doReg: Captcha haven\'t been generated for email ', email);
       return 1;
     }
     const captchaInfo = JSON.parse(captchaQuery);
@@ -193,8 +196,10 @@ class AuthService extends Service {
     // 验证码不对， 减少有效次数
     if (captchaInfo.captcha !== captcha) {
       captchaInfo.status -= 1;
+      this.logger.info('AuthService:: doReg: Captcha is wrong for email ', email);
       // 已经错误3次， 验证码失效
       if (captchaInfo.status === 0) {
+        this.logger.info('AuthService:: doReg: Captcha expired');
         await this.app.redis.del(mailhash);
         return 2;
       }
@@ -206,6 +211,7 @@ class AuthService extends Service {
       return 3;
     }
 
+    // 增加用户
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
     const passwordHash = sha256(password).toString();
     const createAccount = await this.app.mysql.query(
@@ -214,34 +220,53 @@ class AuthService extends Service {
       { username: email, email, ipaddress, password: passwordHash, now }
     );
 
-    if (createAccount.affectedRows === 1) {
-      return 0;
+    if (createAccount.affectedRows !== 1) {
+      return 5;
     }
-    return 5;
+    this.logger.info('AuthService:: doReg: New user Added for email ', email);
+    return 0;
   }
 
   async verifyLogin(username, password, ipaddress) {
-    const userPw = await this.app.mysql.query(
-      'SELECT id, username, password_hash FROM users WHERE username = :username AND platform = \'email\';',
-      { username }
-    );
-    if (userPw.length === 0) {
-      return null;
+    // 提取用户信息
+    let userPw;
+    try {
+      userPw = await this.app.mysql.query(
+        'SELECT id, username, password_hash FROM users WHERE username = :username AND platform = \'email\';',
+        { username }
+      );
+    } catch (err) {
+      this.logger.error('AuthService:: verifyLogin: Error ', err);
+      return 3;
     }
+    if (userPw.length === 0) {
+      this.logger.info('AuthService:: verifyLogin: User doesn\'t exist ', username);
+      return 1;
+    }
+    // 密码对不上
     const passwordHash = sha256(password).toString();
     if (userPw[0].password_hash !== passwordHash) {
-      return null;
+      this.logger.info('AuthService:: verifyLogin: Wrong password ', username);
+      return 2;
     }
 
+    // 增加登陆记录
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    const addLoginLog = await this.app.mysql.query(
-      'INSERT INTO users_login_log (uid, ip, source, login_time) VALUES '
-      + '(:uid, :ipaddress, \'ss\', :now);',
-      { uid: userPw[0].id, ipaddress, now }
-    );
-    if (!addLoginLog.affectedRows) {
-      return null;
+    let addLoginLog;
+    try {
+      addLoginLog = await this.app.mysql.query(
+        'INSERT INTO users_login_log (uid, ip, source, login_time) VALUES '
+        + '(:uid, :ipaddress, \'ss\', :now);',
+        { uid: userPw[0].id, ipaddress, now }
+      );
+    } catch (err) {
+      this.logger.error('AuthService:: verifyLogin: Error ', err);
+      return 3;
     }
+    if (addLoginLog.affectedRows !== 1) {
+      return 3;
+    }
+    // 生成token
     const expires = moment().add(7, 'days').valueOf();
     const jwttoken = jwt.encode({
       iss: userPw[0].username,
@@ -249,6 +274,7 @@ class AuthService extends Service {
       platform: 'email',
       id: userPw[0].id,
     }, this.app.config.jwtTokenSecret);
+    this.logger.info('AuthService:: verifyLogin: User Login... ', username);
 
     return jwttoken;
   }

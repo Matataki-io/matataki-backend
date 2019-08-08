@@ -57,6 +57,8 @@ module.exports = {
   captchaWrong: 10015,
   // 用户已经注册， 不能再次注册
   alreadyRegisted: 10016,
+  // 密码错误
+  passwordWrong: 10017,
 
   // post相关
   postNotFound: 10100,
@@ -122,6 +124,7 @@ module.exports = {
       captchaRatelimit: { code: this.captchaRatelimit, message: 'Captcha rate limit' },
       captchaWrong: { code: this.captchaWrong, message: 'wrong captcha' },
       alreadyRegisted: { code: this.alreadyRegisted, message: 'Already registed' },
+      passwordWrong: { code: this.passwordWrong, message: 'wrong password' },
 
       postNotFound: { code: this.postNotFound, message: 'post not found' },
       postDeleteError: { code: this.postDeleteError, message: 'delete post error' },
@@ -176,6 +179,7 @@ module.exports = {
       captchaRatelimit: { code: this.captchaRatelimit, message: '获取验证码操作次数过多' },
       captchaWrong: { code: this.captchaWrong, message: '验证码错误' },
       alreadyRegisted: { code: this.alreadyRegisted, message: '用户已经注册' },
+      passwordWrong: { code: this.passwordWrong, message: '密码错误' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },
