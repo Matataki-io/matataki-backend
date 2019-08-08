@@ -426,6 +426,72 @@ request({
 
 ```
 
+#### 验证用户是否存在
+* GET /login/verify
+
+* 参数（使用URL query 格式）：
+* email： 用户名， 使用邮箱注册的就是邮箱
+
+* 请求示例： curl https://apitest.smartsignature.io/login/verify?email=1@0.0
+
+* 响应示例（data为true说明用户存在， false说明不存在）：
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": true
+}
+```
+
+#### 使用邮箱获取验证码
+* GET /login/captcha
+
+* 参数（使用URL query 格式）:
+* email: 用户的邮箱
+
+* 请求示例：curl https://apitest.smartsignature.io/login/captcha?email=0@gmail.com
+
+* 响应示例：
+```
+{
+    "code": 0,
+    "message": "成功"
+}
+```
+
+* 错误原因：邮箱格式不对， 邮箱已经注册
+
+#### 使用邮箱注册
+* POST /login/regist
+
+* 参数（位于body中）：
+* email: 获取验证码使用的邮箱
+* captcha: 对应的验证码， 字符串格式
+* password: 密码， 或者密码的哈希值
+
+* 请求示例： curl -d "email=1@example.com&captcha=000000&password=pw" -X POST https://apitest.smartsignature.io/login/regist
+
+* 出错原因: 验证码错误， 此邮箱没有获取过验证码
+
+#### 使用账户密码登陆
+* POST /login/account
+
+* 参数（位于body中）：
+* username：账户名字， 邮箱注册的就是邮箱
+* password： 密码， 或者密码的哈希， 需要和注册时候机制一致
+
+* 请求示例： curl -d "username=1&password=1" -X POST https://apitest.smartsignature.io/login/account
+
+* 响应示例（data里面是token）：
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": "token"
+}
+```
+* 出错原因：用户不存在， 密码错误
+
 #### 文章阅读上报
 
 统计阅读次数

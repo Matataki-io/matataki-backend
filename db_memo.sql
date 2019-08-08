@@ -684,3 +684,11 @@ insert into post_tag values (null, 527, 102);
 -- 广告位
 ALTER TABLE ads ADD COLUMN hash varchar(255) DEFAULT "";
 CREATE UNIQUE INDEX idx_ads_hash ON ads(hash);
+
+
+-- 2019/08/08 spinrt8-v2.6.0
+-- 增加用户注册IP、最后登陆时间、密码的哈希
+ALTER TABLE users ADD COLUMN reg_ip VARCHAR(50) NULL;
+ALTER TABLE users ADD COLUMN last_login_time DATETIME NULL;
+ALTER TABLE users ADD COLUMN password_hash VARCHAR(64) NULL;
+
