@@ -8,15 +8,17 @@ module.exports = {
   async authorize(ctx, next) {
     const lang = ctx.headers.lang;
     const token = ctx.header['x-access-token'];
+    ctx.msg = message.returnObj(lang);
 
     // 没有authorization token信息
     if (token === undefined) {
-      ctx.throw(401, 'Access denied.');
+      // ctx.throw(401, 'Access denied.');
+      ctx.body = ctx.msg.unauthorized;
+      return;
     }
 
     ctx.user = {};
     ctx.user.isAuthenticated = false;
-    ctx.msg = message.returnObj(lang);
 
     // 校验 token， 解密， 验证token的可用性 ，检索里面的用户
     try {
@@ -31,7 +33,9 @@ module.exports = {
       ctx.user.isAuthenticated = true;
       ctx.user.platform = decoded.platform;
     } catch (err) {
-      ctx.throw(401, 'The token is error.', err);
+      // ctx.throw(401, 'The token is error.', err);
+      ctx.body = ctx.msg.unauthorized;
+      return;
     }
 
     await next();
@@ -58,7 +62,7 @@ module.exports = {
           ctx.user.platform = decoded.platform;
         }
       } catch (err) {
-
+        console.log(err);
       }
     }
 

@@ -273,7 +273,7 @@
 POST /post/ipfs
 
 示例：
-curl -d "data" -H "x-access-token: your_access_token" -X POST https://apitest.smartsignature.io/ipfs2/post
+curl -d "data" -H "x-access-token: your_access_token" -X POST https://apitest.smartsignature.io/post/ipfs
 
 响应内容：
 成功时候httpstaus为200， code为0
@@ -290,7 +290,7 @@ curl -d "data" -H "x-access-token: your_access_token" -X POST https://apitest.sm
 GET /post/ipfs/:hash
 
 示例： 
-* curl https://apitest.smartsignature.io/ipfs2/post/Qm00000000
+* curl https://apitest.smartsignature.io/post/ipfs/Qm00000000
 
 响应内容：
 
