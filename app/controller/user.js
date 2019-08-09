@@ -206,6 +206,7 @@ class UserController extends Controller {
     const ctx = this.ctx;
     const { contract, symbol, amount, platform, toaddress, memo, publickey, sign } = ctx.request.body;
 
+    // 注意： platform是体现到的地址的平台， ctx.user.platfrom是该用户的平台
     let verifyStatus = true;
     // 验证提现地址合法性
     if (platform === 'eos') {
@@ -248,6 +249,8 @@ class UserController extends Controller {
         await this.ont_signature_verify(msg, sign, publickey, publickey, sign);
       } else if (ctx.user.platform === 'github') {
         this.logger.info('UserController:: withdraw: There is a github user withdrawing...');
+      } else if (ctx.user.platform === 'email') {
+        this.logger.info('UserController:: withdraw: There is a Email user withdrawing...');
       } else {
         ctx.body = ctx.msg.postPublishSignVerifyError; // 'platform not support';
         return;

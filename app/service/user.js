@@ -102,7 +102,7 @@ class UserService extends Service {
     }
 
     let accountAttached = 1;
-    if (platform === 'github') {
+    if (platform === 'github' || platform === 'email') {
       accountAttached = 0;
     }
     basicInfo.accounts = accountAttached;

@@ -49,6 +49,8 @@ class PostController extends Controller {
         this.ont_signature_verify(msg, sign, publickey);
       } else if (platform === 'github') {
         this.logger.info('There is a GitHub user publishing...');
+      } else if (platform === 'email') {
+        this.logger.info('There is a Email account user publishing...');
       } else {
         ctx.body = ctx.msg.postPublishSignVerifyError; // 'platform not support';
         return;
@@ -139,6 +141,8 @@ class PostController extends Controller {
         this.ont_signature_verify(msg, sign, publickey);
       } else if (platform === 'github') {
         this.logger.info('There is a GitHub user editing...');
+      } else if (platform === 'email') {
+        this.logger.info('There is a Email account user publishing...');
       } else {
         ctx.body = ctx.msg.unsupportedPlatform;
         return;
