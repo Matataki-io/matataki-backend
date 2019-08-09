@@ -13,6 +13,7 @@ module.exports = {
     // 没有authorization token信息
     if (token === undefined) {
       // ctx.throw(401, 'Access denied.');
+      ctx.status = 401;
       ctx.body = ctx.msg.unauthorized;
       return;
     }
@@ -34,6 +35,7 @@ module.exports = {
       ctx.user.platform = decoded.platform;
     } catch (err) {
       // ctx.throw(401, 'The token is error.', err);
+      ctx.status = 401;
       ctx.body = ctx.msg.unauthorized;
       return;
     }
