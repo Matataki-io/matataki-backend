@@ -254,13 +254,13 @@ class AuthController extends Controller {
     const loginResult = await this.service.auth.verifyLogin(username, password, ipaddress);
     switch (loginResult) {
       case 1:
-        ctx.body = ctx.msg.userNotExist;
+        ctx.body = ctx.msg.passwordWrong;
         break;
       case 2:
         ctx.body = ctx.msg.passwordWrong;
         break;
       case 3:
-        ctx.body = ctx.msg.failure;
+        ctx.body = ctx.msg.passwordWrong;
         break;
       default:
         ctx.body = ctx.msg.success;
