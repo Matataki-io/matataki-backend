@@ -138,7 +138,7 @@ class AuthService extends Service {
 
   async sendCaptchaMail(email) {
 
-    const mailhash = md5(email).toString();
+    const mailhash = 'captcha:' + md5(email).toString();
     const timestamp = Date.now();
     // 是否在1分钟之内获取过验证码， 无论是否消耗
     const lastSentQuery = await this.app.redis.get(mailhash);
@@ -166,7 +166,7 @@ class AuthService extends Service {
     // 生成需要存放的数据： 验证码， 时间戳， 状态
     const storeItems = { captcha, timestamp, status: 3 };
     const storeString = JSON.stringify(storeItems);
-    await this.app.redis.set(mailhash, storeString, 'EX', 1800);
+    await this.app.redis.set(mailhash, storeString, 'EX', 300);
     this.logger.info('AuthService:: sendCaptchaMail: Captcha generated: ', email);
     // await this.app.redis.hmset(mailhash, storeItems);
 
@@ -181,7 +181,7 @@ class AuthService extends Service {
   }
 
   async doReg(email, captcha, password, ipaddress) {
-    const mailhash = md5(email).toString();
+    const mailhash = 'captcha:' + md5(email).toString();
     const captchaQuery = await this.app.redis.get(mailhash);
     // 从未获取过验证码
     if (!captchaQuery) {

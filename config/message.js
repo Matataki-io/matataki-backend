@@ -178,7 +178,7 @@ module.exports = {
 
       captchaRatelimit: { code: this.captchaRatelimit, message: '获取验证码操作次数过多' },
       captchaWrong: { code: this.captchaWrong, message: '验证码错误' },
-      alreadyRegisted: { code: this.alreadyRegisted, message: '用户已经注册' },
+      alreadyRegisted: { code: this.alreadyRegisted, message: '已经注册，请直接登录' },
       passwordWrong: { code: this.passwordWrong, message: '密码错误' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },

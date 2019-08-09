@@ -216,7 +216,11 @@ class AuthController extends Controller {
       ctx.body = ctx.msg.paramsError;
       return;
     }
-
+    const userExistence = await this.service.auth.verifyUser(email);
+    if (userExistence) {
+      ctx.body = ctx.msg.alreadyRegisted;
+      return;
+    }
     const regResult = await this.service.auth.doReg(email, captcha, password, ipaddress);
     switch (regResult) {
       case 1:
