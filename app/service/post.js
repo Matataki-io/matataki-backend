@@ -91,6 +91,17 @@ class PostService extends Service {
     return this.getPostProfile(post, userId);
   }
 
+  async get(id) {
+    const posts = await this.app.mysql.select('posts', {
+      where: { id },
+      columns: [ 'id', 'uid', 'title', 'status', 'create_time' ], // todo：需要再增加
+    });
+    if (posts && posts.length > 0) {
+      return posts[0];
+    }
+    return null;
+  }
+
   // 根据id获取文章
   async getById(id, userId) {
     // const post = await this.app.mysql.get('posts', { id });

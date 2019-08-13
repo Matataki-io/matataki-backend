@@ -156,5 +156,13 @@ module.exports = app => {
   // -------------------------------- 对外API --------------------------------
   // 获取微信API签名
   router.get('/wx/sign', passport.verify, controller.wechat.calculateSign);
+
+  // 开始阅读
+  router.post('/posts/:id/reading', passport.authorize, controller.mining.reading);
+  // 喜欢
+  router.post('/posts/:id/like', passport.authorize, controller.mining.like);
+  // 不喜欢
+  router.post('/posts/:id/dislike', passport.authorize, controller.mining.dislike);
+
 };
 
