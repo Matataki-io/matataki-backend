@@ -213,8 +213,10 @@ class PostService extends Service {
     const amount = queryResult[0];
     const posts = queryResult[1];
 
+    // TBD: 有无文章接口都要改成一致！
     if (posts.length === 0) {
       return [];
+      // return { count: 0, list: [] };
     }
 
     const postids = [];
@@ -262,6 +264,7 @@ class PostService extends Service {
 
     if (postids.length === 0) {
       return [];
+      // return { count: 0, list: [] };
     }
 
     const extraItem = {};
@@ -312,6 +315,7 @@ class PostService extends Service {
 
     if (postids.length === 0) {
       return [];
+      // return { count: 0, list: [] };
     }
 
     const extraItem = {};
@@ -375,6 +379,7 @@ class PostService extends Service {
 
     if (postids.length === 0) {
       return [];
+      // return { count: 0, list: [] };
     }
 
     // 调用getPostList函数获得文章的具体信息
@@ -487,6 +492,7 @@ class PostService extends Service {
 
     if (postids.length === 0) {
       return [];
+      // return { count: 0, list: [] };
     }
 
     const postList = await this.getPostList(postids);
