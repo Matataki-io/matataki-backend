@@ -36,10 +36,15 @@ class LikeService extends Service {
   https://www.geetest.com/Deepknow
   深知：通过用户手机号码、ip、设备、登录到点赞的流程等等判断，给用户打风险分（可以看成是一个风控系统），防止黑产注册成千上万的账号薅羊毛，每日生成报告
 
+  todo：
+  1. 读者每日上限？？？
+  2. 如何防止用户发文刷积分
+  3. csrf
+  4. 人机验证，防刷
   */
 
   // csrf验证要开启
-  // 每个用户每篇文章只能赞或踩，如果已经点赞或踩则不用调用
+  // 每个用户每篇文章只能赞或踩一次，如果已经点赞或踩则不用调用
   async reading(userId, signId) {
     // 更新redis
     // redis_key：'read:userId:signId', 记录阅读的开始时间;
@@ -53,6 +58,16 @@ class LikeService extends Service {
     await this.app.redis.set(rediskey_read, JSON.stringify(value), 'EX', TTL);
 
     // const key_read_log = `read:${userId}:${signId}`;
+  }
+
+  // 获取是否点赞过
+  async liked(userId, signId) {
+    const rediskey_readHistory = `readhistory:${userId}:${signId}`;
+    const readhistory = await this.app.redis.get(rediskey_readHistory);
+    if (readhistory) {
+      return 1;
+    }
+    return 0;
   }
 
   // 赞
@@ -73,7 +88,7 @@ class LikeService extends Service {
     }
 
     // 2. 判断是否已经claim过阅读积分
-    const rediskey_readHistory = `readhistory:${userId}:${signId}`;
+    const rediskey_readHistory = `readhistory:${userId}:${signId}`; // todo key写到统一的一个地方
     const readhistory = await this.app.redis.get(rediskey_readHistory);
     if (readhistory) {
       return -1;
@@ -131,7 +146,7 @@ class LikeService extends Service {
       if (likeStatus === 1) {
         const author_point = Math.floor(point / 2);
         if (author_point > 0) {
-          await conn.query('UPDATE assets_points SET amount = amount + ? WHERE uid = ?;', [ author_point, post.uid ]);
+          await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, author_point, author_point ]);
           await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
             [ post.uid, signId, author_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.beread, ip ]);
         }
@@ -150,7 +165,7 @@ class LikeService extends Service {
           await conn.query('UPDATE assets_points SET amount = amount + ? WHERE uid = ?;', [ readingnew_point, userId ]);
 
           // 作者额外+1
-          await conn.query('UPDATE assets_points SET amount = amount + ? WHERE uid = ?;', [ bereadnew_point, post.uid ]);
+          await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, bereadnew_point, bereadnew_point ]);
           await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
             [ post.uid, signId, bereadnew_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.bereadNew, ip ]);
         }
@@ -173,6 +188,73 @@ class LikeService extends Service {
     }
   }
 
+  async points(userId, page, pagesize) {
+    const points = await this.app.mysql.select('assets_points', {
+      columns: [ 'uid', 'amount' ],
+      where: { uid: userId },
+    });
+
+    if (points || points.length > 0) {
+      const countsql = 'SELECT COUNT(1) AS count FROM assets_points_log l ';
+      const listsql = 'SELECT l.sign_id, p.title, l.amount, l.create_time, l.type FROM assets_points_log l LEFT JOIN posts p ON l.sign_id=p.id ';
+      const wheresql = 'WHERE l.uid = ? ';
+      const ordersql = 'ORDER BY l.id DESC LIMIT ? ,? ';
+
+      const sql = countsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+
+      const queryResult = await this.app.mysql.query(sql,
+        [ userId, userId, (page - 1) * pagesize, 1 * pagesize ]
+      );
+
+      const result = {
+        amount: points[0].amount,
+        count: queryResult[0].count,
+        logs: queryResult[1],
+      };
+      return result;
+    }
+
+    return { amount: 0, count: 0 };
+  }
+
+  // 获取用户从单篇文章阅读获取的积分
+  async getPointslogBySignId(userId, signId) {
+    const pointslog = await this.app.mysql.select('assets_points_log', {
+      columns: [ 'amount', 'type', 'create_time' ],
+      where: { uid: userId, sign_id: signId },
+    });
+
+    return pointslog;
+  }
+
+  async publish(userId, signId, ip) {
+    const point = 20;
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      // 4.1 更新用户积分
+      await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+        [ userId, point, point ]);
+
+      // 4.2 插入log日志，并判断是否已经插入过, todo：加唯一索引，uid,sign_id, type，上下的语句都改下
+      const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
+        + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
+      [ userId, signId, point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.publish, ip, userId, signId, consts.pointTypes.publish ]);
+
+      if (logResult.affectedRows !== 1) {
+        conn.rollback();
+        return -1;
+      }
+
+      // 提交事务
+      await conn.commit();
+      return 0;
+
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('Mining.like exception. j%', e);
+      return -1;
+    }
+  }
 
 }
 

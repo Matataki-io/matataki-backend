@@ -24,6 +24,20 @@ class UserController extends Controller {
     ctx.body.data = details;
   }
 
+  // 获取用户的积分和日志
+  async points() {
+    const ctx = this.ctx;
+    const { page = 1, pagesize = 20 } = this.ctx.query;
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const result = await this.service.mining.points(ctx.user.id, page, pagesize);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
+
   async tokens() {
     const { page = 1, pagesize = 20, symbol = 'EOS' } = this.ctx.query;
 

@@ -51,6 +51,10 @@ class PostService extends Service {
           + ' VALUES(?, 0, 0, 0 ,0, 0);',
           [ result.insertId ]
         );
+
+        // 加积分
+        await this.service.mining.publish(data.uid, result.insertId, ''); // todo；posts表增加ip，这里传进来ip
+
         return result.insertId;
       }
     } catch (err) {
@@ -91,6 +95,7 @@ class PostService extends Service {
     return this.getPostProfile(post, userId);
   }
 
+  // 根据id获取文章-简单版
   async get(id) {
     const posts = await this.app.mysql.select('posts', {
       where: { id },
@@ -125,7 +130,7 @@ class PostService extends Service {
 
       // 阅读次数
       const count = await this.app.mysql.query(
-        'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue'
+        'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue, likes, dislikes'
         + ' FROM post_read_count WHERE post_id = ?;',
         [ post.id ]
       );
@@ -135,8 +140,10 @@ class PostService extends Service {
         post.ups = count[0].ups;
         post.value = count[0].eosvalue;
         post.ontvalue = count[0].ontvalue;
+        post.likes = count[0].likes;
+        post.dislikes = count[0].dislikes;
       } else {
-        post.read = post.sale = post.ups = post.value = post.ontvalue = 0;
+        post.read = post.sale = post.ups = post.value = post.ontvalue = post.likes = post.dislikes = 0;
       }
 
       // tags
@@ -170,6 +177,13 @@ class PostService extends Service {
       const user = await this.app.mysql.get('users', { username: name });
       if (user) {
         post.nickname = user.nickname;
+      }
+
+      if (userId) {
+        // 是否点过推荐/不推荐，每个人只能点一次推荐/不推荐
+        post.is_liked = await this.service.mining.liked(userId, post.id);
+        // 获取用户从单篇文章阅读获取的积分
+        post.points = await this.service.mining.getPointslogBySignId(userId, post.id);
       }
 
       // update cahce

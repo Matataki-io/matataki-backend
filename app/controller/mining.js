@@ -20,7 +20,6 @@ class LikeController extends Controller {
     ctx.body = ctx.msg.success;
   }
 
-
   // 不喜欢
   async dislike() {
     const ctx = this.ctx;

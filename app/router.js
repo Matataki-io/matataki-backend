@@ -98,6 +98,8 @@ module.exports = app => {
   // 资产明细
   // router.get('/tokens', passport.authorize, controller.user.tokens);
   router.get('/user/tokens', passport.authorize, controller.user.tokens);
+  // 获取用户的积分和日志
+  router.get('/user/points', passport.authorize, controller.user.points);
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
   // 设置用户头像 (need access token)
@@ -157,12 +159,14 @@ module.exports = app => {
   // 获取微信API签名
   router.get('/wx/sign', passport.verify, controller.wechat.calculateSign);
 
+  // -------------------------------- 积分相关 --------------------------------
   // 开始阅读
   router.post('/posts/:id/reading', passport.authorize, controller.mining.reading);
   // 喜欢
   router.post('/posts/:id/like', passport.authorize, controller.mining.like);
   // 不喜欢
   router.post('/posts/:id/dislike', passport.authorize, controller.mining.dislike);
+
 
 };
 
