@@ -527,16 +527,23 @@ class PostController extends Controller {
       matchStatus = 1;
       result = await this.service.postImport.handleWechat(wechatMatch[0]);
     }
-    const chainnewsMatch = url.match(/https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/);
-    if (chainnewsMatch) {
-      matchStatus = 1;
-      result = await this.service.postImport.handleChainnews(chainnewsMatch[0]);
+
+    if (matchStatus === 0) {
+      const chainnewsMatch = url.match(/https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/);
+      if (chainnewsMatch) {
+        matchStatus = 1;
+        result = await this.service.postImport.handleChainnews(chainnewsMatch[0]);
+      }
     }
-    const orangeMatch = url.match(/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/);
-    if (orangeMatch) {
-      matchStatus = 1;
-      result = await this.service.postImport.handleOrange(orangeMatch[0]);
+
+    if (matchStatus === 0) {
+      const orangeMatch = url.match(/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/);
+      if (orangeMatch && matchStatus !== 1) {
+        matchStatus = 1;
+        result = await this.service.postImport.handleOrange(orangeMatch[0]);
+      }
     }
+
     if (matchStatus === 0) {
       ctx.body = ctx.msg.importPlatformNotSupported;
       return;
