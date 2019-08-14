@@ -519,13 +519,23 @@ class PostController extends Controller {
       return;
     }
     let result = null;
-    if (/https:\/\/mp\.weixin\.qq\.com\/s[?\/]{1}[_=&#a-zA-Z0-9]{1,200}/.test(url)) {
-      result = await this.service.postImport.handleWechat(url);
-    } else if (/https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/.test(url)) {
-      result = await this.service.postImport.handleChainnews(url);
-    } else if (/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/.test(url)) {
-      result = await this.service.postImport.handleOrange(url);
-    } else {
+    let matchStatus = 0;
+    const wechatMatch = url.match(/https:\/\/mp\.weixin\.qq\.com\/s[?\/]{1}[_\-=&#a-zA-Z0-9]{1,200}/);
+    if (wechatMatch) {
+      matchStatus = 1;
+      result = await this.service.postImport.handleWechat(wechatMatch[0]);
+    }
+    const chainnewsMatch = url.match(/https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/);
+    if (chainnewsMatch) {
+      matchStatus = 1;
+      result = await this.service.postImport.handleChainnews(chainnewsMatch[0]);
+    }
+    const orangeMatch = url.match(/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/);
+    if (orangeMatch) {
+      matchStatus = 1;
+      result = await this.service.postImport.handleOrange(orangeMatch[0]);
+    }
+    if (matchStatus === 0) {
       ctx.body = ctx.msg.importPlatformNotSupported;
       return;
     }
