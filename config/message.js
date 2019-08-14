@@ -76,6 +76,7 @@ module.exports = {
   receiverNotYourself: 10112,
   receiverNotAccept: 10113,
   notYourPost: 10114,
+  importPlatformNotSupported: 10115,
 
   // draft 草稿箱相关
   // 找不到草稿
@@ -141,6 +142,7 @@ module.exports = {
       receiverNotYourself: { code: this.receiverNotYourself, message: 'Receiver should not be yourself' },
       receiverNotAccept: { code: this.receiverNotAccept, message: 'This user does not accept' },
       notYourPost: { code: this.notYourPost, message: 'not your post' },
+      importPlatformNotSupported: { code: this.importPlatformNotSupported, message: 'Platform not supported' },
 
       draftNotFound: { code: this.draftNotFound, message: 'Cannot find the draft' },
       notYourDraft: { code: this.notYourDraft, message: 'It is not your draft' },
@@ -196,6 +198,7 @@ module.exports = {
       receiverNotYourself: { code: this.receiverNotYourself, message: '不能转移文章给自己' },
       receiverNotAccept: { code: this.receiverNotAccept, message: '用户不接受转让' },
       notYourPost: { code: this.notYourPost, message: '不能操作别人的文章' },
+      importPlatformNotSupported: { code: this.importPlatformNotSupported, message: '不支持导入这个平台的文章' },
 
       draftNotFound: { code: this.draftNotFound, message: '找不到这篇草稿' },
       notYourDraft: { code: this.notYourDraft, message: '无权操作别人的草稿' },

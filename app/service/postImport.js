@@ -68,10 +68,14 @@ class PostImportService extends Service {
       imgFileName = './uploads/today_' + Date.now() + '.' + imgElement[0].rawAttributes['data-type'];
       imgUpUrl = await this.uploadArticleImage(imgRawUrl, imgFileName);
       if (imgUpUrl) {
-        imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(imgRawUrl, 'https://ssimg.frontenduse.top' + imgUpUrl);
+        imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(
+          /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
+        imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(
+          /style=\"[a-zA-Z0-9-:;%,() ]{0,100}\"/g, 'style="vertical-align: middle;width: 90%;height: 90%;"');
       } else {
         this.logger.info('PostImportService:: handleWechat: upload Image failed, ignored');
-        imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(imgRawUrl, '');
+        imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(
+          /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, '');
       }
       imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace('data-src', 'src');
     }
@@ -85,7 +89,7 @@ class PostImportService extends Service {
 
     // 处理标题和封面
     const parsedTitleRaw = parsedPage.querySelector('h2.rich_media_title').childNodes[0].rawText;
-    const parsedTitle = parsedTitleRaw.replace(/\s{3,}/, '');
+    const parsedTitle = parsedTitleRaw.replace(/\s{2,}/g, '');
     const parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz_jpg\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/)[0];
     const parsedCover = parsedCoverRaw.substring(15, parsedCoverRaw.length - 1);
     const coverLocation = await this.uploadArticleImage(parsedCover);

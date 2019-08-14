@@ -526,15 +526,17 @@ class PostController extends Controller {
     } else if (/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/.test(url)) {
       result = await this.service.postImport.handleOrange(url);
     } else {
-      ctx.body = ctx.msg.paramsError;
+      ctx.body = ctx.msg.importPlatformNotSupported;
       return;
     }
     if (result) {
-      console.log(result.content);
+      // console.log(result.content);
+      this.logger.info('PostController:: importer: Import article succeed..', url);
       ctx.body = ctx.msg.success;
       ctx.body.data = result;
       return;
     }
+    this.logger.info('PostController:: importer: Import article failed..', url);
     ctx.body = ctx.msg.failure;
   }
 
