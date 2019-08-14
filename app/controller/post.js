@@ -26,9 +26,9 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
       publickey, sign, hash, fissionFactor = 2000,
-      cover, is_original = 0, platform = 'eos', tags = '' } = ctx.request.body;
+      cover, is_original = 0, origin_url = '', platform = 'eos', tags = '' } = ctx.request.body;
 
-    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, is_original);
+    ctx.logger.info('debug info', author, title, content, publickey, sign, hash, is_original, origin_url);
 
     if (fissionFactor > 2000) {
       ctx.body = ctx.msg.postPublishParamsError; // msg: 'fissionFactor should >= 2000',
@@ -78,6 +78,7 @@ class PostController extends Controller {
       sign,
       hash,
       is_original,
+      origin_url,
       fission_factor: fissionFactor,
       create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
       cover, // 封面url
@@ -104,7 +105,9 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos', tags = '' } = ctx.request.body;
+    const { signId, author = '', title = '', content = '',
+      publickey, sign, hash, fissionFactor = 2000, cover,
+      is_original = 0, origin_url = '', platform = 'eos', tags = '' } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -124,7 +127,7 @@ class PostController extends Controller {
       return;
     }
 
-    ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash);
+    ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash, is_original, origin_url);
 
     try {
       if (platform === 'eos') {
@@ -174,6 +177,7 @@ class PostController extends Controller {
           sign: post.sign,
           cover: post.cover,
           is_original: post.is_original,
+          origin_url: post.origin_url,
           public_key: post.public_key,
           create_time: now,
         });
@@ -183,6 +187,7 @@ class PostController extends Controller {
           public_key: publickey,
           sign,
           short_content: shortContent,
+          origin_url,
         };
 
         if (title) {
