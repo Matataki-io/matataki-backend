@@ -153,14 +153,14 @@ class LikeService extends Service {
       }
 
       // 4.5 阅读3天内的新文章
-      if (Date.now() - post.create_time) {
+      if ((Date.now() - post.create_time) / (24 * 3600 * 1000) <= 3) {
         const readingnew_point = 5;
         const bereadnew_point = 1;
 
         // 用户额外+5
         const readnewlogResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
           + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
-        [ userId, signId, readingnew_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readingNew, ip, userId, signId, consts.pointTypes.reading ]);
+        [ userId, signId, readingnew_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readingNew, ip, userId, signId, consts.pointTypes.readingNew ]);
         if (readnewlogResult.affectedRows === 1) {
           await conn.query('UPDATE assets_points SET amount = amount + ? WHERE uid = ?;', [ readingnew_point, userId ]);
 

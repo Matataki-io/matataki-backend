@@ -1844,6 +1844,17 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 ```
 ### 积分系统
 
+积分类型：
+```
+ pointTypes: {
+    reading: 'reading', // 用户阅读
+    beread: 'beread', // 读者的文章被阅读
+    publish: 'publish', // 发布文章
+    readingNew: 'reading_new', // 用户阅读新文章，额外获得的
+    bereadNew: 'beread_new', // 读者的新文章被阅读，额外获得的
+  }
+```
+
 #### 客户端打开文章后提交，表示开始阅读
 * POST /posts/:id/reading
 * 响应状态码：200
