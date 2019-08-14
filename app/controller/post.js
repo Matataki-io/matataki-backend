@@ -513,6 +513,35 @@ class PostController extends Controller {
     ctx.body = ctx.msg.success;
   }
 
+  async importer() {
+    const ctx = this.ctx;
+    const { url = null } = ctx.request.body;
+    if (!url) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    let result = null;
+    if (/https:\/\/mp\.weixin\.qq\.com\/s[?\/]{1}[_=&#a-zA-Z0-9]{1,200}/.test(url)) {
+      result = await this.service.postImport.handleWechat(url);
+    } else if (/https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/.test(url)) {
+      result = await this.service.postImport.handleChainnews(url);
+    } else if (/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/.test(url)) {
+      result = await this.service.postImport.handleOrange(url);
+    } else {
+      ctx.body = ctx.msg.importPlatformNotSupported;
+      return;
+    }
+    if (result) {
+      // console.log(result.content);
+      this.logger.info('PostController:: importer: Import article succeed..', url);
+      ctx.body = ctx.msg.success;
+      ctx.body.data = result;
+      return;
+    }
+    this.logger.info('PostController:: importer: Import article failed..', url);
+    ctx.body = ctx.msg.failure;
+  }
+
   async uploadImage() {
     const ctx = this.ctx;
     const file = ctx.request.files[0];

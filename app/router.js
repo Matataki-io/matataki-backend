@@ -53,6 +53,8 @@ module.exports = app => {
   router.get('/posts/recommend', passport.verify, controller.post.getRecommend);
   // 根据 tag 查找tag下的文章
   router.get('/posts/getPostByTag', passport.verify, controller.post.getPostByTag);
+  // 文章导入功能
+  router.post('/posts/importer', passport.authorize, controller.post.importer);
   // Elastic search
   // router.get('/ela/search', passport.verify, controller.search.search);
 

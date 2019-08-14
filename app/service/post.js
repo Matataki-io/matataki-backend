@@ -238,8 +238,10 @@ class PostService extends Service {
     const amount = queryResult[0];
     const posts = queryResult[1];
 
+    // TBD: 有无文章接口都要改成一致！
     if (posts.length === 0) {
-      return [];
+      // return [];
+      return { count: 0, list: [] };
     }
 
     const postids = [];
@@ -286,7 +288,8 @@ class PostService extends Service {
     });
 
     if (postids.length === 0) {
-      return [];
+      // return [];
+      return { count: 0, list: [] };
     }
 
     const extraItem = {};
@@ -336,7 +339,8 @@ class PostService extends Service {
     });
 
     if (postids.length === 0) {
-      return [];
+      // return [];
+      return { count: 0, list: [] };
     }
 
     const extraItem = {};
@@ -365,6 +369,7 @@ class PostService extends Service {
 
   // 分币种的赞赏金额排序
   // 请注意因为"后筛选"导致的不满20条,进而前端无法加载的问题.
+  // 暂时不使用， 因此没有维护
   async amountRank(page = 1, pagesize = 20, symbol = 'EOS', channel = null) {
 
     let posts = null;
@@ -400,6 +405,7 @@ class PostService extends Service {
 
     if (postids.length === 0) {
       return [];
+      // return { count: 0, list: [] };
     }
 
     // 调用getPostList函数获得文章的具体信息
@@ -466,6 +472,11 @@ class PostService extends Service {
       postids.push(row.signid);
     });
 
+    if (postids.length === 0) {
+      // return [];
+      return { count: 0, list: [] };
+    }
+
     let postList = await this.getPostList(postids);
 
     _.each(postList, row2 => {
@@ -512,6 +523,7 @@ class PostService extends Service {
 
     if (postids.length === 0) {
       return [];
+      // return { count: 0, list: [] };
     }
 
     const postList = await this.getPostList(postids);

@@ -1794,6 +1794,28 @@ curl -d "title=牛逼" -H "x-access-token: xxxx" -X POST  http://localhost:7001/
 curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb703954f7b4612abc5daf48d8d56b277
 
 
+#### 文章搬运功能（need access token）
+
+* POST /posts/importer
+* 参数： 需要获取的页面URL， 带协议名称， 如
+```
+{
+  "url": "https://www.chainnews.com/articles/133376386310.htm"
+}
+```
+* 正常响应状态码：200
+* 响应数据：文章的题目， 封面， 内容
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "title": "慢雾：门罗币锁定转账攻击可锁定交易所 XMR 流动性，但不会导致资金损失",
+        "cover": "/image/2019/08/13/565a7435db23af271289eb2350e2f11f.jpg",
+        "content": "> 该攻击不会导致交易所任何资金损失，但是会锁定了交易所 XMR 流动性。\n\n**原文标题：《门罗币 (XMR) 锁定转账攻击细节分析》**  \n**作者：ISME@SlowMist team**\n\n近日据慢雾区情报显示，针对门罗币 (XMR) 转账锁定攻击在多个交易所出现，慢雾安全团队在收到情报第一时间进行分析跟进，本着负责任披露的原则我们第一时间在慢雾区进行了预警并为我们所服务的客户进行了及时的情报同步以及协助检测和修复。如有其他需要提供验证和检测服务欢迎联系慢雾安全团队。"
+    }
+}
+```
 ### 积分系统
 
 #### 客户端打开文章后提交，表示开始阅读
