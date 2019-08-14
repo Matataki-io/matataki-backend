@@ -1111,23 +1111,49 @@ curl https://api.smartsignature.io/p/123 | jq
 
 ```
 {
-  "id": 123,
-  "username": null,
-  "author": "cryptobuffff",
-  "title": "我是一个粉刷匠",
-  "short_content": null,
-  "hash": "QmUkEM3FKU1mvBSKfZLMWubBZMnnmNMp5No8DoWTrUZ8vX",
-  "sign": "SIG_K1_K9gV2aPKUoYX53C9bbXPKs1ZhH5jkmPTLqM3eygRcDeGbJkZgbk5de4UESSowpPUB3KXq9GLZn66kyLqobTVZPQBi5pZ2k",
-  "public_key": "EOS89Q5D3pDAn4UeLqhtX8ZoDWKNTmiYewPQk4CmQTdj81BuTe9es",
-  "status": 0,
-  "onchain_status": 1,
-  "create_time": "2019-03-21T12:35:29.000Z",
-  "fission_factor": 2000,
-  "read": 0,
-  "ups": 0,
-  "value": 0
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"id": 100531,
+		"username": "xiaotiandada",
+		"author": "xiaotiandada",
+		"title": "占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页",
+		"short_content": "占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页",
+		"hash": "QmcHTp2NdrZcweq1Do3v4g1iK2yq6ANHBfyCeF98jLqgti",
+		"status": 0,
+		"onchain_status": 0,
+		"create_time": "2019-06-21T03:59:59.000Z",
+		"fission_factor": 2000,
+		"cover": "/image/2019/07/11/561ad457a2368a4be4909cef0ac328c7.jpg",
+		"is_original": 0,
+		"channel_id": 1,
+		"fission_rate": 100,
+		"referral_rate": 0,
+		"uid": 65,
+		"is_recommend": 1,
+		"category_id": 0,
+		"read": 114,
+		"sale": 0,
+		"ups": 2,
+		"value": 0,
+		"ontvalue": 20000,
+		"likes": 2,
+		"dislikes": 0,
+		"tags": [{
+			"id": 10,
+			"name": "我看不行"
+		}],
+		"is_support": false,
+		"nickname": "11我321哈11112",
+		"is_liked": 1,
+		"points": [{
+			"uid": 1048,
+			"amount": 3,
+			"type": "reading",
+			"create_time": "2019-08-13T09:08:52.000Z"…
+		}]
+	}
 }
-
 ```
 #### 上传并设置头像（阿里云oss版本）（need access token）
 * POST /user/uploadAvatar
@@ -1818,6 +1844,17 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 ```
 ### 积分系统
 
+积分类型：
+```
+ pointTypes: {
+    reading: 'reading', // 用户阅读
+    beread: 'beread', // 读者的文章被阅读
+    publish: 'publish', // 发布文章
+    readingNew: 'reading_new', // 用户阅读新文章，额外获得的
+    bereadNew: 'beread_new', // 读者的新文章被阅读，额外获得的
+  }
+```
+
 #### 客户端打开文章后提交，表示开始阅读
 * POST /posts/:id/reading
 * 响应状态码：200
@@ -1861,5 +1898,38 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 {
   "code": 0,
   "message": "成功"
+}
+```
+
+#### 获取我的积分
+* GET /user/points
+* 响应状态码：200
+* 参数：
+```
+?page=1&pagesize=10
+```
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"amount": 26,
+		"logs": [{
+				"sign_id": 100531,
+				"title": "占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页",
+				"amount": 20,
+				"create_time": "2019-08-14T06:41:33.000Z",
+				…
+			},
+			{
+				"sign_id": 100531,
+				"title": "占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页",
+				"amount": 3,
+				"create_time": "2019-08-13T09:08:52.000Z",
+				…
+			}
+		]
+	}
 }
 ```

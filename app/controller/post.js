@@ -334,6 +334,7 @@ class PostController extends Controller {
     this.ctx.body.data = postData;
   }
 
+  // 查看单篇文章
   async p() {
     const ctx = this.ctx;
     const id = ctx.params.id;
@@ -365,6 +366,7 @@ class PostController extends Controller {
 
   }
 
+  // 文章阅读事件上报 todo，待整合
   async show() {
     const ctx = this.ctx;
     // const id = ctx.params.id;

@@ -32,12 +32,13 @@ module.exports = {
     order: 2,
   },
 
+  // 积分系统
   pointTypes: {
-    reading: 'reading',
-    beread: 'beread',
-    publish: 'publish',
-    readingNew: 'reading_new',
-    bereadNew: 'beread_new',
+    reading: 'reading', // 用户阅读
+    beread: 'beread', // 读者的文章被阅读
+    publish: 'publish', // 发布文章
+    readingNew: 'reading_new', // 用户阅读新文章，额外获得的
+    bereadNew: 'beread_new', // 读者的新文章被阅读，额外获得的
   },
 
 };
