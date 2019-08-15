@@ -72,12 +72,12 @@ class LikeService extends Service {
 
   // 赞
   async like(userId, signId, time, ip) {
-    return await this.do_like(userId, signId, time, ip, 1);
+    return await this.do_like(userId, signId, time, ip, 2);
   }
 
   // 踩
   async dislike(userId, signId, time, ip) {
-    return await this.do_like(userId, signId, time, ip, 0);
+    return await this.do_like(userId, signId, time, ip, 1);
   }
 
   async do_like(userId, signId, time, ip, likeStatus) {
@@ -125,6 +125,7 @@ class LikeService extends Service {
     // 4. 处理积分
     const conn = await this.app.mysql.beginTransaction();
     try {
+
       // 4.1 更新用户积分
       await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
         [ userId, point, point ]);
@@ -139,11 +140,23 @@ class LikeService extends Service {
         return -1;
       }
 
-      // 4.3 更新点赞次数
+      // 4.3 记录点赞状态， 更新点赞次数
       await conn.query('UPDATE post_read_count SET likes=likes+1 WHERE post_id=?;', [ signId ]);
 
+      if (likeStatus === 2) {
+        await conn.query(
+          'INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES (?, ?, ?, ?, ?, ?)',
+          [ userId, signId, 1, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.like, ip ]
+        );
+      } else if (likeStatus === 1) {
+        await conn.query(
+          'INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES (?, ?, ?, ?, ?, ?)',
+          [ userId, signId, 1, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.dislike, ip ]
+        );
+      }
+
       // 4.4 更新作者积分和日志
-      if (likeStatus === 1) {
+      if (likeStatus === 2) {
         const author_point = Math.floor(point / 2);
         if (author_point > 0) {
           await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, author_point, author_point ]);
@@ -177,8 +190,9 @@ class LikeService extends Service {
       // 删除redis，是必须的吗？
       await this.app.redis.del(rediskey_read);
 
-      // 4.6 插入redis read:history，表示已经获取积分
-      await this.app.redis.set(rediskey_readHistory, 1);
+      // 4.6 插入redis read:history，表示已经获取积分， 踩时候状态记录1， 顶时候状态记录2
+      // await this.app.redis.set(rediskey_readHistory, 1);
+      await this.app.redis.set(rediskey_readHistory, likeStatus);
 
       return 0;
     } catch (e) {
