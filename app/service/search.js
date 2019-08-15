@@ -2,6 +2,7 @@
 
 const Service = require('egg').Service;
 const elastic = require('@elastic/elasticsearch');
+const moment = require('moment');
 
 class SearchService extends Service {
   constructor(ctx, app) {
@@ -108,6 +109,36 @@ class SearchService extends Service {
       return thePost[0];
     }
     return [];
+  }
+
+  async importPost(postid, userid, title, content) {
+    const author = await this.app.mysql.query(
+      'SELECT id, username, nickname FROM users WHERE id = ?;',
+      [ userid ]
+    );
+    if (author.length === 0) {
+      return null;
+    }
+
+    const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
+    try {
+      await elaClient.index({
+        index: 'posts',
+        body: {
+          id: postid,
+          create_time: moment(),
+          // uid: author[0].id,
+          username: author[0].username,
+          nickname: author[0].nickname,
+          title,
+          content,
+        },
+      });
+    } catch (err) {
+      this.logger.error('SearchService:: importPost: error ', err);
+      return null;
+    }
+
   }
 }
 

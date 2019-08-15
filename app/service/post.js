@@ -31,12 +31,12 @@ class PostService extends Service {
     // 去除video标签
     parsedContent = parsedContent.replace(/<video.*?>\n*?.*?\n*?<\/video>/gi, '');
     parsedContent = parsedContent.replace(/<[^>]+>/gi, '');
-    parsedContent = parsedContent.substring(0, 600);
+    // parsedContent = parsedContent.substring(0, 600);
     // 去除markdown和html
     parsedContent = removemd(parsedContent);
     // 去除空格
     parsedContent = parsedContent.replace(/\s+/g, '');
-    parsedContent = parsedContent.substring(0, 300);
+    // parsedContent = parsedContent.substring(0, 300);
     return parsedContent;
   }
 

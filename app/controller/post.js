@@ -68,7 +68,8 @@ class PostController extends Controller {
     }
     const articleJson = JSON.parse(articleData.toString());
     // 只清洗文章文本的标识
-    const shortContent = await this.service.post.wash(articleJson.content);
+    const articleContent = await this.service.post.wash(articleJson.content);
+    const shortContent = articleContent.substring(0, 300);
 
     const id = await ctx.service.post.publish({
       author,
@@ -87,6 +88,8 @@ class PostController extends Controller {
       category_id: 0,
       short_content: shortContent,
     });
+
+    // await this.service.search.importPost(id, ctx.user.id, title, articleContent);
 
     if (tags) {
       let tag_arr = tags.split(',');
@@ -161,7 +164,8 @@ class PostController extends Controller {
     }
     const articleJson = JSON.parse(articleData.toString());
     // 只清洗文章文本的标识
-    const shortContent = await this.service.post.wash(articleJson.content);
+    const articleContent = await this.service.post.wash(articleJson.content);
+    const shortContent = articleContent.substring(0, 300);
 
     try {
       const conn = await this.app.mysql.beginTransaction();
@@ -215,6 +219,8 @@ class PostController extends Controller {
         ctx.body = ctx.msg.failure;
         return;
       }
+
+      // await this.service.search.importPost(signId, ctx.user.id, title, articleContent);
 
       ctx.body = ctx.msg.success;
       ctx.body.data = signId;
