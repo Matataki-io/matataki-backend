@@ -29,9 +29,28 @@ class SearchService extends Service {
             // match: {
             //   content: keyword,
             // },
-            multi_match: {
-              query: keyword,
-              fields: [ 'nickname', 'title', 'content' ],
+            // multi_match: {
+            //   query: keyword,
+            //   fields: [ 'nickname', 'title', 'content' ],
+            // },
+            function_score: {
+              functions: [
+                {
+                  exp: {
+                    create_time: {
+                      origin: 'now',
+                      offset: '0d',
+                      scale: '30d',
+                    },
+                  },
+                },
+              ],
+              query: {
+                multi_match: {
+                  query: keyword,
+                  fields: [ 'nickname', 'title', 'content' ],
+                },
+              },
             },
           },
           highlight: {
@@ -53,8 +72,9 @@ class SearchService extends Service {
     // 加了多匹配之后， 没有匹配到的项目在highlight里面没有
     for (let hindex = 0; hindex < postQuery.body.hits.hits.length; hindex += 1) {
       matches = {};
-      matches.postid = postQuery.body.hits.hits[hindex]._source.inner_id;
+      matches.postid = postQuery.body.hits.hits[hindex]._source.id;
       matches.username = postQuery.body.hits.hits[hindex]._source.username;
+      matches.create_time = postQuery.body.hits.hits[hindex]._source.create_time;
 
       if (postQuery.body.hits.hits[hindex].highlight.nickname) {
         matches.nickname = postQuery.body.hits.hits[hindex].highlight.nickname[0];
@@ -77,6 +97,49 @@ class SearchService extends Service {
     }
     return result;
   }
+
+  async precisePost(postid) {
+    const thePost = await this.app.mysql.query(
+      'SELECT p.id AS postid, p.username, p.create_time, u.nickname, p.title, p.short_content '
+      + 'FROM posts p LEFT JOIN users u ON p.uid = u.id WHERE p.id = ?;',
+      [ postid ]
+    );
+    if (thePost.length > 0) {
+      return thePost[0];
+    }
+    return [];
+  }
 }
 
 module.exports = SearchService;
+
+// 时间加权方案：
+// {
+//   "query": {
+//   	"function_score": {
+//   	  "functions": [
+//   	  	{
+//     	  "exp": {
+//   	  		"create_time": {
+//   	  		  "origin": "now",
+//   	  		  "offset": "0d",
+//   	  		  "scale": "30d"
+//   	  		}
+//   	  	  }
+//   	  	}
+//       ],
+//       "query": {
+//       	"bool": {
+//   	      "must": [
+//   	  	    { "match": { "content": "价格" } }
+// 		  ]
+//   		}
+//       }
+//   	}
+//   },
+//   "highlight": {
+//     "fields" : {
+//       "content" : {}
+//         }
+// 	}
+// }

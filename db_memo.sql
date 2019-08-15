@@ -693,7 +693,7 @@ ALTER TABLE users ADD COLUMN last_login_time DATETIME NULL;
 ALTER TABLE users ADD COLUMN password_hash VARCHAR(64) NULL;
 
 -- 2019/08/14 sprint8-v2.6.0
--- 增加文章溯源URL
-ALTER TABLE posts ADD COLUMN origin_url VARCHAR(255) NULL;
-ALTER TABLE drafts ADD COLUMN origin_url VARCHAR(255) NULL;
-ALTER TABLE edit_history ADD COLUMN origin_url VARCHAR(255) NULL;
+-- 增加文章溯源URL(计划已经撤销)
+-- ALTER TABLE posts ADD COLUMN origin_url VARCHAR(255) NULL;
+-- ALTER TABLE drafts ADD COLUMN origin_url VARCHAR(255) NULL;
+-- ALTER TABLE edit_history ADD COLUMN origin_url VARCHAR(255) NULL;

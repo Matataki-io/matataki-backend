@@ -31,16 +31,16 @@ class DraftsController extends Controller {
   async save() {
     const ctx = this.ctx;
 
-    const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0, origin_url = '', tags = '' } = ctx.request.body;
+    const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0, tags = '' } = ctx.request.body;
 
     if (id) {
-      await this.save_draft(this.ctx.user.id, id, title, content, cover, fissionFactor, is_original, origin_url, tags);
+      await this.save_draft(this.ctx.user.id, id, title, content, cover, fissionFactor, is_original, tags);
     } else {
-      await this.create_draft(this.ctx.user.id, title, content, cover, fissionFactor, is_original, origin_url, tags);
+      await this.create_draft(this.ctx.user.id, title, content, cover, fissionFactor, is_original, tags);
     }
   }
 
-  async save_draft(uid, id, title, content, cover, fissionFactor, is_original, origin_url, tags) {
+  async save_draft(uid, id, title, content, cover, fissionFactor, is_original, tags) {
     const draft = await this.app.mysql.get('drafts', { id });
 
     if (!draft) {
@@ -63,7 +63,6 @@ class DraftsController extends Controller {
         fission_factor: fissionFactor,
         update_time: now,
         is_original,
-        origin_url,
         tags,
       }, { where: { id } });
 
@@ -82,7 +81,7 @@ class DraftsController extends Controller {
     }
   }
 
-  async create_draft(uid, title, content, cover, fissionFactor, is_original, origin_url, tags) {
+  async create_draft(uid, title, content, cover, fissionFactor, is_original, tags) {
 
     try {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -94,7 +93,6 @@ class DraftsController extends Controller {
         cover,
         fission_factor: fissionFactor,
         is_original,
-        origin_url,
         create_time: now,
         update_time: now,
         tags,

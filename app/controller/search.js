@@ -9,7 +9,20 @@ class SearchController extends Controller {
 
     let result;
     if (type === 'post') {
-      result = await this.service.search.searchPost(word);
+      if (word[0] === '#') {
+        const postid = parseInt(word.substring(1, word.length));
+        if (isNaN(postid)) {
+          ctx.body = ctx.msg.paramsError;
+          return;
+        }
+        const post = await this.service.search.precisePost(postid);
+        post.content = [];
+        post.content.push(post.short_content);
+        delete post.short_content;
+        result = [ post ];
+      } else {
+        result = await this.service.search.searchPost(word);
+      }
     }
 
     if (!result) {
