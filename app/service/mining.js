@@ -234,7 +234,7 @@ class LikeService extends Service {
 
       const result = {
         amount: points[0].amount,
-        count: queryResult[0].count,
+        count: queryResult[0][0].count,
         logs: queryResult[1],
       };
       return result;
