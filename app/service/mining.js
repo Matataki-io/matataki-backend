@@ -249,31 +249,34 @@ class LikeService extends Service {
 
   async publish(userId, signId, ip) {
     const point = 20;
-    const conn = await this.app.mysql.beginTransaction();
-    try {
-      // 4.1 更新用户积分
-      await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
-        [ userId, point, point ]);
+    if (await this.setTodayPoint(userId, point)) {
+      const conn = await this.app.mysql.beginTransaction();
+      try {
+        // 4.1 更新用户积分
+        await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+          [ userId, point, point ]);
 
-      // 4.2 插入log日志，并判断是否已经插入过, todo：加唯一索引，uid,sign_id, type，上下的语句都改下
-      const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
-        + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
-      [ userId, signId, point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.publish, ip, userId, signId, consts.pointTypes.publish ]);
+        // 4.2 插入log日志，并判断是否已经插入过, todo：加唯一索引，uid,sign_id, type，上下的语句都改下
+        const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
+          + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
+        [ userId, signId, point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.publish, ip, userId, signId, consts.pointTypes.publish ]);
 
-      if (logResult.affectedRows !== 1) {
-        conn.rollback();
+        if (logResult.affectedRows !== 1) {
+          conn.rollback();
+          return -1;
+        }
+
+        // 提交事务
+        await conn.commit();
+        return 0;
+
+      } catch (e) {
+        await conn.rollback();
+        this.logger.error('Mining.like exception. j%', e);
         return -1;
       }
-
-      // 提交事务
-      await conn.commit();
-      return 0;
-
-    } catch (e) {
-      await conn.rollback();
-      this.logger.error('Mining.like exception. j%', e);
-      return -1;
     }
+    return -1;
   }
 
   async setTodayPoint(userId, amount) {
