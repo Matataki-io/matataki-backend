@@ -17,7 +17,7 @@ class PostScore extends Subscription {
   }
 
   async subscribe() {
-    // if (this.ctx.app.config.isDebug) return;
+    if (this.ctx.app.config.isDebug) return;
 
     this.logger.info('PostScoreSchedule:: Start to update Score...');
     try {
