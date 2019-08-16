@@ -51,7 +51,7 @@ class SearchService extends Service {
                 query: {
                   multi_match: {
                     query: keyword,
-                    fields: [ 'nickname', 'title', 'content' ],
+                    fields: [ 'title', 'content' ],
                   },
                 },
               },
@@ -99,7 +99,7 @@ class SearchService extends Service {
                 query: {
                   multi_match: {
                     query: keyword,
-                    fields: [ 'nickname', 'title', 'content' ],
+                    fields: [ 'title', 'content' ],
                   },
                 },
               },

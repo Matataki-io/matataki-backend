@@ -207,6 +207,77 @@ class PostService extends Service {
     return prices;
   }
 
+  // 推荐分数排序(默认方法)(new format)(count-list格式)
+  async scoreRank(page = 1, pagesize = 20, author = null, channel = null, extra = null) {
+
+    // 获取文章列表, 分为商品文章和普通文章
+    // 再分为带作者和不带作者的情况.
+
+    const totalsql = 'SELECT COUNT(*) AS count FROM posts ';
+    const listsql = 'SELECT id FROM posts ';
+    let wheresql = 'WHERE status = 0 ';
+
+    if (author) {
+      wheresql += 'AND uid = :author ';
+    }
+    const channelid = parseInt(channel);
+    if (channel !== null) {
+      if (isNaN(channelid)) {
+        return 2;
+      }
+      wheresql += 'AND channel_id = ' + channelid + ' ';
+    }
+
+    const ordersql = 'ORDER BY hot_score DESC, id DESC LIMIT :start, :end';
+    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const queryResult = await this.app.mysql.query(
+      sqlcode,
+      { author, start: (page - 1) * pagesize, end: 1 * pagesize }
+    );
+
+    const amount = queryResult[0];
+    const posts = queryResult[1];
+
+    // TBD: 有无文章接口都要改成一致！
+    if (posts.length === 0) {
+      // return [];
+      return { count: 0, list: [] };
+    }
+
+    const postids = [];
+    _.each(posts, row => {
+      postids.push(row.id);
+    });
+
+    const extraItem = { hot_score: true };
+    if (extra) {
+      const extraSplit = extra.split(',');
+      _.each(extraSplit, row => {
+        if (row === 'short_content') {
+          extraItem.short_content = true;
+        }
+      });
+    }
+
+    let postList = await this.getPostList(postids, extraItem);
+
+    // 由赞赏次数进行排序
+    // 还没加上时间降序
+    postList = postList.sort((a, b) => {
+      if (a.hot_score === b.hot_score) {
+        return a.id > b.id ? -1 : 1;
+      }
+      return a.hot_score > b.hot_score ? -1 : 1;
+    });
+
+    // 必须删掉hot_score， 不随接口返回
+    _.each(postList, row => {
+      delete row.hot_score;
+    });
+
+    return { count: amount[0].count, list: postList };
+  }
+
   // 发布时间排序(默认方法)(new format)(count-list格式)
   async timeRank(page = 1, pagesize = 20, author = null, channel = null, extra = null) {
 
@@ -545,6 +616,9 @@ class PostService extends Service {
     if (extraItem) {
       if (extraItem.short_content) {
         sqlcode += ' a.short_content,';
+      }
+      if (extraItem.hot_score) {
+        sqlcode += ' a.hot_score,';
       }
     }
 

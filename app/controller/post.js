@@ -232,6 +232,28 @@ class PostController extends Controller {
 
   }
 
+  // 获取推荐分数排序的文章列表(基础方法)(新)
+  async getScoreRanking() {
+    const ctx = this.ctx;
+
+    const { page = 1, pagesize = 20, channel = null, author = null, extra = null } = this.ctx.query;
+
+    const postData = await this.service.post.scoreRank(page, pagesize, author, channel, extra);
+
+    if (postData === 2) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    if (postData) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = postData;
+      return;
+    }
+
+    ctx.body = ctx.msg.failure;
+  }
+
   // 获取按照时间排序的文章列表(基础方法)(新)
   async getTimeRanking() {
     const ctx = this.ctx;
