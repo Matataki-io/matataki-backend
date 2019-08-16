@@ -131,15 +131,15 @@ class LikeService extends Service {
       await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
         [ userId, point, point ]);
 
-      // 4.2 插入log日志，并判断是否已经插入过
-      const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
-        + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
-      [ userId, signId, point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.reading, ip, userId, signId, consts.pointTypes.reading ]);
+      // 4.2 插入log日志，并判断是否已经插入过， reading暂时弃用， 改为reading_like， reading_dislike
+      // const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
+      //   + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
+      // [ userId, signId, point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.reading, ip, userId, signId, consts.pointTypes.reading ]);
 
-      if (logResult.affectedRows !== 1) {
-        conn.rollback();
-        return -1;
-      }
+      // if (logResult.affectedRows !== 1) {
+      //   conn.rollback();
+      //   return -1;
+      // }
 
       // 4.3 记录点赞状态， 更新点赞次数
       await conn.query('UPDATE post_read_count SET likes=likes+1 WHERE post_id=?;', [ signId ]);

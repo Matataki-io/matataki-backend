@@ -39,8 +39,8 @@ module.exports = {
     publish: 'publish', // 发布文章
     readingNew: 'reading_new', // 用户阅读新文章，额外获得的
     bereadNew: 'beread_new', // 读者的新文章被阅读，额外获得的
-    like: 'like', // 点赞
-    dislike: 'dislike', // 点踩
+    like: 'reading_like', // 点赞
+    dislike: 'reading_dislike', // 点踩
   },
 
 };
