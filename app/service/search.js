@@ -18,55 +18,106 @@ class SearchService extends Service {
     };
   }
 
-  async searchPost(keyword) {
+  async searchPost(keyword, uid = null) {
     let postQuery;
     const elasticClient = new elastic.Client({ node: this.config.elasticsearch.host });
-    try {
-      // const elasticClient = create(this.config.elasticsearch.host);
-      postQuery = await elasticClient.search({
-        index: 'posts',
-        body: {
-          query: {
-            // match: {
-            //   content: keyword,
-            // },
-            // multi_match: {
-            //   query: keyword,
-            //   fields: [ 'nickname', 'title', 'content' ],
-            // },
-            function_score: {
-              functions: [
-                {
-                  exp: {
-                    create_time: {
-                      origin: 'now',
-                      offset: '0d',
-                      scale: '30d',
+    // TBD 指定用户查询
+    if (uid) {
+      try {
+        // const elasticClient = create(this.config.elasticsearch.host);
+        postQuery = await elasticClient.search({
+          index: 'posts',
+          body: {
+            query: {
+              // match: {
+              //   content: keyword,
+              // },
+              // multi_match: {
+              //   query: keyword,
+              //   fields: [ 'nickname', 'title', 'content' ],
+              // },
+              function_score: {
+                functions: [
+                  {
+                    exp: {
+                      create_time: {
+                        origin: 'now',
+                        offset: '0d',
+                        scale: '30d',
+                      },
                     },
                   },
-                },
-              ],
-              query: {
-                multi_match: {
-                  query: keyword,
-                  fields: [ 'nickname', 'title', 'content' ],
+                ],
+                query: {
+                  multi_match: {
+                    query: keyword,
+                    fields: [ 'nickname', 'title', 'content' ],
+                  },
                 },
               },
             },
-          },
-          highlight: {
-            fields: {
-              // content: {},
-              nickname: {},
-              title: {},
-              content: {},
+            highlight: {
+              fields: {
+                // content: {},
+                nickname: {},
+                title: {},
+                content: {},
+              },
             },
           },
-        },
-      });
-    } catch (err) {
-      this.logger.error('Search Service: searchPost error', err);
-      return null;
+        });
+      } catch (err) {
+        this.logger.error('Search Service: searchPost error', err);
+        return null;
+      }
+    } else {
+      try {
+        // const elasticClient = create(this.config.elasticsearch.host);
+        postQuery = await elasticClient.search({
+          index: 'posts',
+          body: {
+            query: {
+              // match: {
+              //   content: keyword,
+              // },
+              // multi_match: {
+              //   query: keyword,
+              //   fields: [ 'nickname', 'title', 'content' ],
+              // },
+              function_score: {
+                functions: [
+                  {
+                    exp: {
+                      create_time: {
+                        origin: 'now',
+                        offset: '0d',
+                        scale: '30d',
+                      },
+                    },
+                  },
+                ],
+                query: {
+                  multi_match: {
+                    query: keyword,
+                    fields: [ 'nickname', 'title', 'content' ],
+                  },
+                },
+              },
+            },
+            highlight: {
+              fields: {
+                // content: {},
+                nickname: {},
+                title: {},
+                content: {},
+              },
+            },
+          },
+        });
+      } catch (err) {
+        this.logger.error('Search Service: searchPost error', err);
+        return null;
+      }
     }
     const result = [];
     let matches = {};
@@ -74,6 +125,7 @@ class SearchService extends Service {
     for (let hindex = 0; hindex < postQuery.body.hits.hits.length; hindex += 1) {
       matches = {};
       matches.postid = postQuery.body.hits.hits[hindex]._source.id;
+      matches.uid = postQuery.body.hits.hits[hindex]._source.uid;
       matches.username = postQuery.body.hits.hits[hindex]._source.username;
       matches.create_time = postQuery.body.hits.hits[hindex]._source.create_time;
 
@@ -127,7 +179,7 @@ class SearchService extends Service {
         body: {
           id: postid,
           create_time: moment(),
-          // uid: author[0].id,
+          uid: author[0].id,
           username: author[0].username,
           nickname: author[0].nickname,
           title,

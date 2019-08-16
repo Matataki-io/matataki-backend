@@ -65,7 +65,7 @@ class LikeService extends Service {
     const rediskey_readHistory = `readhistory:${userId}:${signId}`;
     const readhistory = await this.app.redis.get(rediskey_readHistory);
     if (readhistory) {
-      return 1;
+      return readhistory;
     }
     return 0;
   }
