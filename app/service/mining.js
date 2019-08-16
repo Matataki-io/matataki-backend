@@ -123,6 +123,7 @@ class LikeService extends Service {
     if (point > max_point) point = max_point;
 
     // 4. 处理积分
+    // const userTodayCount =
     const conn = await this.app.mysql.beginTransaction();
     try {
 
@@ -208,7 +209,7 @@ class LikeService extends Service {
       where: { uid: userId },
     });
 
-    if (points || points.length > 0) {
+    if (points.length > 0) {
       const countsql = 'SELECT COUNT(1) AS count FROM assets_points_log l ';
       const listsql = 'SELECT l.sign_id, p.title, l.amount, l.create_time, l.type FROM assets_points_log l LEFT JOIN posts p ON l.sign_id=p.id ';
       const wheresql = 'WHERE l.uid = ? ';
@@ -228,7 +229,7 @@ class LikeService extends Service {
       return result;
     }
 
-    return { amount: 0, count: 0 };
+    return { amount: 0, count: 0, logs: [] };
   }
 
   // 获取用户从单篇文章阅读获取的积分
