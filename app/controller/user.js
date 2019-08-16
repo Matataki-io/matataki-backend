@@ -27,6 +27,8 @@ class UserController extends Controller {
   // 获取用户的积分和日志
   async points() {
     const ctx = this.ctx;
+    // await this.service.mining.publish(ctx.user.id, 100701, 'test');
+
     const { page = 1, pagesize = 20 } = this.ctx.query;
     if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
       ctx.body = ctx.msg.paramsError;

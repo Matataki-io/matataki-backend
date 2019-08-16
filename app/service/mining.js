@@ -133,6 +133,10 @@ class LikeService extends Service {
     const perPointSeconds = 30 / 2;
     let reader_point = Math.floor(time * 1.0 / perPointSeconds);
     if (reader_point > max_point) reader_point = max_point;
+    // 阅读积分小于1分，不做处理
+    if (reader_point < 1) {
+      return -1;
+    }
 
     // 4. 处理积分
     const conn = await this.app.mysql.beginTransaction();
@@ -294,8 +298,8 @@ class LikeService extends Service {
     // 查到今天的key，累加
     if (todayPoint) {
       // 是否达到上限
-      if (todayPoint + amount <= dailyMaxPoint) {
-        await this.app.redis.set(rediskey_todayPoint, todayPoint + amount, 'EX', TTL);
+      if (parseInt(todayPoint) + amount <= dailyMaxPoint) {
+        await this.app.redis.set(rediskey_todayPoint, parseInt(todayPoint) + amount, 'EX', TTL);
         return true;
       }
       return false;
