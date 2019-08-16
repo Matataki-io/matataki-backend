@@ -26,6 +26,10 @@ class LikeService extends Service {
 
   安全|常见的Web攻击手段之CSRF攻击
   https://www.jianshu.com/p/67408d73c66d
+  https://blog.csdn.net/u011250882/article/details/49679535/
+  https://blog.csdn.net/xiaoxinshuaiga/article/details/80766369
+  https://juejin.im/post/5a37c3f9518825258b741f49
+  https://www.zhihu.com/question/40159698
 
 
   redis缓存，定时任务处理
@@ -41,6 +45,10 @@ class LikeService extends Service {
   2. 如何防止用户发文刷积分
   3. csrf
   4. 人机验证，防刷
+  5. 接口加密
+  6. 接口限流
+  7. 删除文章，扣除发文积分，是否扣除阅读积分
+  8. 如果显示恶意发文刷积分
   */
 
   // csrf验证要开启
@@ -117,26 +125,33 @@ class LikeService extends Service {
     // 还需要判断两次提交时间，时间过短则有问题
 
     // 小值有效 const interval = time > server_time ? server_time : time;
+
+    // 单个用户 单篇文章 阅读最多可以获得多少积分，todo：配置
     const max_point = 10;
-    const max_mins = 5;
-    let point = Math.floor(time * 1.0 / 60 * max_point / max_mins); // 10积分/5分钟
-    if (point > max_point) point = max_point;
+
+    // 每获取1分需要阅读多少秒
+    const perPointSeconds = 30 / 2;
+    let reader_point = Math.floor(time * 1.0 / perPointSeconds);
+    if (reader_point > max_point) reader_point = max_point;
 
     // 4. 处理积分
     const conn = await this.app.mysql.beginTransaction();
     try {
-      // 4.1 更新用户积分
-      await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
-        [ userId, point, point ]);
 
-      // 4.2 插入log日志，并判断是否已经插入过
-      const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
-        + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
-      [ userId, signId, point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.reading, ip, userId, signId, consts.pointTypes.reading ]);
+      if (await this.setTodayPoint(userId, reader_point)) {
+        // 4.1 更新用户积分
+        await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+          [ userId, reader_point, reader_point ]);
 
-      if (logResult.affectedRows !== 1) {
-        conn.rollback();
-        return -1;
+        // 4.2 插入log日志，并判断是否已经插入过
+        const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
+          + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
+        [ userId, signId, reader_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.reading, ip, userId, signId, consts.pointTypes.reading ]);
+
+        if (logResult.affectedRows !== 1) {
+          conn.rollback();
+          return -1;
+        }
       }
 
       // 4.3 更新点赞次数
@@ -144,8 +159,9 @@ class LikeService extends Service {
 
       // 4.4 更新作者积分和日志
       if (likeStatus === 1) {
-        const author_point = Math.floor(point / 2);
-        if (author_point > 0) {
+        const author_point = Math.floor(reader_point / 2);
+
+        if (author_point > 0 && await this.setTodayPoint(post.uid, author_point)) {
           await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, author_point, author_point ]);
           await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
             [ post.uid, signId, author_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.beread, ip ]);
@@ -157,17 +173,21 @@ class LikeService extends Service {
         const readingnew_point = 5;
         const bereadnew_point = 1;
 
-        // 用户额外+5
-        const readnewlogResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
-          + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
-        [ userId, signId, readingnew_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readingNew, ip, userId, signId, consts.pointTypes.readingNew ]);
-        if (readnewlogResult.affectedRows === 1) {
-          await conn.query('UPDATE assets_points SET amount = amount + ? WHERE uid = ?;', [ readingnew_point, userId ]);
+        if (await this.setTodayPoint(userId, readingnew_point)) {
+          // 用户额外+5
+          const readnewlogResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
+            + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
+          [ userId, signId, readingnew_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readingNew, ip, userId, signId, consts.pointTypes.readingNew ]);
+          if (readnewlogResult.affectedRows === 1) {
+            await conn.query('UPDATE assets_points SET amount = amount + ? WHERE uid = ?;', [ readingnew_point, userId ]);
 
-          // 作者额外+1
-          await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, bereadnew_point, bereadnew_point ]);
-          await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
-            [ post.uid, signId, bereadnew_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.bereadNew, ip ]);
+            if (await this.setTodayPoint(userId, bereadnew_point)) {
+              // 作者额外+1
+              await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, bereadnew_point, bereadnew_point ]);
+              await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
+                [ post.uid, signId, bereadnew_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.bereadNew, ip ]);
+            }
+          }
         }
       }
 
@@ -254,6 +274,30 @@ class LikeService extends Service {
       this.logger.error('Mining.like exception. j%', e);
       return -1;
     }
+  }
+
+  async setTodayPoint(userId, amount) {
+    // 每日上限，todo：配置
+    const dailyMaxPoint = 100;
+    const date = moment().format('YYYYMMDD');
+    const rediskey_todayPoint = `dailypoint:${date}:${userId}`;
+    const todayPoint = await this.app.redis.get(rediskey_todayPoint);
+
+    const TTL = 1 * 24 * 3600; // 保留1天
+
+    // 查到今天的key，累加
+    if (todayPoint) {
+      // 是否达到上限
+      if (todayPoint + amount <= dailyMaxPoint) {
+        await this.app.redis.set(rediskey_todayPoint, todayPoint + amount, 'EX', TTL);
+        return true;
+      }
+      return false;
+    }
+
+    // 未查到今天的key，创建
+    await this.app.redis.set(rediskey_todayPoint, amount, 'EX', TTL);
+    return true;
   }
 
 }
