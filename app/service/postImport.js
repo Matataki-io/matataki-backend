@@ -71,7 +71,7 @@ class PostImportService extends Service {
         imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(
           /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
         imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(
-          /style=\"[a-zA-Z0-9-:;%,() ]{0,100}\"/g, 'style="vertical-align: middle;width: 90%;height: 90%;"');
+          /style=\"[a-zA-Z0-9-.!:;%,() ]{0,200}\"/g, 'style="vertical-align: middle;width: 90%;height: 90%;"');
       } else {
         this.logger.info('PostImportService:: handleWechat: upload Image failed, ignored');
         imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(
@@ -90,9 +90,11 @@ class PostImportService extends Service {
     // 处理标题和封面
     const parsedTitleRaw = parsedPage.querySelector('h2.rich_media_title').childNodes[0].rawText;
     const parsedTitle = parsedTitleRaw.replace(/\s{2,}/g, '');
+
     const parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz_jpg\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/)[0];
     const parsedCover = parsedCoverRaw.substring(15, parsedCoverRaw.length - 1);
-    const coverLocation = await this.uploadArticleImage(parsedCover);
+    const parsedCoverUpload = './uploads/today_wx_' + Date.now() + '.jpg';
+    const coverLocation = await this.uploadArticleImage(parsedCover, parsedCoverUpload);
     // console.log(parsedTitle);
     // console.log(parsedCover);
     // console.log(parsedContent);
@@ -139,7 +141,8 @@ class PostImportService extends Service {
     const turndownService = new turndown();
     articleContent = turndownService.turndown(parsedContent.toString());
 
-    const coverLocation = await this.uploadArticleImage(coverUrl.substring(5, coverUrl.length - 2));
+    const parsedCoverUpload = './uploads/today_orange_' + Date.now() + '.jpg';
+    const coverLocation = await this.uploadArticleImage(coverUrl.substring(5, coverUrl.length - 2), parsedCoverUpload);
 
     const articleObj = {
       title: parsedTitle,
@@ -175,7 +178,8 @@ class PostImportService extends Service {
     const turndownService = new turndown();
     const articleContent = turndownService.turndown(parsedContent.toString());
 
-    const coverLocation = await this.uploadArticleImage(parsedCover.substring(0, parsedCover.length - 6));
+    const parsedCoverUpload = './uploads/today_chainnews_' + Date.now() + '.jpg';
+    const coverLocation = await this.uploadArticleImage(parsedCover.substring(0, parsedCover.length - 6), parsedCoverUpload);
 
     const articleObj = {
       title: parsedTitle.childNodes[0].rawText,

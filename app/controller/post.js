@@ -68,7 +68,8 @@ class PostController extends Controller {
     }
     const articleJson = JSON.parse(articleData.toString());
     // 只清洗文章文本的标识
-    const shortContent = await this.service.post.wash(articleJson.content);
+    const articleContent = await this.service.post.wash(articleJson.content);
+    const shortContent = articleContent.substring(0, 300);
 
     const id = await ctx.service.post.publish({
       author,
@@ -88,6 +89,8 @@ class PostController extends Controller {
       short_content: shortContent,
     });
 
+    // await this.service.search.importPost(id, ctx.user.id, title, articleContent);
+
     if (tags) {
       let tag_arr = tags.split(',');
       tag_arr = tag_arr.filter(x => { return x !== ''; });
@@ -104,7 +107,9 @@ class PostController extends Controller {
 
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', publickey, sign, hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos', tags = '' } = ctx.request.body;
+    const { signId, author = '', title = '', content = '',
+      publickey, sign, hash, fissionFactor = 2000, cover,
+      is_original = 0, platform = 'eos', tags = '' } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -124,7 +129,7 @@ class PostController extends Controller {
       return;
     }
 
-    ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash);
+    ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash, is_original);
 
     try {
       if (platform === 'eos') {
@@ -159,7 +164,8 @@ class PostController extends Controller {
     }
     const articleJson = JSON.parse(articleData.toString());
     // 只清洗文章文本的标识
-    const shortContent = await this.service.post.wash(articleJson.content);
+    const articleContent = await this.service.post.wash(articleJson.content);
+    const shortContent = articleContent.substring(0, 300);
 
     try {
       const conn = await this.app.mysql.beginTransaction();
@@ -213,6 +219,8 @@ class PostController extends Controller {
         ctx.body = ctx.msg.failure;
         return;
       }
+
+      // await this.service.search.importPost(signId, ctx.user.id, title, articleContent);
 
       ctx.body = ctx.msg.success;
       ctx.body.data = signId;
@@ -521,13 +529,30 @@ class PostController extends Controller {
       return;
     }
     let result = null;
-    if (/https:\/\/mp\.weixin\.qq\.com\/s[?\/]{1}[_=&#a-zA-Z0-9]{1,200}/.test(url)) {
-      result = await this.service.postImport.handleWechat(url);
-    } else if (/https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/.test(url)) {
-      result = await this.service.postImport.handleChainnews(url);
-    } else if (/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/.test(url)) {
-      result = await this.service.postImport.handleOrange(url);
-    } else {
+    let matchStatus = 0;
+    const wechatMatch = url.match(/https:\/\/mp\.weixin\.qq\.com\/s[?\/]{1}[_\-=&#a-zA-Z0-9]{1,200}/);
+    if (wechatMatch) {
+      matchStatus = 1;
+      result = await this.service.postImport.handleWechat(wechatMatch[0]);
+    }
+
+    if (matchStatus === 0) {
+      const chainnewsMatch = url.match(/https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/);
+      if (chainnewsMatch) {
+        matchStatus = 1;
+        result = await this.service.postImport.handleChainnews(chainnewsMatch[0]);
+      }
+    }
+
+    if (matchStatus === 0) {
+      const orangeMatch = url.match(/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/);
+      if (orangeMatch && matchStatus !== 1) {
+        matchStatus = 1;
+        result = await this.service.postImport.handleOrange(orangeMatch[0]);
+      }
+    }
+
+    if (matchStatus === 0) {
       ctx.body = ctx.msg.importPlatformNotSupported;
       return;
     }

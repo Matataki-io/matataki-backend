@@ -56,7 +56,7 @@ module.exports = app => {
   // 文章导入功能
   router.post('/posts/importer', passport.authorize, controller.post.importer);
   // Elastic search
-  // router.get('/ela/search', passport.verify, controller.search.search);
+  // router.get('/posts/search', passport.verify, controller.search.search);
 
   // -------------------------------- 编辑,转移,评论 --------------------------------
   // 隐藏文章，统一返回格式示例

@@ -17,7 +17,12 @@ class LikeController extends Controller {
     const ctx = this.ctx;
     const { time } = ctx.request.body;
     const result = await this.service.mining.like(ctx.user.id, ctx.params.id, time, ctx.ip);
+    let points = [];
+    if (result === 0) {
+      points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
+    }
     ctx.body = ctx.msg.success;
+    ctx.body.data = points;
   }
 
   // 不喜欢
@@ -25,7 +30,12 @@ class LikeController extends Controller {
     const ctx = this.ctx;
     const { time } = ctx.request.body;
     const result = await this.service.mining.dislike(ctx.user.id, ctx.params.id, time, ctx.ip);
+    let points = [];
+    if (result === 0) {
+      points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
+    }
     ctx.body = ctx.msg.success;
+    ctx.body.data = points;
   }
 }
 

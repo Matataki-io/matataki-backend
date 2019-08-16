@@ -31,7 +31,7 @@ class DraftsController extends Controller {
   async save() {
     const ctx = this.ctx;
 
-    const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0, tags = "" } = ctx.request.body;
+    const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0, tags = '' } = ctx.request.body;
 
     if (id) {
       await this.save_draft(this.ctx.user.id, id, title, content, cover, fissionFactor, is_original, tags);
@@ -41,7 +41,7 @@ class DraftsController extends Controller {
   }
 
   async save_draft(uid, id, title, content, cover, fissionFactor, is_original, tags) {
-    const draft = await this.app.mysql.get('drafts', { id: id });
+    const draft = await this.app.mysql.get('drafts', { id });
 
     if (!draft) {
       this.ctx.body = this.ctx.msg.draftNotFound;
@@ -56,15 +56,15 @@ class DraftsController extends Controller {
     try {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
-      let result = await this.app.mysql.update("drafts", {
+      const result = await this.app.mysql.update('drafts', {
         title,
         content,
         cover,
         fission_factor: fissionFactor,
         update_time: now,
         is_original,
-        tags
-      }, { where: { id: id } });
+        tags,
+      }, { where: { id } });
 
       const updateSuccess = result.affectedRows === 1;
 
@@ -95,7 +95,7 @@ class DraftsController extends Controller {
         is_original,
         create_time: now,
         update_time: now,
-        tags
+        tags,
       });
 
       const updateSuccess = result.affectedRows === 1;
@@ -118,7 +118,7 @@ class DraftsController extends Controller {
   async draft() {
     const id = this.ctx.params.id;
 
-    const draft = await this.app.mysql.get('drafts', { id: id });
+    const draft = await this.app.mysql.get('drafts', { id });
 
     if (!draft) {
       this.ctx.body = this.ctx.msg.draftNotFound;
@@ -148,7 +148,7 @@ class DraftsController extends Controller {
   async delete() {
     const id = this.ctx.params.id;
 
-    const draft = await this.app.mysql.get('drafts', { id: id });
+    const draft = await this.app.mysql.get('drafts', { id });
 
     if (!draft) {
       this.ctx.body = this.ctx.msg.draftNotFound;
@@ -160,7 +160,7 @@ class DraftsController extends Controller {
       return;
     }
 
-    const result = await this.app.mysql.delete('drafts', { id: id });
+    const result = await this.app.mysql.delete('drafts', { id });
 
     const updateSuccess = result.affectedRows === 1;
 

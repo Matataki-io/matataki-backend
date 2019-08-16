@@ -73,19 +73,19 @@ class LikeService extends Service {
     const rediskey_readHistory = `readhistory:${userId}:${signId}`;
     const readhistory = await this.app.redis.get(rediskey_readHistory);
     if (readhistory) {
-      return 1;
+      return readhistory;
     }
     return 0;
   }
 
   // 赞
   async like(userId, signId, time, ip) {
-    return await this.do_like(userId, signId, time, ip, 1);
+    return await this.do_like(userId, signId, time, ip, 2);
   }
 
   // 踩
   async dislike(userId, signId, time, ip) {
-    return await this.do_like(userId, signId, time, ip, 0);
+    return await this.do_like(userId, signId, time, ip, 1);
   }
 
   async do_like(userId, signId, time, ip, likeStatus) {
@@ -139,14 +139,15 @@ class LikeService extends Service {
     try {
 
       if (await this.setTodayPoint(userId, reader_point)) {
-        // 4.1 更新用户积分
+        // 4.1 更新用户阅读积分
         await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
           [ userId, reader_point, reader_point ]);
 
         // 4.2 插入log日志，并判断是否已经插入过
+        const type = likeStatus === 2 ? consts.pointTypes.like : consts.pointTypes.dislike;
         const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
           + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
-        [ userId, signId, reader_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.reading, ip, userId, signId, consts.pointTypes.reading ]);
+        [ userId, signId, reader_point, moment().format('YYYY-MM-DD HH:mm:ss'), type, ip, userId, signId, type ]);
 
         if (logResult.affectedRows !== 1) {
           conn.rollback();
@@ -154,11 +155,11 @@ class LikeService extends Service {
         }
       }
 
-      // 4.3 更新点赞次数
+      // 4.3 记录点赞状态， 更新点赞次数
       await conn.query('UPDATE post_read_count SET likes=likes+1 WHERE post_id=?;', [ signId ]);
 
       // 4.4 更新作者积分和日志
-      if (likeStatus === 1) {
+      if (likeStatus === 2) {
         const author_point = Math.floor(reader_point / 2);
 
         if (author_point > 0 && await this.setTodayPoint(post.uid, author_point)) {
@@ -197,8 +198,9 @@ class LikeService extends Service {
       // 删除redis，是必须的吗？
       await this.app.redis.del(rediskey_read);
 
-      // 4.6 插入redis read:history，表示已经获取积分
-      await this.app.redis.set(rediskey_readHistory, 1);
+      // 4.6 插入redis read:history，表示已经获取积分， 踩时候状态记录1， 顶时候状态记录2
+      // await this.app.redis.set(rediskey_readHistory, 1);
+      await this.app.redis.set(rediskey_readHistory, likeStatus);
 
       return 0;
     } catch (e) {
@@ -214,7 +216,7 @@ class LikeService extends Service {
       where: { uid: userId },
     });
 
-    if (points || points.length > 0) {
+    if (points.length > 0) {
       const countsql = 'SELECT COUNT(1) AS count FROM assets_points_log l ';
       const listsql = 'SELECT l.sign_id, p.title, l.amount, l.create_time, l.type FROM assets_points_log l LEFT JOIN posts p ON l.sign_id=p.id ';
       const wheresql = 'WHERE l.uid = ? ';
@@ -234,7 +236,7 @@ class LikeService extends Service {
       return result;
     }
 
-    return { amount: 0, count: 0 };
+    return { amount: 0, count: 0, logs: [] };
   }
 
   // 获取用户从单篇文章阅读获取的积分
