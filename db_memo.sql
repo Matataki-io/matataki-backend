@@ -697,3 +697,31 @@ ALTER TABLE users ADD COLUMN password_hash VARCHAR(64) NULL;
 -- ALTER TABLE posts ADD COLUMN origin_url VARCHAR(255) NULL;
 -- ALTER TABLE drafts ADD COLUMN origin_url VARCHAR(255) NULL;
 -- ALTER TABLE edit_history ADD COLUMN origin_url VARCHAR(255) NULL;
+CREATE TABLE assets_points
+(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uid INT unsigned default 0 NOT NULL,
+    amount INT unsigned default 0 NOT NULL,
+    CONSTRAINT idx_assets_points_uid
+    unique (uid)
+);
+
+CREATE TABLE assets_points_log
+(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uid INT unsigned default 0 NOT NULL,
+    sign_id INT(10) NOT NULL,
+    amount INT unsigned NOT NULL,
+    create_time TIMESTAMP NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    ip VARCHAR(50) NULL
+);
+
+CREATE INDEX idx_assets_points_log_uid ON assets_points_log (uid);
+
+CREATE INDEX idx_assets_points_log_uid_signId ON assets_points_log (uid, sign_id, type);
+
+ALTER TABLE posts ADD COLUMN hot_score float(11, 2) DEFAULT 0.00 NULL;
+
+ALTER TABLE post_read_count ADD COLUMN likes INT UNSIGNED DEFAULT 0 NULL;
+ALTER TABLE post_read_count ADD COLUMN dislikes INT UNSIGNED DEFAULT 0 NULL;
