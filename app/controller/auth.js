@@ -6,7 +6,7 @@ const moment = require('moment');
 const ecc = require('eosjs-ecc');
 const base64url = require('base64url');
 const jwt = require('jwt-simple');
-const ONT = require('ontology-ts-sdk');
+// const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
 const axios = require('axios');
 
@@ -23,14 +23,14 @@ class AuthController extends Controller {
   async auth() {
 
     // 1. 取出签名
-    const { username, publickey, sign, platform = 'eos', source = "ss"} = this.ctx.request.body;
+    const { username, publickey, sign, platform = 'eos', source = 'ss' } = this.ctx.request.body;
 
     // create user if not exit
-    let user = await this.get_or_create_user(username, platform, source);
+    const user = await this.get_or_create_user(username, platform, source);
 
-    if ('eos' === platform) {
+    if (platform === 'eos') {
       await this.eos_auth(sign, username, publickey, user);
-    } else if ('ont' === platform) {
+    } else if (platform === 'ont') {
       await this.ont_auth(sign, username, publickey, user);
     } else {
       this.ctx.body = this.ctx.msg.unsupportedPlatform;
@@ -53,18 +53,18 @@ class AuthController extends Controller {
       return;
     }
 
-    //由于EOS的帐号系统是 username 和 公钥绑定的关系，所有要多加一个验证，username是否绑定了签名的EOS公钥
+    // 由于EOS的帐号系统是 username 和 公钥绑定的关系，所有要多加一个验证，username是否绑定了签名的EOS公钥
 
     try {
-      let eosacc = await this.eosClient.getAccount(username);
+      const eosacc = await this.eosClient.getAccount(username);
 
       let pass_permission_verify = false;
 
       for (let i = 0; i < eosacc.permissions.length; i++) {
-        let permit = eosacc.permissions[i];
-        let keys = permit.required_auth.keys;
+        const permit = eosacc.permissions[i];
+        const keys = permit.required_auth.keys;
         for (let j = 0; j < keys.length; j++) {
-          let pub = keys[j].key;
+          const pub = keys[j].key;
           if (publickey === pub) {
             pass_permission_verify = true;
           }
@@ -82,9 +82,9 @@ class AuthController extends Controller {
     }
 
     // 3. 签名有效，生成accessToken . accessToken = username + date + secret (JWT format)
-    var expires = moment().add(7, "days").valueOf();
+    const expires = moment().add(7, 'days').valueOf();
 
-    var token = jwt.encode({
+    const token = jwt.encode({
       iss: username,
       exp: expires,
       platform: user.platform,
@@ -95,33 +95,34 @@ class AuthController extends Controller {
   }
 
   async ont_auth(sign, username, publickey, user) {
+    /*
+        const pub = new ONT.Crypto.PublicKey(publickey);
 
-    const pub = new ONT.Crypto.PublicKey(publickey);
+        const msg = ONT.utils.str2hexstr(username);
 
-    const msg = ONT.utils.str2hexstr(username);
+        const signature = ONT.Crypto.Signature.deserializeHex(sign);
 
-    const signature = ONT.Crypto.Signature.deserializeHex(sign);
+        const pass = pub.verify(msg, signature);
 
-    const pass = pub.verify(msg, signature);
+        if (pass) {
 
-    if (pass) {
+          // 3. 签名有效，生成accessToken . accessToken = username + date + secret (JWT format)
+          var expires = moment().add(7, "days").valueOf();
 
-      // 3. 签名有效，生成accessToken . accessToken = username + date + secret (JWT format)
-      var expires = moment().add(7, "days").valueOf();
+          var token = jwt.encode({
+            iss: username,
+            exp: expires,
+            platform: user.platform,
+            id: user.id,
+          }, this.app.config.jwtTokenSecret);
 
-      var token = jwt.encode({
-        iss: username,
-        exp: expires,
-        platform: user.platform,
-        id: user.id,
-      }, this.app.config.jwtTokenSecret);
+          this.ctx.body = token;
 
-      this.ctx.body = token;
-
-    } else {
-      this.ctx.body = this.ctx.msg.invalidSignature;
-    }
-    // curl -d "platform=ont&publickey=0205c8fff4b1d21f4b2ec3b48cf88004e38402933d7e914b2a0eda0de15e73ba61&username=helloworld&sign=010936f0693e83d5d605816ceeeb4872d8a343d4c7350ef23e49614e0302d94d6f6a4af73e20ed9c818c0be6865e6096efc7b9f98fa42a33f775ff0ea1cb17703a" -H "Authorization: Basic bXlfYXBwOm15X3NlY3JldA==" -v -X POST http://127.0.0.1:7001/auth
+        } else {
+          this.ctx.body = this.ctx.msg.invalidSignature;
+        }
+        // curl -d "platform=ont&publickey=0205c8fff4b1d21f4b2ec3b48cf88004e38402933d7e914b2a0eda0de15e73ba61&username=helloworld&sign=010936f0693e83d5d605816ceeeb4872d8a343d4c7350ef23e49614e0302d94d6f6a4af73e20ed9c818c0be6865e6096efc7b9f98fa42a33f775ff0ea1cb17703a" -H "Authorization: Basic bXlfYXBwOm15X3NlY3JldA==" -v -X POST http://127.0.0.1:7001/auth
+      */
   }
 
   async githubLogin() {

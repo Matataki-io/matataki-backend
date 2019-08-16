@@ -3,7 +3,7 @@
 const Controller = require('../core/base_controller');
 const moment = require('moment');
 const _ = require('lodash');
-const ONT = require('ontology-ts-sdk');
+// const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
 
 class UserController extends Controller {
@@ -255,14 +255,16 @@ class UserController extends Controller {
         console.log('debug for withdraw', ctx.user.platform, sign_data, publickey, sign);
         await this.eos_signature_verify(ctx.user.username, sign_data, sign, publickey);
       } else if (ctx.user.platform === 'ont') {
+
         // ONT最小提现 (测试先不限制)
         // if(amount < 30000){
         //   return this.response(403, "ONT withdtaw amount must greater than 3 ONT");
         // }
-
+        /*
         const sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
         const msg = ONT.utils.str2hexstr(sign_data);
         await this.ont_signature_verify(msg, sign, publickey, publickey, sign);
+        */
       } else if (ctx.user.platform === 'github') {
         this.logger.info('UserController:: withdraw: There is a github user withdrawing...');
       } else if (ctx.user.platform === 'email') {

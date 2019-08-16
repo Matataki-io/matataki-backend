@@ -2,7 +2,7 @@
 
 const Service = require('egg').Service;
 const EOS = require('eosjs');
-const ONT = require('ontology-ts-sdk');
+// const ONT = require('ontology-ts-sdk');
 const fs = require('fs');
 const moment = require('moment');
 const downloader = require('image-downloader');
@@ -376,6 +376,7 @@ class UserService extends Service {
   // }
 
   async isOntAddress(address) {
+    /*
     try {
       const addressVerify = new ONT.Crypto.Address(address);
       await addressVerify.serialize();
@@ -383,6 +384,7 @@ class UserService extends Service {
       this.logger.info('UserService:: isOntAddress: No, info: %j', err);
       return false;
     }
+    */
     return true;
   }
 }
