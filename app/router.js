@@ -47,6 +47,8 @@ module.exports = app => {
   router.get('/posts/supportsRanking', passport.verify, controller.post.getSupportsRanking);
   // 按照发布时间排序的文章列表(新)
   router.get('/posts/timeRanking', passport.verify, controller.post.getTimeRanking);
+  // 按照评分排序的文章列表(新)
+  router.get('/posts/scoreRanking', passport.verify, controller.post.getScoreRanking);
   // 某用户赞赏过的文章列表(新)
   router.get('/posts/supported', passport.verify, controller.post.getSupported);
   // 推荐文章列表(仅5条, 不分页)
