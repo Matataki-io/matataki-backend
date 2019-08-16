@@ -722,6 +722,7 @@ CREATE INDEX idx_assets_points_log_uid ON assets_points_log (uid);
 CREATE INDEX idx_assets_points_log_uid_signId ON assets_points_log (uid, sign_id, type);
 
 ALTER TABLE posts ADD COLUMN hot_score float(11, 2) DEFAULT 0.00 NULL;
+CREATE INDEX idx_posts_hotscore ON posts (hot_score);
 
 ALTER TABLE post_read_count ADD COLUMN likes INT UNSIGNED DEFAULT 0 NULL;
 ALTER TABLE post_read_count ADD COLUMN dislikes INT UNSIGNED DEFAULT 0 NULL;
