@@ -250,7 +250,8 @@ class LikeService extends Service {
   }
 
   async publish(userId, signId, ip) {
-    const point = 20;
+    // 发文获取积分，todo：配置
+    const point = 10;
     if (await this.setTodayPoint(userId, point)) {
       const conn = await this.app.mysql.beginTransaction();
       try {
