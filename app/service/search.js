@@ -7,6 +7,7 @@ const moment = require('moment');
 class SearchService extends Service {
   constructor(ctx, app) {
     super(ctx, app);
+    // const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
     this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function(txt, key) {
@@ -18,109 +19,88 @@ class SearchService extends Service {
     };
   }
 
-  async searchPost(keyword, uid = null) {
+  async searchPost(keyword, channelId = null, page = 1, pagesize = 10) {
     let postQuery;
     const elasticClient = new elastic.Client({ node: this.config.elasticsearch.host });
-    // TBD 指定用户查询
-    if (uid) {
-      try {
-        // const elasticClient = create(this.config.elasticsearch.host);
-        postQuery = await elasticClient.search({
-          index: 'posts',
-          body: {
-            query: {
-              // match: {
-              //   content: keyword,
-              // },
-              // multi_match: {
-              //   query: keyword,
-              //   fields: [ 'nickname', 'title', 'content' ],
-              // },
-              function_score: {
-                functions: [
-                  {
-                    exp: {
-                      create_time: {
-                        origin: 'now',
-                        offset: '0d',
-                        scale: '30d',
-                      },
-                    },
-                  },
-                ],
-                query: {
-                  multi_match: {
-                    query: keyword,
-                    fields: [ 'title', 'content' ],
+    const searchProject = {
+      index: 'posts',
+      from: pagesize * (page - 1),
+      size: 1 * pagesize,
+      body: {
+        query: {
+          // match: {
+          //   content: keyword,
+          // },
+          // multi_match: {
+          //   query: keyword,
+          //   fields: [ 'nickname', 'title', 'content' ],
+          // },
+          function_score: {
+            functions: [
+              {
+                exp: {
+                  create_time: {
+                    origin: 'now',
+                    offset: '0d',
+                    scale: '30d',
                   },
                 },
               },
-            },
-            highlight: {
-              fields: {
-                // content: {},
-                nickname: {},
-                title: {},
-                content: {},
-              },
+            ],
+            query: {
+              // 接下来会被填充
             },
           },
-        });
-      } catch (err) {
-        this.logger.error('Search Service: searchPost error', err);
-        return null;
-      }
+        },
+        highlight: {
+          fields: {
+            // content: {},
+            // nickname: {},
+            title: {},
+            content: {},
+          },
+        },
+      },
+    };
+    // 指定category查询
+    if (channelId) {
+      // searchProject.body.query.function_score.query.push({ term: { channel_id: channelId } });
+      searchProject.body.query.function_score.query = {
+        bool: {
+          must: [
+            { term: { channel_id: channelId } },
+            { bool: {
+              should: [
+                { match: { title: keyword } },
+                { match: { content: keyword } },
+              ],
+            },
+            },
+          ],
+        },
+      };
     } else {
-      try {
-        // const elasticClient = create(this.config.elasticsearch.host);
-        postQuery = await elasticClient.search({
-          index: 'posts',
-          body: {
-            query: {
-              // match: {
-              //   content: keyword,
-              // },
-              // multi_match: {
-              //   query: keyword,
-              //   fields: [ 'nickname', 'title', 'content' ],
-              // },
-              function_score: {
-                functions: [
-                  {
-                    exp: {
-                      create_time: {
-                        origin: 'now',
-                        offset: '0d',
-                        scale: '30d',
-                      },
-                    },
-                  },
-                ],
-                query: {
-                  multi_match: {
-                    query: keyword,
-                    fields: [ 'title', 'content' ],
-                  },
-                },
-              },
-            },
-            highlight: {
-              fields: {
-                // content: {},
-                nickname: {},
-                title: {},
-                content: {},
-              },
-            },
-          },
-        });
-      } catch (err) {
-        this.logger.error('Search Service: searchPost error', err);
-        return null;
-      }
+      searchProject.body.query.function_score.query = {
+        bool: {
+          should: [
+            { match: { title: keyword } },
+            { match: { content: keyword } },
+          ],
+        },
+      };
     }
-    const result = [];
+
+    try {
+      postQuery = await elasticClient.search(searchProject);
+    } catch (err) {
+      this.logger.error('SearchService:: SearchPost: error: ', err);
+      return null;
+    }
+    // const postQuery = await elasticClient.search(searchProject);
+
+    const resultList = [];
     let matches = {};
+    const count = postQuery.body.hits.total.value;
     // 加了多匹配之后， 没有匹配到的项目在highlight里面没有
     for (let hindex = 0; hindex < postQuery.body.hits.hits.length; hindex += 1) {
       matches = {};
@@ -128,12 +108,14 @@ class SearchService extends Service {
       matches.uid = postQuery.body.hits.hits[hindex]._source.uid;
       matches.username = postQuery.body.hits.hits[hindex]._source.username;
       matches.create_time = postQuery.body.hits.hits[hindex]._source.create_time;
+      matches.nickname = postQuery.body.hits.hits[hindex]._source.nickname;
+      matches.channel_id = postQuery.body.hits.hits[hindex]._source.channel_id;
 
-      if (postQuery.body.hits.hits[hindex].highlight.nickname) {
-        matches.nickname = postQuery.body.hits.hits[hindex].highlight.nickname[0];
-      } else {
-        matches.nickname = postQuery.body.hits.hits[hindex]._source.nickname;
-      }
+      // if (postQuery.body.hits.hits[hindex].highlight.nickname) {
+      //   matches.nickname = postQuery.body.hits.hits[hindex].highlight.nickname[0];
+      // } else {
+      //   matches.nickname = postQuery.body.hits.hits[hindex]._source.nickname;
+      // }
 
       if (postQuery.body.hits.hits[hindex].highlight.title) {
         matches.title = postQuery.body.hits.hits[hindex].highlight.title[0];
@@ -146,9 +128,11 @@ class SearchService extends Service {
       } else {
         matches.content = [];
       }
-      result.push(matches);
+
+      matches.content.push(postQuery.body.hits.hits[hindex]._source.content.substring(0, 200));
+      resultList.push(matches);
     }
-    return result;
+    return { count, list: resultList };
   }
 
   async precisePost(postid) {
@@ -157,12 +141,17 @@ class SearchService extends Service {
       + 'FROM posts p LEFT JOIN users u ON p.uid = u.id WHERE p.id = ?;',
       [ postid ]
     );
-    if (thePost.length > 0) {
-      return thePost[0];
+    if (thePost.length === 0) {
+      return { count: 0, list: [] };
     }
-    return [];
+    const post = thePost[0];
+    post.content = [];
+    post.content.push(post.short_content);
+    delete post.short_content;
+    return { count: 1, list: [ post ] };
   }
 
+  // 新建和更新文章， 都可以用这个
   async importPost(postid, userid, title, content) {
     const author = await this.app.mysql.query(
       'SELECT id, username, nickname FROM users WHERE id = ?;',
@@ -175,6 +164,7 @@ class SearchService extends Service {
     const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
     try {
       await elaClient.index({
+        id: postid,
         index: 'posts',
         body: {
           id: postid,
@@ -184,45 +174,31 @@ class SearchService extends Service {
           nickname: author[0].nickname,
           title,
           content,
+          channel_id: 1,
         },
       });
     } catch (err) {
       this.logger.error('SearchService:: importPost: error ', err);
       return null;
     }
-
   }
+
+  async deletePost(postid) {
+    const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
+
+    try {
+      await elaClient.delete({
+        id: postid,
+        index: 'posts',
+      });
+    } catch (err) {
+      this.logger.error('SearchService:: deletePost: error ', err);
+      return null;
+    }
+    return 1;
+  }
+
 }
 
 module.exports = SearchService;
 
-// 时间加权方案：
-// {
-//   "query": {
-//   	"function_score": {
-//   	  "functions": [
-//   	  	{
-//     	  "exp": {
-//   	  		"create_time": {
-//   	  		  "origin": "now",
-//   	  		  "offset": "0d",
-//   	  		  "scale": "30d"
-//   	  		}
-//   	  	  }
-//   	  	}
-//       ],
-//       "query": {
-//       	"bool": {
-//   	      "must": [
-//   	  	    { "match": { "content": "价格" } }
-// 		  ]
-//   		}
-//       }
-//   	}
-//   },
-//   "highlight": {
-//     "fields" : {
-//       "content" : {}
-//         }
-// 	}
-// }

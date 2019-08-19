@@ -5,7 +5,12 @@ const Controller = require('egg').Controller;
 class SearchController extends Controller {
   async search() {
     const ctx = this.ctx;
-    const { type = 'post', word = 'smart', user = 0 } = ctx.query;
+    const { type = 'post', word = 'smart', category = null, page = 1, pagesize = 10 } = ctx.query;
+
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
 
     let result;
     if (type === 'post') {
@@ -18,22 +23,19 @@ class SearchController extends Controller {
         }
         const post = await this.service.search.precisePost(postid);
         // 精确搜索， 需要独立把文章摘要提取出来
-        post.content = [];
-        post.content.push(post.short_content);
-        delete post.short_content;
-        result = [ post ];
+        result = post;
       } else {
-        // 不带用户搜索
-        if (user !== 0) {
-          const userId = parseInt(user);
-          if (isNaN(userId)) {
+        // 带category搜索
+        if (category) {
+          const categoryId = parseInt(category);
+          if (!(categoryId === 1 || categoryId === 2)) {
             ctx.body = ctx.msg.paramsError;
             return;
           }
-          result = await this.service.search.searchPost(word, userId);
-        // 带用户搜索
+          result = await this.service.search.searchPost(word, categoryId, page, pagesize);
+        // 不带category搜索
         } else {
-          result = await this.service.search.searchPost(word);
+          result = await this.service.search.searchPost(word, null, page, pagesize);
         }
       }
     }

@@ -91,7 +91,7 @@ class PostController extends Controller {
       short_content: shortContent,
     });
 
-    // await this.service.search.importPost(id, ctx.user.id, title, articleContent);
+    await this.service.search.importPost(id, ctx.user.id, title, articleContent);
 
     if (tags) {
       let tag_arr = tags.split(',');
@@ -171,6 +171,7 @@ class PostController extends Controller {
     const articleContent = await this.service.post.wash(articleJson.content);
     const shortContent = articleContent.substring(0, 300);
 
+    let elaTitle = post.title;
     try {
       const conn = await this.app.mysql.beginTransaction();
 
@@ -197,6 +198,7 @@ class PostController extends Controller {
 
         if (title) {
           updateRow.title = title;
+          elaTitle = title;
         }
 
         if (cover !== undefined) {
@@ -224,7 +226,7 @@ class PostController extends Controller {
         return;
       }
 
-      // await this.service.search.importPost(signId, ctx.user.id, title, articleContent);
+      await this.service.search.importPost(signId, ctx.user.id, elaTitle, articleContent);
 
       ctx.body = ctx.msg.success;
       ctx.body.data = signId;
@@ -448,6 +450,7 @@ class PostController extends Controller {
       return;
     }
 
+    await this.service.search.deletePost(id);
     const result = await this.service.post.delete(id, ctx.user.id);
     if (!result) {
       ctx.body = ctx.msg.postDeleteError;
