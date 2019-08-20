@@ -131,7 +131,7 @@ class BaseController extends Controller {
 
   async get_or_create_user(username, platform, source) {
     try {
-      let user = await this.app.mysql.get('users', { username });
+      let user = await this.app.mysql.get('users', { username, platform });
 
       if (!user) {
         const newuser = await this.app.mysql.insert('users', {
@@ -140,7 +140,8 @@ class BaseController extends Controller {
           source,
           create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
         });
-        user = await this.app.mysql.get('users', { username });
+        user = await this.app.mysql.get('users', { username, platform });
+        await this.service.search.importUser(user.id);
       }
 
       // login log

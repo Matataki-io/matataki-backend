@@ -12,6 +12,8 @@ class SearchController extends Controller {
       return;
     }
 
+    // 还需要记录搜索历史
+
     let result;
     if (type === 'post') {
       // 带了文章id， 视为精确搜索
@@ -39,6 +41,26 @@ class SearchController extends Controller {
         }
       }
     }
+
+    if (!result) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
+
+  async searchUser() {
+    const ctx = this.ctx;
+    const { word = 'smart', page = 1, pagesize = 10 } = ctx.query;
+
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const result = await this.service.search.searchUser(word, page, pagesize);
 
     if (!result) {
       ctx.body = ctx.msg.failure;

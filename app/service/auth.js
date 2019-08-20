@@ -106,6 +106,7 @@ class AuthService extends Service {
         );
       }
       const currentUser = await this.app.mysql.get('users', { username, platform });
+      await this.service.search.importUser(currentUser.id);
 
       const expires = moment().add(7, 'days').valueOf();
 
@@ -223,6 +224,10 @@ class AuthService extends Service {
     if (createAccount.affectedRows !== 1) {
       return 5;
     }
+
+    const currentUser = await this.app.mysql.get('users', { username: email, platform: 'email' });
+    await this.service.search.importUser(currentUser.id);
+
     this.logger.info('AuthService:: doReg: New user Added for email ', email);
     return 0;
   }

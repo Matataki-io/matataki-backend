@@ -98,41 +98,103 @@ class SearchService extends Service {
     }
     // const postQuery = await elasticClient.search(searchProject);
 
-    const resultList = [];
-    let matches = {};
+    // const resultList = [];
+    const postids = [];
+    // let matches = {};
     const count = postQuery.body.hits.total.value;
     // 加了多匹配之后， 没有匹配到的项目在highlight里面没有
     for (let hindex = 0; hindex < postQuery.body.hits.hits.length; hindex += 1) {
-      matches = {};
-      matches.postid = postQuery.body.hits.hits[hindex]._source.id;
-      matches.uid = postQuery.body.hits.hits[hindex]._source.uid;
-      matches.username = postQuery.body.hits.hits[hindex]._source.username;
-      matches.create_time = postQuery.body.hits.hits[hindex]._source.create_time;
-      matches.nickname = postQuery.body.hits.hits[hindex]._source.nickname;
-      matches.channel_id = postQuery.body.hits.hits[hindex]._source.channel_id;
-
-      // if (postQuery.body.hits.hits[hindex].highlight.nickname) {
-      //   matches.nickname = postQuery.body.hits.hits[hindex].highlight.nickname[0];
-      // } else {
-      //   matches.nickname = postQuery.body.hits.hits[hindex]._source.nickname;
-      // }
-
-      if (postQuery.body.hits.hits[hindex].highlight.title) {
-        matches.title = postQuery.body.hits.hits[hindex].highlight.title[0];
-      } else {
-        matches.title = postQuery.body.hits.hits[hindex]._source.title;
-      }
-
-      if (postQuery.body.hits.hits[hindex].highlight.content) {
-        matches.content = postQuery.body.hits.hits[hindex].highlight.content;
-      } else {
-        matches.content = [];
-      }
-
-      matches.content.push(postQuery.body.hits.hits[hindex]._source.content.substring(0, 200));
-      resultList.push(matches);
+      postids.push(postQuery.body.hits.hits[hindex]._source.id);
     }
-    return { count, list: resultList };
+
+    // 传统的获取文章列表方法
+    let postList = await this.service.post.getPostList(postids, { short_content: true });
+
+    // 再度排序
+    postList = postList.sort((a, b) => {
+      return postids.indexOf(a.id) - postids.indexOf(b.id);
+    });
+
+    // 填充高亮匹配信息
+    for (let pindex = 0; pindex < postList.length; pindex += 1) {
+      if (postQuery.body.hits.hits[pindex].highlight.title) {
+        postList[pindex].title = postQuery.body.hits.hits[pindex].highlight.title[0];
+      } else {
+        postList[pindex].title = postQuery.body.hits.hits[pindex]._source.title;
+      }
+
+      if (postQuery.body.hits.hits[pindex].highlight.content) {
+        let new_content = '';
+        for (let cindex = 0; cindex < postQuery.body.hits.hits[pindex].highlight.content.length; cindex += 1) {
+          new_content += (postQuery.body.hits.hits[pindex].highlight.content[cindex] + '...');
+        }
+        postList[pindex].short_content = new_content;
+      }
+    }
+
+    return { count, list: postList };
+  }
+
+  async searchUser(keyword, page = 1, pagesize = 10) {
+    let userQuery;
+    const elasticClient = new elastic.Client({ node: this.config.elasticsearch.host });
+    const searchProject = {
+      index: 'users',
+      from: pagesize * (page - 1),
+      size: 1 * pagesize,
+      body: {
+        query: {
+          bool: {
+            should: [
+              { match: { nickname: keyword } },
+              { match: { username: keyword } },
+            ],
+          },
+        },
+        highlight: {
+          fields: {
+            nickname: {},
+            username: {},
+          },
+        },
+      },
+    };
+
+    try {
+      userQuery = await elasticClient.search(searchProject);
+    } catch (err) {
+      this.logger.error('SearchService:: SearchUser: error: ', err);
+      return null;
+    }
+
+    const userids = [];
+    const count = userQuery.body.hits.total.value;
+
+    // 生成userid列表
+    for (let uindex = 0; uindex < userQuery.body.hits.hits.length; uindex += 1) {
+      userids.push(userQuery.body.hits.hits[uindex]._source.id);
+    }
+
+    // 获取详情
+    let userList = await this.service.user.getUserList(userids);
+
+    // 重排序
+    userList = userList.sort((a, b) => {
+      return userids.indexOf(a.id) - userids.indexOf(b.id);
+    });
+
+    // 填充高亮匹配信息
+    for (let uindex = 0; uindex < userQuery.body.hits.hits.length; uindex += 1) {
+      if (userQuery.body.hits.hits[uindex].highlight.nickname) {
+        userList[uindex].nickname = userQuery.body.hits.hits[uindex].highlight.nickname[0];
+      }
+
+      if (userQuery.body.hits.hits[uindex].highlight.username) {
+        userList[uindex].username = userQuery.body.hits.hits[uindex].highlight.username[0];
+      }
+    }
+
+    return { count, list: userList };
   }
 
   async precisePost(postid) {
@@ -169,9 +231,9 @@ class SearchService extends Service {
         body: {
           id: postid,
           create_time: moment(),
-          uid: author[0].id,
-          username: author[0].username,
-          nickname: author[0].nickname,
+          // uid: author[0].id,
+          // username: author[0].username,
+          // nickname: author[0].nickname,
           title,
           content,
           channel_id: 1,
@@ -190,6 +252,34 @@ class SearchService extends Service {
       await elaClient.delete({
         id: postid,
         index: 'posts',
+      });
+    } catch (err) {
+      this.logger.error('SearchService:: deletePost: error ', err);
+      return null;
+    }
+    return 1;
+  }
+
+  async importUser(userid) {
+    const user = await this.app.mysql.query(
+      'SELECT id, username, nickname FROM users WHERE id = ?;',
+      [ userid ]
+    );
+    if (user.length === 0) {
+      return null;
+    }
+
+    const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
+    try {
+      await elaClient.index({
+        id: userid,
+        index: 'users',
+        body: {
+          id: userid,
+          create_time: user[0].create_time,
+          username: user[0].username,
+          nickname: user[0].nickname,
+        },
       });
     } catch (err) {
       this.logger.error('SearchService:: deletePost: error ', err);

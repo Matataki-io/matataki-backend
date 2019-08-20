@@ -96,6 +96,8 @@ module.exports = app => {
   // 用户搜索
   // router.get('/search', passport.verify, controller.user.search);
   router.get('/user/search', passport.verify, controller.user.search);
+  // 用户搜索， elastic版
+  router.get('/users/search', passport.verify, controller.search.searchUser);
   // 个人资产
   // router.get('/balance', passport.authorize, controller.user.balance);
   router.get('/user/balance', passport.authorize, controller.user.balance);

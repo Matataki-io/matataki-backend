@@ -125,6 +125,24 @@ class UserService extends Service {
     return basicInfo;
   }
 
+  async getUserList(userids) {
+
+    let userList = [];
+
+    if (userids.length === 0) {
+      return userList;
+    }
+
+    const sqlcode = 'SELECT id, username, nickname, avatar, introduction FROM users WHERE id IN (?);';
+
+    userList = await this.app.mysql.query(
+      sqlcode,
+      [ userids ]
+    );
+
+    return userList;
+  }
+
   async setProfile(userid, email, nickname, introduction, accept) {
 
     if (userid === null) {
@@ -161,6 +179,7 @@ class UserService extends Service {
 
     try {
       const result = await this.app.mysql.update('users', row, options);
+      await this.service.search.importUser(userid);
       return result.affectedRows === 1;
     } catch (err) {
       this.logger.error('UserService::setProfile error: %j', err);
