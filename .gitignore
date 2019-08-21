@@ -22,3 +22,4 @@ unittest/
 build/
 cmd.sh
 .vscode/
+scripts/config.local.json

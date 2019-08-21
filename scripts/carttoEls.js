@@ -19,9 +19,10 @@
 // node carttoEls.js search users 1001
 // node carttoEls.js
 
+// 请注意当前用的是config.local.json
 const axios = require('axios');
 const mysql = require('mysql2/promise');
-const config = require('./config.json');
+const config = require('./config.local.json');
 const elastic = require('@elastic/elasticsearch');
 const removemd = require('remove-markdown');
 // const striptags = require('striptags');
