@@ -238,6 +238,35 @@ class PostController extends Controller {
 
   }
 
+  // 获取关注作者的文章列表
+  async getFollowedRanking() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    if (!userid) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = { count: 0, list: [] };
+      return;
+    }
+
+    const { page = 1, pagesize = 20, channel = null, extra = null } = this.ctx.query;
+
+    const postData = await this.service.post.followedPosts(page, pagesize, userid, channel, extra);
+
+    if (postData === 2) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    if (postData) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = postData;
+      return;
+    }
+
+    ctx.body = ctx.msg.failure;
+  }
+
   // 获取推荐分数排序的文章列表(基础方法)(新)
   async getScoreRanking() {
     const ctx = this.ctx;

@@ -1,5 +1,57 @@
 # Posts API 文档
 
+### 搜索已经关注的用户发的文章
+
+- 路径： /posts/followedPosts
+- 请求方式： GET
+- Header： 默认
+- 参数：
+  
+| 参数名 | 类型 | 是否必须 | 说明 | 位置 |
+|---|---|---|---|---|
+| page | int | Flase | 页码 | Query |
+| pagesize | int | Fasle | 每页的条数 | Query |
+| channel | int | False | 文章的频道， 1为普通文章， 2为商品 | Query |
+| extra | string | False | 额外的信息， 以逗号隔开 | Query |
+
+- 请求示例：
+
+```
+curl -X GET 'http://apitest.smartsignature.io/posts/followedPosts?pagesize=2&extra=short_content&channel=2&page=2' 
+```
+
+- 返回示例：
+
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "count": 68,
+        "list": [
+            {
+                "id": 100702,
+                "uid": 207,
+                "author": "fromnrttolax",
+                "title": "ProofofLife：为什么说比特币是一种生命体？",
+                "short_content": "如何证明读文章的你不是一段代码？",
+                "hash": "QmYQcJViXawLhJJKoDY5BoaYppFB3dq976hFLcamNMgeR7",
+                "create_time": "2019-08-16T05:46:29.000Z",
+                "cover": "/image/2019/08/16/82c99da533512b4b3bb10370f6caa954.jpg",
+                "nickname": "from",
+                "avatar": "/avatar/2019/07/12/b8fea8566aa0b6341060c37410ea628b.png",
+                "read": 15,
+                "eosvalue": 0,
+                "ups": 0,
+                "ontvalue": 0,
+                "tags": [],
+                "sale": 0
+            }
+        ]
+    }
+}
+```
+
 ### 全文搜索功能
 
 - 路径： /posts/search

@@ -47,6 +47,8 @@ module.exports = app => {
   router.get('/posts/supportsRanking', passport.verify, controller.post.getSupportsRanking);
   // 按照发布时间排序的文章列表(新)
   router.get('/posts/timeRanking', passport.verify, controller.post.getTimeRanking);
+  // 获取关注的作者的文章
+  router.get('/posts/followedPosts', passport.verify, controller.post.getFollowedRanking);
   // 按照评分排序的文章列表(新)
   router.get('/posts/scoreRanking', passport.verify, controller.post.getScoreRanking);
   // 某用户赞赏过的文章列表(新)
@@ -175,7 +177,7 @@ module.exports = app => {
 
   // -------------------------------- 搜索相关 --------------------------------
   // 推荐搜索词语
-  router.get('/search/recommand', passport.verify, controller.search.recommand);
+  router.get('/search/recommend', passport.verify, controller.search.recommand);
 
 };
 

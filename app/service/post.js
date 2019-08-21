@@ -207,6 +207,61 @@ class PostService extends Service {
     return prices;
   }
 
+  // 获取我关注的作者的文章
+  async followedPosts(page = 1, pagesize = 20, userid = null, channel = null, extra = null) {
+
+    if (userid === null) {
+      return 2;
+    }
+
+    const totalsql = 'SELECT COUNT(*) AS count FROM posts p INNER JOIN follows f ON f.fuid = p.uid AND f.status = 1 ';
+    const listsql = 'SELECT p.id AS signid FROM posts p INNER JOIN follows f ON f.fuid = p.uid AND f.status = 1 ';
+    const ordersql = 'ORDER BY p.id DESC LIMIT :start, :end';
+    let wheresql = 'WHERE f.uid = :uid AND p.status = 0 ';
+
+    const channelid = parseInt(channel);
+    if (channel) {
+      if (isNaN(channelid)) {
+        return 2;
+      }
+      wheresql += 'AND p.channel_id = ' + channelid + ' ';
+    }
+    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const queryResult = await this.app.mysql.query(
+      sqlcode,
+      { uid: userid, start: (page - 1) * pagesize, end: 1 * pagesize }
+    );
+
+    const amount = queryResult[0];
+    const posts = queryResult[1];
+
+    const postids = [];
+    _.each(posts, row => {
+      postids.push(row.signid);
+    });
+
+    const extraItem = {};
+    if (extra) {
+      const extraSplit = extra.split(',');
+      _.each(extraSplit, row => {
+        if (row === 'short_content') {
+          extraItem.short_content = true;
+        }
+      });
+    }
+
+
+    if (postids.length === 0) {
+      // return [];
+      return { count: 0, list: [] };
+    }
+
+    const postList = await this.getPostList(postids, extraItem);
+
+    return { count: amount[0].count, list: postList };
+
+  }
+
   // 推荐分数排序(默认方法)(new format)(count-list格式)
   async scoreRank(page = 1, pagesize = 20, author = null, channel = null, extra = null) {
 
@@ -278,7 +333,7 @@ class PostService extends Service {
     return { count: amount[0].count, list: postList };
   }
 
-  // 发布时间排序(默认方法)(new format)(count-list格式)
+  // 发布时间排序()(new format)(count-list格式)
   async timeRank(page = 1, pagesize = 20, author = null, channel = null, extra = null) {
 
     // 获取文章列表, 分为商品文章和普通文章

@@ -198,19 +198,18 @@ class SearchService extends Service {
   }
 
   async precisePost(postid) {
-    const thePost = await this.app.mysql.query(
-      'SELECT p.id AS postid, p.username, p.create_time, u.nickname, p.title, p.short_content '
-      + 'FROM posts p LEFT JOIN users u ON p.uid = u.id WHERE p.id = ?;',
-      [ postid ]
-    );
-    if (thePost.length === 0) {
+    // const thePost = await this.app.mysql.query(
+    //   'SELECT p.id AS postid, p.username, p.create_time, u.nickname, p.title, p.short_content '
+    //   + 'FROM posts p LEFT JOIN users u ON p.uid = u.id WHERE p.id = ?;',
+    //   [ postid ]
+    // );
+
+    const postList = await this.service.post.getPostList([ postid ], { short_content: true });
+
+    if (postList.length === 0) {
       return { count: 0, list: [] };
     }
-    const post = thePost[0];
-    post.content = [];
-    post.content.push(post.short_content);
-    delete post.short_content;
-    return { count: 1, list: [ post ] };
+    return { count: 1, list: postList };
   }
 
   // 新建和更新文章， 都可以用这个
