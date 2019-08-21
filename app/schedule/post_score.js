@@ -22,11 +22,18 @@ class PostScore extends Subscription {
 
     this.logger.info('PostScoreSchedule:: Start to update Score...');
     try {
-      await this.app.mysql.query(
-        'UPDATE posts p INNER JOIN post_read_count c ON p.id = c.post_id '
-        + 'SET p.hot_score = (c.real_read_count * 0.2 + c.likes*0.4 - c.dislikes*0.2 + c.support_count * 0.8); '
-        + 'UPDATE posts SET hot_score = hot_score * 1.5 WHERE create_time > DATE_SUB(NOW(), INTERVAL 3 DAY);'
+      await this.app.mysql.query(`
+          -- 计算热度积分
+          UPDATE posts p INNER JOIN post_read_count c ON p.id = c.post_id
+          SET p.hot_score = (c.real_read_count * 0.2 + c.likes * 0.4 - c.dislikes * 1 + c.support_count * 1);
+          -- 3天内的提权
+          UPDATE posts SET hot_score = hot_score * 1.5 WHERE create_time > DATE_SUB(NOW(), INTERVAL 3 DAY);
+          -- 按天减少权重
+          UPDATE posts SET hot_score = hot_score - datediff(now(), create_time) * 3;`
       );
+      // 'UPDATE posts p INNER JOIN post_read_count c ON p.id = c.post_id '
+      // + 'SET p.hot_score = (c.real_read_count * 0.2 + c.likes*0.4 - c.dislikes*0.2 + c.support_count * 0.8); '
+      // + 'UPDATE posts SET hot_score = hot_score * 1.5 WHERE create_time > DATE_SUB(NOW(), INTERVAL 3 DAY);'
     } catch (err) {
       this.logger.error('PostScoreSchedule:: subscribe error: ', err);
     }
