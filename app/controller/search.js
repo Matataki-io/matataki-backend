@@ -12,7 +12,13 @@ class SearchController extends Controller {
       return;
     }
 
+    if (word.length > 50) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
     // 还需要记录搜索历史
+    await this.service.search.writeLog(word, 1);
 
     let result;
     if (type === 'post') {
@@ -27,7 +33,7 @@ class SearchController extends Controller {
         // 精确搜索， 需要独立把文章摘要提取出来
         result = post;
       } else {
-        // 带category搜索
+        // 带channel搜索
         if (channel) {
           const channelId = parseInt(channel);
           if (!(channelId === 1 || channelId === 2)) {
@@ -60,8 +66,37 @@ class SearchController extends Controller {
       return;
     }
 
+    if (word.length > 50) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    // 还需要记录搜索历史
+    await this.service.search.writeLog(word, 3);
+
     const result = await this.service.search.searchUser(word, page, pagesize);
 
+    if (!result) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
+
+  async recommand() {
+    const ctx = this.ctx;
+    const { amount = 5, area = 1 } = ctx.query;
+
+    const amountNum = parseInt(amount);
+    const areaNum = parseInt(area);
+    if (isNaN(amountNum) || isNaN(areaNum)) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const result = await this.service.search.recommandWord(amountNum, areaNum);
     if (!result) {
       ctx.body = ctx.msg.failure;
       return;

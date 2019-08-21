@@ -173,6 +173,9 @@ module.exports = app => {
   // 不喜欢
   router.post('/posts/:id/dislike', passport.authorize, controller.mining.dislike);
 
+  // -------------------------------- 搜索相关 --------------------------------
+  // 推荐搜索词语
+  router.get('/search/recommand', passport.verify, controller.search.recommand);
 
 };
 

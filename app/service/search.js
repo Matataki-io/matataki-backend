@@ -288,6 +288,37 @@ class SearchService extends Service {
     return 1;
   }
 
+  // 每搜索一次，次数+1
+  async writeLog(word, area) {
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    try {
+      await this.app.mysql.query(
+        'INSERT INTO search_count (word, create_time, update_time, search_count, search_area) VALUES (:word, :now, :now, 1, :area)'
+        + ' ON DUPLICATE KEY UPDATE search_count = search_count + 1, update_time = :now;',
+        { word, now, area }
+      );
+    } catch (err) {
+      this.ctx.logger.error('SearchService:: writeLog: error: ', err);
+      return 1;
+    }
+    return 0;
+  }
+
+  // 返回次数最多的几条搜索
+  async recommandWord(amount = 5, area = 1) {
+    let result = [];
+    try {
+      result = await this.app.mysql.query(
+        'SELECT word FROM search_count WHERE search_area = :area ORDER BY search_count DESC, update_time DESC LIMIT :amount;',
+        { area, amount }
+      );
+    } catch (err) {
+      this.logger.error('SearchService:: RecommandWord: error ', err);
+      return null;
+    }
+    return result;
+  }
+
 }
 
 module.exports = SearchService;
