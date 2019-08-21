@@ -5,7 +5,7 @@ const Controller = require('egg').Controller;
 class SearchController extends Controller {
   async search() {
     const ctx = this.ctx;
-    const { type = 'post', word = 'smart', category = null, page = 1, pagesize = 10 } = ctx.query;
+    const { type = 'post', word = 'smart', channel = null, page = 1, pagesize = 10 } = ctx.query;
 
     if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
       ctx.body = ctx.msg.paramsError;
@@ -28,13 +28,13 @@ class SearchController extends Controller {
         result = post;
       } else {
         // 带category搜索
-        if (category) {
-          const categoryId = parseInt(category);
-          if (!(categoryId === 1 || categoryId === 2)) {
+        if (channel) {
+          const channelId = parseInt(channel);
+          if (!(channelId === 1 || channelId === 2)) {
             ctx.body = ctx.msg.paramsError;
             return;
           }
-          result = await this.service.search.searchPost(word, categoryId, page, pagesize);
+          result = await this.service.search.searchPost(word, channelId, page, pagesize);
         // 不带category搜索
         } else {
           result = await this.service.search.searchPost(word, null, page, pagesize);
