@@ -726,3 +726,41 @@ CREATE INDEX idx_posts_hotscore ON posts (hot_score);
 
 ALTER TABLE post_read_count ADD COLUMN likes INT UNSIGNED DEFAULT 0 NULL;
 ALTER TABLE post_read_count ADD COLUMN dislikes INT UNSIGNED DEFAULT 0 NULL;
+
+-- 2019/08/21 sprint9-v2.7.0
+-- create table search_log
+-- (
+-- 	id int(16) auto_increment,
+-- 	word varchar(50) null comment '搜索词',
+-- 	create_time timestamp null comment '搜索时间',
+-- 	user int(10) null comment '执行搜索的用户',
+-- 	constraint search_log_pk
+-- 		primary key (id)
+-- );
+
+-- create table search_count
+-- (
+-- 	id int(20) auto_increment,
+-- 	word varchar(50) null comment '搜索词',
+-- 	create_time timestamp null comment '创建时间',
+-- 	update_time timestamp null comment '更新时间',
+-- 	search_count int(10) null comment '搜索次数总计',
+-- 	constraint search_count_pk
+-- 		primary key (id)
+-- );
+
+-- create unique index search_count_word_uindex
+-- 	on search_count (word);
+
+create table search_count
+(
+	id int(20) auto_increment,
+	word varchar(50) null comment '搜索词',
+	create_time timestamp null comment '创建时间',
+	update_time timestamp null comment '更新时间',
+	search_count int(10) null comment '搜索次数总计',
+	search_area int(8) null comment '搜索区域， 1为文章区， 3为用户区',
+	constraint search_count_pk
+		primary key (id)
+);
+CREATE UNIQUE INDEX idx_word_search_area ON search_count(word, search_area);
