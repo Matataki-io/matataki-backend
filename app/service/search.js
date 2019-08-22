@@ -20,6 +20,7 @@ class SearchService extends Service {
   }
 
   async searchPost(keyword, channelId = null, page = 1, pagesize = 10) {
+    this.logger.info('SearchService:: Search for', keyword);
     let postQuery;
     const elasticClient = new elastic.Client({ node: this.config.elasticsearch.host });
     const searchProject = {
