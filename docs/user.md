@@ -24,14 +24,19 @@ curl -X GET 'https://apitest.smartsignature.io/users/search?word=t&page=1&pagesi
     "code": 0,
     "message": "成功",
     "data": {
-        "count": 1,
+        "count": 16,
         "list": [
             {
-                "id": 1047,
-                "username": "guanchao71@<em>gmail</em>.com",
-                "nickname": "00",
-                "avatar": "/avatar/2019/08/09/5ce83d89b2052ea7e3128844be68025a.gif",
-                "introduction": "woshipm"
+                "id": 1041,
+                "username": "<em>1</em>@0.0",
+                "platform": "email",
+                "nickname": null,
+                "avatar": null,
+                "introduction": null,
+                "fans": 0,
+                "follows": 0,
+                "is_follow": false,
+                "is_fan": false
             }
         ]
     }

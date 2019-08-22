@@ -59,6 +59,7 @@ class SearchController extends Controller {
 
   async searchUser() {
     const ctx = this.ctx;
+    const current_user = ctx.user.id;
     const { word = 'smart', page = 1, pagesize = 10 } = ctx.query;
 
     if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
@@ -74,7 +75,7 @@ class SearchController extends Controller {
     // 还需要记录搜索历史
     await this.service.search.writeLog(word, 3);
 
-    const result = await this.service.search.searchUser(word, page, pagesize);
+    const result = await this.service.search.searchUser(word, page, pagesize, current_user);
 
     if (!result) {
       ctx.body = ctx.msg.failure;

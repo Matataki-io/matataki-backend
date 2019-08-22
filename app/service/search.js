@@ -135,7 +135,7 @@ class SearchService extends Service {
     return { count, list: postList };
   }
 
-  async searchUser(keyword, page = 1, pagesize = 10) {
+  async searchUser(keyword, page = 1, pagesize = 10, current_user = null) {
     let userQuery;
     const elasticClient = new elastic.Client({ node: this.config.elasticsearch.host });
     const searchProject = {
@@ -176,7 +176,7 @@ class SearchService extends Service {
     }
 
     // 获取详情
-    let userList = await this.service.user.getUserList(userids);
+    let userList = await this.service.user.getUserList(userids, current_user);
 
     // 重排序
     userList = userList.sort((a, b) => {

@@ -8,6 +8,7 @@ const moment = require('moment');
 const downloader = require('image-downloader');
 const md5 = require('crypto-js/md5');
 const filetype = require('file-type');
+const _ = require('lodash');
 
 const introductionLengthInvalid = 4;
 const emailDuplicated = 5;
@@ -125,20 +126,74 @@ class UserService extends Service {
     return basicInfo;
   }
 
-  async getUserList(userids) {
+  async getUserList(userids, current_user = null) {
 
     let userList = [];
+    let myFollows = [];
+    let myFans = [];
 
     if (userids.length === 0) {
       return userList;
     }
 
-    const sqlcode = 'SELECT id, username, nickname, avatar, introduction FROM users WHERE id IN (?);';
+    let sqlcode = 'SELECT id, username, platform, nickname, avatar, introduction FROM users WHERE id IN (:userids);'
+      // 粉丝数量
+      + 'SELECT fuid, COUNT(*) AS fans FROM follows WHERE status = 1 AND fuid IN (:userids) GROUP BY fuid;'
+      // 关注数量
+      + 'SELECT uid, COUNT(*) AS follows FROM follows WHERE status = 1 AND uid IN (:userids) GROUP BY uid;';
 
-    userList = await this.app.mysql.query(
+    if (current_user) {
+      // 这群人是否有fo我
+      sqlcode += ('SELECT uid FROM follows WHERE uid IN (:userids) AND fuid = :me AND status = 1;'
+      // 我是否有fo这群人
+      + 'SELECT fuid FROM follows WHERE fuid IN (:userids) AND uid = :me AND status = 1;');
+    }
+
+    const userQuery = await this.app.mysql.query(
       sqlcode,
-      [ userids ]
+      { userids, me: current_user }
     );
+
+    userList = userQuery[0];
+    const fanCount = userQuery[1];
+    const followCount = userQuery[2];
+
+    if (current_user) {
+      myFans = userQuery[3];
+      myFollows = userQuery[4];
+    }
+
+    // 初始化数据
+    _.each(userList, everyUser => {
+      everyUser.fans = 0;
+      everyUser.follows = 0;
+      everyUser.is_follow = false;
+      everyUser.is_fan = false;
+    });
+
+    // 填充每个人的数据
+    _.each(userList, everyUser => {
+      _.each(fanCount, everyCount => {
+        if (everyUser.id === everyCount.fuid) {
+          everyUser.fans = everyCount.fans;
+        }
+      });
+      _.each(followCount, everyCount => {
+        if (everyUser.id === everyCount.uid) {
+          everyUser.follows = everyCount.follows;
+        }
+      });
+      _.each(myFans, everyFan => {
+        if (everyUser.id === everyFan.uid) {
+          everyUser.is_fan = true;
+        }
+      });
+      _.each(myFollows, everyFollow => {
+        if (everyUser.id === everyFollow.fuid) {
+          everyUser.is_follow = true;
+        }
+      });
+    });
 
     return userList;
   }
