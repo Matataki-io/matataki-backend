@@ -764,3 +764,6 @@ create table search_count
 		primary key (id)
 );
 CREATE UNIQUE INDEX idx_word_search_area ON search_count(word, search_area);
+
+alter table users	add is_recommend tinyint(1) default 0 null comment '是否是被推荐的用户';
+

@@ -9,6 +9,9 @@
 // 同步文章/用户数据
 // node carttoEls.js sync posts
 // node carttoEls.js sync users
+// 也可以从顺序第多少个开始（第X个， 不是id为X）
+// node carttoEls.js sync posts 100
+// node carttoEls.js sync users 10
 
 // 删除index
 // node carttoEls.js delete posts
@@ -42,7 +45,7 @@ async function catcherPost(start = 0, end = null) {
     user: config.mysql_user,
     password: config.mysql_password,
     database: config.mysql_db,
-    ssl: {}
+    ssl: {},
   });
     // 创建Elastic连接
   const elaClient = new elastic.Client({ node: config.elastic_address });
@@ -55,7 +58,7 @@ async function catcherPost(start = 0, end = null) {
   console.log(`There are ${articleCountQuery[0][0].count} articles here...`);
 
   // 有start和end的话， 就从他们开始吧！
-  for (let index = start; index < ( end ? end : articleCountQuery[0][0].count ); index += 1) {
+  for (let index = start; index < (end ? end : articleCountQuery[0][0].count); index += 1) {
     console.log('---- ---- ---- ---- ---- ---- ---- ----');
     console.log(`Current index ${index}`);
     // 在某篇文章处卡断推出， 请重启脚本
@@ -68,8 +71,8 @@ async function catcherPost(start = 0, end = null) {
 
     // 文章是否已经添加入Elastic数据库， 已经添加则会跳过
     elaQuery = await elaClient.search({
-      index: 'posts',
-      q: `id:${currentId}`
+      index: config.indexPosts,
+      q: `id:${currentId}`,
     });
     if (elaQuery.body.hits.hits.length !== 0) {
       console.log(`Current article id ${currentId} already added...`);
@@ -87,7 +90,7 @@ async function catcherPost(start = 0, end = null) {
     // 取内容失败， 多数是无效的ipfs哈希引起， 会掠过， 不会退出
     try {
       articleRawContent = await axios({
-        url: `https://apitest.smartsignature.io/ipfs/catJSON/${currentHash}`,
+        url: `https://apitest.smartsignature.io/post/ipfs/${currentHash}`,
         method: 'get',
         timeout: 3000,
       });
@@ -98,7 +101,7 @@ async function catcherPost(start = 0, end = null) {
     }
 
     // ipfs获取出错， 可能为其中没有实际文本内容， 会掠过， 不会退出
-    if (articleRawContent.data.code !== 200) {
+    if (articleRawContent.data.code !== 0) {
       console.log(`Current article id ${currentId} wrong content structure... ignored...`);
       continue;
     }
@@ -109,7 +112,7 @@ async function catcherPost(start = 0, end = null) {
     // 插入文章失败， 请重启脚本
     await elaClient.index({
       id: currentId,
-      index: 'posts',
+      index: config.indexPosts,
       body: {
         id: currentId,
         // uid: articleDetailQuery[0][0].uid,
@@ -119,7 +122,7 @@ async function catcherPost(start = 0, end = null) {
         title: articleDetailQuery[0][0].title,
         channel_id: articleDetailQuery[0][0].channel_id,
         content: parsedContent,
-      }
+      },
     });
   }
 }
@@ -135,7 +138,7 @@ async function catcherUser(start = 0, end = null) {
     user: config.mysql_user,
     password: config.mysql_password,
     database: config.mysql_db,
-    ssl: {}
+    ssl: {},
   });
     // 创建Elastic连接
   const elaClient = new elastic.Client({ node: config.elastic_address });
@@ -148,7 +151,7 @@ async function catcherUser(start = 0, end = null) {
   console.log(`There are ${userCountQuery[0][0].count} users here...`);
 
   // 有start和end的话， 就从他们开始吧！
-  for (let index = start; index < ( end ? end : userCountQuery[0][0].count ); index += 1) {
+  for (let index = start; index < (end ? end : userCountQuery[0][0].count); index += 1) {
     console.log('---- ---- ---- ---- ---- ---- ---- ----');
     console.log(`Current index ${index}`);
     // ..
@@ -160,8 +163,8 @@ async function catcherUser(start = 0, end = null) {
 
     // ..
     elaQuery = await elaClient.search({
-      index: 'users',
-      q: `id:${currentId}`
+      index: config.indexUsers,
+      q: `id:${currentId}`,
     });
     if (elaQuery.body.hits.hits.length !== 0) {
       console.log(`Current user id ${currentId} already added...`);
@@ -171,13 +174,13 @@ async function catcherUser(start = 0, end = null) {
 
     await elaClient.index({
       id: currentId,
-      index: 'users',
+      index: config.indexUsers,
       body: {
         id: currentId,
         create_time: userDetailQuery[0][0].create_time,
         username: userDetailQuery[0][0].username,
         nickname: userDetailQuery[0][0].nickname,
-      }
+      },
     });
   }
 }
@@ -186,19 +189,19 @@ async function catcherUser(start = 0, end = null) {
 async function performSearch(word) {
   const elaClient = new elastic.Client({ node: config.elastic_address });
   const search = await elaClient.search({
-    index: 'posts',
+    index: config.indexPosts,
     body: {
       query: {
         match: {
-          content: word
-        }
+          content: word,
+        },
       },
       highlight: {
         fields: {
-          content: {}
-        }
-      }
-    }
+          content: {},
+        },
+      },
+    },
   });
   console.log(search.body.hits);
   for (let index = 0; index < search.body.hits.hits.length; index += 1) {
@@ -213,7 +216,7 @@ async function performSearch(word) {
 async function search2(area = 'posts', keyword = '1') {
   const result = await axios({
     url: `${config.elastic_address}/${area}/_search?q=id:${keyword}`,
-    method: 'GET'
+    method: 'GET',
   });
   console.log(result.data.hits.hits);
 }
@@ -238,22 +241,22 @@ async function wash(rawContent) {
 // 创造空间！
 async function createTb() {
   await axios({
-    url: `${config.elastic_address}/posts`,
+    url: `${config.elastic_address}/${config.indexPosts}`,
     method: 'PUT',
     data: {
       mappings: {
         properties: {
           id: {
-            type: 'long'
+            type: 'long',
           },
           // uid: {
           //     type: 'long'
           // },
           create_time: {
-            type: 'date'
+            type: 'date',
           },
           channel_id: {
-            type: 'short'
+            type: 'short',
           },
           title: {
             type: 'text',
@@ -274,25 +277,25 @@ async function createTb() {
             type: 'text',
             analyzer: 'ik_max_word',
             search_analyzer: 'ik_smart',
-          }
-        }
-      }
-    }
+          },
+        },
+      },
+    },
   });
 }
 
 async function createUs() {
   await axios({
-    url: `${config.elastic_address}/users`,
+    url: `${config.elastic_address}/${config.indexUsers}`,
     method: 'PUT',
     data: {
       mappings: {
         properties: {
           id: {
-            type: 'long'
+            type: 'long',
           },
           create_time: {
-            type: 'date'
+            type: 'date',
           },
           nickname: {
             type: 'text',
@@ -304,24 +307,24 @@ async function createUs() {
             analyzer: 'ik_max_word',
             search_analyzer: 'ik_max_word',
           },
-        }
-      }
-    }
+        },
+      },
+    },
   });
 }
 
 // 忘记它罢！
 async function deleteTb() {
   await axios({
-    url: `${config.elastic_address}/posts`,
-    method: 'DELETE'
+    url: `${config.elastic_address}/${config.indexPosts}`,
+    method: 'DELETE',
   });
 }
 
 async function deleteUs() {
   await axios({
-    url: `${config.elastic_address}/users`,
-    method: 'DELETE'
+    url: `${config.elastic_address}/${config.indexUsers}`,
+    method: 'DELETE',
   });
 }
 

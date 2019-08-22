@@ -23,7 +23,7 @@ class SearchService extends Service {
     let postQuery;
     const elasticClient = new elastic.Client({ node: this.config.elasticsearch.host });
     const searchProject = {
-      index: 'posts',
+      index: this.config.elasticsearch.indexPosts,
       from: pagesize * (page - 1),
       size: 1 * pagesize,
       body: {
@@ -139,7 +139,7 @@ class SearchService extends Service {
     let userQuery;
     const elasticClient = new elastic.Client({ node: this.config.elasticsearch.host });
     const searchProject = {
-      index: 'users',
+      index: this.config.elasticsearch.indexUsers,
       from: pagesize * (page - 1),
       size: 1 * pagesize,
       body: {
@@ -226,7 +226,7 @@ class SearchService extends Service {
     try {
       await elaClient.index({
         id: postid,
-        index: 'posts',
+        index: this.config.elasticsearch.indexPosts,
         body: {
           id: postid,
           create_time: moment(),
@@ -250,7 +250,7 @@ class SearchService extends Service {
     try {
       await elaClient.delete({
         id: postid,
-        index: 'posts',
+        index: this.config.elasticsearch.indexPosts,
       });
     } catch (err) {
       this.logger.error('SearchService:: deletePost: error ', err);
@@ -272,7 +272,7 @@ class SearchService extends Service {
     try {
       await elaClient.index({
         id: userid,
-        index: 'users',
+        index: this.config.elasticsearch.indexUsers,
         body: {
           id: userid,
           create_time: user[0].create_time,
