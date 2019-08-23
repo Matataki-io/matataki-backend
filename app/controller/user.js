@@ -380,6 +380,28 @@ class UserController extends Controller {
     this.ctx.body.data = result;
   }
 
+  async recommend() {
+    const ctx = this.ctx;
+    const current_user = ctx.user.id;
+    const { amount = 3 } = ctx.query;
+
+    const amountNum = parseInt(amount);
+    if (isNaN(amountNum)) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const result = await this.service.user.recommendUser(amountNum, current_user);
+
+    if (!result) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
+
 }
 
 module.exports = UserController;

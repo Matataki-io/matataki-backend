@@ -198,6 +198,50 @@ class UserService extends Service {
     return userList;
   }
 
+  async recommendUser(amount, current_user = null) {
+    // 随机选取数个
+    const userList = await this.app.mysql.query(
+      'SELECT id, username, nickname, avatar FROM users WHERE is_recommend = 1 ORDER BY RAND() LIMIT :amount;',
+      { amount }
+    );
+
+    const userids = [];
+    let myFans = [];
+    let myFollows = [];
+
+    _.each(userList, everyUser => {
+      userids.push(everyUser.id);
+      everyUser.is_follow = false;
+      everyUser.is_fan = false;
+    });
+
+    if (current_user) {
+      const followStatus = await this.app.mysql.query(
+        'SELECT uid FROM follows WHERE uid IN (:userids) AND fuid = :me AND status = 1;'
+        + 'SELECT fuid FROM follows WHERE fuid IN (:userids) AND uid = :me AND status = 1;',
+        { userids, me: current_user }
+      );
+
+      myFans = followStatus[0];
+      myFollows = followStatus[1];
+    }
+
+    _.each(userList, everyUser => {
+      _.each(myFans, everyFan => {
+        if (everyUser.id === everyFan.uid) {
+          everyUser.is_fan = true;
+        }
+      });
+      _.each(myFollows, everyFollow => {
+        if (everyUser.id === everyFollow.fuid) {
+          everyUser.is_follow = true;
+        }
+      });
+    });
+
+    return userList;
+  }
+
   async setProfile(userid, email, nickname, introduction, accept) {
 
     if (userid === null) {

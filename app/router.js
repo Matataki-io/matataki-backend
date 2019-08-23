@@ -118,6 +118,8 @@ module.exports = app => {
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
   // 发起提现
   router.post('/user/withdraw', passport.authorize, controller.user.withdraw);
+  // 推荐用户
+  router.get('/users/recommend', passport.verify, controller.user.recommend);
 
   // -------------------------------- 粉丝系统 --------------------------------
   // follow 关注和取关动作。关注数和粉丝数在userinfo里
