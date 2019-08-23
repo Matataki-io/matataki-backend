@@ -6,6 +6,7 @@ const _ = require('lodash');
 
 class FollowController extends Controller {
 
+  // 关注动作
   async follow() {
     const ctx = this.ctx;
 
@@ -31,6 +32,7 @@ class FollowController extends Controller {
     ctx.body = ctx.msg.success;
   }
 
+  // 取消关注动作
   async unfollow() {
     const ctx = this.ctx;
 
@@ -43,11 +45,13 @@ class FollowController extends Controller {
       return;
     }
 
+    // 失败， 不能关注自己
     if (resp === 2) {
       ctx.body = ctx.msg.followYourself;
       return;
     }
 
+    // 失败， 用户不存在
     if (resp === 3) {
       ctx.body = ctx.msg.userNotExist;
       return;
@@ -56,7 +60,7 @@ class FollowController extends Controller {
     ctx.body = ctx.msg.success;
   }
 
-
+  // 关注列表
   async follows() {
     const ctx = this.ctx;
 
@@ -73,6 +77,7 @@ class FollowController extends Controller {
     ctx.body.data = resp;
   }
 
+  // 粉丝列表
   async fans() {
     const ctx = this.ctx;
 

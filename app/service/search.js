@@ -36,6 +36,8 @@ class SearchService extends Service {
           //   query: keyword,
           //   fields: [ 'nickname', 'title', 'content' ],
           // },
+
+          // 时间影响评分
           function_score: {
             functions: [
               {
@@ -53,6 +55,7 @@ class SearchService extends Service {
             },
           },
         },
+        // 高亮设置
         highlight: {
           fields: {
             // content: {},
@@ -71,6 +74,7 @@ class SearchService extends Service {
           must: [
             { term: { channel_id: channelId } },
             { bool: {
+              // 匹配标题和内容其中一个
               should: [
                 { match: { title: keyword } },
                 { match: { content: keyword } },

@@ -11,6 +11,8 @@ const pretty = require('pretty');
 const turndown = require('turndown');
 
 class PostImportService extends Service {
+
+  // 搬运时候上传图片
   async uploadArticleImage(url, cacheFile = './uploads/today.jpg') {
     let imageFile;
     // let imageUpload = null;
@@ -41,6 +43,7 @@ class PostImportService extends Service {
     return filename;
   }
 
+  // 搬运微信文章
   async handleWechat(url) {
     // 获取文章内容
     let rawPage;
@@ -67,6 +70,7 @@ class PostImportService extends Service {
       imgRawUrl = imgElement[index].rawAttributes['data-src'];
       imgFileName = './uploads/today_' + Date.now() + '.' + imgElement[0].rawAttributes['data-type'];
       imgUpUrl = await this.uploadArticleImage(imgRawUrl, imgFileName);
+      // 匹配图片URL， 并进行替换
       if (imgUpUrl) {
         imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(
           /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
@@ -108,6 +112,7 @@ class PostImportService extends Service {
     return articleObj;
   }
 
+  // 处理橙皮书文章
   async handleOrange(url) {
     // 拉取文章内容
     let articleContent = '';
@@ -141,6 +146,7 @@ class PostImportService extends Service {
     const turndownService = new turndown();
     articleContent = turndownService.turndown(parsedContent.toString());
 
+    // 上传封面
     const parsedCoverUpload = './uploads/today_orange_' + Date.now() + '.jpg';
     const coverLocation = await this.uploadArticleImage(coverUrl.substring(5, coverUrl.length - 2), parsedCoverUpload);
 
@@ -153,6 +159,7 @@ class PostImportService extends Service {
     return articleObj;
   }
 
+  // 处理链闻文章
   async handleChainnews(url) {
     // 拉取文章内容
     let rawPage;

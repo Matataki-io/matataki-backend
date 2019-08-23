@@ -3,6 +3,7 @@
 const Controller = require('egg').Controller;
 
 class SearchController extends Controller {
+  // 普通搜索， 搜索文章
   async search() {
     const ctx = this.ctx;
     const { type = 'post', word = 'smart', channel = null, page = 1, pagesize = 10 } = ctx.query;
@@ -57,6 +58,7 @@ class SearchController extends Controller {
     ctx.body.data = result;
   }
 
+  // 搜索用户
   async searchUser() {
     const ctx = this.ctx;
     const current_user = ctx.user.id;

@@ -40,6 +40,7 @@ class UserController extends Controller {
     ctx.body.data = result;
   }
 
+  // 现有资产列表和收入明细
   async tokens() {
     const { page = 1, pagesize = 20, symbol = 'EOS' } = this.ctx.query;
 
@@ -104,6 +105,7 @@ class UserController extends Controller {
     this.ctx.body.data = result;
   }
 
+  // 资产列表
   async balance() {
 
     const tokens = await this.app.mysql.query(
@@ -126,6 +128,7 @@ class UserController extends Controller {
     this.ctx.body.data = tokens;
   }
 
+  // 设置头像路径
   async setAvatar() {
 
     const ctx = this.ctx;
@@ -156,6 +159,7 @@ class UserController extends Controller {
     }
   }
 
+  // 上传头像文件， 返回头像地址路径
   async uploadAvatar() {
     const ctx = this.ctx;
     const file = ctx.request.files[0];
@@ -356,6 +360,7 @@ class UserController extends Controller {
     }
   }
 
+  // 普通精准搜索， 用于文章转让时候确定用户
   async search() {
     const { q = '' } = this.ctx.query;
 
@@ -380,6 +385,7 @@ class UserController extends Controller {
     this.ctx.body.data = result;
   }
 
+  // 推荐作者（用户）
   async recommend() {
     const ctx = this.ctx;
     const current_user = ctx.user.id;

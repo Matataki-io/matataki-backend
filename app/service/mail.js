@@ -17,6 +17,7 @@ class MailService extends Service {
     };
   }
 
+  // 发送收货邮件
   async sendMail(orderid) {
 
     if (!orderid) {
@@ -85,6 +86,7 @@ class MailService extends Service {
     return result;
   }
 
+  // 发送验证码邮件
   async sendCaptcha(email, captcha) {
     if (!email || !captcha) {
       return null;

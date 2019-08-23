@@ -4,6 +4,7 @@ const Controller = require('../core/base_controller');
 
 class WechatController extends Controller {
 
+  // 获取签名
   async calculateSign() {
     const ctx = this.ctx;
     const { url = '' } = ctx.query;

@@ -133,16 +133,19 @@ class AuthController extends Controller {
       // ctx.body.data = this.service.auth.generateRedirectUrl;
       return;
     }
+    // 验证前端传回的Code， 再取得access token
     const usertoken = await this.service.auth.verifyCode(code);
     if (usertoken === null) {
       ctx.body = ctx.msg.authCodeInvalid;
       return;
     }
+    // 由access token再取用户信息
     const userinfo = await this.service.auth.getGithubUser(usertoken.access_token);
     if (userinfo === null) {
       ctx.body = ctx.msg.generateTokenError;
       return;
     }
+    // 创建， 设置用户
     const jwttoken = await this.service.auth.saveUser(userinfo.login, userinfo.name, userinfo.avatar_url);
     if (jwttoken === null) {
       ctx.body = ctx.msg.generateTokenError;
@@ -172,6 +175,7 @@ class AuthController extends Controller {
     }
   }
 
+  // 登陆时候发送验证码
   async sendCaptcha() {
     const ctx = this.ctx;
     const { email = null } = ctx.request.query;
@@ -179,6 +183,8 @@ class AuthController extends Controller {
       ctx.body = ctx.msg.paramsError;
       return;
     }
+
+    // 验证用户存在
     const userExistence = await this.service.auth.verifyUser(email);
     if (userExistence) {
       ctx.body = ctx.msg.alreadyRegisted;
@@ -209,6 +215,7 @@ class AuthController extends Controller {
     // ctx.body = ctx.msg.failure;
   }
 
+  // 注册用户
   async regUser() {
     const ctx = this.ctx;
     const ipaddress = ctx.header['x-real-ip'];
@@ -217,11 +224,14 @@ class AuthController extends Controller {
       ctx.body = ctx.msg.paramsError;
       return;
     }
+
+    // 验证用户需要不存在
     const userExistence = await this.service.auth.verifyUser(email);
     if (userExistence) {
       ctx.body = ctx.msg.alreadyRegisted;
       return;
     }
+    // 注册， 写入信息
     const regResult = await this.service.auth.doReg(email, captcha, password, ipaddress);
     switch (regResult) {
       case 1:
@@ -244,6 +254,7 @@ class AuthController extends Controller {
     }
   }
 
+  // 账户用密码登录
   async accountLogin() {
     const ctx = this.ctx;
     const ipaddress = ctx.header['x-real-ip'];

@@ -22,6 +22,7 @@ class PostController extends Controller {
     };
   }
 
+  // 发布文章
   async publish() {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
@@ -36,6 +37,7 @@ class PostController extends Controller {
     }
 
     try {
+      // 验证签名
       if (platform === 'eos') {
         const hash_piece1 = hash.slice(0, 12);
         const hash_piece2 = hash.slice(12, 24);
@@ -49,6 +51,8 @@ class PostController extends Controller {
                 const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
                 this.ont_signature_verify(msg, sign, publickey);
         */
+
+      // Github以及Email用户不验证签名
       } else if (platform === 'github') {
         this.logger.info('There is a GitHub user publishing...');
       } else if (platform === 'email') {
@@ -71,6 +75,7 @@ class PostController extends Controller {
     const articleJson = JSON.parse(articleData.toString());
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(articleJson.content);
+    // 设置短摘要
     const shortContent = articleContent.substring(0, 300);
 
     const id = await ctx.service.post.publish({
@@ -91,6 +96,7 @@ class PostController extends Controller {
       short_content: shortContent,
     });
 
+    // 添加文章到elastic search
     await this.service.search.importPost(id, ctx.user.id, title, articleContent);
 
     if (tags) {
@@ -107,6 +113,7 @@ class PostController extends Controller {
     }
   }
 
+  // 编辑文章， 处理逻辑和发布相似
   async edit() {
     const ctx = this.ctx;
     const { signId, author = '', title = '', content = '',
@@ -550,6 +557,7 @@ class PostController extends Controller {
   //   ctx.body = mail;
   // }
 
+  // 转移文章
   async transferOwner() {
     const ctx = this.ctx;
     const { uid, signid } = ctx.request.body;

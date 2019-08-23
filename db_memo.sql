@@ -752,6 +752,9 @@ ALTER TABLE post_read_count ADD COLUMN dislikes INT UNSIGNED DEFAULT 0 NULL;
 -- create unique index search_count_word_uindex
 -- 	on search_count (word);
 
+-- 2019/08/21 sprint9-v2.7.0
+-- 搜索功能
+
 create table search_count
 (
 	id int(20) auto_increment,

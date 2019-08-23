@@ -11,6 +11,7 @@ class DraftsController extends Controller {
     super(ctx);
   }
 
+  // 获取草稿列表
   async drafts() {
     const ctx = this.ctx;
 
@@ -28,11 +29,13 @@ class DraftsController extends Controller {
   }
 
 
+  // 保存草稿
   async save() {
     const ctx = this.ctx;
 
     const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0, tags = '' } = ctx.request.body;
 
+    // 有id视为保存草稿， 没有id视为一篇新的草稿
     if (id) {
       await this.save_draft(this.ctx.user.id, id, title, content, cover, fissionFactor, is_original, tags);
     } else {
@@ -40,6 +43,7 @@ class DraftsController extends Controller {
     }
   }
 
+  // 更新一篇已经存在的草稿
   async save_draft(uid, id, title, content, cover, fissionFactor, is_original, tags) {
     const draft = await this.app.mysql.get('drafts', { id });
 
@@ -81,6 +85,7 @@ class DraftsController extends Controller {
     }
   }
 
+  // 创建新的草稿
   async create_draft(uid, title, content, cover, fissionFactor, is_original, tags) {
 
     try {
@@ -115,6 +120,7 @@ class DraftsController extends Controller {
     }
   }
 
+  // 获取一篇草稿
   async draft() {
     const id = this.ctx.params.id;
 
@@ -130,6 +136,7 @@ class DraftsController extends Controller {
       return;
     }
 
+    // 分配标签
     let tag_arr = draft.tags.split(",");
     tag_arr = tag_arr.filter((x) => { return x !== "" });
     let tags = [];
@@ -145,6 +152,7 @@ class DraftsController extends Controller {
     this.ctx.body = draft;
   }
 
+  // 删除草稿
   async delete() {
     const id = this.ctx.params.id;
 
@@ -172,6 +180,7 @@ class DraftsController extends Controller {
 
   }
 
+  // 转让草稿
   async transferOwner() {
     const ctx = this.ctx;
     const { uid, draftid } = ctx.request.body;
