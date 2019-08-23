@@ -23,3 +23,5 @@ build/
 cmd.sh
 .vscode/
 scripts/config.local.json
+scripts/article-cart/config.local.json
+scripts/oss-copy/config.local.json
