@@ -43,4 +43,12 @@ module.exports = {
     dislike: 'reading_dislike', // 点踩
   },
 
+  // 用户账号所属平台
+  platforms: {
+    email: 'email',
+    eos: 'eos',
+    ont: 'ont',
+    github: 'github',
+  },
+
 };

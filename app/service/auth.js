@@ -7,6 +7,7 @@ const sha256 = require('crypto-js/sha256');
 const axios = require('axios');
 const moment = require('moment');
 const jwt = require('jwt-simple');
+const consts = require('./consts');
 
 class AuthService extends Service {
 
@@ -23,7 +24,8 @@ class AuthService extends Service {
     };
   }
 
-  // 验证access_token, 暂时是不verify state的
+
+  // github账号登录，验证access_token, 暂时是不verify state的
   async verifyCode(code) {
     let tokendata = null;
     try {
@@ -51,7 +53,7 @@ class AuthService extends Service {
     return tokendata;
   }
 
-  // 获取用户信息
+  // 获取github用户信息
   async getGithubUser(usertoken) {
 
     let userinfo = null;
@@ -73,17 +75,21 @@ class AuthService extends Service {
     return userinfo.data;
   }
 
-  // 创建或登录用户, 发放jwt token
-  async saveUser(username, nickname, avatarUrl, platform = 'github') {
+  // github账号登录，创建或登录用户, 发放jwt token
+  // todo：2019-8-27 缺少登录日志
+  async saveUser(username, nickname, avatarUrl, ip = '', referral = 0, platform = 'github') {
     try {
-      const userExistence = await this.app.mysql.get('users', { username, platform });
+      let currentUser = await this.app.mysql.get('users', { username, platform });
+
       // 用户是第一次登录, 先创建
-      if (userExistence === null) {
-        await this.app.mysql.insert('users', {
-          username,
-          platform,
-          create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-        });
+      if (currentUser === null) {
+        // await this.app.mysql.insert('users', {
+        //   username,
+        //   platform,
+        //   create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        // });
+
+        await this.insertUser(username, '', platform, 'ss', ip, '', referral);
 
         // 若没有昵称, 先把username给nickname
         if (nickname === null) {
@@ -104,9 +110,14 @@ class AuthService extends Service {
           { nickname, avatar },
           { where: { username, platform } }
         );
+
+        currentUser = await this.app.mysql.get('users', { username, platform });
       }
-      const currentUser = await this.app.mysql.get('users', { username, platform });
-      await this.service.search.importUser(currentUser.id);
+
+      // await this.service.search.importUser(currentUser.id);
+
+      // 增加登录日志
+      await this.insertLoginLog(currentUser.id, ip);
 
       const expires = moment().add(7, 'days').valueOf();
 
@@ -125,6 +136,8 @@ class AuthService extends Service {
     }
   }
 
+
+  // 验证用户账号是否存在
   async verifyUser(username) {
     const user = await this.app.mysql.query(
       'SELECT id FROM users WHERE username = :username;',
@@ -137,6 +150,8 @@ class AuthService extends Service {
 
   // }
 
+
+  // 发送邮箱验证码
   async sendCaptchaMail(email) {
 
     const mailhash = 'captcha:' + md5(email).toString();
@@ -181,7 +196,8 @@ class AuthService extends Service {
     return 2;
   }
 
-  async doReg(email, captcha, password, ipaddress) {
+  // 邮箱注册
+  async doReg(email, captcha, password, ipaddress, referral) {
     const mailhash = 'captcha:' + md5(email).toString();
     const captchaQuery = await this.app.redis.get(mailhash);
     // 从未获取过验证码
@@ -213,25 +229,30 @@ class AuthService extends Service {
     }
 
     // 增加用户
-    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    // const now = moment().format('YYYY-MM-DD HH:mm:ss');
     const passwordHash = sha256(password).toString();
-    const createAccount = await this.app.mysql.query(
-      'INSERT INTO users (username, email, create_time, last_login_time, platform, source, reg_ip, password_hash) '
-      + 'VALUES (:username, :email, :now, :now, \'email\', \'ss\', :ipaddress, :password);',
-      { username: email, email, ipaddress, password: passwordHash, now }
-    );
+    const result = await this.insertUser(email, email, consts.platforms.email, 'ss', ipaddress, passwordHash, referral);
+    // const createAccount = await this.app.mysql.query(
+    //   'INSERT INTO users (username, email, create_time, last_login_time, platform, source, reg_ip, password_hash) '
+    //   + 'VALUES (:username, :email, :now, :now, \'email\', \'ss\', :ipaddress, :password);',
+    //   { username: email, email, ipaddress, password: passwordHash, now }
+    // );
 
-    if (createAccount.affectedRows !== 1) {
+    // if (createAccount.affectedRows !== 1) {
+    //   return 5;
+    // }
+    if (!result) {
       return 5;
     }
 
-    const currentUser = await this.app.mysql.get('users', { username: email, platform: 'email' });
-    await this.service.search.importUser(currentUser.id);
+    // const currentUser = await this.app.mysql.get('users', { username: email, platform: 'email' });
+    // await this.service.search.importUser(currentUser.id);
 
     this.logger.info('AuthService:: doReg: New user Added for email ', email);
     return 0;
   }
 
+  // 邮箱账号密码登录
   async verifyLogin(username, password, ipaddress) {
     // 提取用户信息
     let userPw;
@@ -255,22 +276,23 @@ class AuthService extends Service {
       return 2;
     }
 
-    // 增加登陆记录
-    const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    let addLoginLog;
-    try {
-      addLoginLog = await this.app.mysql.query(
-        'INSERT INTO users_login_log (uid, ip, source, login_time) VALUES '
-        + '(:uid, :ipaddress, \'ss\', :now);',
-        { uid: userPw[0].id, ipaddress, now }
-      );
-    } catch (err) {
-      this.logger.error('AuthService:: verifyLogin: Error ', err);
-      return 3;
-    }
-    if (addLoginLog.affectedRows !== 1) {
-      return 3;
-    }
+    // 增加登录日志
+    await this.insertLoginLog(userPw[0].id, ipaddress);
+    // const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    // let addLoginLog;
+    // try {
+    //   addLoginLog = await this.app.mysql.query(
+    //     'INSERT INTO users_login_log (uid, ip, source, login_time) VALUES '
+    //     + '(:uid, :ipaddress, \'ss\', :now);',
+    //     { uid: userPw[0].id, ipaddress, now }
+    //   );
+    // } catch (err) {
+    //   this.logger.error('AuthService:: verifyLogin: Error ', err);
+    //   return 3;
+    // }
+    // if (addLoginLog.affectedRows !== 1) {
+    //   return 3;
+    // }
     // 生成token
     const expires = moment().add(7, 'days').valueOf();
     const jwttoken = jwt.encode({
@@ -283,6 +305,49 @@ class AuthService extends Service {
 
     return jwttoken;
   }
+
+  // 插入用户
+  async insertUser(username, email, platform, source, ip, pwd, referral) {
+    // 确认推荐人是否存在
+    let referral_uid = referral;
+    if (referral > 0) {
+      const referral_user = await this.service.user.get(referral);
+      if (!referral_user) {
+        referral_uid = 0;
+      }
+    }
+
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    const createAccount = await this.app.mysql.query(
+      'INSERT INTO users (username, email, create_time, platform, source, reg_ip, password_hash,referral_uid) '
+      + 'VALUES (:username, :email, :now, :platform, :source, :ip, :password, :referral);',
+      { username, email, ip, platform, source, password: pwd, now, referral: referral_uid }
+    );
+
+    if (createAccount.affectedRows === 1) {
+      // 插入ES
+      await this.service.search.importUser(createAccount.insertId);
+      return true;
+    }
+    return false;
+  }
+
+  // 插入登录日志
+  async insertLoginLog(uid, ip) {
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    try {
+      await this.app.mysql.query(
+        'UPDATE users SET last_login_time=:now, last_login_ip=:ip WHERE id=:uid; INSERT INTO users_login_log (uid, ip, source, login_time) VALUES '
+        + '(:uid, :ip, \'ss\', :now);',
+        { uid, ip, now }
+      );
+      return true;
+    } catch (err) {
+      this.logger.error('AuthService:: verifyLogin: Error ', err);
+      return false;
+    }
+  }
+
 }
 
 module.exports = AuthService;

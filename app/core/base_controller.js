@@ -27,6 +27,8 @@ class BaseController extends Controller {
       chainId: ctx.app.config.eos.chainId,
       httpEndpoint: ctx.app.config.eos.httpEndpoint,
     });
+
+    this.clientIP = ctx.header['x-real-ip'];
   }
 
   get user() {
@@ -128,35 +130,6 @@ class BaseController extends Controller {
   //     return null;
   //   }
   // }
-
-  async get_or_create_user(username, platform, source) {
-    try {
-      let user = await this.app.mysql.get('users', { username, platform });
-
-      if (!user) {
-        const newuser = await this.app.mysql.insert('users', {
-          username,
-          platform,
-          source,
-          create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-        });
-        user = await this.app.mysql.get('users', { username, platform });
-        await this.service.search.importUser(user.id);
-      }
-
-      // login log
-      await this.app.mysql.insert('users_login_log', {
-        uid: user.id,
-        ip: this.ctx.header['x-real-ip'],
-        source,
-        login_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-      });
-
-      return user;
-    } catch (err) {
-      return null;
-    }
-  }
 
   async eos_signature_verify(author, sign_data, sign, publickey) {
     try {

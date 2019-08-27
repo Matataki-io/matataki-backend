@@ -30,8 +30,19 @@ class UserService extends Service {
     };
   }
 
-  async find(id) {
-    return await this.app.mysql.get('users', { id });
+  // async find(id) {
+  //   return await this.app.mysql.get('users', { id });
+  // }
+
+  async get(id) {
+    const users = await this.app.mysql.select('users', {
+      where: { id },
+      columns: [ 'id', 'username', 'nickname', 'platform' ], // todo：需要再增加
+    });
+    if (users && users.length > 0) {
+      return users[0];
+    }
+    return null;
   }
 
   async getUserById(id) {
@@ -145,8 +156,8 @@ class UserService extends Service {
     if (current_user) {
       // 这群人是否有fo我
       sqlcode += ('SELECT uid FROM follows WHERE uid IN (:userids) AND fuid = :me AND status = 1;'
-      // 我是否有fo这群人
-      + 'SELECT fuid FROM follows WHERE fuid IN (:userids) AND uid = :me AND status = 1;');
+        // 我是否有fo这群人
+        + 'SELECT fuid FROM follows WHERE fuid IN (:userids) AND uid = :me AND status = 1;');
     }
 
     const userQuery = await this.app.mysql.query(

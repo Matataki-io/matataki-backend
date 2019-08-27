@@ -20,13 +20,15 @@ class AuthController extends Controller {
     });
   }
 
+  // eos、ont登录，首次登录自动注册
   async auth() {
 
     // 1. 取出签名
-    const { username, publickey, sign, platform = 'eos', source = 'ss' } = this.ctx.request.body;
+    const { username, publickey, sign, platform = 'eos', source = 'ss', referral = 0 } = this.ctx.request.body;
 
     // create user if not exit
-    const user = await this.get_or_create_user(username, platform, source);
+    // todo：待优化，应该在验证签名成功后再创建用户
+    const user = await this.get_or_create_user(username, platform, source, referral);
 
     if (platform === 'eos') {
       await this.eos_auth(sign, username, publickey, user);
@@ -36,6 +38,39 @@ class AuthController extends Controller {
       this.ctx.body = this.ctx.msg.unsupportedPlatform;
     }
 
+  }
+
+  // eos、ont登录，首次登录自动注册
+  async get_or_create_user(username, platform, source, referral) {
+    try {
+      let user = await this.app.mysql.get('users', { username, platform });
+
+      if (!user) {
+        await this.service.auth.insertUser(username, '', platform, source, this.clientIP, '', referral);
+        // const newuser = await this.app.mysql.insert('users', {
+        //   username,
+        //   platform,
+        //   source,
+        //   create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        // });
+        user = await this.app.mysql.get('users', { username, platform });
+        // await this.service.search.importUser(user.id);
+      }
+
+      // login log
+      // await this.app.mysql.insert('users_login_log', {
+      //   uid: user.id,
+      //   ip: this.ctx.header['x-real-ip'],
+      //   source,
+      //   login_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+      // });
+      // 插入登录日志
+      await this.service.auth.insertLoginLog(user.id, this.clientIP);
+
+      return user;
+    } catch (err) {
+      return null;
+    }
   }
 
   async eos_auth(sign, username, publickey, user) {
@@ -125,9 +160,11 @@ class AuthController extends Controller {
       */
   }
 
+
+  // github账号登录，第一次登录会创建账号
   async githubLogin() {
     const ctx = this.ctx;
-    const { code = null } = ctx.request.body;
+    const { code = null, referral = 0 } = ctx.request.body;
     if (code === null) {
       ctx.body = ctx.msg.paramsError;
       // ctx.body.data = this.service.auth.generateRedirectUrl;
@@ -146,7 +183,7 @@ class AuthController extends Controller {
       return;
     }
     // 创建， 设置用户
-    const jwttoken = await this.service.auth.saveUser(userinfo.login, userinfo.name, userinfo.avatar_url);
+    const jwttoken = await this.service.auth.saveUser(userinfo.login, userinfo.name, userinfo.avatar_url, this.clientIP, referral);
     if (jwttoken === null) {
       ctx.body = ctx.msg.generateTokenError;
       return;
@@ -154,6 +191,8 @@ class AuthController extends Controller {
     ctx.body = jwttoken;
   }
 
+
+  // 验证邮箱是否存在
   async verifyReg() {
     const ctx = this.ctx;
     const { email = null } = ctx.request.query;
@@ -175,7 +214,7 @@ class AuthController extends Controller {
     }
   }
 
-  // 登陆时候发送验证码
+  // 邮箱注册时发送验证码
   async sendCaptcha() {
     const ctx = this.ctx;
     const { email = null } = ctx.request.query;
@@ -215,11 +254,11 @@ class AuthController extends Controller {
     // ctx.body = ctx.msg.failure;
   }
 
-  // 注册用户
+  // 邮箱注册
   async regUser() {
     const ctx = this.ctx;
-    const ipaddress = ctx.header['x-real-ip'];
-    const { email = null, captcha = null, password = null } = ctx.request.body;
+    // const ipaddress = ctx.header['x-real-ip'];
+    const { email = null, captcha = null, password = null, referral = 0 } = ctx.request.body;
     if (!email || !captcha || !password) {
       ctx.body = ctx.msg.paramsError;
       return;
@@ -232,7 +271,7 @@ class AuthController extends Controller {
       return;
     }
     // 注册， 写入信息
-    const regResult = await this.service.auth.doReg(email, captcha, password, ipaddress);
+    const regResult = await this.service.auth.doReg(email, captcha, password, this.clientIP, referral);
     switch (regResult) {
       case 1:
         ctx.body = ctx.msg.captchaWrong;
@@ -254,7 +293,7 @@ class AuthController extends Controller {
     }
   }
 
-  // 账户用密码登录
+  // 账户密码登录，目前只有邮箱账号是密码登录
   async accountLogin() {
     const ctx = this.ctx;
     const ipaddress = ctx.header['x-real-ip'];
