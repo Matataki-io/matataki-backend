@@ -28,7 +28,7 @@ class BaseController extends Controller {
       httpEndpoint: ctx.app.config.eos.httpEndpoint,
     });
 
-    this.clientIP = ctx.header['x-real-ip'];
+    this.clientIP = ctx.header['x-real-ip'] || ctx.ip;
   }
 
   get user() {

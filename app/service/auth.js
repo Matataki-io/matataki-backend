@@ -309,9 +309,9 @@ class AuthService extends Service {
   // 插入用户
   async insertUser(username, email, platform, source, ip, pwd, referral) {
     // 确认推荐人是否存在
-    let referral_uid = referral;
-    if (referral > 0) {
-      const referral_user = await this.service.user.get(referral);
+    let referral_uid = parseInt(referral);
+    if (referral_uid > 0) {
+      const referral_user = await this.service.user.get(referral_uid);
       if (!referral_user) {
         referral_uid = 0;
       }
@@ -325,8 +325,14 @@ class AuthService extends Service {
     );
 
     if (createAccount.affectedRows === 1) {
+      // 处理注册推荐积分
+      if (referral_uid > 0) {
+        await this.service.mining.register(createAccount.insertId, referral, ip);
+      }
+
       // 插入ES
       await this.service.search.importUser(createAccount.insertId);
+
       return true;
     }
     return false;
@@ -337,10 +343,11 @@ class AuthService extends Service {
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
     try {
       await this.app.mysql.query(
-        'UPDATE users SET last_login_time=:now, last_login_ip=:ip WHERE id=:uid; INSERT INTO users_login_log (uid, ip, source, login_time) VALUES '
-        + '(:uid, :ip, \'ss\', :now);',
+        `UPDATE users SET last_login_time=:now, last_login_ip=:ip WHERE id=:uid; 
+         INSERT INTO users_login_log (uid, ip, source, login_time) VALUES (:uid, :ip, \'ss\', :now);`,
         { uid, ip, now }
       );
+
       return true;
     } catch (err) {
       this.logger.error('AuthService:: verifyLogin: Error ', err);

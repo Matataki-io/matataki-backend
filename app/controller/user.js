@@ -5,6 +5,7 @@ const moment = require('moment');
 const _ = require('lodash');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
+const consts = require('../service/consts');
 
 class UserController extends Controller {
 
@@ -24,10 +25,50 @@ class UserController extends Controller {
     ctx.body.data = details;
   }
 
+  // 获取任务状态
+  async getTaskStatus() {
+    const ctx = this.ctx;
+
+    // 获取积分领取领取状态
+    const login = await this.service.mining.getTaskStatus(ctx.user.id, consts.pointTypes.login);
+    const profile = await this.service.mining.getTaskStatus(ctx.user.id, consts.pointTypes.profile);
+    const amount = await this.service.mining.balance(ctx.user.id);
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = { amount, login, profile };
+  }
+
+  // 获取任务积分
+  async claimTaskPoint() {
+    const ctx = this.ctx;
+    const { type } = ctx.request.body;
+    let result = 0;
+
+    switch (type) {
+      case 'login':
+        result = await this.service.mining.login(ctx.user.id, this.clientIP);
+        break;
+      case 'profile':
+        if (!await this.service.user.get(ctx.user.id).nickname) {
+          ctx.body = ctx.msg.pointNoProfile;
+          return;
+        }
+        result = await this.service.mining.profile(ctx.user.id, this.clientIP);
+        break;
+    }
+
+    if (result === 0) {
+      ctx.body = ctx.msg.success;
+    } else if (result === 1) {
+      ctx.body = ctx.msg.pointAlreadyClaimed;
+    } else {
+      ctx.body = ctx.msg.failure;
+    }
+  }
+
   // 获取用户的积分和日志
   async points() {
     const ctx = this.ctx;
-    // await this.service.mining.publish(ctx.user.id, 100701, 'test');
 
     const { page = 1, pagesize = 20 } = this.ctx.query;
     if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {

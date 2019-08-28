@@ -108,8 +108,7 @@ module.exports = app => {
   router.get('/user/tokens', passport.authorize, controller.user.tokens);
   // 获取用户的积分和日志
   router.get('/user/points', passport.authorize, controller.user.points);
-  // 获取用户信息：用户名、关注数，粉丝数
-  router.get('/user/:id', passport.verify, controller.user.user);
+
   // 设置用户头像 (need access token)
   router.post('/user/setAvatar', passport.authorize, controller.user.setAvatar);
   // 上传用户头像, 并自动设置
@@ -120,6 +119,13 @@ module.exports = app => {
   router.post('/user/withdraw', passport.authorize, controller.user.withdraw);
   // 推荐用户
   router.get('/users/recommend', passport.verify, controller.user.recommend);
+  // 获取任务积分
+  router.post('/user/claimTaskPoint', passport.authorize, controller.user.claimTaskPoint);
+  // 获取任务状态
+  router.get('/user/taskStatus', passport.authorize, controller.user.getTaskStatus);
+
+  // 获取用户信息：用户名、关注数，粉丝数
+  router.get('/user/:id', passport.verify, controller.user.user);
 
   // -------------------------------- 粉丝系统 --------------------------------
   // follow 关注和取关动作。关注数和粉丝数在userinfo里

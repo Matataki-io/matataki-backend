@@ -96,6 +96,12 @@ module.exports = {
   // 获取广告时候出错
   getAdError: 10505,
 
+  // 积分相关
+  // 资料不完整
+  pointNoProfile: 10601,
+  // 已经领取过积分
+  pointAlreadyClaimed: 10602,
+
   returnObj(lang) {
 
     const en = {
@@ -152,6 +158,9 @@ module.exports = {
       submitAdError: { code: this.submitAdError, message: 'Submit ad error' },
       adNotFound: { code: this.adNotFound, message: 'Ad notfound in contract' },
       getAdError: { code: this.getAdError, message: 'Get ad error' },
+
+      pointNoProfile: { code: this.pointNoProfile, message: 'Please fill in your profile first.' },
+      pointAlreadyClaimed: { code: this.pointAlreadyClaimed, message: 'You have already claimed.' },
     };
 
     const zh = {
@@ -208,6 +217,9 @@ module.exports = {
       submitAdError: { code: this.submitAdError, message: '上传广告牌错误' },
       adNotFound: { code: this.adNotFound, message: '找不到这条广告' },
       getAdError: { code: this.getAdError, message: '获取广告错误' },
+
+      pointNoProfile: { code: this.pointNoProfile, message: '请先完善资料' },
+      pointAlreadyClaimed: { code: this.pointAlreadyClaimed, message: '已经获取过积分' },
     };
 
     let message;

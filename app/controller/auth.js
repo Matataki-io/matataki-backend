@@ -214,6 +214,7 @@ class AuthController extends Controller {
     }
   }
 
+  // todo：增加geetest，防刷，改为post
   // 邮箱注册时发送验证码
   async sendCaptcha() {
     const ctx = this.ctx;
@@ -296,13 +297,12 @@ class AuthController extends Controller {
   // 账户密码登录，目前只有邮箱账号是密码登录
   async accountLogin() {
     const ctx = this.ctx;
-    const ipaddress = ctx.header['x-real-ip'];
     const { username = null, password = null } = ctx.request.body;
     if (!username || !password) {
       ctx.body = ctx.msg.paramsError;
       return;
     }
-    const loginResult = await this.service.auth.verifyLogin(username, password, ipaddress);
+    const loginResult = await this.service.auth.verifyLogin(username, password, this.clientIP);
     switch (loginResult) {
       case 1:
         ctx.body = ctx.msg.passwordWrong;

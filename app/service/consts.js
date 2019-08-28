@@ -34,13 +34,24 @@ module.exports = {
 
   // 积分系统
   pointTypes: {
-    reading: 'reading', // 用户阅读
+    read: 'read', // 用户阅读，数据库中记录readLike、readDislike两种类型，在redis中统一为read
+    readLike: 'read_like', // 点赞
+    readDislike: 'read_dislike', // 点踩
+    readReferral: 'read_referral', // 阅读，推荐人
     beread: 'beread', // 读者的文章被阅读
-    publish: 'publish', // 发布文章
-    readingNew: 'reading_new', // 用户阅读新文章，额外获得的
+
+    readNew: 'read_new', // 用户阅读新文章，额外获得的
     bereadNew: 'beread_new', // 读者的新文章被阅读，额外获得的
-    like: 'reading_like', // 点赞
-    dislike: 'reading_dislike', // 点踩
+
+    publish: 'publish', // 发布文章
+    publishReferral: 'publish_referral', // 发布文章，推荐人获取积分
+
+    regInviter: 'reg_inviter', // 注册，邀请人
+    regInvitee: 'reg_invitee', // 注册，被邀请人
+
+    login: 'login', // 登录
+    profile: 'profile', // 完善资料
+
   },
 
   // 用户账号所属平台
