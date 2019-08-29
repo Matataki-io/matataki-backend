@@ -338,6 +338,10 @@ GET /post/ipfs/:hash
 * username: 用户
 * publickey: 用户签名用的公钥
 * sign: 签名
+* platform: 账号平台，例如：'eos'，非必填
+* source: 登录来源，例如：'ss'，非必填
+* referral: 邀请人uid，非必填
+
 
 成功得到 access_token 后 
 在后续请求的请求头中带上access_token： req.header['x-access-token']
@@ -469,7 +473,7 @@ request({
 * captcha: 对应的验证码， 字符串格式
 * password: 密码， 或者密码的哈希值
 
-* 请求示例： curl -d "email=1@example.com&captcha=000000&password=pw" -X POST https://apitest.smartsignature.io/login/regist
+* 请求示例： curl -d "email=1@example.com&captcha=000000&password=pw&referral=123" -X POST https://apitest.smartsignature.io/login/regist
 
 * 出错原因: 验证码错误， 此邮箱没有获取过验证码
 
@@ -1933,3 +1937,50 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 	}
 }
 ```
+
+#### 获取任务状态
+* GET /user/pointStatus
+* 响应状态码：200
+* 参数：无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"amount": 592,
+		"login": 1, //1已经领取登录积分，0未领取
+		"profile": 1, //1已经领取完善资料积分，0未领取
+		"read": {
+			"today": 0,
+			"max": 100
+		},
+		"publish": {
+			"today": 0,
+			"max": 20
+		}
+	}
+}
+```
+
+#### 领取任务积分
+
+* POST /user/claimTaskPoint
+* 响应状态码：200
+* 参数：
+```
+{
+  "type": "login"，取值范围："login"表示领取登录积分，"profile"表示领取完善资料积分
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+

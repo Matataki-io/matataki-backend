@@ -129,12 +129,12 @@ class LikeService extends Service {
     // 小值有效 const interval = time > server_time ? server_time : time;
 
     // 单个用户 单篇文章 阅读最多可以获得多少积分
-    const max_point = this.config.points.readMax;
+    const max_point = this.config.points.readOnceMax;
     // 每获取1分需要阅读多少秒
     const perPointSeconds = this.config.points.readRate;
     let reader_point = Math.floor(time * 1.0 / perPointSeconds);
     if (reader_point > max_point) reader_point = max_point;
-    // 阅读积分小于1分，不做处理
+    // 阅读积分小于1分，不做处理，todo：需要处理，记录推荐/不推荐状态，不加积分
     if (reader_point < 1) {
       return -1;
     }
@@ -325,7 +325,7 @@ class LikeService extends Service {
     }
   }
 
-  // 每日获取积分上限
+  // 设置每日获取积分上限，type：read 阅读、publish 发文
   async setTodayPoint(userId, type, amount) {
     // todo：配置
     let dailyMaxPoint = 0;
@@ -354,6 +354,18 @@ class LikeService extends Service {
     // 未查到今天的key，创建
     await this.app.redis.set(rediskey_todayPoint, amount, 'EX', TTL);
     return true;
+  }
+
+  // 获取每日积分，type：read 阅读、publish 发文
+  async getTodayPoint(userId, type) {
+    const date = moment().format('YYYYMMDD');
+    const rediskey_todayPoint = `dailypoint:${type}:${date}:${userId}`;
+    const todayPoint = await this.app.redis.get(rediskey_todayPoint);
+    if (todayPoint) {
+      return parseInt(todayPoint);
+    }
+
+    return 0;
   }
 
   /* 获取邀请注册积分

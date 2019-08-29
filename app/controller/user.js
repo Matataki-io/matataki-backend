@@ -26,16 +26,28 @@ class UserController extends Controller {
   }
 
   // 获取任务状态
-  async getTaskStatus() {
+  async getPointStatus() {
     const ctx = this.ctx;
 
     // 获取积分领取领取状态
     const login = await this.service.mining.getTaskStatus(ctx.user.id, consts.pointTypes.login);
     const profile = await this.service.mining.getTaskStatus(ctx.user.id, consts.pointTypes.profile);
+    const todayReadPoint = await this.service.mining.getTodayPoint(ctx.user.id, consts.pointTypes.read);
+    const todayPublishPoint = await this.service.mining.getTodayPoint(ctx.user.id, consts.pointTypes.publish);
     const amount = await this.service.mining.balance(ctx.user.id);
 
     ctx.body = ctx.msg.success;
-    ctx.body.data = { amount, login, profile };
+    ctx.body.data = {
+      amount, login, profile,
+      read: {
+        today: todayReadPoint,
+        max: this.config.points.readDailyMax,
+      },
+      publish: {
+        today: todayPublishPoint,
+        max: this.config.points.publishDailyMax,
+      },
+    };
   }
 
   // 获取任务积分

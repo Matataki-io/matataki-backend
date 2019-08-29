@@ -122,7 +122,7 @@ module.exports = app => {
   // 获取任务积分
   router.post('/user/claimTaskPoint', passport.authorize, controller.user.claimTaskPoint);
   // 获取任务状态
-  router.get('/user/taskStatus', passport.authorize, controller.user.getTaskStatus);
+  router.get('/user/pointStatus', passport.authorize, controller.user.getPointStatus);
 
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
