@@ -330,6 +330,12 @@ class AuthService extends Service {
         await this.service.mining.register(createAccount.insertId, referral, ip);
       }
 
+      // 处理推荐人，防刷	你成功邀请的好友阅读并评价了5篇文章，你可得到xx积分
+      const rediskey = `invite:read:${createAccount.insertId}`;
+      await this.app.redis.lpush(rediskey, [ 1, 2, 3, 4, 5 ]);
+      this.app.redis.expire(rediskey, 30 * 24 * 3600); // 30天过期
+
+
       // 插入ES
       await this.service.search.importUser(createAccount.insertId);
 

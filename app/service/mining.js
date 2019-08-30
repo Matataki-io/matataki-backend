@@ -184,6 +184,19 @@ class LikeService extends Service {
         await conn.query('UPDATE post_read_count SET dislikes=dislikes+1 WHERE post_id=?;', [ signId ]);
       }
 
+      // 处理邀请任务完成积分
+      const rediskey_invite = `invite:read:${userId}`;
+      if (reader.referral_uid > 0 && (Date.now() - reader.create_time) / (24 * 3600 * 1000) <= 30) {
+        const x = await this.app.redis.rpop(rediskey_invite);
+        if (parseInt(x) === 5) {
+          const invitePoint = this.config.points.regInviteFinished;
+          await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+            [ reader.referral_uid, invitePoint, invitePoint ]);
+          await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
+            [ reader.referral_uid, 0, invitePoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.regInviteFinished, ip ]);
+        }
+      }
+
       // 提交事务
       await conn.commit();
 
@@ -236,42 +249,39 @@ class LikeService extends Service {
       return -3;
     }
 
+    // 3天以上的文章直接返回
+    if ((Date.now() - post.create_time) / (24 * 3600 * 1000) > 3) {
+      return 0;
+    }
+
     const conn = await this.app.mysql.beginTransaction();
     try {
-      // 4。 阅读3天内的新文章
-      if ((Date.now() - post.create_time) / (24 * 3600 * 1000) <= 3) {
-        const readnewPoint = this.config.points.readNew;
-        const readNewAuthorPoint = this.config.points.readNewAuthor;
+      // 4. 阅读3天内的新文章
+      const readnewPoint = this.config.points.readNew;
+      const readNewAuthorPoint = this.config.points.readNewAuthor;
 
-        if (await this.setTodayPoint(userId, consts.pointTypes.read, readnewPoint)) {
-          // 用户额外+5
-          const readnewlogResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
-            + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
-          [ userId, signId, readnewPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readNew, ip, userId, signId, consts.pointTypes.readNew ]);
-          if (readnewlogResult.affectedRows === 1) {
-            await conn.query('UPDATE assets_points SET amount = amount + ? WHERE uid = ?;', [ readnewPoint, userId ]);
-          }
+      if (await this.setTodayPoint(userId, consts.pointTypes.read, readnewPoint)) {
+        // 用户额外+5
+        const readnewlogResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
+          + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
+        [ userId, signId, readnewPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readNew, ip, userId, signId, consts.pointTypes.readNew ]);
+        if (readnewlogResult.affectedRows === 1) {
+          await conn.query('UPDATE assets_points SET amount = amount + ? WHERE uid = ?;', [ readnewPoint, userId ]);
         }
-
-        // 作者额外+1
-        await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, readNewAuthorPoint, readNewAuthorPoint ]);
-        await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
-          [ post.uid, signId, readNewAuthorPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.bereadNew, ip ]);
-
-        // 4.5 插入redis read:history，表示已经获取积分， 踩时候状态记录1， 顶时候状态记录2
-
-        const TTL = 3 * 24 * 3600; // 保留3天
-
-
-        await this.app.redis.set(rediskey_readNew, 1, 'EX', TTL);
-
-        // 提交事务
-        await conn.commit();
-        return readnewPoint;
       }
+
+      // 作者额外+1
+      await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, readNewAuthorPoint, readNewAuthorPoint ]);
+      await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
+        [ post.uid, signId, readNewAuthorPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.bereadNew, ip ]);
+
+      // 5. 标记已经领取新文章奖励
+      const TTL = 3 * 24 * 3600; // 保留3天
+      await this.app.redis.set(rediskey_readNew, 1, 'EX', TTL);
+
       // 提交事务
       await conn.commit();
-      return 0;
+      return readnewPoint;
     } catch (e) {
       await conn.rollback();
       this.logger.error('Mining.like exception. j%', e);
