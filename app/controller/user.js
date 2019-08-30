@@ -25,77 +25,6 @@ class UserController extends Controller {
     ctx.body.data = details;
   }
 
-  // 获取任务状态
-  async getPointStatus() {
-    const ctx = this.ctx;
-
-    // 获取积分领取领取状态
-    const login = await this.service.mining.getTaskStatus(ctx.user.id, consts.pointTypes.login);
-    const profile = await this.service.mining.getTaskStatus(ctx.user.id, consts.pointTypes.profile);
-    const todayReadPoint = await this.service.mining.getTodayPoint(ctx.user.id, consts.pointTypes.read);
-    const todayPublishPoint = await this.service.mining.getTodayPoint(ctx.user.id, consts.pointTypes.publish);
-    const amount = await this.service.mining.balance(ctx.user.id);
-
-    ctx.body = ctx.msg.success;
-    ctx.body.data = {
-      amount, login, profile,
-      read: {
-        today: todayReadPoint,
-        max: this.config.points.readDailyMax,
-      },
-      publish: {
-        today: todayPublishPoint,
-        max: this.config.points.publishDailyMax,
-      },
-    };
-  }
-
-  // 获取任务积分
-  async claimTaskPoint() {
-
-    const ctx = this.ctx;
-    const { type } = ctx.request.body;
-    let result = 0;
-    let user = null;
-
-    switch (type) {
-      case 'login':
-        result = await this.service.mining.login(ctx.user.id, this.clientIP);
-        break;
-      case 'profile':
-        user = await this.service.user.get(ctx.user.id);
-        if (!user.nickname) {
-          ctx.body = ctx.msg.pointNoProfile;
-          return;
-        }
-        result = await this.service.mining.profile(ctx.user.id, this.clientIP);
-        break;
-    }
-
-    if (result === 0) {
-      ctx.body = ctx.msg.success;
-    } else if (result === 1) {
-      ctx.body = ctx.msg.pointAlreadyClaimed;
-    } else {
-      ctx.body = ctx.msg.failure;
-    }
-  }
-
-  // 获取用户的积分和日志
-  async points() {
-    const ctx = this.ctx;
-
-    const { page = 1, pagesize = 20 } = this.ctx.query;
-    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
-      ctx.body = ctx.msg.paramsError;
-      return;
-    }
-
-    const result = await this.service.mining.points(ctx.user.id, page, pagesize);
-    ctx.body = ctx.msg.success;
-    ctx.body.data = result;
-  }
-
   // 现有资产列表和收入明细
   async tokens() {
     const { page = 1, pagesize = 20, symbol = 'EOS' } = this.ctx.query;
@@ -468,6 +397,77 @@ class UserController extends Controller {
   async invitees() {
     const ctx = this.ctx;
     const result = await this.service.user.invitees(ctx.user.id);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
+
+  // 获取任务状态
+  async getPointStatus() {
+    const ctx = this.ctx;
+
+    // 获取积分领取领取状态
+    const login = await this.service.mining.getTaskStatus(ctx.user.id, consts.pointTypes.login);
+    const profile = await this.service.mining.getTaskStatus(ctx.user.id, consts.pointTypes.profile);
+    const todayReadPoint = await this.service.mining.getTodayPoint(ctx.user.id, consts.pointTypes.read);
+    const todayPublishPoint = await this.service.mining.getTodayPoint(ctx.user.id, consts.pointTypes.publish);
+    const amount = await this.service.mining.balance(ctx.user.id);
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = {
+      amount, login, profile,
+      read: {
+        today: todayReadPoint,
+        max: this.config.points.readDailyMax,
+      },
+      publish: {
+        today: todayPublishPoint,
+        max: this.config.points.publishDailyMax,
+      },
+    };
+  }
+
+  // 获取任务积分
+  async claimTaskPoint() {
+
+    const ctx = this.ctx;
+    const { type } = ctx.request.body;
+    let result = 0;
+    let user = null;
+
+    switch (type) {
+      case 'login':
+        result = await this.service.mining.login(ctx.user.id, this.clientIP);
+        break;
+      case 'profile':
+        user = await this.service.user.get(ctx.user.id);
+        if (!user.nickname) {
+          ctx.body = ctx.msg.pointNoProfile;
+          return;
+        }
+        result = await this.service.mining.profile(ctx.user.id, this.clientIP);
+        break;
+    }
+
+    if (result === 0) {
+      ctx.body = ctx.msg.success;
+    } else if (result === 1) {
+      ctx.body = ctx.msg.pointAlreadyClaimed;
+    } else {
+      ctx.body = ctx.msg.failure;
+    }
+  }
+
+  // 获取用户的积分和日志
+  async points() {
+    const ctx = this.ctx;
+
+    const { page = 1, pagesize = 20 } = this.ctx.query;
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const result = await this.service.mining.points(ctx.user.id, page, pagesize);
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
   }

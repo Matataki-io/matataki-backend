@@ -335,7 +335,7 @@ class LikeService extends Service {
     if (points.length > 0) {
       return points[0].amount;
     }
-    return -1;
+    return 0;
   }
 
   // 获取用户从单篇文章阅读获取的积分
