@@ -480,7 +480,8 @@ class LikeService extends Service {
   * 新老用户积分不一样
   */
   async login(userId, ip) {
-    const point = userId > 1000 ? this.config.points.loginNew : this.config.points.loginOld;
+    const user = await this.service.user.get(userId);
+    const point = user.create_time > Date.parse('2019-8-31') ? this.config.points.loginNew : this.config.points.loginOld;
     const type = consts.pointTypes.login;
 
     return await this.onceTask(userId, point, type, ip);
