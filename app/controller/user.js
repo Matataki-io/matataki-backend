@@ -52,16 +52,19 @@ class UserController extends Controller {
 
   // 获取任务积分
   async claimTaskPoint() {
+
     const ctx = this.ctx;
     const { type } = ctx.request.body;
     let result = 0;
+    let user = null;
 
     switch (type) {
       case 'login':
         result = await this.service.mining.login(ctx.user.id, this.clientIP);
         break;
       case 'profile':
-        if (!await this.service.user.get(ctx.user.id).nickname) {
+        user = await this.service.user.get(ctx.user.id);
+        if (!user.nickname) {
           ctx.body = ctx.msg.pointNoProfile;
           return;
         }
@@ -457,6 +460,14 @@ class UserController extends Controller {
       return;
     }
 
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
+
+  // 获取我邀请的人的列表
+  async invitees() {
+    const ctx = this.ctx;
+    const result = await this.service.user.invitees(ctx.user.id);
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
   }

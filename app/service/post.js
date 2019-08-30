@@ -184,6 +184,11 @@ class PostService extends Service {
         post.is_liked = await this.service.mining.liked(userId, post.id);
         // 获取用户从单篇文章阅读获取的积分
         post.points = await this.service.mining.getPointslogBySignId(userId, post.id);
+
+        // 判断3天内的文章是否领取过阅读新文章奖励，3天以上的就不查询了
+        if ((Date.now() - post.create_time) / (24 * 3600 * 1000) <= 3) {
+          post.is_readnew = await this.service.mining.getReadNew(userId, post.id);
+        }
       }
 
       // update cahce
@@ -876,6 +881,15 @@ class PostService extends Service {
     return data;
   }
 
+  async stats() {
+    const sql = `SELECT COUNT(1) as count FROM users; 
+                  SELECT COUNT(1) as count FROM posts; 
+                  SELECT SUM(amount) as amount FROM assets_points;`;
+
+    const queryResult = await this.app.mysql.query(sql);
+
+    return { users: queryResult[0][0].count, articles: queryResult[1][0].count, points: queryResult[2][0].amount };
+  }
 }
 
 module.exports = PostService;

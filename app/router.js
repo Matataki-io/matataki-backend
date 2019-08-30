@@ -61,6 +61,8 @@ module.exports = app => {
   router.post('/posts/importer', passport.authorize, controller.post.importer);
   // Elastic search
   router.get('/posts/search', passport.verify, controller.search.search);
+  // 查询统计数据
+  router.get('/posts/stats', passport.verify, controller.post.stats);
 
   // -------------------------------- 编辑,转移,评论 --------------------------------
   // 隐藏文章，统一返回格式示例
@@ -123,6 +125,8 @@ module.exports = app => {
   router.post('/user/claimTaskPoint', passport.authorize, controller.user.claimTaskPoint);
   // 获取任务状态
   router.get('/user/pointStatus', passport.authorize, controller.user.getPointStatus);
+  // 获取我邀请的人的列表
+  router.get('/user/invitees', passport.authorize, controller.user.invitees);
 
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
@@ -182,6 +186,8 @@ module.exports = app => {
   router.post('/posts/:id/like', passport.authorize, controller.mining.like);
   // 不喜欢
   router.post('/posts/:id/dislike', passport.authorize, controller.mining.dislike);
+  // 阅读新内容30秒，增加阅读新内容积分
+  router.post('/posts/:id/readnew', passport.authorize, controller.mining.readnew);
 
   // -------------------------------- 搜索相关 --------------------------------
   // 推荐搜索词语

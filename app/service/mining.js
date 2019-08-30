@@ -142,14 +142,13 @@ class LikeService extends Service {
     // 4. 处理积分
     const conn = await this.app.mysql.beginTransaction();
     try {
-
-      // 读者积分
+      // 4.1 读者积分
       if (await this.setTodayPoint(userId, consts.pointTypes.read, reader_point)) {
-        // 4.1 更新用户阅读积分
+        // 更新用户阅读积分
         await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
           [ userId, reader_point, reader_point ]);
 
-        // 4.2 插入log日志，并判断是否已经插入过
+        // 插入log日志，并判断是否已经插入过
         const type = likeStatus === 2 ? consts.pointTypes.readLike : consts.pointTypes.readDislike;
         const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
           + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
@@ -161,7 +160,7 @@ class LikeService extends Service {
         }
       }
 
-      // 4.3 推荐人积分
+      // 4.2 推荐人积分
       const reader = await this.service.user.get(userId);
       if (reader.referral_uid > 0) {
         const referralPoint = Math.floor(reader_point * this.config.points.readReferralRate);
@@ -170,7 +169,7 @@ class LikeService extends Service {
           [ reader.referral_uid, signId, referralPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readReferral, ip ]);
       }
 
-      // 4.4 作者积分
+      // 4.3 作者积分
       if (likeStatus === 2) {
         const authorPoint = Math.floor(reader_point * this.config.points.readAuthorRate);
         await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, authorPoint, authorPoint ]);
@@ -178,7 +177,68 @@ class LikeService extends Service {
           [ post.uid, signId, authorPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.beread, ip ]);
       }
 
-      // 4.5 阅读3天内的新文章
+      // 4.4 更新点赞/点踩次数
+      if (likeStatus === 2) {
+        await conn.query('UPDATE post_read_count SET likes=likes+1 WHERE post_id=?;', [ signId ]);
+      } else {
+        await conn.query('UPDATE post_read_count SET dislikes=dislikes+1 WHERE post_id=?;', [ signId ]);
+      }
+
+      // 提交事务
+      await conn.commit();
+
+      // 删除redis，是必须的吗？
+      await this.app.redis.del(rediskey_read);
+
+      // 4.5 插入redis read:history，表示已经获取积分， 踩时候状态记录1， 顶时候状态记录2
+      await this.app.redis.set(rediskey_readHistory, likeStatus);
+
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('Mining.like exception. j%', e);
+      return -1;
+    }
+  }
+
+  async readNew(userId, signId, time, ip) {
+    // 1. 文章是否存在
+    const post = await this.service.post.get(signId);
+    if (!post) {
+      return -9;
+    }
+
+    // 2. 判断是否已经claim过阅读新内容积分
+    const rediskey_readNew = `readNew:${userId}:${signId}`; // todo key写到统一的一个地方
+    const readNew = await this.app.redis.get(rediskey_readNew);
+    if (readNew) {
+      return -1;
+    }
+
+    // 3. 读取redis获取阅读开始时间
+    const rediskey_read = `read:${userId}:${signId}`;
+    const read = await this.app.redis.get(rediskey_read);
+    // 没有开始阅读记录
+    if (!read) {
+      return -1;
+    }
+    const readInfo = JSON.parse(read);
+    // server_time 服务端时间差
+    const server_time = Date.now() / 1000 - readInfo.timestamp;
+    // time 客户端时间差
+    // 客户端时间小于服务端时间有效，否则认为是异常提交，不做处理， //误差小于10秒有效 Math.abs(time - server_time) < 10
+    if (time > server_time) {
+      return -2;
+    }
+
+    // 小于30秒无效
+    if (time < 30) {
+      return -3;
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      // 4。 阅读3天内的新文章
       if ((Date.now() - post.create_time) / (24 * 3600 * 1000) <= 3) {
         const readnewPoint = this.config.points.readNew;
         const readNewAuthorPoint = this.config.points.readNewAuthor;
@@ -197,30 +257,36 @@ class LikeService extends Service {
         await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, readNewAuthorPoint, readNewAuthorPoint ]);
         await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
           [ post.uid, signId, readNewAuthorPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.bereadNew, ip ]);
-      }
 
-      // 4.3 更新点赞/点踩次数
-      if (likeStatus === 2) {
-        await conn.query('UPDATE post_read_count SET likes=likes+1 WHERE post_id=?;', [ signId ]);
-      } else {
-        await conn.query('UPDATE post_read_count SET dislikes=dislikes+1 WHERE post_id=?;', [ signId ]);
-      }
+        // 4.5 插入redis read:history，表示已经获取积分， 踩时候状态记录1， 顶时候状态记录2
 
+        const TTL = 3 * 24 * 3600; // 保留3天
+
+
+        await this.app.redis.set(rediskey_readNew, 1, 'EX', TTL);
+
+        // 提交事务
+        await conn.commit();
+        return readnewPoint;
+      }
       // 提交事务
       await conn.commit();
-
-      // 删除redis，是必须的吗？
-      await this.app.redis.del(rediskey_read);
-
-      // 4.6 插入redis read:history，表示已经获取积分， 踩时候状态记录1， 顶时候状态记录2
-      await this.app.redis.set(rediskey_readHistory, likeStatus);
-
       return 0;
     } catch (e) {
       await conn.rollback();
       this.logger.error('Mining.like exception. j%', e);
       return -1;
     }
+  }
+
+  // 获取是否领取过阅读新内容积分
+  async getReadNew(userId, signId) {
+    const rediskey_readNew = `readNew:${userId}:${signId}`; // todo key写到统一的一个地方
+    const readnew = await this.app.redis.get(rediskey_readNew);
+    if (readnew) {
+      return 1;
+    }
+    return 0;
   }
 
   // 分页获取我的积分列表
@@ -339,7 +405,7 @@ class LikeService extends Service {
     const rediskey_todayPoint = `dailypoint:${type}:${date}:${userId}`;
     const todayPoint = await this.app.redis.get(rediskey_todayPoint);
 
-    const TTL = 1 * 24 * 3600; // 保留1天
+    const TTL = 3 * 24 * 3600; // 保留3天
 
     // 查到今天的key，累加
     if (todayPoint) {

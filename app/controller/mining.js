@@ -37,6 +37,16 @@ class LikeController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = points;
   }
+
+  // 阅读新内容30秒，增加阅读新内容积分
+  async readnew() {
+    const ctx = this.ctx;
+    const { time } = ctx.request.body;
+    const points = await this.service.mining.readNew(ctx.user.id, ctx.params.id, time, ctx.ip);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = points;
+  }
+
 }
 
 module.exports = LikeController;

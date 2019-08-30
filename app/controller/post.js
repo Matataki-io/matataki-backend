@@ -52,7 +52,7 @@ class PostController extends Controller {
                 this.ont_signature_verify(msg, sign, publickey);
         */
 
-      // Github以及Email用户不验证签名
+        // Github以及Email用户不验证签名
       } else if (platform === 'github') {
         this.logger.info('There is a GitHub user publishing...');
       } else if (platform === 'email') {
@@ -690,6 +690,13 @@ class PostController extends Controller {
     }
 
     ctx.body = ctx.msg.ipfsCatchFailed;
+  }
+
+  // 查询统计数据
+  async stats() {
+    const ctx = this.ctx;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = await this.service.post.stats();
   }
 
 }
