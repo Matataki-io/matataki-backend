@@ -50,8 +50,8 @@ module.exports = {
     regInvitee: 'reg_invitee', // 注册，被邀请人
     regInviteFinished: 'reg_invite_finished', // 邀请任务完成
 
-    login: 'login', // 登录
-    profile: 'profile', // 完善资料
+    login: 'login', // 登录任务
+    profile: 'profile', // 完善资料任务
 
   },
 

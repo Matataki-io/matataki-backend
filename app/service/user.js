@@ -520,7 +520,7 @@ class UserService extends Service {
   // 获取我邀请的人的列表
   async invitees(userId, page = 1, pagesize = 20) {
     const totalsql = 'SELECT COUNT(*) AS count FROM users ';
-    const listsql = 'SELECT id,username,create_time FROM users ';
+    const listsql = 'SELECT id,username,avatar,create_time FROM users ';
     const wheresql = 'WHERE referral_uid=:userId ';
     const ordersql = 'ORDER BY id DESC LIMIT :start, :end ';
 
