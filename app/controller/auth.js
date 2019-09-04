@@ -6,7 +6,7 @@ const moment = require('moment');
 const ecc = require('eosjs-ecc');
 const base64url = require('base64url');
 const jwt = require('jwt-simple');
-// const ONT = require('ontology-ts-sdk');
+const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
 const axios = require('axios');
 
@@ -130,34 +130,34 @@ class AuthController extends Controller {
   }
 
   async ont_auth(sign, username, publickey, user) {
-    /*
-        const pub = new ONT.Crypto.PublicKey(publickey);
 
-        const msg = ONT.utils.str2hexstr(username);
+    const pub = new ONT.Crypto.PublicKey(publickey);
 
-        const signature = ONT.Crypto.Signature.deserializeHex(sign);
+    const msg = ONT.utils.str2hexstr(username);
 
-        const pass = pub.verify(msg, signature);
+    const signature = ONT.Crypto.Signature.deserializeHex(sign);
 
-        if (pass) {
+    const pass = pub.verify(msg, signature);
 
-          // 3. 签名有效，生成accessToken . accessToken = username + date + secret (JWT format)
-          var expires = moment().add(7, "days").valueOf();
+    if (pass) {
 
-          var token = jwt.encode({
-            iss: username,
-            exp: expires,
-            platform: user.platform,
-            id: user.id,
-          }, this.app.config.jwtTokenSecret);
+      // 3. 签名有效，生成accessToken . accessToken = username + date + secret (JWT format)
+      const expires = moment().add(7, 'days').valueOf();
 
-          this.ctx.body = token;
+      const token = jwt.encode({
+        iss: username,
+        exp: expires,
+        platform: user.platform,
+        id: user.id,
+      }, this.app.config.jwtTokenSecret);
 
-        } else {
-          this.ctx.body = this.ctx.msg.invalidSignature;
-        }
-        // curl -d "platform=ont&publickey=0205c8fff4b1d21f4b2ec3b48cf88004e38402933d7e914b2a0eda0de15e73ba61&username=helloworld&sign=010936f0693e83d5d605816ceeeb4872d8a343d4c7350ef23e49614e0302d94d6f6a4af73e20ed9c818c0be6865e6096efc7b9f98fa42a33f775ff0ea1cb17703a" -H "Authorization: Basic bXlfYXBwOm15X3NlY3JldA==" -v -X POST http://127.0.0.1:7001/auth
-      */
+      this.ctx.body = token;
+
+    } else {
+      this.ctx.body = this.ctx.msg.invalidSignature;
+    }
+    // curl -d "platform=ont&publickey=0205c8fff4b1d21f4b2ec3b48cf88004e38402933d7e914b2a0eda0de15e73ba61&username=helloworld&sign=010936f0693e83d5d605816ceeeb4872d8a343d4c7350ef23e49614e0302d94d6f6a4af73e20ed9c818c0be6865e6096efc7b9f98fa42a33f775ff0ea1cb17703a" -H "Authorization: Basic bXlfYXBwOm15X3NlY3JldA==" -v -X POST http://127.0.0.1:7001/auth
+
   }
 
 
