@@ -219,14 +219,18 @@ class PostImportService extends Service {
     const parsedContent = parsedPage.querySelector('div.show-content-free');
     const parsedTitle = parsedPage.querySelector('h1.title');
     const turndownService = new turndown();
+    const parsedCoverList = parsedPage.querySelectorAll('.show-content .image-view img');
+    for (let i = 0; i < parsedCoverList.length; i++) {
+      parsedCoverList[i].rawAttrs = parsedCoverList[i].rawAttrs.replace('data-original-src', 'src');
+    }
     const articleContent = turndownService.turndown(parsedContent.toString());
+    // console.log(parsedContent.toString());
 
     const parsedCover = parsedPage.querySelector('.show-content .image-view img');
     let coverLocation = null;
     if (parsedCover) {
-      let originalSrc = parsedCover.rawAttributes['data-original-src'];
+      let originalSrc = parsedCover.rawAttributes.src;
       if (originalSrc.indexOf('http') === -1) originalSrc = 'https:' + originalSrc;
-      console.log('originalSrc', originalSrc);
       const parsedCoverUpload = './uploads/today_jianshu_' + Date.now() + '.jpg';
       coverLocation = await this.uploadArticleImage(originalSrc, parsedCoverUpload);
     }
