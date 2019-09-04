@@ -23,6 +23,19 @@ services:
       - 7653:7001
     networks:
       overlay:
+  
+  prod2:
+    restart: always
+    build: .
+    hostname: "{{.Service.Name}}-{{.Task.Slot}}"
+    # command: npm run serve
+    command: npm run dev
+    volumes:
+      - /usr/local/smart-signature/ss-backend-config/config.prod.js:/usr/src/app/config/config.default.js
+    ports:
+      - 7654:7001
+    networks:
+      overlay:
 
   test:
     restart: always
