@@ -31,10 +31,10 @@ class PostImportService extends Service {
       return null;
     }
     // 上传的文件的名字
-    const filename = '/image/'
-      + moment().format('YYYY/MM/DD/')
-      + md5(imageFile.filename).toString()
-      + '.' + filetype[filetype.length - 1];
+    const filename = '/image/' +
+      moment().format('YYYY/MM/DD/') +
+      md5(imageFile.filename).toString() +
+      '.' + filetype[filetype.length - 1];
     const uploadImageResult = await this.service.post.uploadImage(filename, imageFile.filename);
     if (uploadImageResult !== 0) {
       this.logger.info('PostImportService:: uploadArticleImage: Upload Image Failed...');
@@ -187,6 +187,49 @@ class PostImportService extends Service {
 
     const parsedCoverUpload = './uploads/today_chainnews_' + Date.now() + '.jpg';
     const coverLocation = await this.uploadArticleImage(parsedCover.substring(0, parsedCover.length - 6), parsedCoverUpload);
+
+    const articleObj = {
+      title: parsedTitle.childNodes[0].rawText,
+      cover: coverLocation,
+      content: articleContent,
+    };
+
+    return articleObj;
+  }
+
+  // 处理简书文章
+  async handleJianShu(url) {
+    // 拉取文章内容
+    let rawPage;
+    try {
+      rawPage = await axios({
+        url,
+        method: 'get',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        },
+      });
+    } catch (err) {
+      this.logger.error('PostImportService:: handleJianShu: error:', err);
+      return null;
+    }
+    // Parser 处理， 转化为markdown， 因平台而异
+    const parsedPage = htmlparser.parse(rawPage.data);
+    const parsedContent = parsedPage.querySelector('div.show-content-free');
+    const parsedTitle = parsedPage.querySelector('h1.title');
+    const turndownService = new turndown();
+    const articleContent = turndownService.turndown(parsedContent.toString());
+
+    const parsedCover = parsedPage.querySelector('.show-content .image-view img');
+    let coverLocation = null;
+    if (parsedCover) {
+      let originalSrc = parsedCover.rawAttributes['data-original-src'];
+      if (originalSrc.indexOf('http') === -1) originalSrc = 'https:' + originalSrc;
+      console.log('originalSrc', originalSrc);
+      const parsedCoverUpload = './uploads/today_jianshu_' + Date.now() + '.jpg';
+      coverLocation = await this.uploadArticleImage(originalSrc, parsedCoverUpload);
+    }
 
     const articleObj = {
       title: parsedTitle.childNodes[0].rawText,

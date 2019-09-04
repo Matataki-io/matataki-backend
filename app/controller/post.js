@@ -617,6 +617,13 @@ class PostController extends Controller {
         result = await this.service.postImport.handleOrange(orangeMatch[0]);
       }
     }
+    if (matchStatus === 0) {
+      const jianshuMatch = url.match(/https:\/\/(www\.)?jianshu\.com\/p\/[\w]{12}/);
+      if (jianshuMatch && matchStatus !== 1) {
+        matchStatus = 1;
+        result = await this.service.postImport.handleJianShu(jianshuMatch[0]);
+      }
+    }
 
     if (matchStatus === 0) {
       ctx.body = ctx.msg.importPlatformNotSupported;
