@@ -164,17 +164,21 @@ class LikeService extends Service {
       const reader = await this.service.user.get(userId);
       if (reader.referral_uid > 0) {
         const referralPoint = Math.floor(reader_point * this.config.points.readReferralRate);
-        await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ reader.referral_uid, referralPoint, referralPoint ]);
-        await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
-          [ reader.referral_uid, signId, referralPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readReferral, ip ]);
+        if (referralPoint > 0) {
+          await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ reader.referral_uid, referralPoint, referralPoint ]);
+          await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
+            [ reader.referral_uid, signId, referralPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readReferral, ip ]);
+        }
       }
 
       // 4.3 作者积分
       if (likeStatus === 2) {
         const authorPoint = Math.floor(reader_point * this.config.points.readAuthorRate);
-        await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, authorPoint, authorPoint ]);
-        await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
-          [ post.uid, signId, authorPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.beread, ip ]);
+        if (authorPoint > 0) {
+          await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, authorPoint, authorPoint ]);
+          await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
+            [ post.uid, signId, authorPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.beread, ip ]);
+        }
       }
 
       // 4.4 更新点赞/点踩次数
