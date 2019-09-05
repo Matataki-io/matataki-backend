@@ -119,14 +119,15 @@ class AuthService extends Service {
       // 增加登录日志
       await this.insertLoginLog(currentUser.id, ip);
 
-      const expires = moment().add(7, 'days').valueOf();
+      // const expires = moment().add(7, 'days').valueOf();
 
-      const jwttoken = jwt.encode({
-        iss: currentUser.username,
-        exp: expires,
-        platform,
-        id: currentUser.id,
-      }, this.app.config.jwtTokenSecret);
+      const jwttoken = this.jwtSign(currentUser);
+      // jwt.encode({
+      //   iss: currentUser.username,
+      //   exp: expires,
+      //   platform,
+      //   id: currentUser.id,
+      // }, this.app.config.jwtTokenSecret);
 
       return jwttoken;
 
@@ -137,7 +138,7 @@ class AuthService extends Service {
   }
 
 
-  // 验证用户账号是否存在
+  // 验证用户账号是否存在， todo，添加platform信息
   async verifyUser(username) {
     const user = await this.app.mysql.query(
       'SELECT id FROM users WHERE username = :username;',
@@ -258,7 +259,7 @@ class AuthService extends Service {
     let userPw;
     try {
       userPw = await this.app.mysql.query(
-        'SELECT id, username, password_hash FROM users WHERE username = :username AND platform = \'email\';',
+        'SELECT id, username, password_hash,platform FROM users WHERE username = :username AND platform = \'email\';',
         { username }
       );
     } catch (err) {
@@ -293,17 +294,18 @@ class AuthService extends Service {
     // if (addLoginLog.affectedRows !== 1) {
     //   return 3;
     // }
-    // 生成token
-    const expires = moment().add(7, 'days').valueOf();
-    const jwttoken = jwt.encode({
-      iss: userPw[0].username,
-      exp: expires,
-      platform: 'email',
-      id: userPw[0].id,
-    }, this.app.config.jwtTokenSecret);
-    this.logger.info('AuthService:: verifyLogin: User Login... ', username);
 
-    return jwttoken;
+    // 生成token
+    // const expires = moment().add(7, 'days').valueOf();
+    // const jwttoken = jwt.encode({
+    //   iss: userPw[0].username,
+    //   exp: expires,
+    //   platform: 'email',
+    //   id: userPw[0].id,
+    // }, this.app.config.jwtTokenSecret);
+    // this.logger.info('AuthService:: verifyLogin: User Login... ', username);
+
+    return this.jwtSign(userPw[0]);
   }
 
   // 插入用户
@@ -358,6 +360,19 @@ class AuthService extends Service {
       this.logger.error('AuthService:: verifyLogin: Error ', err);
       return false;
     }
+  }
+
+  // jwt token
+  jwtSign(user) {
+    const expires = moment().add(7, 'days').valueOf();
+    const jwttoken = jwt.encode({
+      iss: user.username,
+      exp: expires,
+      platform: user.platform,
+      id: user.id,
+    }, this.app.config.jwtTokenSecret);
+
+    return jwttoken;
   }
 
 }
