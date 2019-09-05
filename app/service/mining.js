@@ -164,17 +164,21 @@ class LikeService extends Service {
       const reader = await this.service.user.get(userId);
       if (reader.referral_uid > 0) {
         const referralPoint = Math.floor(reader_point * this.config.points.readReferralRate);
-        await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, referralPoint, referralPoint ]);
-        await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
-          [ reader.referral_uid, signId, referralPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readReferral, ip ]);
+        if (referralPoint > 0) {
+          await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ reader.referral_uid, referralPoint, referralPoint ]);
+          await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
+            [ reader.referral_uid, signId, referralPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readReferral, ip ]);
+        }
       }
 
       // 4.3 作者积分
       if (likeStatus === 2) {
         const authorPoint = Math.floor(reader_point * this.config.points.readAuthorRate);
-        await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, authorPoint, authorPoint ]);
-        await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
-          [ post.uid, signId, authorPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.beread, ip ]);
+        if (authorPoint > 0) {
+          await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ post.uid, authorPoint, authorPoint ]);
+          await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
+            [ post.uid, signId, authorPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.beread, ip ]);
+        }
       }
 
       // 4.4 更新点赞/点踩次数
@@ -266,7 +270,7 @@ class LikeService extends Service {
           + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
         [ userId, signId, readnewPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.readNew, ip, userId, signId, consts.pointTypes.readNew ]);
         if (readnewlogResult.affectedRows === 1) {
-          await conn.query('UPDATE assets_points SET amount = amount + ? WHERE uid = ?;', [ readnewPoint, userId ]);
+          await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;', [ userId, readnewPoint, readnewPoint ]);
         }
       }
 
@@ -355,11 +359,11 @@ class LikeService extends Service {
       // 1. 更新作者积分
       const authorPoint = this.config.points.publish;
       if (await this.setTodayPoint(userId, consts.pointTypes.publish, authorPoint)) {
-        // 更新积分
+        // 1.1 更新积分
         await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
           [ userId, authorPoint, authorPoint ]);
 
-        // 插入log日志，并判断是否已经插入过, todo：加唯一索引，uid,sign_id, type，上下的语句都改下
+        // 1.2 插入log日志，并判断是否已经插入过, todo：加唯一索引，uid,sign_id, type，上下的语句都改下
         const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
           + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
         [ userId, signId, authorPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.publish, ip, userId, signId, consts.pointTypes.publish ]);
@@ -375,14 +379,14 @@ class LikeService extends Service {
       const author = await this.service.user.get(userId);
       if (author.referral_uid > 0) {
         const referralPoint = this.config.points.publishReferral;
-        // 1 更新作者积分
+        // 2.1 更新积分
         await conn.query('INSERT INTO assets_points(uid, amount) VALUES (?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
-          [ userId, referralPoint, referralPoint ]);
+          [ author.referral_uid, referralPoint, referralPoint ]);
 
-        // 2 插入log日志，并判断是否已经插入过, todo：加唯一索引，uid,sign_id, type，上下的语句都改下
+        // 2.2 插入log日志，并判断是否已经插入过, todo：加唯一索引，uid,sign_id, type，上下的语句都改下
         const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
           + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
-        [ userId, signId, referralPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.publishReferral, ip, userId, signId, consts.pointTypes.publishReferral ]);
+        [ author.referral_uid, signId, referralPoint, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.publishReferral, ip, author.referral_uid, signId, consts.pointTypes.publishReferral ]);
 
         if (logResult.affectedRows !== 1) {
           conn.rollback();

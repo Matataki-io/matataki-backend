@@ -6,7 +6,7 @@ const moment = require('moment');
 const ecc = require('eosjs-ecc');
 const base64url = require('base64url');
 const jwt = require('jwt-simple');
-// const ONT = require('ontology-ts-sdk');
+const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
 const axios = require('axios');
 
@@ -22,22 +22,35 @@ class AuthController extends Controller {
 
   // eos、ont登录，首次登录自动注册
   async auth() {
-
+    const ctx = this.ctx;
     // 1. 取出签名
-    const { username, publickey, sign, platform = 'eos', source = 'ss', referral = 0 } = this.ctx.request.body;
+    const { username, publickey, sign, platform = 'eos', source = 'ss', referral = 0 } = ctx.request.body;
 
-    // create user if not exit
-    // todo：待优化，应该在验证签名成功后再创建用户
-    const user = await this.get_or_create_user(username, platform, source, referral);
-
+    let flag = false;
     if (platform === 'eos') {
-      await this.eos_auth(sign, username, publickey, user);
+      flag = await this.eos_auth(sign, username, publickey);
     } else if (platform === 'ont') {
-      await this.ont_auth(sign, username, publickey, user);
+      flag = await this.ont_auth(sign, username, publickey);
+    } else if (platform === 'vnt') {
+      flag = await this.vnt_auth(sign, username, publickey);
     } else {
-      this.ctx.body = this.ctx.msg.unsupportedPlatform;
+      ctx.body = ctx.msg.unsupportedPlatform;
+      return;
     }
 
+    if (!flag) {
+      this.ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    // this.ctx.body = this.ctx.msg.signatureVerifyFailed;
+    // this.ctx.body = this.ctx.msg.invalidSignature;
+
+    // create user if not exit
+    const user = await this.get_or_create_user(username, platform, source, referral);
+    const jwttoken = this.service.auth.jwtSign(user);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = jwttoken;
   }
 
   // eos、ont登录，首次登录自动注册
@@ -73,26 +86,20 @@ class AuthController extends Controller {
     }
   }
 
-  async eos_auth(sign, username, publickey, user) {
+  async eos_auth(sign, username, publickey) {
     // 2. 验证签名
     try {
       const recover = ecc.recover(sign, username);
-
       if (recover !== publickey) {
-        this.ctx.body = this.ctx.msg.invalidSignature;
-        return;
+        return false;
       }
-
     } catch (err) {
-      this.ctx.body = this.ctx.msg.invalidSignature;
-      return;
+      return false;
     }
 
     // 由于EOS的帐号系统是 username 和 公钥绑定的关系，所有要多加一个验证，username是否绑定了签名的EOS公钥
-
     try {
       const eosacc = await this.eosClient.getAccount(username);
-
       let pass_permission_verify = false;
 
       for (let i = 0; i < eosacc.permissions.length; i++) {
@@ -107,29 +114,17 @@ class AuthController extends Controller {
       }
 
       if (!pass_permission_verify) {
-        this.ctx.body = this.ctx.msg.signatureVerifyFailed;
-        return;
+        return false;
       }
-
     } catch (err) {
-      this.ctx.body = this.ctx.msg.signatureVerifyFailed;
-      return;
+      // this.logger.error('AuthController.eos_auth error: j%', err);
+      return false;
     }
 
-    // 3. 签名有效，生成accessToken . accessToken = username + date + secret (JWT format)
-    const expires = moment().add(7, 'days').valueOf();
-
-    const token = jwt.encode({
-      iss: username,
-      exp: expires,
-      platform: user.platform,
-      id: user.id,
-    }, this.app.config.jwtTokenSecret);
-
-    this.ctx.body = token;
+    return true;
   }
 
-  async ont_auth(sign, username, publickey, user) {
+  async ont_auth(sign, username, publickey) {
     /*
         const pub = new ONT.Crypto.PublicKey(publickey);
 
@@ -142,9 +137,9 @@ class AuthController extends Controller {
         if (pass) {
 
           // 3. 签名有效，生成accessToken . accessToken = username + date + secret (JWT format)
-          var expires = moment().add(7, "days").valueOf();
+          const expires = moment().add(7, 'days').valueOf();
 
-          var token = jwt.encode({
+          const token = jwt.encode({
             iss: username,
             exp: expires,
             platform: user.platform,
@@ -157,9 +152,12 @@ class AuthController extends Controller {
           this.ctx.body = this.ctx.msg.invalidSignature;
         }
         // curl -d "platform=ont&publickey=0205c8fff4b1d21f4b2ec3b48cf88004e38402933d7e914b2a0eda0de15e73ba61&username=helloworld&sign=010936f0693e83d5d605816ceeeb4872d8a343d4c7350ef23e49614e0302d94d6f6a4af73e20ed9c818c0be6865e6096efc7b9f98fa42a33f775ff0ea1cb17703a" -H "Authorization: Basic bXlfYXBwOm15X3NlY3JldA==" -v -X POST http://127.0.0.1:7001/auth
-      */
+    */
   }
 
+  async vnt_auth(sign, username, publickey) {
+    return true;
+  }
 
   // github账号登录，第一次登录会创建账号
   async githubLogin() {
@@ -182,13 +180,16 @@ class AuthController extends Controller {
       ctx.body = ctx.msg.generateTokenError;
       return;
     }
+
     // 创建， 设置用户
     const jwttoken = await this.service.auth.saveUser(userinfo.login, userinfo.name, userinfo.avatar_url, this.clientIP, referral);
     if (jwttoken === null) {
       ctx.body = ctx.msg.generateTokenError;
       return;
     }
-    ctx.body = jwttoken;
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = jwttoken;
   }
 
 

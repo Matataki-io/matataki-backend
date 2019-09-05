@@ -17,12 +17,14 @@ class LikeController extends Controller {
     const ctx = this.ctx;
     const { time } = ctx.request.body;
     const result = await this.service.mining.like(ctx.user.id, ctx.params.id, time, ctx.ip);
-    let points = [];
     if (result === 0) {
-      points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
+      const points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
+      ctx.body = ctx.msg.success;
+      ctx.body.data = points;
+    } else {
+      ctx.body = ctx.msg.pointReadError;
+      ctx.body.data = result;
     }
-    ctx.body = ctx.msg.success;
-    ctx.body.data = points;
   }
 
   // 不喜欢
@@ -30,12 +32,14 @@ class LikeController extends Controller {
     const ctx = this.ctx;
     const { time } = ctx.request.body;
     const result = await this.service.mining.dislike(ctx.user.id, ctx.params.id, time, ctx.ip);
-    let points = [];
     if (result === 0) {
-      points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
+      const points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
+      ctx.body = ctx.msg.success;
+      ctx.body.data = points;
+    } else {
+      ctx.body = ctx.msg.pointReadError;
+      ctx.body.data = result;
     }
-    ctx.body = ctx.msg.success;
-    ctx.body.data = points;
   }
 
   // 阅读新内容30秒，增加阅读新内容积分
@@ -43,8 +47,13 @@ class LikeController extends Controller {
     const ctx = this.ctx;
     const { time } = ctx.request.body;
     const points = await this.service.mining.readNew(ctx.user.id, ctx.params.id, time, ctx.ip);
-    ctx.body = ctx.msg.success;
-    ctx.body.data = points;
+    if (points > 0) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = points;
+    } else {
+      ctx.body = ctx.msg.pointReadError;
+      ctx.body.data = points;
+    }
   }
 
 }
