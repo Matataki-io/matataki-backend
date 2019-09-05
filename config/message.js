@@ -104,6 +104,9 @@ module.exports = {
   // 领取阅读积分错误
   pointReadError: 10603,
 
+  // geetest
+  geetestVerifyFailed: 10700,
+
   returnObj(lang) {
 
     const en = {
@@ -163,6 +166,8 @@ module.exports = {
 
       pointNoProfile: { code: this.pointNoProfile, message: 'Please fill in your profile first.' },
       pointAlreadyClaimed: { code: this.pointAlreadyClaimed, message: 'You have already claimed.' },
+
+      geetestVerifyFailed: { code: this.geetestVerifyFailed, message: 'geetest verify failed.' },
       pointReadError: { code: this.pointReadError, message: 'Get reading points error.' },
     };
 
@@ -223,6 +228,8 @@ module.exports = {
 
       pointNoProfile: { code: this.pointNoProfile, message: '请先完善资料' },
       pointAlreadyClaimed: { code: this.pointAlreadyClaimed, message: '已经获取过积分' },
+
+      geetestVerifyFailed: { code: this.geetestVerifyFailed, message: 'geetest校验失败' },
       pointReadError: { code: this.pointReadError, message: '获取阅读积分错误' },
     };
 
