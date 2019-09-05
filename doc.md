@@ -1984,3 +1984,43 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 ```
 
 
+#### 赞赏提交交易hash
+
+* POST /support/saveTxhash
+* 响应状态码：200
+* 参数：
+```
+{
+	"supportId": 437619,
+  "txhash": "0x111"
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+
+#### 订单提交交易hash
+
+* POST /order/saveTxhash
+* 响应状态码：200
+* 参数：
+```
+{
+	"orderId": 437619,
+  "txhash": "0x111"
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```

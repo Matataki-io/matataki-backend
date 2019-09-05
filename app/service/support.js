@@ -27,6 +27,15 @@ class SupportService extends Service {
     }
   }
 
+  // 保存交易hash
+  async saveTxhash(supportId, userId, hash) {
+    const result = await this.app.mysql.update('supports', {
+      txhash: hash,
+    }, { where: { id: supportId, uid: userId } });
+
+    return result;
+  }
+
   async getByUserId(userId, signId) {
     return await this.app.mysql.get('supports', { uid: userId, signid: signId, status: 1 });
   }

@@ -65,6 +65,16 @@ class OrderService extends Service {
     }
   }
 
+  // 保存交易hash
+  async saveTxhash(orderId, userId, hash) {
+    const result = await this.app.mysql.update('orders', {
+      txhash: hash,
+    }, { where: { id: orderId, uid: userId } });
+
+    return result;
+  }
+
+
   async getByUserId(userId, signId) {
     return await this.app.mysql.get('orders', { uid: userId, signid: signId, status: 1 });
   }
@@ -139,9 +149,9 @@ class OrderService extends Service {
     const countsql = 'SELECT COUNT(*) AS count ';
     const listsql = 'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, o.price, o.amount, r.title, p.category_id, p.cover ';
     const wheresql = 'FROM orders o '
-    + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.platform = o.platform '
-    + 'INNER JOIN posts p ON p.id = o.signid '
-    + 'WHERE o.uid = :userid AND o.status = 1 ';
+      + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.platform = o.platform '
+      + 'INNER JOIN posts p ON p.id = o.signid '
+      + 'WHERE o.uid = :userid AND o.status = 1 ';
     const ordersql = 'ORDER BY o.create_time DESC LIMIT :start, :end ';
 
     const sqlcode = countsql + wheresql + ';' + listsql + wheresql + ordersql + ';';

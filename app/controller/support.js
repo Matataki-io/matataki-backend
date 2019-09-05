@@ -14,6 +14,11 @@ class SupportController extends Controller {
     const { ctx } = this;
     const { signId, contract, symbol, amount, platform, referrer, comment } = this.ctx.request.body;
 
+    // const transdata = await this.service.vnt.getTransaction(txhash);
+    // const transdata2 = await this.service.vnt.getTransactionReceipt(txhash);
+    // await this.service.vnt.verify({ id: 437617, uid: 1068, platform: 'vnt', txhash: '0x0efe43e209009c2ef1cd53e7495cb5392f8e8805800e880b018cdfcec1aaa97b' });
+    // return;
+
     if (!signId) {
       return this.response(403, 'signId required');
     }
@@ -29,7 +34,7 @@ class SupportController extends Controller {
     if (!platform) {
       return this.response(403, 'platform required');
     }
-    if (!(platform === 'eos' || platform === 'ont')) {
+    if (!(platform === 'eos' || platform === 'ont' || platform === 'vnt')) {
       return this.response(403, 'platform not support');
     }
 
@@ -71,6 +76,15 @@ class SupportController extends Controller {
     const ret = ctx.msg.success;
     ret.data = { supportId };
     this.ctx.body = ret;
+  }
+
+  // 保存交易hash
+  async saveTxhash() {
+    const { ctx } = this;
+    const { supportId, txhash } = this.ctx.request.body;
+    const result = await this.service.support.saveTxhash(supportId, ctx.user.id, txhash);
+
+    ctx.body = ctx.msg.success;
   }
 
   // 待删除，转移到comment.js

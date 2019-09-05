@@ -32,7 +32,8 @@
     "ontology-ts-sdk": "^1.0.21",
     "pretty": "^2.0.0",
     "remove-markdown": "^0.3.0",
-    "turndown": "^5.0.3"
+    "turndown": "^5.0.3",
+    "vnt": "git+https://github.com/vntchain/vnt.js.git"
   },
   "devDependencies": {
     "autod": "^3.0.1",

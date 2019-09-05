@@ -159,6 +159,10 @@ module.exports = app => {
   // 用户自己已经购买的商品列表
   router.get('/order/products', passport.authorize, controller.order.myProducts);
 
+  // 保存交易hash
+  router.post('/support/saveTxhash', passport.authorize, controller.support.saveTxhash);
+  router.post('/order/saveTxhash', passport.authorize, controller.order.saveTxhash);
+
   // // 邮件测试
   // router.get('/mailtest6a3476f5', passport.verify, controller.post.mailtest);
 

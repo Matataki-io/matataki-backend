@@ -88,6 +88,15 @@ class OrderController extends Controller {
     this.ctx.body = ret;
   }
 
+  // 保存交易hash
+  async saveTxhash() {
+    const { ctx } = this;
+    const { orderId, txhash } = this.ctx.request.body;
+    const result = await this.service.shop.order.saveTxhash(orderId, ctx.user.id, txhash);
+
+    ctx.body = ctx.msg.success;
+  }
+
   async myProducts() {
 
     const ctx = this.ctx;

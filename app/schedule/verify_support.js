@@ -42,6 +42,8 @@ class VerifySupport extends Subscription {
         await this.eos_verify(support);
       } else if (support.platform === 'ont') {
         await this.ont_verify(support);
+      } else if (support.platform === 'vnt') {
+        await this.vnt_verify(support);
       }
     }
   }
@@ -190,6 +192,14 @@ class VerifySupport extends Subscription {
 
     }
   */
+  }
+
+  async vnt_verify(support) {
+    support.action = consts.payActions.support;
+    const result = await this.service.vnt.verify(support);
+    if (result) {
+      await this.passVerify(support);
+    }
   }
 
   async passVerify(support) {
