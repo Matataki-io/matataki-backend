@@ -7,6 +7,9 @@ const passport = require('./passport');
 module.exports = app => {
   const { router, controller } = app;
 
+  // geetest校验中间件
+  // const geetestVerify = app.middleware.geetest();
+
   router.get('/', controller.home.index);
 
   // -------------------------------- 用户登录 --------------------------------
@@ -192,6 +195,10 @@ module.exports = app => {
   // -------------------------------- 搜索相关 --------------------------------
   // 推荐搜索词语
   router.get('/search/recommend', passport.verify, controller.search.recommand);
-
+  // -------------------------------- geetest --------------------------------
+  // 注册geetest
+  router.get('/gt/register-slide', controller.geetest.register);
+  // 验证geetest
+  router.post('/gt/validate-slide', controller.geetest.validate);
 };
 
