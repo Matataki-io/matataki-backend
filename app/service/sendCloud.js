@@ -4,8 +4,8 @@ const Service = require('egg').Service;
 class sendCloudService extends Service {
   // 发送验证码服务
   async sendCaptcha(email, captcha) {
-    const API_USER = 'matataki_user_2';
-    const API_KEY = 'w9cKCVnnyEEV9JCa';
+    const API_USER = this.config.sendCloud.API_USER;
+    const API_KEY = this.config.sendCloud.API_KEY;
     const x_smtpapi = {
       to: [ email ],
       sub: {
