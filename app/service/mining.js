@@ -163,9 +163,9 @@ class LikeService extends Service {
 
         // 插入log日志，并判断是否已经插入过
         const type = likeStatus === 2 ? consts.pointTypes.readLike : consts.pointTypes.readDislike;
-        const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) '
-          + 'SELECT ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
-        [ userId, signId, reader_point, moment().format('YYYY-MM-DD HH:mm:ss'), type, ip, userId, signId, type ]);
+        const logResult = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip, reading_time) '
+          + 'SELECT ?, ?, ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM assets_points_log WHERE uid=? AND sign_id=? AND type=? );',
+        [ userId, signId, reader_point, moment().format('YYYY-MM-DD HH:mm:ss'), type, ip, time, userId, signId, type ]);
 
         if (logResult.affectedRows !== 1) {
           conn.rollback();

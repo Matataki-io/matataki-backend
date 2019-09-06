@@ -98,10 +98,10 @@ class VntService extends Service {
     return new Promise((resolve, reject) => {
       vnt.core.getTransactionReceipt(txhash, function(err, data) {
         if (err) {
-          console.log(err);
+          this.logger.error('vnt.getTransactionReceipt error: %j', err);
           reject(err);
         } else {
-          console.log(data);
+          // console.log(data);
           resolve(data);
         }
       });
@@ -113,10 +113,10 @@ class VntService extends Service {
     return new Promise((resolve, reject) => {
       vnt.core.getTransaction(txhash, function(err, data) {
         if (err) {
-          console.log(err);
+          this.logger.error('vnt.getTransactionReceipt error: %j', err);
           reject(err);
         } else {
-          console.log(data);
+          // console.log(data);
           resolve(data);
         }
       });
