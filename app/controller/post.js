@@ -53,14 +53,17 @@ class PostController extends Controller {
         */
 
         // Github以及Email用户不验证签名
-      } else if (platform === 'github') {
-        this.logger.info('There is a GitHub user publishing...');
-      } else if (platform === 'email') {
-        this.logger.info('There is a Email account user publishing...');
-      } else {
-        ctx.body = ctx.msg.postPublishSignVerifyError; // 'platform not support';
-        return;
       }
+      // else if (platform === 'github') {
+      //   this.logger.info('There is a GitHub user publishing...');
+      // } else if (platform === 'email') {
+      //   this.logger.info('There is a Email account user publishing...');
+      // }
+
+      // else {
+      //   ctx.body = ctx.msg.postPublishSignVerifyError; // 'platform not support';
+      //   return;
+      // }
     } catch (err) {
       ctx.body = ctx.msg.postPublishSignVerifyError; // err.message;
       return;
