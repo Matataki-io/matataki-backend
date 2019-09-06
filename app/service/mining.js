@@ -55,17 +55,12 @@ class LikeService extends Service {
   // 开始阅读，每个用户每篇文章只能赞或踩一次，如果已经点赞或踩则不用调用
   async reading(userId, signId) {
     // 更新redis
-    // redis_key：'read:userId:signId', 记录阅读的开始时间;
-    const timestamp = Date.now() / 1000;
+    // redis_key：'reading:userId:signId', 记录阅读的开始时间;
+    const timestamp = Math.floor(Date.now() / 1000);
     const TTL = 3 * 24 * 3600; // 保留3天
-
-    const rediskey_read = `read:${userId}:${signId}`;
-
-    // const nonce = 11212212;
-    const value = { timestamp };
-    await this.app.redis.set(rediskey_read, JSON.stringify(value), 'EX', TTL);
-
-    // const key_read_log = `read:${userId}:${signId}`;
+    const rediskey_reading = `reading:${userId}:${signId}`;
+    const value = timestamp;
+    await this.app.redis.set(rediskey_reading, value, 'EX', TTL);
   }
 
   // 获取是否点赞过
@@ -105,15 +100,14 @@ class LikeService extends Service {
     }
 
     // 3. 读取redis获取阅读开始时间
-    const rediskey_read = `read:${userId}:${signId}`;
-    const read = await this.app.redis.get(rediskey_read);
+    const rediskey_reading = `reading:${userId}:${signId}`;
+    const reading = await this.app.redis.get(rediskey_reading);
     // 没有开始阅读记录
-    if (!read) {
+    if (!reading) {
       return -1;
     }
-    const readInfo = JSON.parse(read);
     // server_time 服务端时间差
-    const server_time = Date.now() / 1000 - readInfo.timestamp;
+    const server_time = Date.now() / 1000 - parseInt(reading);
     // time 客户端时间差
     // 客户端时间小于服务端时间有效，否则认为是异常提交，不做处理， //误差小于10秒有效 Math.abs(time - server_time) < 10
     if (time > server_time) {
@@ -134,9 +128,28 @@ class LikeService extends Service {
     const perPointSeconds = this.config.points.readRate;
     let reader_point = Math.floor(time * 1.0 / perPointSeconds);
     if (reader_point > max_point) reader_point = max_point;
-    // 阅读积分小于1分，不做处理，todo：需要处理，记录推荐/不推荐状态，不加积分
+    // 阅读积分小于1分，记录推荐/不推荐状态，不加积分
     if (reader_point < 1) {
-      return -1;
+      // 只需处理推荐/不推荐数量
+      const conn = await this.app.mysql.beginTransaction();
+      try {
+        if (likeStatus === 2) {
+          await conn.query('UPDATE post_read_count SET likes=likes+1 WHERE post_id=?;', [ signId ]);
+        } else {
+          await conn.query('UPDATE post_read_count SET dislikes=dislikes+1 WHERE post_id=?;', [ signId ]);
+        }
+        // 提交事务
+        await conn.commit();
+        // 删除redis，是必须的吗？
+        await this.app.redis.del(rediskey_reading);
+        // 4.5 插入redis readhistory，表示已经获取积分， 踩时候状态记录1， 顶时候状态记录2
+        await this.app.redis.set(rediskey_readHistory, likeStatus);
+        return 0;
+      } catch (e) {
+        await conn.rollback();
+        this.logger.error('Mining.like exception. j%', e);
+        return -1;
+      }
     }
 
     // 4. 处理积分
@@ -205,9 +218,9 @@ class LikeService extends Service {
       await conn.commit();
 
       // 删除redis，是必须的吗？
-      await this.app.redis.del(rediskey_read);
+      await this.app.redis.del(rediskey_reading);
 
-      // 4.5 插入redis read:history，表示已经获取积分， 踩时候状态记录1， 顶时候状态记录2
+      // 4.5 插入redis readhistory，表示已经获取积分， 踩时候状态记录1， 顶时候状态记录2
       await this.app.redis.set(rediskey_readHistory, likeStatus);
 
       return 0;
@@ -233,15 +246,14 @@ class LikeService extends Service {
     }
 
     // 3. 读取redis获取阅读开始时间
-    const rediskey_read = `read:${userId}:${signId}`;
-    const read = await this.app.redis.get(rediskey_read);
+    const rediskey_reading = `reading:${userId}:${signId}`;
+    const reading = await this.app.redis.get(rediskey_reading);
     // 没有开始阅读记录
-    if (!read) {
+    if (!reading) {
       return -1;
     }
-    const readInfo = JSON.parse(read);
     // server_time 服务端时间差
-    const server_time = Date.now() / 1000 - readInfo.timestamp;
+    const server_time = Date.now() / 1000 - parseInt(reading);
     // time 客户端时间差
     // 客户端时间小于服务端时间有效，否则认为是异常提交，不做处理， //误差小于10秒有效 Math.abs(time - server_time) < 10
     if (time > server_time) {
