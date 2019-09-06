@@ -8,7 +8,7 @@ module.exports = app => {
   const { router, controller } = app;
 
   // geetest校验中间件
-  // const geetestVerify = app.middleware.geetest();
+  const geetestVerify = app.middleware.geetest();
 
   router.get('/', controller.home.index);
 
@@ -21,7 +21,7 @@ module.exports = app => {
   // 验证用户存在性， 是否已经注册
   router.get('/login/verify', passport.verify, controller.auth.verifyReg);
   // 发送注册码邮件
-  router.get('/login/captcha', passport.verify, controller.auth.sendCaptcha);
+  router.post('/login/captcha', passport.verify, geetestVerify, controller.auth.sendCaptcha);
   // 注册用户
   router.post('/login/regist', passport.verify, controller.auth.regUser);
   // 进行账密登录
