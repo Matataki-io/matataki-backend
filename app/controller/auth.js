@@ -6,7 +6,7 @@ const moment = require('moment');
 const ecc = require('eosjs-ecc');
 const base64url = require('base64url');
 const jwt = require('jwt-simple');
-const ONT = require('ontology-ts-sdk');
+// const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
 const axios = require('axios');
 

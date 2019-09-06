@@ -158,14 +158,15 @@ class PostController extends Controller {
                 const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
                 this.ont_signature_verify(msg, sign, publickey);
         */
-      } else if (platform === 'github') {
-        this.logger.info('There is a GitHub user editing...');
-      } else if (platform === 'email') {
-        this.logger.info('There is a Email account user publishing...');
-      } else {
-        ctx.body = ctx.msg.unsupportedPlatform;
-        return;
       }
+      // else if (platform === 'github') {
+      //   this.logger.info('There is a GitHub user editing...');
+      // } else if (platform === 'email') {
+      //   this.logger.info('There is a Email account user publishing...');
+      // } else {
+      //   ctx.body = ctx.msg.unsupportedPlatform;
+      //   return;
+      // }
     } catch (err) {
       ctx.body = ctx.msg.postPublishSignVerifyError;
       return;
