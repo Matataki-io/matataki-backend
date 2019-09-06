@@ -191,8 +191,14 @@ class AuthService extends Service {
     // console.log(captchaStatus);
 
     const sendResult = await this.service.mail.sendCaptcha(email, captcha);
+    this.ctx.logger.info('sendResult', sendResult)
     if (sendResult) {
       return 0;
+    } else {
+      const sendCloudResult = await this.service.sendCloud.sendCaptcha(email, captcha);
+      if (sendCloudResult) {
+        return 0;
+      }
     }
     return 2;
   }
