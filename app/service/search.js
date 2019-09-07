@@ -73,13 +73,14 @@ class SearchService extends Service {
         bool: {
           must: [
             { term: { channel_id: channelId } },
-            { bool: {
-              // 匹配标题和内容其中一个
-              should: [
-                { match: { title: keyword } },
-                { match: { content: keyword } },
-              ],
-            },
+            {
+              bool: {
+                // 匹配标题和内容其中一个
+                should: [
+                  { match: { title: keyword } },
+                  { match: { content: keyword } },
+                ],
+              },
             },
           ],
         },
@@ -264,6 +265,7 @@ class SearchService extends Service {
     return 1;
   }
 
+  // todo：增加一种方式直接传入user对象
   async importUser(userid) {
     const user = await this.app.mysql.query(
       'SELECT id, username, nickname FROM users WHERE id = ?;',
