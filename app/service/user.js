@@ -125,7 +125,9 @@ class UserService extends Service {
       + 'SELECT COUNT(*) AS fans FROM follows WHERE fuid = :uid AND status = 1;'
       + 'SELECT COUNT(*) AS articles FROM posts WHERE uid = :uid AND status = 0;'
       + 'SELECT COUNT(*) AS drafts FROM drafts WHERE uid = :uid AND status = 0;'
-      + 'SELECT COUNT(*) AS supports, signid FROM supports s INNER JOIN posts p ON s.signid = p.id WHERE s.uid = :uid AND p.status = 0 AND s.status = 1;',
+      + 'SELECT COUNT(*) AS supports, signid FROM supports s INNER JOIN posts p ON s.signid = p.id WHERE s.uid = :uid AND p.status = 0 AND s.status = 1;'
+      + 'SELECT amount FROM assets_points WHERE uid = :uid;' // 查询 assets_points 的 amount 积分
+      + 'SELECT COUNT(*) AS referral_amount FROM users WHERE referral_uid = :uid;', // 统计 users 的 referral_uid 数量
       { uid: basicInfo.id }
     );
     basicInfo.follows = counts[0][0].follows;
@@ -133,6 +135,9 @@ class UserService extends Service {
     basicInfo.articles = counts[2][0].articles;
     basicInfo.drafts = counts[3][0].drafts;
     basicInfo.supports = counts[4][0].supports;
+    basicInfo.points = counts[5][0].amount;
+    basicInfo.referral_amount = counts[6][0].referral_amount;
+    // console.log(counts, basicInfo.id);
 
     return basicInfo;
   }
