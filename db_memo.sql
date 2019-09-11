@@ -770,3 +770,33 @@ CREATE UNIQUE INDEX idx_word_search_area ON search_count(word, search_area);
 
 alter table users	add is_recommend tinyint(1) default 0 null comment '是否是被推荐的用户';
 
+
+-- 2019/8/30 sprint9 v2.7.1
+-- 增加推荐人功能
+ALTER TABLE users ADD COLUMN referral_uid INT UNSIGNED NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN last_login_ip varchar(50) DEFAULT "";
+-- 更新数据
+UPDATE assets_points_log SET type='read_like' WHERE type='reading_like';
+UPDATE assets_points_log SET type='read_dislike' WHERE type='reading_dislike';
+UPDATE assets_points_log SET type='read_new' WHERE type='reading_new';
+
+
+-- 2019/9/5 sprint10 v2.8.0
+-- supports 增加交易txhash字段
+-- orders 增加交易txhash字段
+-- assets_points_log增加reading_duration阅读时长
+-- 新增vnt定价
+ALTER TABLE orders ADD COLUMN txhash varchar(255) NULL COMMENT '交易hash';
+ALTER TABLE supports ADD COLUMN txhash varchar(255) NULL COMMENT '交易hash';
+ALTER TABLE assets_points_log ADD COLUMN reading_time INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '阅读时长';
+
+ALTER TABLE post_read_count ADD COLUMN vnt_value_count INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'VNT赞赏金额统计';
+
+-- 2019/9/10 sprint10 v2.8.1
+-- posts表增加评论需要支付的积分
+-- assets表amount字段去掉无符号，长度改为11
+-- orders表增加索引idx_orders_signId、idx_orders_uid
+-- supports表增加索引idx_supports_signId、idx_supports_uid
+-- assets_points_log表增加status字段
+-- orders表amount字段去掉无符号，长度改为11
+-- supports表amount字段去掉无符号，长度改为11

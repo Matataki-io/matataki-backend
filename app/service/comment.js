@@ -1,6 +1,7 @@
 'use strict';
 const _ = require('lodash');
 const moment = require('moment');
+const consts = require('../service/consts');
 const Service = require('egg').Service;
 
 class CommentService extends Service {
@@ -16,6 +17,18 @@ class CommentService extends Service {
         return txt;
       }.bind(this));
     };
+  }
+
+  // 付费评论
+  async payPointCreate(userId, username, signId, comment, ip) {
+    const result = await this.service.mining.comment(userId, signId, ip);
+    // 积分扣除成功
+    if (result < 0) {
+      return result;
+    }
+
+    await this.create(userId, username, signId, comment, consts.commentTypes.point, result);
+    return 0;
   }
 
   // 创建评论
@@ -36,16 +49,18 @@ class CommentService extends Service {
 
   // 评论列表
   async commentList(signid, page = 1, pagesize = 20) {
-
     if (!signid) {
       return null;
     }
 
+    // tudo：会有性能问题，需要优化，comments表增加status字段，增加其它展示信息，避免查询orders、supports、assets_points_log表
     const sql = 'SELECT s.id as payId, s.amount, s.platform, s.signid, s.create_time, s.num, s.action, u.id, u.username, u.nickname, u.avatar, c.comment '
       + 'FROM ( '
-      + 'SELECT id,uid,signId,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid '
+      + 'SELECT id,uid,signid,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid '
       + 'UNION ALL '
-      + 'SELECT id,uid,signId,amount,0 AS num,platform,create_time,status,1 AS action FROM supports WHERE signId = :signid '
+      + 'SELECT id,uid,signid,amount,0 AS num,platform,create_time,status,1 AS action FROM supports WHERE signId = :signid '
+      + 'UNION ALL '
+      + 'SELECT id,uid,sign_id AS signid,amount,0 AS num,\'point\' AS platform,create_time,status,3 AS action FROM assets_points_log WHERE sign_id=:signid and type=\'comment_pay\' '
       + ') s '
       + 'LEFT JOIN users u ON s.uid = u.id '
       + 'LEFT JOIN comments c ON c.type=s.action and c.ref_id = s.id '

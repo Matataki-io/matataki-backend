@@ -7,6 +7,8 @@
 
 * curl -d "author=tengavinwood&title=xxxxx&publickey=EOS8QP2Z6tApaUYPEC6hm9f1pZrSEMmZ7n5SsvjzA3VTnRXUyra9E&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy&sign=SIG_K1_KZU9PyXP8YAePjCfCcmBjGHARkvTVDjKpKvVgS6XL8o2FXTXUdhP3rqrL38dJYgJo2WNBdYubsY9LKTo47RUUE4N3ZHjZQ" -X POST https://api.smartsignature.io/post/publish
 
+* 增加参数：commentPayPoint 评论需要花的积分
+
 
 #### 获取文章列表
 
@@ -567,6 +569,7 @@ curl https://apitest.smartsignature.io/comments?signid=100591
   ]
 }
 ```
+
 
 
 #### 获取支持过的文章列表
@@ -2014,6 +2017,26 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 {
 	"orderId": 437619,
   "txhash": "0x111"
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+
+#### 积分评论
+* POST /comment/comment
+* 响应状态码： 200
+* 参数：
+```
+{
+  "signId": 100748,
+  "comment": "sfdsfdsfdsf"
 }
 ```
 * 请求头：x-access-token

@@ -559,6 +559,38 @@ class LikeService extends Service {
     return 0;
   }
 
+  async comment(userId, signId, ip) {
+    // 1. 文章是否存在
+    const post = await this.service.post.get(signId);
+    if (!post) {
+      return -9;
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      // 减少评论者的积分
+      const result = await conn.query('UPDATE assets_points SET amount=amount-? WHERE uid=? AND amount>=?;', [ post.comment_pay_point, userId, post.comment_pay_point ]);
+      if (result.affectedRows !== 1) {
+        conn.rollback();
+        return -1;
+      }
+      const log = await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
+        [ userId, signId, -post.comment_pay_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.commentPay, ip ]);
+
+      // 增加作者的积分
+      await conn.query('UPDATE assets_points SET amount=amount+? WHERE uid=? AND amount>=?;', [ post.comment_pay_point, post.uid, post.comment_pay_point ]);
+      await conn.query('INSERT INTO assets_points_log(uid, sign_id, amount, create_time, type, ip) VALUES(?,?,?,?,?,?);',
+        [ post.uid, signId, post.comment_pay_point, moment().format('YYYY-MM-DD HH:mm:ss'), consts.pointTypes.commentIncome, ip ]);
+
+      // 提交事务
+      await conn.commit();
+      return log.insertId;
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('Mining.comment exception. j%', e);
+      return -2;
+    }
+  }
 
 }
 

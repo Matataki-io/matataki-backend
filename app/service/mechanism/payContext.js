@@ -42,6 +42,10 @@ class PayContextService extends Service {
         return;
       }
 
+      // todo：优化评论模块时在处理
+      // const commentType = payment.action === consts.payActions.support ? consts.commentTypes.support : consts.commentTypes.order;
+      // updateResult = await conn.query('UPDATE comments SET status=1 WHERE ref_id=? AND type=?;', [ payment.id, commentType ]);
+
       // 3. 开始分账
       /*
       - 有推荐人

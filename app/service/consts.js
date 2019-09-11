@@ -30,6 +30,7 @@ module.exports = {
   commentTypes: {
     support: 1,
     order: 2,
+    point: 3,
   },
 
   // 积分系统
@@ -53,6 +54,8 @@ module.exports = {
     login: 'login', // 登录任务
     profile: 'profile', // 完善资料任务
 
+    commentPay: 'comment_pay', // 评论支付
+    commentIncome: 'comment_income', // 被评论收入
   },
 
   // 用户账号所属平台

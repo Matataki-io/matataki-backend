@@ -173,6 +173,8 @@ module.exports = app => {
   // 评论列表
   // router.get('/comments', passport.verify, controller.comment.comments);
   router.get('/comment/comments', passport.verify, controller.comment.comments);
+  // 直接评论，需要支付积分
+  router.post('/comment/comment', passport.authorize, controller.comment.comment);
 
   // -------------------------------- 橙皮书 --------------------------------
   // 橙皮书合约广告人、次统计

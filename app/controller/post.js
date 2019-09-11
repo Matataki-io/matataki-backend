@@ -27,12 +27,19 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
       publickey, sign, hash, fissionFactor = 2000,
-      cover, is_original = 0, platform = 'eos', tags = '' } = ctx.request.body;
+      cover, is_original = 0, platform = 'eos', tags = '', commentPayPoint = 0 } = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, is_original);
 
     if (fissionFactor > 2000) {
       ctx.body = ctx.msg.postPublishParamsError; // msg: 'fissionFactor should >= 2000',
+      return;
+    }
+
+    // 评论需要支付的积分
+    const comment_pay_point = parseInt(commentPayPoint);
+    if (comment_pay_point > 20 || comment_pay_point < 1) {
+      ctx.body = ctx.msg.pointCommentSettingError;
       return;
     }
 
@@ -97,6 +104,7 @@ class PostController extends Controller {
       is_recommend: 0,
       category_id: 0,
       short_content: shortContent,
+      comment_pay_point,
     });
 
     // 添加文章到elastic search
