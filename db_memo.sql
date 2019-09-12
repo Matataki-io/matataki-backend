@@ -794,9 +794,29 @@ ALTER TABLE post_read_count ADD COLUMN vnt_value_count INT UNSIGNED NOT NULL DEF
 
 -- 2019/9/10 sprint10 v2.8.1
 -- posts表增加评论需要支付的积分
--- assets表amount字段去掉无符号，长度改为11
+
+-- assets_points_log表amount字段去掉无符号，长度改为11
+
 -- orders表增加索引idx_orders_signId、idx_orders_uid
 -- supports表增加索引idx_supports_signId、idx_supports_uid
 -- assets_points_log表增加status字段
+
 -- orders表amount字段去掉无符号，长度改为11
 -- supports表amount字段去掉无符号，长度改为11
+
+-- drafts 增加comment_pay_point字段
+
+ALTER TABLE posts ADD COLUMN comment_pay_point INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '评论需要支付的积分';
+
+CREATE INDEX idx_orders_signId ON orders (signid);
+CREATE INDEX idx_orders_uid ON orders (uid);
+
+CREATE INDEX idx_supports_signId ON supports (signid);
+CREATE INDEX idx_supports_uid ON supports (uid);
+
+ALTER TABLE assets_points_log ADD COLUMN status INT UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态，0无效，1有效';
+
+ALTER TABLE drafts ADD COLUMN comment_pay_point INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '评论需要支付的积分';
+
+UPDATE posts SET comment_pay_point=5 WHERE comment_pay_point=0;
+

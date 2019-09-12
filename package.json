@@ -50,7 +50,7 @@
     "node": ">=8.9.0"
   },
   "scripts": {
-    "start": "egg-scripts start --daemon --title=egg-server-example",
+    "start": "egg-scripts start --port=7654 --daemon --title=egg-server-example",
     "serve": "egg-scripts start ",
     "stop": "egg-scripts stop --title=egg-server-example",
     "dev": "egg-bin dev",
