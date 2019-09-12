@@ -566,6 +566,10 @@ class LikeService extends Service {
       return -9;
     }
 
+    if (post.comment_pay_point === 0) {
+      return 0;
+    }
+
     const conn = await this.app.mysql.beginTransaction();
     try {
       // 减少评论者的积分
