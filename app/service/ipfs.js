@@ -5,10 +5,11 @@ const Service = require('egg').Service;
 class ipfs extends Service {
   constructor(ctx, app) {
     super(ctx, app);
+    const { host, port, protocol } = this.config.ipfs_service;
     this.ipfs = new IPFS({
-      host: '47.52.2.146',
-      port: 5001,
-      protocol: 'http',
+      host,
+      port,
+      protocol,
     });
   }
   cat(hash) {

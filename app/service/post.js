@@ -865,7 +865,7 @@ class PostService extends Service {
       this.logger.error('PostService:: ipfsUpload Error', err);
       return null;
     }
-    return add[0].hash;
+    return add; // add[0].hash
   }
 
   async ipfsCatch(hash) {
