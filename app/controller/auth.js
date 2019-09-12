@@ -6,7 +6,7 @@ const moment = require('moment');
 const ecc = require('eosjs-ecc');
 const base64url = require('base64url');
 const jwt = require('jwt-simple');
-const ONT = require('ontology-ts-sdk');
+// const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
 const axios = require('axios');
 
@@ -122,16 +122,17 @@ class AuthController extends Controller {
   }
 
   async ont_auth(sign, username, publickey) {
+    /*
+        const pub = new ONT.Crypto.PublicKey(publickey);
 
-    const pub = new ONT.Crypto.PublicKey(publickey);
+        const msg = ONT.utils.str2hexstr(username);
 
-    const msg = ONT.utils.str2hexstr(username);
+        const signature = ONT.Crypto.Signature.deserializeHex(sign);
 
-    const signature = ONT.Crypto.Signature.deserializeHex(sign);
+        const pass = pub.verify(msg, signature);
 
-    const pass = pub.verify(msg, signature);
-
-    return pass;
+        return pass;
+    */
   }
 
   async vnt_auth(sign, username, publickey) {
