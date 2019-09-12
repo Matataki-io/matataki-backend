@@ -43,9 +43,6 @@ class AuthController extends Controller {
       return;
     }
 
-    // this.ctx.body = this.ctx.msg.signatureVerifyFailed;
-    // this.ctx.body = this.ctx.msg.invalidSignature;
-
     // create user if not exit
     const user = await this.get_or_create_user(username, platform, source, referral);
     const jwttoken = this.service.auth.jwtSign(user);
@@ -134,25 +131,7 @@ class AuthController extends Controller {
 
     const pass = pub.verify(msg, signature);
 
-    if (pass) {
-
-      // 3. 签名有效，生成accessToken . accessToken = username + date + secret (JWT format)
-      const expires = moment().add(7, 'days').valueOf();
-
-      const token = jwt.encode({
-        iss: username,
-        exp: expires,
-        platform: user.platform,
-        id: user.id,
-      }, this.app.config.jwtTokenSecret);
-
-      this.ctx.body = token;
-
-    } else {
-      this.ctx.body = this.ctx.msg.invalidSignature;
-    }
-    // curl -d "platform=ont&publickey=0205c8fff4b1d21f4b2ec3b48cf88004e38402933d7e914b2a0eda0de15e73ba61&username=helloworld&sign=010936f0693e83d5d605816ceeeb4872d8a343d4c7350ef23e49614e0302d94d6f6a4af73e20ed9c818c0be6865e6096efc7b9f98fa42a33f775ff0ea1cb17703a" -H "Authorization: Basic bXlfYXBwOm15X3NlY3JldA==" -v -X POST http://127.0.0.1:7001/auth
-
+    return pass;
   }
 
   async vnt_auth(sign, username, publickey) {
@@ -303,8 +282,8 @@ class AuthController extends Controller {
       ctx.body = ctx.msg.paramsError;
       return;
     }
-    const loginResult = await this.service.auth.verifyLogin(username, password, this.clientIP);
-    switch (loginResult) {
+    const jwttoken = await this.service.auth.verifyLogin(username, password, this.clientIP);
+    switch (jwttoken) {
       case 1:
         ctx.body = ctx.msg.passwordWrong;
         break;
@@ -316,7 +295,7 @@ class AuthController extends Controller {
         break;
       default:
         ctx.body = ctx.msg.success;
-        ctx.body.data = loginResult;
+        ctx.body.data = jwttoken;
         break;
     }
   }
