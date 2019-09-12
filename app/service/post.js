@@ -6,7 +6,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const fs = require('fs');
 const removemd = require('remove-markdown');
-const IpfsHttpClientLite = require('ipfs-http-client-lite');
+// const IpfsHttpClientLite = require('ipfs-http-client-lite');
 
 class PostService extends Service {
 
@@ -859,8 +859,8 @@ class PostService extends Service {
     let add = null;
     try {
       // 建立连接并上传
-      const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
-      add = await ipfs.add(data);
+      // const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
+      add = await this.service.ipfs.add(data);
     } catch (err) {
       this.logger.error('PostService:: ipfsUpload Error', err);
       return null;
@@ -872,8 +872,8 @@ class PostService extends Service {
     let data = null;
     try {
       // 建立连接并获取
-      const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
-      data = await ipfs.cat(hash);
+      // const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
+      data = await this.service.ipfs.cat(hash);
     } catch (err) {
       this.logger.error('PostService:: ipfsUpload Error', err);
       return null;
