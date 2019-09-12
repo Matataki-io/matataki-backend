@@ -6,7 +6,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const fs = require('fs');
 const removemd = require('remove-markdown');
-const IpfsHttpClientLite = require('ipfs-http-client-lite');
+// const IpfsHttpClientLite = require('ipfs-http-client-lite');
 
 class PostService extends Service {
 
@@ -88,7 +88,7 @@ class PostService extends Service {
     // const post = await this.app.mysql.get('posts', { hash });
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id FROM posts WHERE hash = ?;',
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE hash = ?;',
       [ hash ]
     );
     const post = posts[0];
@@ -112,7 +112,7 @@ class PostService extends Service {
     // const post = await this.app.mysql.get('posts', { id });
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id FROM posts WHERE id = ?;',
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE id = ?;',
       [ id ]
     );
     const post = posts[0];
@@ -859,8 +859,8 @@ class PostService extends Service {
     let add = null;
     try {
       // 建立连接并上传
-      const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
-      add = await ipfs.add(data);
+      // const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
+      add = await this.service.ipfs.add(data);
     } catch (err) {
       this.logger.error('PostService:: ipfsUpload Error', err);
       return null;
@@ -872,8 +872,8 @@ class PostService extends Service {
     let data = null;
     try {
       // 建立连接并获取
-      const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
-      data = await ipfs.cat(hash);
+      // const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
+      data = await this.service.ipfs.cat(hash);
     } catch (err) {
       this.logger.error('PostService:: ipfsUpload Error', err);
       return null;
