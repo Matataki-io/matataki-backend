@@ -172,6 +172,7 @@ module.exports = {
       geetestVerifyFailed: { code: this.geetestVerifyFailed, message: 'geetest verify failed.' },
       pointReadError: { code: this.pointReadError, message: 'Get reading points error.' },
       pointNotEnough: { code: this.pointNotEnough, message: 'You do not have enough points. ' },
+      pointCommentSettingError: { code: this.pointCommentSettingError, message: 'The post settings error.' },
     };
 
     const zh = {
@@ -235,6 +236,7 @@ module.exports = {
       geetestVerifyFailed: { code: this.geetestVerifyFailed, message: 'geetest校验失败' },
       pointReadError: { code: this.pointReadError, message: '获取阅读积分错误' },
       pointNotEnough: { code: this.pointNotEnough, message: '你没有足够的积分' },
+      pointCommentSettingError: { code: this.pointCommentSettingError, message: '文章设置错误.' },
     };
 
     let message;

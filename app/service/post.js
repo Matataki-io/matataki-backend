@@ -99,7 +99,7 @@ class PostService extends Service {
   async get(id) {
     const posts = await this.app.mysql.select('posts', {
       where: { id },
-      columns: [ 'id', 'uid', 'title', 'status', 'create_time', 'comment_pay_point' ], // todo：需要再增加
+      columns: [ 'id', 'uid', 'title', 'status', 'create_time', 'comment_pay_point', 'channel_id' ], // todo：需要再增加
     });
     if (posts && posts.length > 0) {
       return posts[0];
