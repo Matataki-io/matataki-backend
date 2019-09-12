@@ -12,7 +12,7 @@ class PostScore extends Subscription {
   static get schedule() {
     return {
       interval: '300s',
-      type: 'all',
+      type: 'worker',
     };
   }
 

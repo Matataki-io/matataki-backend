@@ -21,7 +21,7 @@ class VerifyOrder extends Subscription {
   static get schedule() {
     return {
       interval: '5s',
-      type: 'all',
+      type: 'worker',
     };
   }
 

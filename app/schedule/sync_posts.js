@@ -9,7 +9,7 @@ class SyncPosts extends Subscription {
       broadcast: true,
       sign: true,
       chainId: ctx.app.config.eos.chainId,
-      keyProvider: [ctx.app.config.eos.keyProvider],
+      keyProvider: [ ctx.app.config.eos.keyProvider ],
       httpEndpoint: ctx.app.config.eos.httpEndpoint,
     });
   }
@@ -17,7 +17,7 @@ class SyncPosts extends Subscription {
   static get schedule() {
     return {
       interval: '2s',
-      type: 'all',
+      type: 'worker',
     };
   }
 
@@ -25,11 +25,11 @@ class SyncPosts extends Subscription {
     // 已废弃
     return;
 
-    //debug不执行
+    // debug不执行
     if (this.ctx.app.config.isDebug) return;
 
-    this.logger.info("sync posts..");
-    console.log("sync posts..");
+    this.logger.info('sync posts..');
+    console.log('sync posts..');
 
     const results = await this.app.mysql.select('posts', {
       where: { onchain_status: 0 }, // WHERE 条件
@@ -51,13 +51,13 @@ class SyncPosts extends Subscription {
         let public_key = post.public_key;
         let signature = post.sign;
 
-        let author = post.username || post.author
+        let author = post.username || post.author;
 
         // ONT的签名和公钥和EOS不一样。只好随便放。后续应改方式。
-        if (post.platform === "ont") {
+        if (post.platform === 'ont') {
           author = this.ctx.app.config.eos.contract;
-          public_key = "EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C"
-          signature = "SIG_K1_KiDauAQaHi6GJirH6tHaoLQDkrPP8Cd6KJTQvy9Lbc2dRfcR1TB5moexhsj8ZN5o69FvfBs5iKEV9LFzw4uyWY4oP7GYhU"
+          public_key = 'EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C';
+          signature = 'SIG_K1_KiDauAQaHi6GJirH6tHaoLQDkrPP8Cd6KJTQvy9Lbc2dRfcR1TB5moexhsj8ZN5o69FvfBs5iKEV9LFzw4uyWY4oP7GYhU';
         }
 
         actions.push(
@@ -71,11 +71,11 @@ class SyncPosts extends Subscription {
             data: {
               sign: {
                 id: post.id,
-                author: author,
+                author,
                 fission_factor: post.fission_factor,
                 ipfs_hash: post.hash,
-                public_key: public_key,
-                signature: signature,
+                public_key,
+                signature,
               },
             },
           }
