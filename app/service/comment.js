@@ -71,12 +71,13 @@ class CommentService extends Service {
         + 'UNION ALL '
         + 'SELECT id,uid,signid,amount,0 AS num,platform,create_time,status,1 AS action FROM supports WHERE signId = :signid '
         + 'UNION ALL '
-        + 'SELECT id,uid,sign_id AS signid,amount,0 AS num,\'point\' AS platform,create_time,status,3 AS action FROM assets_points_log WHERE sign_id=:signid and type=\'comment_pay\' '
+        + 'SELECT id,uid,sign_id AS signid,-amount,0 AS num,\'point\' AS platform,create_time,status,3 AS action FROM assets_points_log WHERE sign_id=:signid and type=\'comment_pay\' '
         + ') s '
         + 'LEFT JOIN users u ON s.uid = u.id '
         + 'LEFT JOIN comments c ON c.type=s.action and c.ref_id = s.id '
         + 'WHERE s.status = 1 ORDER BY s.create_time DESC LIMIT :start, :end;';
     }
+
     const results = await this.app.mysql.query(
       sql,
       // 'SELECT s.amount, s.platform, s.signid, s.create_time, u.id, u.username, u.nickname, u.avatar, c.comment FROM supports s '
