@@ -3,7 +3,7 @@
 const Controller = require('../core/base_controller');
 
 const moment = require('moment');
-var _ = require('lodash');
+const _ = require('lodash');
 
 class DraftsController extends Controller {
 
@@ -33,18 +33,25 @@ class DraftsController extends Controller {
   async save() {
     const ctx = this.ctx;
 
-    const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0, tags = '' } = ctx.request.body;
+    const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0, tags = '', commentPayPoint = 0 } = ctx.request.body;
+
+    // 评论需要支付的积分
+    const comment_pay_point = parseInt(commentPayPoint);
+    if (comment_pay_point > 20 || comment_pay_point < 1) {
+      ctx.body = ctx.msg.pointCommentSettingError;
+      return;
+    }
 
     // 有id视为保存草稿， 没有id视为一篇新的草稿
     if (id) {
-      await this.save_draft(this.ctx.user.id, id, title, content, cover, fissionFactor, is_original, tags);
+      await this.save_draft(this.ctx.user.id, id, title, content, cover, fissionFactor, is_original, tags, comment_pay_point);
     } else {
-      await this.create_draft(this.ctx.user.id, title, content, cover, fissionFactor, is_original, tags);
+      await this.create_draft(this.ctx.user.id, title, content, cover, fissionFactor, is_original, tags, comment_pay_point);
     }
   }
 
   // 更新一篇已经存在的草稿
-  async save_draft(uid, id, title, content, cover, fissionFactor, is_original, tags) {
+  async save_draft(uid, id, title, content, cover, fissionFactor, is_original, tags, comment_pay_point) {
     const draft = await this.app.mysql.get('drafts', { id });
 
     if (!draft) {
@@ -68,6 +75,7 @@ class DraftsController extends Controller {
         update_time: now,
         is_original,
         tags,
+        comment_pay_point,
       }, { where: { id } });
 
       const updateSuccess = result.affectedRows === 1;
@@ -86,7 +94,7 @@ class DraftsController extends Controller {
   }
 
   // 创建新的草稿
-  async create_draft(uid, title, content, cover, fissionFactor, is_original, tags) {
+  async create_draft(uid, title, content, cover, fissionFactor, is_original, tags, comment_pay_point) {
 
     try {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -101,6 +109,7 @@ class DraftsController extends Controller {
         create_time: now,
         update_time: now,
         tags,
+        comment_pay_point,
       });
 
       const updateSuccess = result.affectedRows === 1;
@@ -137,8 +146,8 @@ class DraftsController extends Controller {
     }
 
     // 分配标签
-    let tag_arr = draft.tags.split(",");
-    tag_arr = tag_arr.filter((x) => { return x !== "" });
+    let tag_arr = draft.tags.split(',');
+    tag_arr = tag_arr.filter(x => { return x !== ''; });
     let tags = [];
     if (tag_arr.length > 0) {
       tags = await await this.app.mysql.query(
