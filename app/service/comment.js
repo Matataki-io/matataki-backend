@@ -62,7 +62,8 @@ class CommentService extends Service {
     if (post.channel_id === 1) {
       sql = 'SELECT c.id, c.uid, c.comment, u.username, u.nickname, u.avatar FROM comments c  '
         + 'LEFT JOIN users u ON c.uid = u.id '
-        + 'WHERE c.sign_id = :signid AND c.type=3 ORDER BY c.create_time DESC LIMIT :start, :end;';
+        + 'WHERE c.sign_id = :signid AND c.type=3 ORDER BY c.create_time DESC LIMIT :start, :end;'
+        + 'SELECT count(1) as count FROM comments c WHERE c.sign_id = :signid AND c.type=3;';
     } else {
       // tudo：会有性能问题，需要优化，comments表增加status字段，增加其它展示信息，避免查询orders、supports、assets_points_log表
       sql = 'SELECT s.id, s.amount, s.platform, s.signid, s.create_time, s.num, s.action, s.uid, u.username, u.nickname, u.avatar, c.comment '
@@ -75,7 +76,16 @@ class CommentService extends Service {
         + ') s '
         + 'LEFT JOIN users u ON s.uid = u.id '
         + 'LEFT JOIN comments c ON c.type=s.action and c.ref_id = s.id '
-        + 'WHERE s.status = 1 ORDER BY s.create_time DESC LIMIT :start, :end;';
+        + 'WHERE s.status = 1 ORDER BY s.create_time DESC LIMIT :start, :end;'
+        + 'SELECT count(1) as count '
+        + 'FROM ( '
+        + 'SELECT id,uid,signid,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid '
+        + 'UNION ALL '
+        + 'SELECT id,uid,signid,amount,0 AS num,platform,create_time,status,1 AS action FROM supports WHERE signId = :signid '
+        + 'UNION ALL '
+        + 'SELECT id,uid,sign_id AS signid,-amount,0 AS num,\'point\' AS platform,create_time,status,3 AS action FROM assets_points_log WHERE sign_id=:signid and type=\'comment_pay\' '
+        + ') s '
+        + 'WHERE s.status = 1;';
     }
 
     const results = await this.app.mysql.query(
@@ -88,13 +98,16 @@ class CommentService extends Service {
       { signid, start: (page - 1) * pagesize, end: pagesize }
     );
 
-    _.each(results, row => {
+    _.each(results[0], row => {
       if (row.comment === null) {
         row.comment = '';
       }
     });
 
-    return results;
+    return {
+      count: results[1][0].count,
+      list: results[0],
+    };
   }
 
 }
