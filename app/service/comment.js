@@ -71,8 +71,8 @@ class CommentService extends Service {
         + 'SELECT id,uid,signid,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid '
         + 'UNION ALL '
         + 'SELECT id,uid,signid,amount,0 AS num,platform,create_time,status,1 AS action FROM supports WHERE signId = :signid '
-        + 'UNION ALL '
-        + 'SELECT id,uid,sign_id AS signid,-amount,0 AS num,\'point\' AS platform,create_time,status,3 AS action FROM assets_points_log WHERE sign_id=:signid and type=\'comment_pay\' '
+        // + 'UNION ALL '
+        // + 'SELECT id,uid,sign_id AS signid,-amount,0 AS num,\'point\' AS platform,create_time,status,3 AS action FROM assets_points_log WHERE sign_id=:signid and type=\'comment_pay\' '
         + ') s '
         + 'LEFT JOIN users u ON s.uid = u.id '
         + 'LEFT JOIN comments c ON c.type=s.action and c.ref_id = s.id '
@@ -82,8 +82,8 @@ class CommentService extends Service {
         + 'SELECT id,uid,signid,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid '
         + 'UNION ALL '
         + 'SELECT id,uid,signid,amount,0 AS num,platform,create_time,status,1 AS action FROM supports WHERE signId = :signid '
-        + 'UNION ALL '
-        + 'SELECT id,uid,sign_id AS signid,-amount,0 AS num,\'point\' AS platform,create_time,status,3 AS action FROM assets_points_log WHERE sign_id=:signid and type=\'comment_pay\' '
+        // + 'UNION ALL '
+        // + 'SELECT id,uid,sign_id AS signid,-amount,0 AS num,\'point\' AS platform,create_time,status,3 AS action FROM assets_points_log WHERE sign_id=:signid and type=\'comment_pay\' '
         + ') s '
         + 'WHERE s.status = 1;';
     }
