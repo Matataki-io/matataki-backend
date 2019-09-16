@@ -190,15 +190,14 @@ class AuthService extends Service {
     // const captchaStatus = await this.app.redis.get(mailhash);
     // console.log(captchaStatus);
 
+    const sendCloudResult = await this.service.sendCloud.sendCaptcha(email, captcha);
+    this.ctx.logger.info('sendCloudResult', sendCloudResult);
+    if (sendCloudResult) {
+      return 0;
+    }
     const sendResult = await this.service.mail.sendCaptcha(email, captcha);
-    this.ctx.logger.info('sendResult', sendResult)
     if (sendResult) {
       return 0;
-    } else {
-      const sendCloudResult = await this.service.sendCloud.sendCaptcha(email, captcha);
-      if (sendCloudResult) {
-        return 0;
-      }
     }
     return 2;
   }
