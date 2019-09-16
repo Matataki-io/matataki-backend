@@ -60,7 +60,7 @@ class CommentService extends Service {
 
     let sql;
     if (post.channel_id === 1) {
-      sql = 'SELECT c.id, c.uid, c.comment,create_time, u.username, u.nickname, u.avatar FROM comments c  '
+      sql = 'SELECT c.id, c.uid, c.comment,c.create_time, u.username, u.nickname, u.avatar FROM comments c  '
         + 'LEFT JOIN users u ON c.uid = u.id '
         + 'WHERE c.sign_id = :signid AND c.type=3 ORDER BY c.create_time DESC LIMIT :start, :end;'
         + 'SELECT count(1) as count FROM comments c WHERE c.sign_id = :signid AND c.type=3;';
