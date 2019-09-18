@@ -21,7 +21,7 @@ class MineTokenController extends Controller {
     const ctx = this.ctx;
     const { tokenId, to, amount } = this.ctx.request.body;
     const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP);
-    ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
+    ctx.body = result ? ctx.msg.success : ctx.msg.failure;
   }
 
 }

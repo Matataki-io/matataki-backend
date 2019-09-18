@@ -67,38 +67,45 @@ class mineTokenService extends Service {
     }
   }
 
-  async transferFrom(tokenId, from, to, value, ip) {
-    const conn = await this.app.mysql.beginTransaction();
+  async transferFrom(tokenId, from, to, value, ip, conn) {
+    // 有可能在其他事务中调用该方法，如果conn是传进来的，不要此commit和rollback
+    let isOutConn = false;
+    if (conn) {
+      isOutConn = true;
+    } else {
+      conn = await this.app.mysql.beginTransaction();
+    }
+
     try {
       // 减少from的token
       const sqlFrom = 'UPDATE assets_minetoken SET amount = amount - ? WHERE uid = ? AND token_id = ?;';
       const result = await conn.query(sqlFrom, [ value, from, tokenId ]);
-
+      // 减少from的token失败回滚
       if (result.affectedRows <= 0) {
-        await conn.rollback();
+        if (!isOutConn) {
+          await conn.rollback();
+        }
         return false;
       }
-
-      const sqlFromLog = 'INSERT INTO assets_minetoken_log(uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?);';
-      await conn.query(sqlFromLog,
+      await conn.query('INSERT INTO assets_minetoken_log(uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?);',
         [ from, tokenId, -value, moment().format('YYYY-MM-DD HH:mm:ss'), ip ]);
 
-
       // 增加to的token
-      const sqlTo = 'INSERT INTO assets_minetoken(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;';
-      await conn.query(sqlTo, [ to, tokenId, value, value ]);
-
-      const sqlToLog = 'INSERT INTO assets_minetoken_log(uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?);';
-      await conn.query(sqlToLog,
+      await conn.query('INSERT INTO assets_minetoken(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+        [ to, tokenId, value, value ]);
+      await conn.query('INSERT INTO assets_minetoken_log(uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?);',
         [ to, tokenId, value, moment().format('YYYY-MM-DD HH:mm:ss'), ip ]);
 
-      await conn.commit();
-      return 0;
-
+      if (!isOutConn) {
+        await conn.commit();
+      }
+      return true;
     } catch (e) {
-      await conn.rollback();
-      this.logger.error('FungibleToken.mint exception. %j', e);
-      return -1;
+      if (!isOutConn) {
+        await conn.rollback();
+      }
+      this.logger.error('mineToken.transferFrom exception. %j', e);
+      return false;
     }
   }
 
