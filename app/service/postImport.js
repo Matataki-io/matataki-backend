@@ -216,17 +216,17 @@ class PostImportService extends Service {
     }
     // Parser 处理， 转化为markdown， 因平台而异
     const parsedPage = htmlparser.parse(rawPage.data);
-    const parsedContent = parsedPage.querySelector('div.show-content-free');
-    const parsedTitle = parsedPage.querySelector('h1.title');
+    const parsedContent = parsedPage.querySelector('article');
+    const parsedTitle = parsedPage.querySelector('h1');
     const turndownService = new turndown();
-    const parsedCoverList = parsedPage.querySelectorAll('.show-content .image-view img');
+    const parsedCoverList = parsedPage.querySelectorAll('article img');
     for (let i = 0; i < parsedCoverList.length; i++) {
       parsedCoverList[i].rawAttrs = parsedCoverList[i].rawAttrs.replace('data-original-src', 'src');
     }
     const articleContent = turndownService.turndown(parsedContent.toString());
     // console.log(parsedContent.toString());
 
-    const parsedCover = parsedPage.querySelector('.show-content .image-view img');
+    const parsedCover = parsedPage.querySelector('article img');
     let coverLocation = null;
     if (parsedCover) {
       let originalSrc = parsedCover.rawAttributes.src;
