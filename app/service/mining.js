@@ -147,7 +147,7 @@ class LikeService extends Service {
         return 0;
       } catch (e) {
         await conn.rollback();
-        this.logger.error('Mining.like exception. j%', e);
+        this.logger.error('Mining.like exception. %j', e);
         return -1;
       }
     }
@@ -226,7 +226,7 @@ class LikeService extends Service {
       return 0;
     } catch (e) {
       await conn.rollback();
-      this.logger.error('Mining.like exception. j%', e);
+      this.logger.error('Mining.like exception. %j', e);
       return -1;
     }
   }
@@ -300,7 +300,7 @@ class LikeService extends Service {
       return readnewPoint;
     } catch (e) {
       await conn.rollback();
-      this.logger.error('Mining.like exception. j%', e);
+      this.logger.error('Mining.like exception. %j', e);
       return -1;
     }
   }
@@ -412,7 +412,7 @@ class LikeService extends Service {
 
     } catch (e) {
       await conn.rollback();
-      this.logger.error('Mining.like exception. j%', e);
+      this.logger.error('Mining.like exception. %j', e);
       return -1;
     }
   }
@@ -485,7 +485,7 @@ class LikeService extends Service {
       return 0;
     } catch (e) {
       await conn.rollback();
-      this.logger.error('Mining.register exception. j%', e);
+      this.logger.error('Mining.register exception. %j', e);
       return -1;
     }
   }
@@ -544,7 +544,7 @@ class LikeService extends Service {
       return 0;
     } catch (e) {
       await conn.rollback();
-      this.logger.error('Mining.onceTask exception. j%', e);
+      this.logger.error('Mining.onceTask exception. %j', e);
       return -1;
     }
   }
@@ -591,7 +591,7 @@ class LikeService extends Service {
       return log.insertId;
     } catch (e) {
       await conn.rollback();
-      this.logger.error('Mining.comment exception. j%', e);
+      this.logger.error('Mining.comment exception. %j', e);
       return -2;
     }
   }

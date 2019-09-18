@@ -206,5 +206,10 @@ module.exports = app => {
   router.get('/gt/register-slide', controller.geetest.register);
   // 验证geetest
   router.post('/gt/validate-slide', controller.geetest.validate);
+
+  // 创建token
+  router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
+  router.post('/minetoken/mint', passport.authorize, controller.mineToken.mint);
+  router.post('/minetoken/transfer', passport.authorize, controller.mineToken.transfer);
 };
 

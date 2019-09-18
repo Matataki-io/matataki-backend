@@ -88,7 +88,7 @@ class VntService extends Service {
 
       return true;
     } catch (ex) {
-      this.logger.error('VntService.verify error: j%', ex);
+      this.logger.error('VntService.verify error: %j', ex);
       return false;
     }
   }
