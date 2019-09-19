@@ -1,7 +1,5 @@
 'use strict';
 const passport = require('./passport');
-// const wxpay = require('./wxpay');
-
 /**
  * @param {Egg.Application} app - egg application
  */
@@ -10,8 +8,6 @@ module.exports = app => {
 
   // geetest校验中间件
   const geetestVerify = app.middleware.geetest();
-
-  // const wxpayInit = wxpay.init(app);
 
   router.get('/', controller.home.index);
 
@@ -211,10 +207,15 @@ module.exports = app => {
   router.post('/gt/validate-slide', controller.geetest.validate);
   // -------------------------------- 微信支付相关API --------------------------------
   // 微信支付回调
-  router.get('/wx/notify', app.wxpay.notify, controller.wxpay.notify); // wxpayInit.middleware('pay')
+  router.get('/wx/notify', app.wxpay.notify, controller.wxpay.notify);
   // 微信支付接口
   router.post('/wx/pay', controller.wxpay.pay);
   // 微信登录获取openid
   router.post('/wx/login', controller.wxpay.login);
+
+  // 创建token
+  router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
+  router.post('/minetoken/mint', passport.authorize, controller.mineToken.mint);
+  router.post('/minetoken/transfer', passport.authorize, controller.mineToken.transfer);
 };
 

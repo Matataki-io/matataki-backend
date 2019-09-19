@@ -114,7 +114,7 @@ class AuthController extends Controller {
         return false;
       }
     } catch (err) {
-      // this.logger.error('AuthController.eos_auth error: j%', err);
+      // this.logger.error('AuthController.eos_auth error: %j', err);
       return false;
     }
 
