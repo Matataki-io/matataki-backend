@@ -1,6 +1,5 @@
 'use strict';
 const passport = require('./passport');
-
 /**
  * @param {Egg.Application} app - egg application
  */
@@ -206,6 +205,13 @@ module.exports = app => {
   router.get('/gt/register-slide', controller.geetest.register);
   // 验证geetest
   router.post('/gt/validate-slide', controller.geetest.validate);
+  // -------------------------------- 微信支付相关API --------------------------------
+  // 微信支付回调
+  router.get('/wx/notify', app.wxpay.notify, controller.wxpay.notify);
+  // 微信支付接口
+  router.post('/wx/pay', controller.wxpay.pay);
+  // 微信登录获取openid
+  router.post('/wx/login', controller.wxpay.login);
 
   // 创建token
   router.post('/minetoken/create', passport.authorize, controller.mineToken.create);

@@ -30,4 +30,9 @@ module.exports = {
     enable: true,
     package: 'egg-redis',
   },
+  // 微信支付
+  wxpay: {
+    enable: true,
+    package: 'egg-wxpay',
+  },
 };
