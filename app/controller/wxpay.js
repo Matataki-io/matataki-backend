@@ -23,17 +23,21 @@ class WxPayController extends Controller {
 
   async pay() {
     const { ctx } = this;
-    const { total, openid } = ctx.request.body; // total单位为元
+    const { total, title } = ctx.request.body; // total单位为元
     const ip = ctx.ips.length > 0 ? ctx.ips[0] !== '127.0.0.1' ? ctx.ips[0] : ctx.ips[1] : ctx.ip;
     const order = {
-      body: '瞬充值中心-粉丝币',
+      body: title,
       out_trade_no: nanoid(31), // 订单号 唯一id商户系统内部订单号，要求32个字符内，只能是数字、大小写字母_-|* 且在同一个商户号下唯一。
       total_fee: Math.floor(total * 100), // 微信最小单位是分
       spbill_create_ip: ip, // 请求的ip地址
-      openid,
-      trade_type: 'JSAPI',
+      // openid,
+      // trade_type: 'JSAPI',
+      trade_type: 'NATIVE',
+      product_id: 'DDT',
     };
+    ctx.logger.info('controller wxpay pay params', order);
     const payargs = await this.app.wxpay.getBrandWCPayRequestParams(order);
+    ctx.logger.info('controller wxpay pay result', payargs);
     this.ctx.body = payargs;
   }
   async notify() {
@@ -45,12 +49,14 @@ class WxPayController extends Controller {
     const { ctx } = this;
     const { code } = ctx.request.body; // total单位为元
     const { appId, appSecret } = this.config.wechat;
+    ctx.logger.info('controller wxpay login start', code, appId, appSecret);
     const result = await ctx.curl(`https://api.weixin.qq.com/sns/oauth2/access_token?appid=${appId}&secret=${appSecret}&code=${code}&grant_type=authorization_code`, {
       // 自动解析 JSON response
       dataType: 'json',
       // 3 秒超时
       // timeout: 3000,
     });
+    ctx.logger.info('controller wxpay login end', result);
     this.ctx.body = result.data;
   }
 }
