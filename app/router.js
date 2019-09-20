@@ -209,7 +209,7 @@ module.exports = app => {
   // 微信支付回调
   router.get('/wx/notify', app.wxpay.notify, controller.wxpay.notify);
   // 微信支付接口
-  router.post('/wx/pay', controller.wxpay.pay);
+  router.post('/wx/pay', passport.authorize, controller.wxpay.pay);
   // 微信登录获取openid
   router.post('/wx/login', controller.wxpay.login);
 

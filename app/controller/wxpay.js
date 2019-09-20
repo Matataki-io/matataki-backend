@@ -3,6 +3,12 @@
 const Controller = require('../core/base_controller');
 const nanoid = require('nanoid');
 
+const typeOptions = {
+  add: 'add',
+  buy_token: 'buy_token',
+  sale_token: 'sale_token',
+};
+
 class WxPayController extends Controller {
 
   /* // 接口回调
@@ -23,7 +29,7 @@ class WxPayController extends Controller {
 
   async pay() {
     const { ctx } = this;
-    const { total, title } = ctx.request.body; // total单位为元
+    const { total, title, type } = ctx.request.body; // total单位为元，type类型见typeOptions：add，buy_token，sale_token
     const ip = ctx.ips.length > 0 ? ctx.ips[0] !== '127.0.0.1' ? ctx.ips[0] : ctx.ips[1] : ctx.ip;
     const order = {
       body: title,
@@ -36,13 +42,37 @@ class WxPayController extends Controller {
       product_id: 'DDT',
     };
     ctx.logger.info('controller wxpay pay params', order);
+    // 创建微信订单
     const payargs = await this.app.wxpay.getBrandWCPayRequestParams(order);
     ctx.logger.info('controller wxpay pay result', payargs);
-    this.ctx.body = payargs;
+    // 插入数据库
+    const createSuccess = await ctx.service.exchange.createOrder({
+      uid: ctx.user.id, // 用户id
+      token_id: 'symbol', // 购买的token id
+      cny_amount: total,
+      token_amount: '',
+      type: typeOptions[type], // 类型：add，buy_token，sale_token
+      trade_no: order.out_trade_no, // 订单号
+      openid: '',
+      status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成
+      min_liquidity: 0, // 资金池pool最小流动性
+      max_tokens: 0, // output为准，最多获得CNY
+      min_tokens: 0, // input为准时，最少获得Token
+      recipient: ctx.user.id, // 接收者
+      ip, // ip
+    });
+    if (createSuccess) {
+      this.ctx.body = {
+        ...payargs,
+      };
+    } else {
+      this.ctx.body = ctx.msg.failure;
+    }
   }
   async notify() {
     const { ctx } = this;
     const { out_trade_no } = ctx.request.body;// 订单号
+    // 把订单改成支付成功
     ctx.logger.info('wxpay notify info', out_trade_no);
   }
   async login() {
