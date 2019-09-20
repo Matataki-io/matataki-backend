@@ -5,6 +5,9 @@ const Controller = require('../core/base_controller');
 class MineTokenController extends Controller {
   async create() {
     const ctx = this.ctx;
+
+    ctx.service.token.exchange.addLiquidity(2);
+
     const { name, symbol, decimals } = this.ctx.request.body;
     const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, decimals);
     ctx.body = result > 0 ? ctx.msg.success : ctx.msg.failure;
