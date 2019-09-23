@@ -25,6 +25,10 @@ module.exports = {
     withdraw: 'withdraw', // 提现
     buyad: 'buyad', // 橙皮书买广告
     earn: 'earn', // 橙皮书收入
+
+    recharge: 'recharge', // 充值
+    transferOut: 'transfer_out', // 转出资产
+    transferIn: 'transfer_in', // 转入资产
   },
 
   commentTypes: {
