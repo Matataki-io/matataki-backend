@@ -37,5 +37,11 @@ class ExchangeService extends Service {
   async createOrderByPool(order) {
 
   }
+  async setOrderComplete() {
+    const sql = 'UPDATE exchange_orders SET status = 9 WHERE status = 6;';
+    const result = await this.app.mysql.query(sql);
+    const updateSuccess = (result.affectedRows !== 0);
+    return updateSuccess;
+  }
 }
 module.exports = ExchangeService;
