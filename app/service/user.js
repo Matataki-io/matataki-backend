@@ -102,12 +102,9 @@ class UserService extends Service {
     return result;
   }
 
-  async getUserDetails(current_user, platform) {
+  async getUserDetails(userId, platform) {
 
-    const basicInfo = await this.app.mysql.get(
-      'users',
-      { id: current_user }
-    );
+    const basicInfo = await this.get(userId);
 
     if (basicInfo === null) {
       return null;
