@@ -59,7 +59,7 @@ class ExchangeService extends Service {
       // 超时，需要退还做市商的钱
       const timestamp = Math.floor(Date.now() / 1000);
       if (order.deadline < timestamp) {
-        await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // todo：还是给他放到他的余额里面，然后提现？？？
+        await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // todo：需要退款
         conn.commit();
         return -1;
       }
@@ -82,7 +82,7 @@ class ExchangeService extends Service {
 
       let exchange = null;
       // 锁定交易对，悲观锁
-      const resultExchange = await conn.query('SELECT token_id, total_supply, token_amount, cny_amount, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
+      const resultExchange = await conn.query('SELECT token_id, total_supply, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
       if (resultExchange && resultExchange.length > 0) {
         exchange = resultExchange[0];
       }
@@ -91,10 +91,14 @@ class ExchangeService extends Service {
       if (exchange && exchange.total_supply > 0) {
         const total_liquidity = exchange.total_supply;
 
+        const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+        const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+
         // 非首次add，按照当前的价格计算出token数量
-        const token_amount = cny_amount * exchange.token_amount / exchange.cny_amount + 1;
+        const token_amount = cny_amount * token_reserve / cny_reserve + 1;
         // 计算实际份额
-        const liquidity_minted = cny_amount * total_liquidity / exchange.cny_amount;
+        const liquidity_minted = cny_amount * total_liquidity / cny_reserve;
+
         // 不满足token最大值和份额最小值条件
         if (max_tokens < token_amount || liquidity_minted < min_liquidity) {
           await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // todo：还是给他放到他的余额里面，然后提现？？？
@@ -123,8 +127,8 @@ class ExchangeService extends Service {
         }
 
         // 扩大交易池
-        await conn.query('UPDATE exchanges SET total_supply = total_supply + ?, token_amount=token_amount + ?, cny_amount = cny_amount + ? WHERE token_id = ?;',
-          [ liquidity_minted, token_amount, cny_amount, tokenId ]
+        await conn.query('UPDATE exchanges SET total_supply = total_supply + ? WHERE token_id = ?;',
+          [ liquidity_minted, tokenId ]
         );
 
         // 增加份额
@@ -149,7 +153,7 @@ class ExchangeService extends Service {
 
         // 处理cny
         await this.service.assets.recharge(userId, 'CNY', cny_amount, conn);
-        const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, exchange.exchange_uid, cny_amount, '', conn);
+        const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, exchange.exchange_uid, cny_amount, conn);
         // 转移资产失败，回滚
         if (!cnyTransferResult) {
           await conn.rollback();
@@ -157,8 +161,8 @@ class ExchangeService extends Service {
         }
 
         // 添加交易池
-        await conn.query('UPDATE exchanges SET total_supply = total_supply + ?, token_amount=token_amount + ?, cny_amount = cny_amount + ? WHERE token_id = ?;',
-          [ initial_liquidity, token_amount, cny_amount, tokenId ]
+        await conn.query('UPDATE exchanges SET total_supply = total_supply + ? WHERE token_id = ?;',
+          [ initial_liquidity, tokenId ]
         );
 
         // 增加份额
@@ -234,7 +238,7 @@ class ExchangeService extends Service {
       }
 
       // 转移token
-      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, userId, token_amount, conn);
+      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, userId, token_amount, '', conn);
       if (!tokenTransferResult) {
         await conn.rollback();
         return -1;
