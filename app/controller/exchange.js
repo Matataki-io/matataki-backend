@@ -48,6 +48,13 @@ class ExchangeController extends Controller {
     ctx.body = ctx.msg.success;
   }
 
+  async cnyToTokenInput() {
+    const ctx = this.ctx;
+    const orderId = parseInt(ctx.request.body.orderId);
+    const result = await ctx.service.token.exchange.cnyToTokenInput(orderId);
+    ctx.body = ctx.msg.success;
+  }
+
 }
 
 module.exports = ExchangeController;
