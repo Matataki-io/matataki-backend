@@ -41,11 +41,7 @@ class WxPayController extends Controller {
       trade_type: 'NATIVE',
       product_id: 'DDT',
     };
-    ctx.logger.info('controller wxpay pay params', order);
-    // 创建微信订单
-    const payargs = await this.app.wxpay.getBrandWCPayRequestParams(order);
-    ctx.logger.info('controller wxpay pay result', payargs);
-    // 插入数据库
+    // 创建订单，status为0
     const createSuccess = await ctx.service.exchange.createOrder({
       uid: ctx.user.id, // 用户id
       token_id: 'symbol', // 购买的token id
@@ -61,19 +57,67 @@ class WxPayController extends Controller {
       recipient: ctx.user.id, // 接收者
       ip, // ip
     });
-    if (createSuccess) {
-      this.ctx.body = {
+    ctx.logger.info('controller wxpay pay params', order);
+    // 创建失败直接返回错误
+    if (!createSuccess) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    // 微信统一下单
+    const payargs = await this.app.wxpay.getBrandWCPayRequestParams(order);
+    ctx.logger.info('controller wxpay pay result', payargs);
+    if (payargs.code_url) {
+      // 更新订单状态为‘支付中’：3
+      await ctx.service.exchange.setStatusPending(order.out_trade_no);
+      ctx.body = {
         ...payargs,
       };
     } else {
-      this.ctx.body = ctx.msg.failure;
+      ctx.body = ctx.msg.failure;
     }
   }
   async notify() {
     const { ctx } = this;
-    const { out_trade_no } = ctx.request.body;// 订单号
-    // 把订单改成支付成功
-    ctx.logger.info('wxpay notify info', ctx.request.body, out_trade_no);
+    // 示例
+    /*
+    { appid: 'wx95829b6a2307300b',
+      bank_type: 'CFT',
+      cash_fee: '1',
+      fee_type: 'CNY',
+      is_subscribe: 'Y',
+      mch_id: '1555776841',
+      nonce_str: 'k7ZUTkvMcATA77lO81ANT0z4t3wbN7Hs',
+      openid: 'oH_q_wQMBPr_FUTuAL3YA2nDQMMg',
+      out_trade_no: '7r5txag1-l4ApcFHAHata7x6aPMUylW',
+      result_code: 'SUCCESS',
+      return_code: 'SUCCESS',
+      sign: '957757312951F6298941D17D1BEBDDF6',
+      time_end: '20190924165102',
+      total_fee: '1',
+      trade_type: 'NATIVE',
+      transaction_id: '4200000416201909240710109485'
+    }*/
+    const { return_code, out_trade_no } = ctx.request.body;// 订单号
+    ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.body);
+    // 支付成功
+    if (return_code === 'SUCCESS') {
+      // 修改订单状态
+      await ctx.service.exchange.setStatusPayed(out_trade_no);
+      const order = await ctx.service.exchange.getOrderBytradeNo(out_trade_no);
+      const orderId = order.id;
+      const type = order.type;
+      switch (typeOptions[type]) {
+        case 'add': // 添加流动性
+          await ctx.service.token.exchange.addLiquidity(orderId);
+          break;
+        case 'buy_token': // 购买token
+          break;
+        case 'sale_token': // 出售token
+          break;
+        default:
+          ctx.body = ctx.msg.failure;
+      }
+    }
   }
   async login() {
     const { ctx } = this;
