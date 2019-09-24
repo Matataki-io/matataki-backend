@@ -73,7 +73,7 @@ class WxPayController extends Controller {
     const { ctx } = this;
     const { out_trade_no } = ctx.request.body;// 订单号
     // 把订单改成支付成功
-    ctx.logger.info('wxpay notify info', out_trade_no);
+    ctx.logger.info('wxpay notify info', ctx.request.body, out_trade_no);
   }
   async login() {
     const { ctx } = this;
@@ -88,6 +88,27 @@ class WxPayController extends Controller {
     });
     ctx.logger.info('controller wxpay login end', result);
     this.ctx.body = result.data;
+  }
+  // 企业付款
+  async transfers() {
+    const payargs = await this.app.wxpay.transfers({
+      partner_trade_no: 'kfc003', // 商户订单号，需保持唯一性
+      openid: '', // 用户openid
+      check_name: 'NO_CHECK', // 校验用户姓名选项 NO_CHECK：不校验真实姓名 , FORCE_CHECK：强校验真实姓名
+      amount: 10 * 100, // 	企业付款金额，单位为分
+      desc: '', // 企业付款备注
+      spbill_create_ip: '', // Ip地址
+    });
+  }
+  // 退款
+  async refund() {
+    // TODO 查找订单号
+    const payargs = await this.app.wxpay.refund({
+      out_trade_no: 'kfc001', // 商户订单号
+      out_refund_no: nanoid(31), // 商户退款单号
+      total_fee: 10 * 100, // 订单金额
+      refund_fee: 10 * 100, // 退款金额
+    });
   }
 }
 
