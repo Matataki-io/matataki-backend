@@ -222,6 +222,13 @@ module.exports = app => {
   router.post('/exchange/create', passport.authorize, controller.exchange.create);
   // 查询交易对
   router.get('/exchange/', passport.verify, controller.exchange.get);
+  // -------------------------------- token list display API --------------------------------
+  // 查询交易对
+  router.get('/token/userlist', passport.verify, controller.token.userList);
+  // 查询交易对
+  router.get('/token/tokenlist', passport.verify, controller.token.tokenList);
+  // 查询交易对
+  router.get('/token/detail', passport.verify, controller.token.tokenDetail);
 
   // todo:测试代码
   router.post('/exchange/addLiquidity', passport.authorize, controller.exchange.addLiquidity);

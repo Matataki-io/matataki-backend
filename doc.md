@@ -2143,3 +2143,85 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 	}
 }
 ```
+
+#### 获取token详情
+* GET /token/detail
+* 响应状态码： 200
+* 参数：无
+* 请求头：x-access-token
+* 返回值：
+```
+// 用户发行了token，data为对象，没有发行token，data为null
+{
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "id": 10,
+        "uid": 1042,
+        "name": "zxplus",
+        "symbol": "ZXT",
+        "decimals": 20,
+        "total_supply": 0,
+        "create_time": "2019-09-24T07:28:50.000Z",
+        "status": 1
+    }
+}
+```
+
+#### 获取token的持仓用户列表
+* GET /token/userlist
+* 响应状态码： 200
+* 参数：page || 1, pagesize || 10
+* 请求头：x-access-token
+* 返回值：
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "count": 1,
+        "list": [
+            {
+                "id": 19,
+                "uid": 1042,
+                "token_id": "10",
+                "amount": 100,
+                "username": "shellteo@163.com",
+                "email": "shellteo@163.com",
+                "nickname": "zxppppp",
+                "avatar": "/avatar/2019/08/08/19009c5b2c25f2a9a262fa9b309b44c6.png"
+            }
+        ]
+    }
+}
+```
+
+#### 获取用户的持仓token列表
+* GET /token/tokenlist
+* 响应状态码： 200
+* 参数：page || 1, pagesize || 10
+* 请求头：x-access-token
+* 返回值：
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "count": 1,
+        "list": [
+            {
+                "id": 10,
+                "uid": 1042,
+                "token_id": "10",
+                "amount": 100,
+                "name": "zxplus",
+                "symbol": "ZXT",
+                "decimals": 20,
+                "total_supply": 0,
+                "create_time": "2019-09-24T07:28:50.000Z",
+                "status": 1
+            }
+        ]
+    }
+}
+```
