@@ -238,7 +238,7 @@ class ExchangeService extends Service {
       }
 
       // 转移token
-      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, userId, token_amount, conn);
+      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, userId, token_amount, '', conn);
       if (!tokenTransferResult) {
         await conn.rollback();
         return -1;

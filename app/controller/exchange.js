@@ -34,10 +34,17 @@ class ExchangeController extends Controller {
   }
 
   // todo : 测试代码
-  async addLiquidity(){
+  async addLiquidity() {
     const ctx = this.ctx;
     const orderId = parseInt(ctx.request.body.orderId);
     const result = await ctx.service.token.exchange.addLiquidity(orderId);
+    ctx.body = ctx.msg.success;
+  }
+
+  async removeLiquidity() {
+    const ctx = this.ctx;
+    const { tokenId, amount, min_cny, min_tokens, deadline } = ctx.request.body;
+    const result = await ctx.service.token.exchange.removeLiquidity(ctx.user.id, tokenId, amount, min_cny, min_tokens, deadline);
     ctx.body = ctx.msg.success;
   }
 
