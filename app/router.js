@@ -227,5 +227,8 @@ module.exports = app => {
   router.post('/exchange/addLiquidity', passport.authorize, controller.exchange.addLiquidity);
   router.post('/exchange/removeLiquidity', passport.authorize, controller.exchange.removeLiquidity);
 
+  router.post('/exchange/cnyToTokenInput', passport.authorize, controller.exchange.cnyToTokenInput);
+  //router.post('/exchange/removeLiquidity', passport.authorize, controller.exchange.removeLiquidity);
+
 };
 
