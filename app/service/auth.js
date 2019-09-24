@@ -381,7 +381,7 @@ class AuthService extends Service {
   }
 
   async getUser(username, platform) {
-    await this.app.mysql.get('users', { username, platform });
+    return await this.app.mysql.get('users', { username, platform });
   }
 
 }

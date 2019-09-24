@@ -445,7 +445,7 @@ class ExchangeService extends Service {
 
     const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
 
-    const cny_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, this.config.exchange.cnyTokenId);
+    const cny_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, 0); //todo
 
     return this.getInputPrice(cny_sold, cny_reserve, token_reserve, cny_reserve);
   }
@@ -460,7 +460,7 @@ class ExchangeService extends Service {
 
     const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
 
-    const cny_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, this.config.exchange.cnyTokenId);
+    const cny_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, 0); // todo
 
     return this.getOutputPrice(tokens_bought, cny_reserve, token_reserve);
   }
