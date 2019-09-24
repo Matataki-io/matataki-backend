@@ -19,15 +19,20 @@ class WxpayService extends Service {
     this.wxpay = wxpay;
   } */
   // unifiedOrder: 微信统一下单
-  async unifiedOrder() {
-    const { wxpay } = this;
-    const result = await wxpay.unifiedOrder({
-      out_trade_no: '商户内部订单号',
-      body: '商品简单描述',
-      total_fee: '订单金额(分)',
-      openid: '用户openid',
+  async unifiedOrder(title, total, symbol) {
+    const { ctx } = this;
+    const ip = ctx.ips.length > 0 ? ctx.ips[0] !== '127.0.0.1' ? ctx.ips[0] : ctx.ips[1] : ctx.ip;
+    const payargs = await this.app.wxpay.getBrandWCPayRequestParams({
+      body: title,
+      out_trade_no: nanoid(31), // 订单号 唯一id商户系统内部订单号，要求32个字符内，只能是数字、大小写字母_-|* 且在同一个商户号下唯一。
+      total_fee: Math.floor(total * 100), // 微信最小单位是分
+      spbill_create_ip: ip, // 请求的ip地址
+      // openid,
+      // trade_type: 'JSAPI',
+      trade_type: 'NATIVE',
+      product_id: symbol,
     });
-    return result;
+    return payargs;
   }
   // 企业付款
   async transfers(openid, amount, desc) {
@@ -41,6 +46,7 @@ class WxpayService extends Service {
       desc, // 企业付款备注
       spbill_create_ip: ip, // Ip地址
     });
+    return payargs;
   }
   // 退款
   async refund(out_trade_no, total_fee, refund_fee) {
@@ -52,6 +58,7 @@ class WxpayService extends Service {
       total_fee: parseFloat(total_fee) * 100, // 订单金额，传入单位元
       refund_fee: parseFloat(refund_fee) * 100, // 退款金额，传入单位元
     });
+    return payargs;
   }
 }
 

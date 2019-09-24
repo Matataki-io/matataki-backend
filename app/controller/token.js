@@ -43,6 +43,15 @@ class TokenController extends Controller {
       data: token,
     };
   }
+  async allToken() {
+    const ctx = this.ctx;
+    const { pagesize = 10, page = 1 } = this.ctx.query;
+    const result = await ctx.service.exchange.getAllToken(parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
 }
 
 module.exports = TokenController;

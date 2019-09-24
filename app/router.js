@@ -229,6 +229,7 @@ module.exports = app => {
   router.get('/token/tokenlist', passport.verify, controller.token.tokenList);
   // 查询交易对
   router.get('/token/detail', passport.verify, controller.token.tokenDetail);
+  router.get('/token/all', passport.verify, controller.token.allToken);
 
   // todo:测试代码
   router.post('/exchange/addLiquidity', passport.authorize, controller.exchange.addLiquidity);
