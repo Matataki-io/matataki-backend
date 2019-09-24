@@ -207,7 +207,7 @@ module.exports = app => {
   router.post('/gt/validate-slide', controller.geetest.validate);
   // -------------------------------- 微信支付相关API --------------------------------
   // 微信支付回调
-  router.get('/wx/notify', app.wxpay.notify, controller.wxpay.notify);
+  router.post('/wx/notify', app.wxpay.notify, controller.wxpay.notify);
   // 微信支付接口
   router.post('/wx/pay', passport.authorize, controller.wxpay.pay);
   // 微信登录获取openid
