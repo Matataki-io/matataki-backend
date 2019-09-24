@@ -47,13 +47,13 @@ class mineTokenService extends Service {
     const conn = await this.app.mysql.beginTransaction();
     try {
       // 唯一索引`uid`, `token_id`
-      const sql = 'INSERT INTO assets_minetoken(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;';
+      const sql = 'INSERT INTO assets_minetokens(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;';
       await conn.query(sql, [ to, tokenId, amount, amount ]);
 
       const sqlTotal = 'UPDATE users_minetoken SET total_supply = total_supply + ? WHERE id = ?;';
       await conn.query(sqlTotal, [ amount, tokenId ]);
 
-      const sqlLog = 'INSERT INTO assets_minetoken_log(uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?);';
+      const sqlLog = 'INSERT INTO assets_minetokens_log(uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?);';
       await conn.query(sqlLog,
         [ to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip ]);
 
@@ -78,8 +78,8 @@ class mineTokenService extends Service {
 
     try {
       // 减少from的token
-      const sqlFrom = 'UPDATE assets_minetoken SET amount = amount - ? WHERE uid = ? AND token_id = ?;';
-      const result = await conn.query(sqlFrom, [ value, from, tokenId ]);
+      const sqlFrom = 'UPDATE assets_minetokens SET amount = amount - ? WHERE uid = ? AND token_id = ? AND amount >= ?;';
+      const result = await conn.query(sqlFrom, [ value, from, tokenId, value ]);
       // 减少from的token失败回滚
       if (result.affectedRows <= 0) {
         if (!isOutConn) {
@@ -87,14 +87,14 @@ class mineTokenService extends Service {
         }
         return false;
       }
-      await conn.query('INSERT INTO assets_minetoken_log(uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?);',
-        [ from, tokenId, -value, moment().format('YYYY-MM-DD HH:mm:ss'), ip ]);
 
       // 增加to的token
-      await conn.query('INSERT INTO assets_minetoken(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+      await conn.query('INSERT INTO assets_minetokens(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
         [ to, tokenId, value, value ]);
-      await conn.query('INSERT INTO assets_minetoken_log(uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?);',
-        [ to, tokenId, value, moment().format('YYYY-MM-DD HH:mm:ss'), ip ]);
+
+      // 记录日志
+      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?,?);',
+        [ from, to, tokenId, value, moment().format('YYYY-MM-DD HH:mm:ss'), ip ]);
 
       if (!isOutConn) {
         await conn.commit();
@@ -112,6 +112,16 @@ class mineTokenService extends Service {
   async burn(userId, value) {
     // todo
     return false;
+  }
+
+  async balanceOf(userId, tokenId) {
+    const balance = await this.app.mysql.get('assets_minetokens', { uid: userId, token_id: tokenId });
+
+    if (!balance) {
+      return 0;
+    }
+
+    return balance.amount;
   }
 }
 

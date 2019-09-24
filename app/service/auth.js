@@ -380,6 +380,10 @@ class AuthService extends Service {
     return jwttoken;
   }
 
+  async getUser(username, platform) {
+    await this.app.mysql.get('users', { username, platform });
+  }
+
 }
 
 module.exports = AuthService;

@@ -1,8 +1,29 @@
 'use strict';
 const moment = require('moment');
+const consts = require('../consts');
 const Service = require('egg').Service;
 
 class ExchangeService extends Service {
+
+  async create(tokenId) {
+    const exchange = await this.getExchange(tokenId);
+    // 已经存在交易对
+    if (exchange) {
+      return -1;
+    }
+
+    // 虚拟账号
+    let exchangeUser = await this.service.auth.getUser('cny_' + tokenId, 'cny');
+    if (!exchangeUser) {
+      await this.service.auth.insertUser('cny_' + tokenId, '', 'cny', 'ss', '', 'cv46BYasKvID933R', 0); // todo：确认该类账号不可从前端登录
+      exchangeUser = await this.service.auth.getUser('cny_' + tokenId, 'cny');
+    }
+
+    // 创建交易对
+    await this.service.mysql.query('INSERT exchanges (token_id, total_supply, create_time, exchange_uid) VALUES(?,?,?,?,?,?);',
+      [ tokenId, 0, moment().format('YYYY-MM-DD HH:mm:ss'), exchangeUser.id ] // 指定exchange_uid
+    );
+  }
 
   async getExchange(tokenId) {
     const exchange = await this.app.mysql.get('exchanges', { token_id: tokenId });
@@ -15,7 +36,6 @@ class ExchangeService extends Service {
   async addLiquidity(orderId) {
     const conn = await this.app.mysql.beginTransaction();
     try {
-
       // 锁定订单，更新锁，悲观锁
       const result = await conn.query('SELECT * FROM exchange_orders WHERE id = ? AND status = 6 AND type=\'add\' FOR UPDATE;', [ orderId ]);
       if (!result || result.length <= 0) {
@@ -78,7 +98,16 @@ class ExchangeService extends Service {
         if (!transferResult) {
           await conn.rollback();
           // conn已经结束，另起一个sql事务退还做市商的钱
-          await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);// todo：还是给他放到他的余额里面，然后提现？？？
+          // await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);// todo：还是给他放到他的余额里面，然后提现？？？
+          return -1;
+        }
+
+        // 处理cny
+        await this.service.assets.recharge(userId, 'CNY', cny_amount, conn);
+        const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, exchange.exchange_uid, cny_amount, '', conn);
+        // 转移资产失败，回滚
+        if (!cnyTransferResult) {
+          await conn.rollback();
           return -1;
         }
 
@@ -97,19 +126,28 @@ class ExchangeService extends Service {
         const token_amount = order.token_amount;
         const initial_liquidity = order.cny_amount;
 
-        // 转移资产，exchange_uid=1050，todo
-        const transferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, 1050, token_amount, '', conn);
+        // 转移token
+        const transferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, token_amount, '', conn);
         // 转移资产失败，回滚
         if (!transferResult) {
           await conn.rollback();
           // conn已经结束，另起一个sql事务退还做市商的钱
-          await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);// todo：还是给他放到他的余额里面，然后提现？？？
+          await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);// todo：退款？还是给他放到他的余额里面，然后提现？？？
           return -1;
         }
 
-        // 创建交易池
-        await conn.query('INSERT exchanges (token_id, total_supply, token_amount, cny_amount, create_time, exchange_uid) VALUES(?,?,?,?,?,?);',
-          [ tokenId, initial_liquidity, token_amount, cny_amount, moment().format('YYYY-MM-DD HH:mm:ss'), 1050 ] // todo: 指定 exchange_uid
+        // 处理cny
+        await this.service.assets.recharge(userId, 'CNY', cny_amount, conn);
+        const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, exchange.exchange_uid, cny_amount, '', conn);
+        // 转移资产失败，回滚
+        if (!cnyTransferResult) {
+          await conn.rollback();
+          return -1;
+        }
+
+        // 添加交易池
+        await conn.query('UPDATE exchanges SET total_supply = total_supply + ?, token_amount=token_amount + ?, cny_amount = cny_amount + ? WHERE token_id = ?;',
+          [ initial_liquidity, token_amount, cny_amount, tokenId ]
         );
 
         // 增加份额
@@ -128,21 +166,77 @@ class ExchangeService extends Service {
     }
   }
 
-  async removeLiquidity(tokenId) {
+  // amount是什么？是与cny 1:1 换算的供应量
+  async removeLiquidity(userId, tokenId, amount, min_cny, min_tokens, deadline) {
+    // 因为不存在等待打包，基本上是实时的交易，所以这里的deadline仅仅是形式而已
+    const timestamp = Math.floor(Date.now() / 1000);
+    if (deadline < timestamp) {
+      return -1;
+    }
+
+    if (min_cny <= 0 || min_tokens <= 0) {
+      return -1;
+    }
+
     const conn = await this.app.mysql.beginTransaction();
     try {
 
       let exchange = null;
-      // 锁定交易对，悲观锁
-      const resultExchange = await conn.query('SELECT token_id, total_supply, token_amount, cny_amount, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
-      if (resultExchange && resultExchange.length > 0) {
-        exchange = resultExchange[0];
+      // 锁定交易对，这里一定要锁住，防止remove的同时，有人先add
+      const result = await conn.query('SELECT token_id, total_supply, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
+      if (!result || result.length <= 0) {
+        await conn.rollback();
+        return -1;
       }
+      exchange = result[0];
 
       const total_liquidity = exchange.total_supply;
-      const token_reserve = exchange.
 
-        conn.commit();
+      const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+      const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+      // 根据用户remove的amount数量计算出cny数量
+      const cny_amount = amount * cny_reserve / total_liquidity;
+      // 计算出token数量
+      const token_amount = amount * token_reserve / total_liquidity;
+
+      if (cny_amount < min_cny || token_amount < min_tokens) {
+        await conn.rollback();
+        return -1;
+      }
+
+      // 减少个人份额
+      const balanceResult = await conn.query('UPDATE exchange_balances SET liquidity_balance = liquidity_balance - ? WHERE uid = ? AND token_id = ? AND liquidity_balance >= ?;',
+        [ amount, userId, tokenId, amount ]
+      );
+      if (balanceResult.affectedRows <= 0) {
+        await conn.rollback();
+        return -1;
+      }
+
+      // 减少total_supply
+      const exchangeResult = await conn.query('UPDATE exchanges SET total_supply = total_supply - ? WHERE token_id = ? AND total_supply >= ?;',
+        [ amount, tokenId, amount ]
+      );
+      if (exchangeResult.affectedRows <= 0) {
+        await conn.rollback();
+        return -1;
+      }
+
+      // 转移token
+      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, userId, token_amount, conn);
+      if (!tokenTransferResult) {
+        await conn.rollback();
+        return -1;
+      }
+
+      // 转移cny
+      const cnyTransferResult = await this.service.assets.transferFrom('CNY', exchange.exchange_uid, userId, cny_amount, conn);
+      if (!cnyTransferResult) {
+        await conn.rollback();
+        return -1;
+      }
+
+      conn.commit();
 
       return 0;
     } catch (e) {
@@ -197,6 +291,7 @@ class ExchangeService extends Service {
         return -1;
       }
 
+      const userId = order.uid;
       const tokenId = order.token_id;
       // min_tokens：页面上显示的可以购买到的最小值
       const min_tokens = order.min_tokens;
@@ -230,10 +325,19 @@ class ExchangeService extends Service {
         return -1;
       }
 
-      // 转移资产
+      // 转移token
       const transferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, order.recipient, tokens_bought, '', conn);
       // 转移资产失败，回滚
       if (!transferResult) {
+        await conn.rollback();
+        return -1;
+      }
+
+      // 处理cny
+      await this.service.assets.recharge(userId, 'CNY', cny_sold, consts.assetTypes.recharge, conn);
+      const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, exchange.exchange_uid, cny_sold, '', conn);
+      // 转移资产失败，回滚
+      if (!cnyTransferResult) {
         await conn.rollback();
         return -1;
       }
@@ -246,13 +350,67 @@ class ExchangeService extends Service {
     }
   }
 
-  // 通过cny兑换token，以token数量为准，因为会产生退款，暂不实现
   async cnyToTokenOutput(orderId) {
-
+    // 通过cny兑换token，以token数量为准，因为会产生退款，暂不实现
   }
 
-  async tokenToCnyInput() {
+  async tokenToCnyInput(userId, tokenId, tokens_sold, min_cny, deadline, recipient, ip) {
+    // 因为不存在等待打包，基本上是实时的交易，所以这里的deadline仅仅是形式而已
+    const timestamp = Math.floor(Date.now() / 1000);
+    if (deadline < timestamp) {
+      return -1;
+    }
 
+    // 锁定exchanges
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+
+      let exchange = null;
+      // 锁定交易对，这里一定要锁住，防止remove的同时，有人先add
+      const result = await conn.query('SELECT token_id, total_supply, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
+      if (!result || result.length <= 0) {
+        await conn.rollback();
+        return -1;
+      }
+      exchange = result[0];
+
+      const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+
+      const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+
+      const cny_bought = this.getInputPrice(tokens_sold, token_reserve, cny_reserve);
+
+      if (cny_bought < min_cny) {
+        await conn.rollback();
+        return -1;
+      }
+
+      // 转移token
+      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, tokens_sold, ip, conn);
+      if (!tokenTransferResult) {
+        await conn.rollback();
+        return -1;
+      }
+
+      // 转移cny
+      const cnyTransferResult = await this.service.assets.transferFrom('CNY', exchange.exchange_uid, recipient, cny_bought, '', conn);
+      // 转移资产失败，回滚
+      if (!cnyTransferResult) {
+        await conn.rollback();
+        return -1;
+      }
+
+      // todo orders里面插入订单
+
+      conn.commit();
+
+      return 0;
+    } catch (e) {
+      // 有一种可能，两笔订单同时进来，代码同时走到首次add initial_liquidity，一笔订单会失败，这笔订单回退到status=6，成为问题订单，需要再次调用addLiquidity方法触发增加liquidity逻辑
+      await conn.rollback();
+      this.logger.error('FungibleToken.mint exception. %j', e);
+      return -1;
+    }
   }
 
   async tokenToCnyOutput() {
@@ -260,7 +418,7 @@ class ExchangeService extends Service {
   }
 
   async tokenToTokenInput() {
-
+    // 稍后实现
   }
 
   async tokenToTokenOutput() {
@@ -274,7 +432,12 @@ class ExchangeService extends Service {
     }
 
     const exchange = await this.getExchange(tokenId);
-    return this.getInputPrice(cny_sold, exchange.cny_amount, exchange.token_amount);
+
+    const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+
+    const cny_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, this.config.exchange.cnyTokenId);
+
+    return this.getInputPrice(cny_sold, cny_reserve, token_reserve, cny_reserve);
   }
 
   // 计算使用cny兑换token的数量，以输出的token数量为准
@@ -284,9 +447,13 @@ class ExchangeService extends Service {
     }
 
     const exchange = await this.getExchange(tokenId);
-    return this.getOutputPrice(tokens_bought, exchange.cny_amount, exchange.token_amount);
-  }
 
+    const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+
+    const cny_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, this.config.exchange.cnyTokenId);
+
+    return this.getOutputPrice(tokens_bought, cny_reserve, token_reserve);
+  }
 
 }
 
