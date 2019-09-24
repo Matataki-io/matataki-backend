@@ -97,6 +97,7 @@ class WxPayController extends Controller {
       await ctx.service.exchange.setStatusPending(order.out_trade_no);
       ctx.body = {
         ...payargs,
+        trade_no: order.out_trade_no,
       };
     } else {
       ctx.body = ctx.msg.failure;
