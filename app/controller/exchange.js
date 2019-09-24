@@ -1,6 +1,6 @@
 'use strict';
 
-const Controller = require('egg').Controller;
+const Controller = require('../core/base_controller');
 
 class ExchangeController extends Controller {
   async create() {
@@ -52,6 +52,13 @@ class ExchangeController extends Controller {
     const ctx = this.ctx;
     const orderId = parseInt(ctx.request.body.orderId);
     const result = await ctx.service.token.exchange.cnyToTokenInput(orderId);
+    ctx.body = ctx.msg.success;
+  }
+
+  async tokenToCnyInput() {
+    const ctx = this.ctx;
+    const { tokenId, tokens_sold, min_cny, deadline, recipient } = ctx.request.body;
+    const result = await ctx.service.token.exchange.tokenToCnyInput(ctx.user.id, tokenId, tokens_sold, min_cny, deadline, recipient, this.clientIP);
     ctx.body = ctx.msg.success;
   }
 

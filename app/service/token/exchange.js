@@ -41,6 +41,7 @@ class ExchangeService extends Service {
     return exchange;
   }
 
+  // exchanges.total_supply 只有addLiquidity和removeLiquidity时才会改变
   // 订单支付成功的情况下调用
   // 不存在部分退款
   // todo：精度问题
@@ -263,7 +264,7 @@ class ExchangeService extends Service {
   }
 
   // 以输入为准计算输出的数量
-  async getInputPrice(input_amount, input_reserve, output_reserve) {
+  getInputPrice(input_amount, input_reserve, output_reserve) {
     if (input_reserve <= 0 || output_reserve <= 0) {
       return -1;
     }
@@ -275,7 +276,7 @@ class ExchangeService extends Service {
   }
 
   // 以输出为准计算输入的数量
-  async getOutputPrice(output_amount, input_reserve, output_reserve) {
+  getOutputPrice(output_amount, input_reserve, output_reserve) {
     if (input_reserve <= 0 || output_reserve <= 0) {
       return -1;
     }
@@ -326,7 +327,7 @@ class ExchangeService extends Service {
 
       const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
       const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
-      const tokens_bought = await this.getInputPrice(cny_sold, cny_reserve, token_reserve);
+      const tokens_bought = this.getInputPrice(cny_sold, cny_reserve, token_reserve);
 
       // 可兑换的token数量不满足最小值，退钱
       if (tokens_bought < min_tokens) {
@@ -384,7 +385,7 @@ class ExchangeService extends Service {
     try {
 
       let exchange = null;
-      // 锁定交易对，这里一定要锁住，防止remove的同时，有人先add
+      // 锁定交易对
       const result = await conn.query('SELECT token_id, total_supply, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
       if (!result || result.length <= 0) {
         await conn.rollback();
@@ -411,17 +412,15 @@ class ExchangeService extends Service {
       }
 
       // 转移cny
-      const cnyTransferResult = await this.service.assets.transferFrom('CNY', exchange.exchange_uid, recipient, cny_bought, '', conn);
+      const cnyTransferResult = await this.service.assets.transferFrom('CNY', exchange.exchange_uid, recipient, cny_bought, conn);
       // 转移资产失败，回滚
       if (!cnyTransferResult) {
         await conn.rollback();
         return -1;
       }
 
-      // todo orders里面插入订单
-
+      // todo orders里面插入订单？？？
       conn.commit();
-
       return 0;
     } catch (e) {
       // 有一种可能，两笔订单同时进来，代码同时走到首次add initial_liquidity，一笔订单会失败，这笔订单回退到status=6，成为问题订单，需要再次调用addLiquidity方法触发增加liquidity逻辑
