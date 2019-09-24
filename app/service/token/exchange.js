@@ -41,6 +41,19 @@ class ExchangeService extends Service {
     return exchange;
   }
 
+  async detail(tokenId) {
+    const exchange = await this.getExchange(tokenId);
+
+    const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+    const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+
+    // exchangeRate = tokenToCnyInput
+    exchange.token_reserve = token_reserve;
+    exchange.cny_reserve = cny_reserve;
+
+    return exchange;
+  }
+
   // exchanges.total_supply 只有addLiquidity和removeLiquidity时才会改变
   // 订单支付成功的情况下调用
   // 不存在部分退款

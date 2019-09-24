@@ -38,9 +38,14 @@ class TokenController extends Controller {
     const user_id = ctx.user.id;
     // 根据user_id查找用户发行的token
     const token = await ctx.service.token.mineToken.getByUserId(user_id);
+    const exchange = await ctx.service.token.exchange.detail(token.id);
     ctx.body = {
       ...ctx.msg.success,
-      data: token,
+      data:
+      {
+        token,
+        exchange,
+      },
     };
   }
 }
