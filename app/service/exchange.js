@@ -44,28 +44,33 @@ class ExchangeService extends Service {
     return updateSuccess;
   }
   // 用户持有的币
-  async getTokenListByUser(id) {
-    const sql = 'SELECT a.*, b.* FROM assets_minetokens AS a LEFT JOIN minetokens AS b ON a.token_id = b.id WHERE a.uid=?;';
-    const result = await this.app.mysql.query(sql, [ id ]);
-    return result;
-  }
-  // 我的粉丝币的详情
-  async getTokenDetail(id) {
-    const sql = 'SELECT * FROM  minetokens WHERE id=?;';
-    const result = await this.app.mysql.query(sql, [ id ]);
-    return result;
+  async getTokenListByUser(id, page = 1, pagesize = 20) {
+    const sql = 'SELECT a.*, b.* FROM assets_minetokens AS a LEFT JOIN minetokens AS b ON a.token_id = b.id WHERE a.uid = :id ORDER BY b.create_time DESC LIMIT :offset, :limit;'
+    + 'SELECT count(1) as count FROM assets_minetokens WHERE uid = :id;';
+    const result = await this.app.mysql.query(sql, {
+      id,
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+    });
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
   }
   // 根据粉丝币获取持仓用户列表
-  async getUserListByToken(id) {
+  async getUserListByToken(id, page = 1, pagesize = 20) {
     id = parseInt(id);
-    const sql = 'SELECT a.*, b.* FROM assets_minetokens AS a LEFT JOIN users AS b ON a.uid = b.id WHERE a.token_id=?;';
-    const result = await this.app.mysql.query(sql, [ id ]);
-    return result;
-  }
-  async getTokenByUser(id) {
-    const sql = 'SELECT * FROM `minetokens` WHERE uid = ?;';
-    const result = await this.app.mysql.query(sql, [ id ]);
-    return result;
+    const sql = 'SELECT a.*, b.username, b.email, b.nickname, b.avatar FROM assets_minetokens AS a LEFT JOIN users AS b ON a.uid = b.id WHERE a.token_id = :id LIMIT :offset, :limit;'
+    + 'SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id;';
+    const result = await this.app.mysql.query(sql, {
+      id,
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+    });
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
   }
 }
 module.exports = ExchangeService;
