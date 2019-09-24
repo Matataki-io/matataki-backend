@@ -73,7 +73,7 @@ class WxPayController extends Controller {
     const { ctx } = this;
     const { out_trade_no } = ctx.request.body;// 订单号
     // 把订单改成支付成功
-    ctx.logger.info('wxpay notify info', out_trade_no);
+    ctx.logger.info('wxpay notify info', ctx.request.body, out_trade_no);
   }
   async login() {
     const { ctx } = this;

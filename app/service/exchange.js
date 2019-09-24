@@ -37,11 +37,35 @@ class ExchangeService extends Service {
   async createOrderByPool(order) {
 
   }
-  async setOrderComplete() {
-    const sql = 'UPDATE exchange_orders SET status = 9 WHERE status = 6;';
-    const result = await this.app.mysql.query(sql);
+  async setOrderComplete(trade_no) {
+    const sql = 'UPDATE exchange_orders SET status = 9 WHERE status = 6 AND trade_no = ?;';
+    const result = await this.app.mysql.query(sql, [ trade_no ]);
     const updateSuccess = (result.affectedRows !== 0);
     return updateSuccess;
+  }
+  // 用户持有的币
+  async getTokenListByUser(id) {
+    const sql = 'SELECT a.*, b.* FROM assets_minetokens AS a LEFT JOIN minetokens AS b ON a.token_id = b.id WHERE a.uid=?;';
+    const result = await this.app.mysql.query(sql, [ id ]);
+    return result;
+  }
+  // 我的粉丝币的详情
+  async getTokenDetail(id) {
+    const sql = 'SELECT * FROM  minetokens WHERE id=?;';
+    const result = await this.app.mysql.query(sql, [ id ]);
+    return result;
+  }
+  // 根据粉丝币获取持仓用户列表
+  async getUserListByToken(id) {
+    id = parseInt(id);
+    const sql = 'SELECT a.*, b.* FROM assets_minetokens AS a LEFT JOIN users AS b ON a.uid = b.id WHERE a.token_id=?;';
+    const result = await this.app.mysql.query(sql, [ id ]);
+    return result;
+  }
+  async getTokenByUser(id) {
+    const sql = 'SELECT * FROM `minetokens` WHERE uid = ?;';
+    const result = await this.app.mysql.query(sql, [ id ]);
+    return result;
   }
 }
 module.exports = ExchangeService;
