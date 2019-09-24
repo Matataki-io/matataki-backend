@@ -6,9 +6,6 @@ class MineTokenController extends Controller {
   async create() {
     const ctx = this.ctx;
 
-    await ctx.service.token.exchange.addLiquidity(5);
-    return;
-
     const { name, symbol, decimals } = this.ctx.request.body;
     const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, decimals);
     if (result === -1) {
