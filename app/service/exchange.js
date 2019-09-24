@@ -37,11 +37,41 @@ class ExchangeService extends Service {
   async createOrderByPool(order) {
 
   }
-  async setOrderComplete(trade_no) {
-    const sql = 'UPDATE exchange_orders SET status = 9 WHERE status = 6 AND trade_no = ?;';
-    const result = await this.app.mysql.query(sql, [ trade_no ]);
+  // 根据订单号查询
+  async getOrderBytradeNo(trade_no) {
+    const order = await this.app.mysql.get('exchange_orders', { trade_no });
+    return order;
+  }
+  async updateStatus(trade_no, status) {
+    status = parseInt(status);
+    const statusOptions = [ 0, 3, 6, 9 ];
+    const index = statusOptions.indexOf(status);
+    if (index <= 0) {
+      return false;
+    }
+    const setStatus = status;
+    const whereStatus = statusOptions[index - 1];
+    const sql = 'UPDATE exchange_orders SET status = :setStatus WHERE status = :whereStatus AND trade_no = :trade_no;';
+    const result = await this.app.mysql.query(sql, {
+      setStatus,
+      whereStatus,
+      trade_no,
+    });
     const updateSuccess = (result.affectedRows !== 0);
     return updateSuccess;
+  }
+  async setStatusPending(trade_no) {
+    const result = await this.updateStatus(trade_no, 3);
+    return result;
+  }
+  async setStatusPayed(trade_no) {
+    const result = await this.updateStatus(trade_no, 6);
+    return result;
+
+  }
+  async setStatusComplete(trade_no) {
+    const result = await this.updateStatus(trade_no, 9);
+    return result;
   }
   // 用户持有的币
   async getTokenListByUser(id, page = 1, pagesize = 20) {
