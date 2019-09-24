@@ -6,23 +6,33 @@ const Service = require('egg').Service;
 class ExchangeService extends Service {
 
   async create(tokenId) {
+    const token = await this.service.token.mineToken.get(tokenId);
+    if (!token) {
+      return -1;
+    }
+
     const exchange = await this.getExchange(tokenId);
     // 已经存在交易对
     if (exchange) {
-      return -1;
+      return -2;
     }
 
     // 虚拟账号
     let exchangeUser = await this.service.auth.getUser('cny_' + tokenId, 'cny');
     if (!exchangeUser) {
-      await this.service.auth.insertUser('cny_' + tokenId, '', 'cny', 'ss', '', 'cv46BYasKvID933R', 0); // todo：确认该类账号不可从前端登录
+      try {
+        await this.service.auth.insertUser('cny_' + tokenId, '', 'cny', 'ss', '', 'cv46BYasKvID933R', 0); // todo：确认该类账号不可从前端登录
+      } catch
+      { }
       exchangeUser = await this.service.auth.getUser('cny_' + tokenId, 'cny');
     }
 
     // 创建交易对
-    await this.service.mysql.query('INSERT exchanges (token_id, total_supply, create_time, exchange_uid) VALUES(?,?,?,?,?,?);',
-      [ tokenId, 0, moment().format('YYYY-MM-DD HH:mm:ss'), exchangeUser.id ] // 指定exchange_uid
+    const result = await this.app.mysql.query('INSERT exchanges (token_id, total_supply, create_time, exchange_uid) VALUES(?,?,?,?);',
+      [tokenId, 0, moment().format('YYYY-MM-DD HH:mm:ss'), exchangeUser.id] // 指定exchange_uid
     );
+
+    return result.insertId;
   }
 
   async getExchange(tokenId) {
@@ -37,7 +47,7 @@ class ExchangeService extends Service {
     const conn = await this.app.mysql.beginTransaction();
     try {
       // 锁定订单，更新锁，悲观锁
-      const result = await conn.query('SELECT * FROM exchange_orders WHERE id = ? AND status = 6 AND type=\'add\' FOR UPDATE;', [ orderId ]);
+      const result = await conn.query('SELECT * FROM exchange_orders WHERE id = ? AND status = 6 AND type=\'add\' FOR UPDATE;', [orderId]);
       if (!result || result.length <= 0) {
         await conn.rollback();
         return -1;
@@ -48,13 +58,13 @@ class ExchangeService extends Service {
       // 超时，需要退还做市商的钱
       const timestamp = Math.floor(Date.now() / 1000);
       if (order.deadline < timestamp) {
-        await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // todo：还是给他放到他的余额里面，然后提现？？？
+        await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [orderId]); // todo：还是给他放到他的余额里面，然后提现？？？
         conn.commit();
         return -1;
       }
 
       // 更新exchange_orders
-      const resultUpdOrder = await conn.query('UPDATE exchange_orders SET status = 9 WHERE id = ?;', [ orderId ]);
+      const resultUpdOrder = await conn.query('UPDATE exchange_orders SET status = 9 WHERE id = ?;', [orderId]);
       if (resultUpdOrder.affectedRows <= 0) {
         await conn.rollback();
         return -1;
@@ -71,7 +81,7 @@ class ExchangeService extends Service {
 
       let exchange = null;
       // 锁定交易对，悲观锁
-      const resultExchange = await conn.query('SELECT token_id, total_supply, token_amount, cny_amount, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
+      const resultExchange = await conn.query('SELECT token_id, total_supply, token_amount, cny_amount, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [tokenId]);
       if (resultExchange && resultExchange.length > 0) {
         exchange = resultExchange[0];
       }
@@ -86,7 +96,7 @@ class ExchangeService extends Service {
         const liquidity_minted = cny_amount * total_liquidity / exchange.cny_amount;
         // 不满足token最大值和份额最小值条件
         if (max_tokens < token_amount || liquidity_minted < min_liquidity) {
-          await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // todo：还是给他放到他的余额里面，然后提现？？？
+          await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [orderId]); // todo：还是给他放到他的余额里面，然后提现？？？
           await conn.commit();
           this.logger.debug('ExchangeService.addLiquidity失败，不满足token最大值和份额最小值条件，j%', orderId);
           return -1; // 退回做市商的钱
@@ -113,12 +123,12 @@ class ExchangeService extends Service {
 
         // 扩大交易池
         await conn.query('UPDATE exchanges SET total_supply = total_supply + ?, token_amount=token_amount + ?, cny_amount = cny_amount + ? WHERE token_id = ?;',
-          [ liquidity_minted, token_amount, cny_amount, tokenId ]
+          [liquidity_minted, token_amount, cny_amount, tokenId]
         );
 
         // 增加份额
         await conn.query('INSERT INTO exchange_balances(uid, token_id, liquidity_balance, create_time) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE liquidity_balance = liquidity_balance + ?;',
-          [ userId, tokenId, liquidity_minted, moment().format('YYYY-MM-DD HH:mm:ss'), liquidity_minted ]
+          [userId, tokenId, liquidity_minted, moment().format('YYYY-MM-DD HH:mm:ss'), liquidity_minted]
         );
 
         conn.commit();
@@ -132,7 +142,7 @@ class ExchangeService extends Service {
         if (!transferResult) {
           await conn.rollback();
           // conn已经结束，另起一个sql事务退还做市商的钱
-          await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);// todo：退款？还是给他放到他的余额里面，然后提现？？？
+          await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [orderId]);// todo：退款？还是给他放到他的余额里面，然后提现？？？
           return -1;
         }
 
@@ -147,12 +157,12 @@ class ExchangeService extends Service {
 
         // 添加交易池
         await conn.query('UPDATE exchanges SET total_supply = total_supply + ?, token_amount=token_amount + ?, cny_amount = cny_amount + ? WHERE token_id = ?;',
-          [ initial_liquidity, token_amount, cny_amount, tokenId ]
+          [initial_liquidity, token_amount, cny_amount, tokenId]
         );
 
         // 增加份额
         await conn.query('INSERT INTO exchange_balances(uid, token_id, liquidity_balance, create_time) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE liquidity_balance = liquidity_balance + ?;',
-          [ userId, tokenId, initial_liquidity, moment().format('YYYY-MM-DD HH:mm:ss'), initial_liquidity ]
+          [userId, tokenId, initial_liquidity, moment().format('YYYY-MM-DD HH:mm:ss'), initial_liquidity]
         );
 
         conn.commit();
@@ -183,7 +193,7 @@ class ExchangeService extends Service {
 
       let exchange = null;
       // 锁定交易对，这里一定要锁住，防止remove的同时，有人先add
-      const result = await conn.query('SELECT token_id, total_supply, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
+      const result = await conn.query('SELECT token_id, total_supply, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [tokenId]);
       if (!result || result.length <= 0) {
         await conn.rollback();
         return -1;
@@ -206,7 +216,7 @@ class ExchangeService extends Service {
 
       // 减少个人份额
       const balanceResult = await conn.query('UPDATE exchange_balances SET liquidity_balance = liquidity_balance - ? WHERE uid = ? AND token_id = ? AND liquidity_balance >= ?;',
-        [ amount, userId, tokenId, amount ]
+        [amount, userId, tokenId, amount]
       );
       if (balanceResult.affectedRows <= 0) {
         await conn.rollback();
@@ -215,7 +225,7 @@ class ExchangeService extends Service {
 
       // 减少total_supply
       const exchangeResult = await conn.query('UPDATE exchanges SET total_supply = total_supply - ? WHERE token_id = ? AND total_supply >= ?;',
-        [ amount, tokenId, amount ]
+        [amount, tokenId, amount]
       );
       if (exchangeResult.affectedRows <= 0) {
         await conn.rollback();
@@ -275,7 +285,7 @@ class ExchangeService extends Service {
     const conn = await this.app.mysql.beginTransaction();
     try {
       // 锁定订单，更新锁，悲观锁
-      const result = await conn.query('SELECT * FROM exchange_orders WHERE id = ? AND status = 6 AND type=\'buy_token\' FOR UPDATE;', [ orderId ]);
+      const result = await conn.query('SELECT * FROM exchange_orders WHERE id = ? AND status = 6 AND type=\'buy_token\' FOR UPDATE;', [orderId]);
       if (!result || result.length <= 0) {
         await conn.rollback();
         return -1;
@@ -286,7 +296,7 @@ class ExchangeService extends Service {
       // 超时，需要退钱
       const timestamp = Math.floor(Date.now() / 1000);
       if (order.deadline < timestamp) {
-        await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // todo：还是给他放到他的余额里面，然后提现？？？
+        await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [orderId]); // todo：还是给他放到他的余额里面，然后提现？？？
         conn.commit();
         return -1;
       }
@@ -299,10 +309,10 @@ class ExchangeService extends Service {
       const cny_sold = order.cny_amount;
 
       // 锁定交易对，悲观锁
-      const resultExchange = await conn.query('SELECT token_id, total_supply, token_amount, cny_amount, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
+      const resultExchange = await conn.query('SELECT token_id, total_supply, token_amount, cny_amount, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [tokenId]);
       // 没有交易对，退钱
       if (!resultExchange || resultExchange.length <= 0) {
-        await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // todo：还是给他放到他的余额里面，然后提现？？？
+        await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [orderId]); // todo：还是给他放到他的余额里面，然后提现？？？
         conn.commit();
         return -1;
       }
@@ -313,13 +323,13 @@ class ExchangeService extends Service {
 
       // 可兑换的token数量不满足最小值，退钱
       if (tokens_bought < min_tokens) {
-        await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // todo：还是给他放到他的余额里面，然后提现？？？
+        await conn.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [orderId]); // todo：还是给他放到他的余额里面，然后提现？？？
         conn.commit();
         return -1;
       }
 
       // 更新exchange_orders
-      const resultUpdOrder = await conn.query('UPDATE exchange_orders SET status = 9 WHERE id = ?;', [ orderId ]);
+      const resultUpdOrder = await conn.query('UPDATE exchange_orders SET status = 9 WHERE id = ?;', [orderId]);
       if (resultUpdOrder.affectedRows <= 0) {
         await conn.rollback();
         return -1;
@@ -367,7 +377,7 @@ class ExchangeService extends Service {
 
       let exchange = null;
       // 锁定交易对，这里一定要锁住，防止remove的同时，有人先add
-      const result = await conn.query('SELECT token_id, total_supply, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
+      const result = await conn.query('SELECT token_id, total_supply, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [tokenId]);
       if (!result || result.length <= 0) {
         await conn.rollback();
         return -1;

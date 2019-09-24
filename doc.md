@@ -2047,3 +2047,99 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
   "message": "成功"
 }
 ```
+
+#### 创建我的token
+* POST /minetoken/create
+* 响应状态码： 200
+* 参数：
+```
+{
+	"name": "chenhao token",
+	"symbol": "CHT",
+	"decimals": 1111
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 发行我的token
+* POST /minetoken/mint
+* 响应状态码： 200
+* 参数：
+```
+{
+	"amount": 100000
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 转移token
+* POST /minetoken/transfer
+* 响应状态码： 200
+* 参数：
+```
+{
+  "tokenId": 5,
+	"to": 1049,
+	"amount": 200
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 创建交易对，前提条件是先查到tokenId
+* POST /exchange/create
+* 响应状态码： 200
+* 参数：
+```
+{
+	"tokenId": 5
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 获取交易对信息，应该还会有调整
+* GET /exchange/create?tokenId=5
+* 响应状态码： 200
+* 参数：无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"id": 5,
+		"token_id": 5,
+		"total_supply": 15000,
+		"create_time": "2019-09-19T03:36:48.000Z",
+		"exchange_uid": 1050
+	}
+}
+```

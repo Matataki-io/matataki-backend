@@ -6,11 +6,19 @@ class MineTokenController extends Controller {
   async create() {
     const ctx = this.ctx;
 
-    ctx.service.token.exchange.addLiquidity(2);
+    // ctx.service.token.exchange.addLiquidity(2);
 
     const { name, symbol, decimals } = this.ctx.request.body;
     const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, decimals);
-    ctx.body = result > 0 ? ctx.msg.success : ctx.msg.failure;
+    if (result === -1) {
+      ctx.body = ctx.msg.tokenAlreadyCreated;
+    } else if (result === -2) {
+      ctx.body = ctx.msg.tokenSymbolDuplicated;
+    } else if (result === 0) {
+      ctx.body = ctx.msg.failure;
+    } else {
+      ctx.body = ctx.msg.success;
+    }
   }
 
   async mint() {

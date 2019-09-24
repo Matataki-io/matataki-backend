@@ -2,27 +2,49 @@
 const moment = require('moment');
 const Service = require('egg').Service;
 
-class mineTokenService extends Service {
+class MineTokenService extends Service {
   // 作者创建一个token
   async create(userId, name, symbol, decimals) {
+    let token = await this.getByUserId(userId);
+    if (token) {
+      return -1;
+    }
+
+    token = await this.getBySymbol(symbol);
+    if (token) {
+      return -2;
+    }
+
     // todo: 查询是否有发币权限
-    const sql = 'INSERT INTO users_minetoken(uid, name, symbol, decimals, total_supply, create_time, status) '
-      + 'SELECT ?,?,?,?,0,?,1 FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM users_minetoken WHERE uid=?);';
+    const sql = 'INSERT INTO minetokens(uid, name, symbol, decimals, total_supply, create_time, status) '
+      + 'SELECT ?,?,?,?,0,?,1 FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
     const result = await this.app.mysql.query(sql,
-      [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), userId ]);
+      [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), userId, symbol ]);
     // if ( result.affectedRows > 0)
     return result.insertId;
   }
 
   async hasMintPermission(tokenId, userId) {
-    const sql = 'SELECT 1 FROM users_minetoken WHERE id=? AND uid=?;';
+    const sql = 'SELECT 1 FROM minetokens WHERE id=? AND uid=?;';
     const result = await this.app.mysql.query(sql, [ tokenId, userId ]);
     return result;
   }
 
-  // 获取我的token
-  async getMine(userId) {
-    const token = await this.app.mysql.get('users_minetoken', { uid: userId });
+  // 获取token
+  async get(tokenId) {
+    const token = await this.app.mysql.get('minetokens', { id: tokenId });
+    return token;
+  }
+
+  // 获取token
+  async getBySymbol(symbol) {
+    const token = await this.app.mysql.get('minetokens', { symbol });
+    return token;
+  }
+
+  // 获取token
+  async getByUserId(userId) {
+    const token = await this.app.mysql.get('minetokens', { uid: userId });
     return token;
   }
 
@@ -33,7 +55,7 @@ class mineTokenService extends Service {
 
   // 铸币
   async mint(userId, to, amount, ip) {
-    const token = await this.getMine(userId);
+    const token = await this.getByUserId(userId);
     if (!token) {
       return -2;
     }
@@ -50,19 +72,18 @@ class mineTokenService extends Service {
       const sql = 'INSERT INTO assets_minetokens(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;';
       await conn.query(sql, [ to, tokenId, amount, amount ]);
 
-      const sqlTotal = 'UPDATE users_minetoken SET total_supply = total_supply + ? WHERE id = ?;';
+      const sqlTotal = 'UPDATE minetokens SET total_supply = total_supply + ? WHERE id = ?;';
       await conn.query(sqlTotal, [ amount, tokenId ]);
 
-      const sqlLog = 'INSERT INTO assets_minetokens_log(uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?);';
+      const sqlLog = 'INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?,?);';
       await conn.query(sqlLog,
-        [ to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip ]);
+        [ 0, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip ]);
 
       await conn.commit();
       return 0;
-
     } catch (e) {
       await conn.rollback();
-      this.logger.error('FungibleToken.mint exception. %j', e);
+      this.logger.error('MineTokenService.mint exception. %j', e);
       return -1;
     }
   }
@@ -104,7 +125,7 @@ class mineTokenService extends Service {
       if (!isOutConn) {
         await conn.rollback();
       }
-      this.logger.error('mineToken.transferFrom exception. %j', e);
+      this.logger.error('MineTokenService.transferFrom exception. %j', e);
       return false;
     }
   }
@@ -125,4 +146,4 @@ class mineTokenService extends Service {
   }
 }
 
-module.exports = mineTokenService;
+module.exports = MineTokenService;

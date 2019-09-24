@@ -109,6 +109,11 @@ module.exports = {
   // geetest
   geetestVerifyFailed: 10700,
 
+  tokenAlreadyCreated: 10800,
+  tokenSymbolDuplicated: 10801,
+  tokenNotExist: 10802,
+  exchangeAlreadyCreated: 10803,
+
   returnObj(lang) {
 
     const en = {
@@ -120,7 +125,7 @@ module.exports = {
       serverError: { code: this.serverError, message: 'internal server error' },
 
       userIntroductionInvalid: { code: this.userIntroductionInvalid, message: 'introduction too long' },
-      userNotExist: { code: this.userNotExist, message: 'user does not exist' },
+      userNotExist: { code: this.userNotExist, message: 'The user does not exist' },
       emailDuplicated: { code: this.emailDuplicated, message: 'same email already exists' },
       nicknameDuplicated: { code: this.nicknameDuplicated, message: 'same nickname already exists' },
       nicknameInvalid: { code: this.nicknameInvalid, message: 'invalid nickname, maybe it contian symbols or is longer than 12 characters' },
@@ -173,6 +178,11 @@ module.exports = {
       pointReadError: { code: this.pointReadError, message: 'Get reading points error.' },
       pointNotEnough: { code: this.pointNotEnough, message: 'You do not have enough points. ' },
       pointCommentSettingError: { code: this.pointCommentSettingError, message: 'The post settings error.' },
+
+      tokenAlreadyCreated: { code: this.tokenAlreadyCreated, message: 'You have created the token.' },
+      tokenSymbolDuplicated: { code: this.tokenSymbolDuplicated, message: 'The symbol already exists.' },
+      tokenNotExist: { code: this.tokenNotExist, message: 'The token does not exist.' },
+      exchangeAlreadyCreated: { code: this.exchangeAlreadyCreated, message: 'The exchange pair already exists.' },
     };
 
     const zh = {
@@ -237,6 +247,11 @@ module.exports = {
       pointReadError: { code: this.pointReadError, message: '获取阅读积分错误' },
       pointNotEnough: { code: this.pointNotEnough, message: '你没有足够的积分' },
       pointCommentSettingError: { code: this.pointCommentSettingError, message: '文章设置错误.' },
+
+      tokenAlreadyCreated: { code: this.tokenAlreadyCreated, message: '你已经创建过token了' },
+      tokenSymbolDuplicated: { code: this.tokenSymbolDuplicated, message: 'token简称重名，请更换一个' },
+      tokenNotExist: { code: this.tokenNotExist, message: 'token不存在' },
+      exchangeAlreadyCreated: { code: this.exchangeAlreadyCreated, message: '交易对已经存在' },
     };
 
     let message;

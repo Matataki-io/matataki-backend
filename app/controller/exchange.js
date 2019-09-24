@@ -8,7 +8,16 @@ class ExchangeController extends Controller {
 
     const { tokenId } = this.ctx.request.body;
     const result = await ctx.service.token.exchange.create(tokenId);
-    ctx.body = result > 0 ? ctx.msg.success : ctx.msg.failure;
+
+    if (result === -1) {
+      ctx.body = ctx.msg.tokenNotExist;
+    } else if (result === -2) {
+      ctx.body = ctx.msg.exchangeAlreadyCreated;
+    } else if (result === 0) {
+      ctx.body = ctx.msg.failure;
+    } else {
+      ctx.body = ctx.msg.success;
+    }
   }
 
   async get() {
@@ -16,7 +25,12 @@ class ExchangeController extends Controller {
 
     const { tokenId } = this.ctx.query;
     const result = await ctx.service.token.exchange.getExchange(tokenId);
-    ctx.body = result > 0 ? ctx.msg.success : ctx.msg.failure;
+    if (!result) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
   }
 
 
