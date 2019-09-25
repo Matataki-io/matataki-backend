@@ -51,7 +51,7 @@ class ExchangeController extends Controller {
   async cnyToTokenInput() {
     const ctx = this.ctx;
     const orderId = parseInt(ctx.request.body.orderId);
-    const result = await ctx.service.token.exchange.cnyToTokenInput(orderId);
+    const result = await ctx.service.token.exchange.cnyToTokenInputOrder(orderId);
     ctx.body = ctx.msg.success;
   }
 
@@ -59,6 +59,13 @@ class ExchangeController extends Controller {
     const ctx = this.ctx;
     const { tokenId, tokens_sold, min_cny, deadline, recipient } = ctx.request.body;
     const result = await ctx.service.token.exchange.tokenToCnyInput(ctx.user.id, tokenId, tokens_sold, min_cny, deadline, recipient, this.clientIP);
+    ctx.body = ctx.msg.success;
+  }
+
+  async tokenToTokenInput() {
+    const ctx = this.ctx;
+    const { inTokenId, tokens_sold, min_tokens_bought, deadline, recipient, outTokenId } = ctx.request.body;
+    const result = await ctx.service.token.exchange.tokenToTokenInput(ctx.user.id, inTokenId, tokens_sold, min_tokens_bought, deadline, recipient, outTokenId, this.clientIP);
     ctx.body = ctx.msg.success;
   }
 

@@ -237,6 +237,6 @@ module.exports = app => {
 
   router.post('/exchange/cnyToTokenInput', passport.authorize, controller.exchange.cnyToTokenInput);
   router.post('/exchange/tokenToCnyInput', passport.authorize, controller.exchange.tokenToCnyInput);
-
+  router.post('/exchange/tokenToTokenInput', passport.authorize, controller.exchange.tokenToTokenInput);
 };
 
