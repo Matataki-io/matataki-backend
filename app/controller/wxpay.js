@@ -33,7 +33,7 @@ class WxPayController extends Controller {
     // type类型见typeOptions：add，buy_token，sale_token
     // token_amount: 输出的token的数值
     // limit_value：极限值
-    const { total, title, type, token_id, token_amount, limit_value } = ctx.request.body;
+    const { total, title, type, token_id, token_amount, limit_value, decimals } = ctx.request.body;
     const ip = ctx.ips.length > 0 ? ctx.ips[0] !== '127.0.0.1' ? ctx.ips[0] : ctx.ips[1] : ctx.ip;
     const token = await ctx.service.token.mineToken.get(token_id);
     if (!token) {
@@ -73,10 +73,11 @@ class WxPayController extends Controller {
       recipient: ctx.user.id, // 接收者
       ip, // ip
     });
+    const total_fee = Math.floor(total / Math.pow(10, parseInt(decimals) - 2));
     const order = {
       body: title,
       out_trade_no, // 订单号 唯一id商户系统内部订单号，要求32个字符内，只能是数字、大小写字母_-|* 且在同一个商户号下唯一。
-      total_fee: Math.floor(total * 100), // 微信最小单位是分
+      total_fee, // 微信最小单位是分
       spbill_create_ip: ip, // 请求的ip地址
       // openid,
       // trade_type: 'JSAPI',
