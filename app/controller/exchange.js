@@ -106,6 +106,7 @@ class ExchangeController extends Controller {
         data: {
           cny_amount: 0,
           token_amount: 0,
+          total_supply: 0,
         },
       };
     } else {
