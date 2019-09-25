@@ -68,6 +68,34 @@ class ExchangeController extends Controller {
     const result = await ctx.service.token.exchange.tokenToTokenInput(ctx.user.id, inTokenId, tokens_sold, min_tokens_bought, deadline, recipient, outTokenId, this.clientIP);
     ctx.body = ctx.msg.success;
   }
+  async getTokenAmount() {
+    const { ctx } = this;
+    const { tokenId, amount = 0 } = ctx.query;
+    // 计算使用cny兑换token的数量，以输入的cny数量为准
+    const tokenAmount = await ctx.service.token.exchange.getCnyToTokenInputPrice(tokenId, parseFloat(amount));
+    if (tokenAmount === -1) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: tokenAmount,
+    };
+  }
+  async getCnyAmount() {
+    const { ctx } = this;
+    const { tokenId, amount = 0 } = ctx.query;
+    // 计算使用cny兑换token的数量，以输出的token数量为准
+    const cnyAmount = await ctx.service.token.exchange.getCnyToTokenOutputPrice(tokenId, parseFloat(amount));
+    if (cnyAmount === -1) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: cnyAmount,
+    };
+  }
 
 }
 
