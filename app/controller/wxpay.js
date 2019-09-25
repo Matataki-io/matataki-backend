@@ -33,7 +33,7 @@ class WxPayController extends Controller {
     // type类型见typeOptions：add，buy_token，sale_token
     // token_amount: 输出的token的数值
     // limit_value：极限值
-    const { total, title, type, token_id, token_amount, limit_value, decimals } = ctx.request.body;
+    const { total, title, type, token_id, token_amount, limit_value, decimals, min_liquidity = 0 } = ctx.request.body;
     const ip = ctx.ips.length > 0 ? ctx.ips[0] !== '127.0.0.1' ? ctx.ips[0] : ctx.ips[1] : ctx.ip;
     const token = await ctx.service.token.mineToken.get(token_id);
     if (!token) {
@@ -41,12 +41,11 @@ class WxPayController extends Controller {
       return;
     }
     const out_trade_no = nanoid(31);
-    let min_liquidity = 0;
     let max_tokens = 0;
     let min_tokens = 0;
     switch (typeOptions[type]) {
       case 'add': // 添加流动性
-        min_liquidity = limit_value;
+        max_tokens = limit_value;
         break;
       case 'buy_token': // 购买token
         min_tokens = limit_value;
