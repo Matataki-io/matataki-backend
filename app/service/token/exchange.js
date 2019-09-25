@@ -544,7 +544,43 @@ class ExchangeService extends Service {
 
     return this.getOutputPrice(tokens_bought, cny_reserve, token_reserve);
   }
+  async getCurrentPoolSize(tokenId) {
+    const exchange = await this.getExchange(tokenId);
+    if (exchange === null) return -1;
 
+    const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+    const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+    return {
+      cny_amount: token_reserve,
+      token_amount: cny_reserve,
+      total_supply: exchange.total_supply,
+    };
+  }
+  async getYourPoolSize(uid, tokenId) {
+    const exchange = await this.getExchange(tokenId);
+    if (exchange === null) return -1;
+    const total_liquidity = exchange.total_supply;
+    const user_balance = await this.app.mysql.get('exchange_balances', { uid, token_id: tokenId });
+    const liquidity_balance = user_balance.liquidity_balance;
+    const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+    const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+    // 根据用户remove的amount数量计算出cny数量
+    const cny_amount = liquidity_balance * cny_reserve / total_liquidity;
+    // 计算出token数量
+    const token_amount = liquidity_balance * token_reserve / total_liquidity;
+    return {
+      cny_amount,
+      token_amount,
+    };
+  }
+  async getYourMintToken(cny_amount, tokenId) {
+    const exchange = await this.getExchange(tokenId);
+    if (exchange === null) return -1;
+    const total_liquidity = exchange.total_supply;
+    const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+    const mint_token = cny_amount * total_liquidity / cny_reserve;
+    return mint_token;
+  }
 }
 
 module.exports = ExchangeService;

@@ -244,5 +244,11 @@ module.exports = app => {
   router.get('/exchange/cnyAmount', passport.verify, controller.exchange.getCnyAmount);
   // 获取token amount
   router.get('/exchange/tokenAmount', passport.verify, controller.exchange.getTokenAmount);
+  // 获取pool size & supply
+  router.get('/exchange/currentPoolSize', passport.verify, controller.exchange.getCurrentPoolSize);
+  // 获取yout pool size
+  router.get('/exchange/userPoolSize', passport.verify, controller.exchange.getYourPoolSize);
+  // 获取your mint token
+  router.get('/exchange/userMintToken', passport.verify, controller.exchange.getYourMintToken);
 };
 
