@@ -9,7 +9,11 @@ class ExchangeService extends Service {
   √ tokenToToken
   √ 精度问题，token和cny都默认精度为4，即1元cny=10000
   √ CNY账号不要插入ES
+  √ 控制发行上限1亿
     Output为准计算
+    控制谁可以发币
+
+    大数问题，所有的计算在node中计算，使用bignumber.js，数据库使用varchar存储，到时可以放开发行量和decimals
   */
   async create(tokenId) {
     const token = await this.service.token.mineToken.get(tokenId);
