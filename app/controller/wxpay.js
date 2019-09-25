@@ -136,10 +136,10 @@ class WxPayController extends Controller {
       const type = order.type;
       switch (typeOptions[type]) {
         case 'add': // 添加流动性
-          await ctx.service.token.exchange.addLiquidity(orderId);
+          await ctx.service.token.exchange.addLiquidityOrder(orderId);
           break;
         case 'buy_token': // 购买token
-          await ctx.service.token.exchange.cnyToTokenInput(orderId);
+          await ctx.service.token.exchange.cnyToTokenInputOrder(orderId);
           break;
         case 'sale_token': // 出售token
           break;

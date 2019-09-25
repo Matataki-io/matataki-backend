@@ -96,6 +96,43 @@ class ExchangeController extends Controller {
       data: cnyAmount,
     };
   }
+  async getCurrentPoolSize() {
+    const { ctx } = this;
+    const { tokenId } = ctx.query;
+    const currentPoolSize = await ctx.service.token.exchange.getCurrentPoolSize(tokenId);
+    if (currentPoolSize === -1) {
+      ctx.body = {
+        cny_amount: 0,
+        token_amount: 0,
+      };
+    } else {
+      ctx.body = currentPoolSize;
+    }
+  }
+  async getYourPoolSize() {
+    const { ctx } = this;
+    const uid = ctx.user.id;
+    const { tokenId } = ctx.query;
+    const yourPoolSize = await ctx.service.token.exchange.getYourPoolSize(uid, tokenId);
+    if (yourPoolSize === -1) {
+      ctx.body = {
+        cny_amount: 0,
+        token_amount: 0,
+      };
+    } else {
+      ctx.body = yourPoolSize;
+    }
+  }
+  async getYourMintToken() {
+    const { ctx } = this;
+    const { amount, tokenId } = ctx.query;
+    const yourMintToken = await ctx.service.token.exchange.getYourMintToken(amount, tokenId);
+    if (yourMintToken === -1) {
+      ctx.body = amount;
+    } else {
+      ctx.body = yourMintToken;
+    }
+  }
 
 }
 
