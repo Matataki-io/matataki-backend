@@ -6,8 +6,8 @@ const Service = require('egg').Service;
 class ExchangeService extends Service {
 
   /* todo list
+  √ tokenToToken
   精度问题
-  tokenToToken
   Output为准计算
   CNY账号不要插入ES
   */
@@ -49,6 +49,9 @@ class ExchangeService extends Service {
 
   async detail(tokenId) {
     const exchange = await this.getExchange(tokenId);
+    if (!exchange) {
+      return null;
+    }
 
     const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
     const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
