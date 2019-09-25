@@ -359,7 +359,7 @@ class PostService extends Service {
       wheresql += 'AND channel_id = ' + channelid + ' ';
     }
 
-    const ordersql = 'ORDER BY id DESC LIMIT :start, :end';
+    const ordersql = 'ORDER BY time_down ASC, id DESC LIMIT :start, :end';
     const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
     const queryResult = await this.app.mysql.query(
       sqlcode,

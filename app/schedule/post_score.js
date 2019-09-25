@@ -25,7 +25,7 @@ class PostScore extends Subscription {
       await this.app.mysql.query(`
           -- 计算热度积分
           UPDATE posts p INNER JOIN post_read_count c ON p.id = c.post_id
-          SET p.hot_score = (c.real_read_count * 0.2 + c.likes * 0.4 - c.dislikes * 1 + c.support_count * 1);
+          SET p.hot_score = (c.real_read_count * 0.2 + c.likes * 0.4 - c.dislikes * 1 + c.support_count * 1 - c.down * 1);
           -- 3天内的提权
           UPDATE posts SET hot_score = hot_score * 1.5 WHERE create_time > DATE_SUB(NOW(), INTERVAL 3 DAY);
           -- 按天减少权重
