@@ -222,13 +222,14 @@ module.exports = app => {
   router.post('/exchange/create', passport.authorize, controller.exchange.create);
   // 查询交易对
   router.get('/exchange/', passport.verify, controller.exchange.get);
-  // -------------------------------- token list display API --------------------------------
-  // 查询交易对
+  // -------------------------------- token display API --------------------------------
+  // 根据token获取持仓用户list
   router.get('/token/userlist', passport.verify, controller.token.userList);
-  // 查询交易对
+  // 用户持仓token list
   router.get('/token/tokenlist', passport.verify, controller.token.tokenList);
-  // 查询交易对
+  // token 详情
   router.get('/token/detail', passport.verify, controller.token.tokenDetail);
+  // 所有的token 分页
   router.get('/token/all', passport.verify, controller.token.allToken);
 
   // todo:测试代码
@@ -238,5 +239,10 @@ module.exports = app => {
   router.post('/exchange/cnyToTokenInput', passport.authorize, controller.exchange.cnyToTokenInput);
   router.post('/exchange/tokenToCnyInput', passport.authorize, controller.exchange.tokenToCnyInput);
   router.post('/exchange/tokenToTokenInput', passport.authorize, controller.exchange.tokenToTokenInput);
+  // -------------------------------- exchage计算 display API --------------------------------
+  // 获取cny amount
+  router.get('/exchange/cnyAmount', passport.verify, controller.exchange.getCnyAmount);
+  // 获取token amount
+  router.get('/exchange/tokenAmount', passport.verify, controller.exchange.getTokenAmount);
 };
 

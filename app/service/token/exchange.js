@@ -525,6 +525,7 @@ class ExchangeService extends Service {
     }
 
     const exchange = await this.getExchange(tokenId);
+    if (exchange === null) return -1;
     const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
     const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
 
@@ -538,6 +539,7 @@ class ExchangeService extends Service {
     }
 
     const exchange = await this.getExchange(tokenId);
+    if (exchange === null) return -1;
     const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
     const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
 
