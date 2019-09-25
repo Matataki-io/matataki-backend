@@ -102,11 +102,17 @@ class ExchangeController extends Controller {
     const currentPoolSize = await ctx.service.token.exchange.getCurrentPoolSize(tokenId);
     if (currentPoolSize === -1) {
       ctx.body = {
-        cny_amount: 0,
-        token_amount: 0,
+        ...ctx.msg.success,
+        data: {
+          cny_amount: 0,
+          token_amount: 0,
+        },
       };
     } else {
-      ctx.body = currentPoolSize;
+      ctx.body = {
+        ...ctx.msg.success,
+        data: currentPoolSize,
+      };
     }
   }
   async getYourPoolSize() {
@@ -116,11 +122,17 @@ class ExchangeController extends Controller {
     const yourPoolSize = await ctx.service.token.exchange.getYourPoolSize(uid, tokenId);
     if (yourPoolSize === -1) {
       ctx.body = {
-        cny_amount: 0,
-        token_amount: 0,
+        ...ctx.msg.success,
+        data: {
+          cny_amount: 0,
+          token_amount: 0,
+        },
       };
     } else {
-      ctx.body = yourPoolSize;
+      ctx.body = {
+        ...ctx.msg.success,
+        data: yourPoolSize,
+      };
     }
   }
   async getYourMintToken() {
@@ -128,9 +140,15 @@ class ExchangeController extends Controller {
     const { amount, tokenId } = ctx.query;
     const yourMintToken = await ctx.service.token.exchange.getYourMintToken(amount, tokenId);
     if (yourMintToken === -1) {
-      ctx.body = amount;
+      ctx.body = {
+        ...ctx.msg.success,
+        data: amount,
+      };
     } else {
-      ctx.body = yourMintToken;
+      ctx.body = {
+        ...ctx.msg.success,
+        data: yourMintToken,
+      };
     }
   }
 
