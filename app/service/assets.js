@@ -11,8 +11,8 @@ class AssetsService extends Service {
     const platform = symbol.toLowerCase();
     // 2. 更新资产余额
     await conn.query(
-      'INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
-      [ userId, '', symbol, amount, platform, amount ]
+      'INSERT INTO assets(uid, contract, symbol, amount, decimals, platform) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
+      [ userId, '', symbol, amount, 4, platform, amount ]
     );
     // 记录log
     await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',

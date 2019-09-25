@@ -268,10 +268,15 @@ class SearchService extends Service {
   // todo：增加一种方式直接传入user对象
   async importUser(userid) {
     const user = await this.app.mysql.query(
-      'SELECT id, username, nickname FROM users WHERE id = ?;',
+      'SELECT id, username, nickname, platform FROM users WHERE id = ?;',
       [ userid ]
     );
     if (user.length === 0) {
+      return null;
+    }
+
+    // 交易所虚拟账号不要插入ES
+    if (user.platform === 'cny') {
       return null;
     }
 

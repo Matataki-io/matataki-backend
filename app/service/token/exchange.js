@@ -1,15 +1,15 @@
 'use strict';
 const moment = require('moment');
-const consts = require('../consts');
 const Service = require('egg').Service;
 
 class ExchangeService extends Service {
 
-  /* todo list
+  /*
+  TODO list
   √ tokenToToken
-  精度问题
-  Output为准计算
-  CNY账号不要插入ES
+  √ 精度问题，token和cny都默认精度为4，即1元cny=10000
+  √ CNY账号不要插入ES
+    Output为准计算
   */
   async create(tokenId) {
     const token = await this.service.token.mineToken.get(tokenId);
@@ -103,6 +103,9 @@ class ExchangeService extends Service {
 
       // 订单付款成功，给用户充值
       await this.service.assets.recharge(userId, 'CNY', cny_amount, conn);
+
+      // 如果交易对不存在，首先创建交易对
+      await this.create(tokenId);
 
       let exchange = null;
       // 锁定交易对，悲观锁
