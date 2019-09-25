@@ -2225,3 +2225,70 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
     }
 }
 ```
+
+
+#### token兑换token
+* POST /exchange/tokenToTokenInput
+* 响应状态码： 200
+* 参数：
+```
+{
+  "inTokenId": 8,
+  "tokens_sold": 90,
+  "min_tokens_bought": 80,
+  "deadline": 1600000000,
+  "recipient": 1048,
+  "outTokenId": 12
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### token兑换cny
+* POST /exchange/tokenToCnyInput
+* 响应状态码： 200
+* 参数：
+```
+{
+  "tokenId": 8,
+  "tokens_sold": 90,
+  "min_cny": 95,
+  "deadline": 1600000000,
+  "recipient": 1048
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 移除流动性
+* POST /exchange/removeLiquidity
+* 响应状态码： 200
+* 参数：
+```
+{
+  "tokenId": 8,
+  "amount": 9000,
+  "min_cny": 8900,
+  "min_tokens": 8900,
+  "deadline": 1600000000
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
