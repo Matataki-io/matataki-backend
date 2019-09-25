@@ -247,7 +247,7 @@ module.exports = app => {
   // 获取pool size & supply
   router.get('/exchange/currentPoolSize', passport.verify, controller.exchange.getCurrentPoolSize);
   // 获取yout pool size
-  router.get('/exchange/userPoolSize', passport.verify, controller.exchange.getYourPoolSize);
+  router.get('/exchange/userPoolSize', passport.authorize, controller.exchange.getYourPoolSize);
   // 获取your mint token
   router.get('/exchange/userMintToken', passport.verify, controller.exchange.getYourMintToken);
 };

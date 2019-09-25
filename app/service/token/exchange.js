@@ -566,6 +566,12 @@ class ExchangeService extends Service {
     if (exchange === null) return -1;
     const total_liquidity = exchange.total_supply;
     const user_balance = await this.app.mysql.get('exchange_balances', { uid, token_id: tokenId });
+    if (user_balance === null) {
+      return {
+        cny_amount: 0,
+        token_amount: 0,
+      };
+    }
     const liquidity_balance = user_balance.liquidity_balance;
     const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
     const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
