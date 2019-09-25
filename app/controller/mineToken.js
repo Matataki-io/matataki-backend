@@ -24,7 +24,15 @@ class MineTokenController extends Controller {
     // amount 客户端*精度，10^decimals
     const { amount } = this.ctx.request.body;
     const result = await ctx.service.token.mineToken.mint(ctx.user.id, ctx.user.id, amount, this.clientIP);
-    ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
+    if (result === -1) {
+      ctx.body = ctx.msg.failure;
+    } else if (result === -2) {
+      ctx.body = ctx.msg.tokenNotExist;
+    } else if (result === -3) {
+      ctx.body = ctx.msg.tokenCantMint;
+    } else {
+      ctx.body = ctx.msg.success;
+    }
   }
 
   async transfer() {

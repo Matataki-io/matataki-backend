@@ -113,6 +113,7 @@ module.exports = {
   tokenSymbolDuplicated: 10801,
   tokenNotExist: 10802,
   exchangeAlreadyCreated: 10803,
+  tokenCantMint: 10804,
 
   returnObj(lang) {
 
@@ -183,6 +184,7 @@ module.exports = {
       tokenSymbolDuplicated: { code: this.tokenSymbolDuplicated, message: 'The symbol already exists.' },
       tokenNotExist: { code: this.tokenNotExist, message: 'The token does not exist.' },
       exchangeAlreadyCreated: { code: this.exchangeAlreadyCreated, message: 'The exchange pair already exists.' },
+      tokenCantMint: { code: this.tokenCantMint, message: 'The token can not mint.' },
     };
 
     const zh = {
@@ -252,6 +254,7 @@ module.exports = {
       tokenSymbolDuplicated: { code: this.tokenSymbolDuplicated, message: 'token简称重名，请更换一个' },
       tokenNotExist: { code: this.tokenNotExist, message: 'token不存在' },
       exchangeAlreadyCreated: { code: this.exchangeAlreadyCreated, message: '交易对已经存在' },
+      tokenCantMint: { code: this.tokenCantMint, message: 'token发行已达上限' },
     };
 
     let message;

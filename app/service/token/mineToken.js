@@ -48,8 +48,15 @@ class MineTokenService extends Service {
     return token;
   }
 
-  async canMint(tokenId) {
-    // todo，token total_supply有上限等等条件
+  // 是否可以发行
+  async canMint(tokenId, amount, conn) {
+    const result = await conn.query('SELECT total_supply FROM minetokens WHERE id=? FOR UPDATE;',
+      [ tokenId ]);
+    const token = result[0];
+    // 上限1亿token
+    if (1000000000000 - token.total_supply < amount) {
+      return false;
+    }
     return true;
   }
 
@@ -62,21 +69,21 @@ class MineTokenService extends Service {
 
     const tokenId = token.id;
 
-    if (!this.canMint(tokenId)) {
-      return -3;
-    }
-
     const conn = await this.app.mysql.beginTransaction();
     try {
+      if (!await this.canMint(tokenId, amount, conn)) {
+        await conn.rollback();
+        return -3;
+      }
+
       // 唯一索引`uid`, `token_id`
-      const sql = 'INSERT INTO assets_minetokens(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;';
-      await conn.query(sql, [ to, tokenId, amount, amount ]);
+      await conn.query('INSERT INTO assets_minetokens(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+        [ to, tokenId, amount, amount ]);
 
-      const sqlTotal = 'UPDATE minetokens SET total_supply = total_supply + ? WHERE id = ?;';
-      await conn.query(sqlTotal, [ amount, tokenId ]);
+      await conn.query('UPDATE minetokens SET total_supply = total_supply + ? WHERE id = ?;',
+        [ amount, tokenId ]);
 
-      const sqlLog = 'INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?,?);';
-      await conn.query(sqlLog,
+      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?,?);',
         [ 0, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip ]);
 
       await conn.commit();
