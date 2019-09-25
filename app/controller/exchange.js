@@ -37,7 +37,7 @@ class ExchangeController extends Controller {
   async addLiquidity() {
     const ctx = this.ctx;
     const orderId = parseInt(ctx.request.body.orderId);
-    const result = await ctx.service.token.exchange.addLiquidity(orderId);
+    const result = await ctx.service.token.exchange.addLiquidityOrder(orderId);
     ctx.body = ctx.msg.success;
   }
 
