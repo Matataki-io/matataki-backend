@@ -187,14 +187,14 @@ class ExchangeController extends Controller {
   async swap() {
     const { ctx } = this;
     const { inputTokenId, outputTokenId, inputAmount, minValue } = ctx.query;
-    if (inputTokenId.toString() === '0') {
+    if (inputTokenId === 0) {
       ctx.body = ctx.msg.failure;
       return;
     }
     let result = -1;
     const deadline = parseInt(moment().format('X')) + DEADLINE; // 设置unix时间戳
     const recipient = ctx.user.id; // 接收者
-    if (outputTokenId.toString() === '0') {
+    if (outputTokenId === 0) {
       // token 换 cny
       result = await ctx.service.token.exchange.tokenToCnyInput(ctx.user.id, inputTokenId, inputAmount, minValue, deadline, recipient, this.clientIP);
 
