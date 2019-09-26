@@ -152,6 +152,20 @@ class ExchangeController extends Controller {
       };
     }
   }
+  // 订单状态修改通知
+  async notify() {
+    const { ctx } = this;
+    const { trade_no } = ctx.query;
+    const order = await ctx.service.exchange.getOrderBytradeNo(trade_no);
+    if (order === null) {
+      ctx.body = ctx.msg.failure;
+    } else {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: order.status, // 状态，0初始，3支付中，6支付成功，9处理完成
+      };
+    }
+  }
 
 }
 

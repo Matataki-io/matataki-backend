@@ -250,5 +250,8 @@ module.exports = app => {
   router.get('/exchange/userPoolSize', passport.authorize, controller.exchange.getYourPoolSize);
   // 获取your mint token
   router.get('/exchange/userMintToken', passport.verify, controller.exchange.getYourMintToken);
+
+  // 支付后订单状态修改通知接口
+  router.get('/exchange/notify', passport.verify, controller.exchange.notify);
 };
 
