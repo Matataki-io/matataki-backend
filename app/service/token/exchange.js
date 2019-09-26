@@ -294,6 +294,11 @@ class ExchangeService extends Service {
       return -1;
     }
 
+    input_amount = parseInt(input_amount);
+    if (input_amount >= input_reserve) {
+      return -1;
+    }
+
     const input_amount_with_fee = input_amount * 997;
     const numerator = input_amount_with_fee * output_reserve;
     const denominator = (input_reserve * 1000) + input_amount_with_fee;
@@ -303,6 +308,11 @@ class ExchangeService extends Service {
   // 以输出为准计算输入的数量
   getOutputPrice(output_amount, input_reserve, output_reserve) {
     if (input_reserve <= 0 || output_reserve <= 0) {
+      return -1;
+    }
+
+    output_amount = parseInt(output_amount);
+    if (output_amount >= output_reserve) {
       return -1;
     }
 

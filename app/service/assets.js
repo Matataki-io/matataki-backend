@@ -33,10 +33,11 @@ class AssetsService extends Service {
     }
 
     try {
+      const amount = parseInt(value);
       const platform = symbol.toLowerCase();
       // 减少from的token
-      const sqlFrom = 'UPDATE assets SET amount = amount - ? WHERE uid = ? AND symbol = ? AND amount >= ?;';
-      const result = await conn.query(sqlFrom, [ value, from, symbol, value ]);
+      const result = await conn.query('UPDATE assets SET amount = amount - ? WHERE uid = ? AND symbol = ? AND amount >= ?;',
+        [ amount, from, symbol, amount ]);
       // 减少from的token失败回滚
       if (result.affectedRows <= 0) {
         if (!isOutConn) {
@@ -46,7 +47,7 @@ class AssetsService extends Service {
       }
       // 记录log
       await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [ from, 0, '', symbol, -value, platform,
+        [ from, 0, '', symbol, -amount, platform,
           consts.assetTypes.transferOut, // 'sign income'
           moment().format('YYYY-MM-DD HH:mm:ss') ]
       );
@@ -54,11 +55,11 @@ class AssetsService extends Service {
       // 增加to的token
       await conn.query(
         'INSERT INTO assets(uid, contract, symbol, amount, platform) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?',
-        [ to, '', symbol, value, platform, value ]
+        [ to, '', symbol, amount, platform, amount ]
       );
       // 记录log
       await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [ to, 0, '', symbol, value, platform,
+        [ to, 0, '', symbol, amount, platform,
           consts.assetTypes.transferIn, // 'sign income'
           moment().format('YYYY-MM-DD HH:mm:ss') ]
       );
