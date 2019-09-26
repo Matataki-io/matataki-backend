@@ -51,13 +51,15 @@ class WxpayService extends Service {
   // 退款
   async refund(out_trade_no, total_fee, refund_fee) {
     const { ctx } = this;
-    // TODO 查找订单号
-    const payargs = await this.app.wxpay.refund({
+    const refund_order = {
       out_trade_no, // 商户订单号
       out_refund_no: nanoid(31), // 商户退款单号
       total_fee: parseFloat(total_fee) * 100, // 订单金额，传入单位元
       refund_fee: parseFloat(refund_fee) * 100, // 退款金额，传入单位元
-    });
+    };
+    ctx.logger.info('service refund refund_order', refund_order);
+    // TODO 查找订单号
+    const payargs = await this.app.wxpay.refund(refund_order);
     return payargs;
   }
 }
