@@ -174,13 +174,15 @@ class WxPayController extends Controller {
   }
   // 退款
   async refund() {
-    // TODO 查找订单号
-    const payargs = await this.app.wxpay.refund({
-      out_trade_no: 'kfc001', // 商户订单号
-      out_refund_no: nanoid(31), // 商户退款单号
-      total_fee: 10 * 100, // 订单金额
-      refund_fee: 10 * 100, // 退款金额
-    });
+    const { ctx } = this;
+    const { out_trade_no, total_fee, refund_fee } = ctx.request.body;
+    ctx.logger.info('controller refund params', out_trade_no, total_fee, refund_fee);
+    const result = await ctx.service.wxpay.refund(out_trade_no, total_fee, refund_fee);
+    ctx.logger.info('controller refund result', result);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
   }
 }
 
