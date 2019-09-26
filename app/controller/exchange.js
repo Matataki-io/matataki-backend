@@ -1,6 +1,8 @@
 'use strict';
 
 const Controller = require('../core/base_controller');
+const moment = require('moment');
+const DEADLINE = 300; // 超时时间300秒
 
 class ExchangeController extends Controller {
   async create() {
@@ -67,34 +69,6 @@ class ExchangeController extends Controller {
     const { inTokenId, tokens_sold, min_tokens_bought, deadline, recipient, outTokenId } = ctx.request.body;
     const result = await ctx.service.token.exchange.tokenToTokenInput(ctx.user.id, inTokenId, tokens_sold, min_tokens_bought, deadline, recipient, outTokenId, this.clientIP);
     ctx.body = ctx.msg.success;
-  }
-  async getTokenAmount() {
-    const { ctx } = this;
-    const { tokenId, amount = 0 } = ctx.query;
-    // 计算使用cny兑换token的数量，以输入的cny数量为准
-    const tokenAmount = await ctx.service.token.exchange.getCnyToTokenInputPrice(tokenId, parseFloat(amount));
-    if (tokenAmount === -1) {
-      ctx.body = ctx.msg.failure;
-      return;
-    }
-    ctx.body = {
-      ...ctx.msg.success,
-      data: tokenAmount,
-    };
-  }
-  async getCnyAmount() {
-    const { ctx } = this;
-    const { tokenId, amount = 0 } = ctx.query;
-    // 计算使用cny兑换token的数量，以输出的token数量为准
-    const cnyAmount = await ctx.service.token.exchange.getCnyToTokenOutputPrice(tokenId, parseFloat(amount));
-    if (cnyAmount === -1) {
-      ctx.body = ctx.msg.failure;
-      return;
-    }
-    ctx.body = {
-      ...ctx.msg.success,
-      data: cnyAmount,
-    };
   }
   // 以input为准，获得output的数量
   async getOutputAmount() {
@@ -207,6 +181,34 @@ class ExchangeController extends Controller {
       ctx.body = {
         ...ctx.msg.success,
         data: order.status, // 状态，0初始，3支付中，6支付成功，9处理完成
+      };
+    }
+  }
+  async swap() {
+    const { ctx } = this;
+    const { inputTokenId, outputTokenId, inputAmount, minValue } = ctx.query;
+    if (inputTokenId.toString() === '0') {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    let result = -1;
+    const deadline = parseInt(moment().format('X')) + DEADLINE; // 设置unix时间戳
+    const recipient = ctx.user.id; // 接收者
+    if (outputTokenId.toString() === '0') {
+      // token 换 cny
+      result = await ctx.service.token.exchange.tokenToCnyInput(ctx.user.id, inputTokenId, inputAmount, minValue, deadline, recipient, this.clientIP);
+
+    } else {
+      // token 换 token
+      result = await ctx.service.token.exchange.tokenToTokenInput(ctx.user.id, inputTokenId, inputAmount, minValue, deadline, recipient, outputTokenId, this.clientIP);
+
+    }
+    if (result === -1) {
+      ctx.body = ctx.msg.failure;
+    } else {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: result,
       };
     }
   }
