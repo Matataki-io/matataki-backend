@@ -101,9 +101,9 @@ class ExchangeController extends Controller {
     const { ctx } = this;
     const { inputTokenId, outputTokenId, inputAmount } = ctx.query;
     let amount = 0;
-    if (inputTokenId === 0) {
+    if (inputTokenId.toString() === '0') {
       amount = await ctx.service.token.exchange.getCnyToTokenInputPrice(outputTokenId, inputAmount);
-    } else if (outputTokenId === 0) {
+    } else if (outputTokenId.toString() === '0') {
       amount = await ctx.service.token.exchange.getTokenToCnyInputPrice(inputTokenId, inputAmount);
     } else {
       amount = await ctx.service.token.exchange.getTokenToTokenInputPrice(inputTokenId, outputTokenId, inputAmount);
@@ -123,9 +123,9 @@ class ExchangeController extends Controller {
     const { ctx } = this;
     const { inputTokenId, outputTokenId, outputAmount } = ctx.query;
     let amount = 0;
-    if (inputTokenId === 0) {
+    if (inputTokenId.toString() === '0') {
       amount = await ctx.service.token.exchange.getCnyToTokenOutputPrice(outputTokenId, outputAmount);
-    } else if (outputTokenId === 0) {
+    } else if (outputTokenId.toString() === '0') {
       amount = await ctx.service.token.exchange.getTokenToCnyOutputPrice(inputTokenId, outputAmount);
     } else {
       amount = await ctx.service.token.exchange.getTokenToTokenOutputPrice(inputTokenId, outputTokenId, outputAmount);
