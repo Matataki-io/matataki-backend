@@ -253,5 +253,9 @@ module.exports = app => {
 
   // 支付后订单状态修改通知接口
   router.get('/exchange/notify', passport.verify, controller.exchange.notify);
+  // 获取output amount
+  router.get('/exchange/outputAmount', passport.verify, controller.exchange.getOutputAmount);
+  // 获取input amount
+  router.get('/exchange/inputAmount', passport.verify, controller.exchange.getInputAmount);
 };
 

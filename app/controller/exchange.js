@@ -96,6 +96,50 @@ class ExchangeController extends Controller {
       data: cnyAmount,
     };
   }
+  // 以input为准，获得output的数量
+  async getOutputAmount() {
+    const { ctx } = this;
+    const { inputTokenId, outputTokenId, inputAmount } = ctx.query;
+    let amount = 0;
+    if (inputTokenId === 0) {
+      amount = await ctx.service.token.exchange.getCnyToTokenInputPrice(outputTokenId, inputAmount);
+    } else if (outputTokenId === 0) {
+      amount = await ctx.service.token.exchange.getTokenToCnyInputPrice(inputTokenId, inputAmount);
+    } else {
+      amount = await ctx.service.token.exchange.getTokenToTokenInputPrice(inputTokenId, outputTokenId, inputAmount);
+    }
+    // 判断
+    if (amount === -1) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: amount,
+    };
+  }
+  // 以output为准，获得input的数量
+  async getInputAmount() {
+    const { ctx } = this;
+    const { inputTokenId, outputTokenId, outputAmount } = ctx.query;
+    let amount = 0;
+    if (inputTokenId === 0) {
+      amount = await ctx.service.token.exchange.getCnyToTokenOutputPrice(outputTokenId, outputAmount);
+    } else if (outputTokenId === 0) {
+      amount = await ctx.service.token.exchange.getTokenToCnyOutputPrice(inputTokenId, outputAmount);
+    } else {
+      amount = await ctx.service.token.exchange.getTokenToTokenOutputPrice(inputTokenId, outputTokenId, outputAmount);
+    }
+    // 判断
+    if (amount === -1) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: amount,
+    };
+  }
   async getCurrentPoolSize() {
     const { ctx } = this;
     const { tokenId } = ctx.query;
