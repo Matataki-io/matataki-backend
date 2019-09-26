@@ -240,10 +240,6 @@ module.exports = app => {
   router.post('/exchange/tokenToCnyInput', passport.authorize, controller.exchange.tokenToCnyInput);
   router.post('/exchange/tokenToTokenInput', passport.authorize, controller.exchange.tokenToTokenInput);
   // -------------------------------- exchage计算 display API --------------------------------
-  // 获取cny amount
-  router.get('/exchange/cnyAmount', passport.verify, controller.exchange.getCnyAmount);
-  // 获取token amount
-  router.get('/exchange/tokenAmount', passport.verify, controller.exchange.getTokenAmount);
   // 获取pool size & supply
   router.get('/exchange/currentPoolSize', passport.verify, controller.exchange.getCurrentPoolSize);
   // 获取yout pool size
@@ -257,5 +253,7 @@ module.exports = app => {
   router.get('/exchange/outputAmount', passport.verify, controller.exchange.getOutputAmount);
   // 获取input amount
   router.get('/exchange/inputAmount', passport.verify, controller.exchange.getInputAmount);
+  // swap
+  router.get('/exchange/swap', passport.authorize, controller.exchange.swap);
 };
 
