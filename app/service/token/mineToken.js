@@ -30,7 +30,7 @@ class MineTokenService extends Service {
     return result;
   }
 
-  // 获取token
+  // 获取token信息
   async get(tokenId) {
     const token = await this.app.mysql.get('minetokens', { id: tokenId });
     return token;
@@ -96,7 +96,7 @@ class MineTokenService extends Service {
   }
 
   async transferFrom(tokenId, from, to, value, ip, conn) {
-    // 有可能在其他事务中调用该方法，如果conn是传进来的，不要此commit和rollback
+    // 有可能在其他事务中调用该方法，如果conn是传进来的，不要在此commit和rollback
     let isOutConn = false;
     if (conn) {
       isOutConn = true;

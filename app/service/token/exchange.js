@@ -533,7 +533,7 @@ class ExchangeService extends Service {
     const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
     const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
 
-    return this.getInputPrice(cny_sold, cny_reserve, token_reserve, cny_reserve);
+    return this.getInputPrice(cny_sold, cny_reserve, token_reserve);
   }
 
   // 计算使用cny兑换token的数量，以输出的token数量为准
@@ -549,6 +549,52 @@ class ExchangeService extends Service {
 
     return this.getOutputPrice(tokens_bought, cny_reserve, token_reserve);
   }
+
+  // 计算使用token兑换cny的数量，以输入的token数量为准
+  async getTokenToCnyInputPrice(tokenId, tokens_sold) {
+    if (tokens_sold <= 0) {
+      return -1;
+    }
+
+    const exchange = await this.getExchange(tokenId);
+    if (exchange === null) return -1;
+    const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+    const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+
+    return this.getInputPrice(tokens_sold, token_reserve, cny_reserve);
+  }
+
+  // 计算使用token兑换cny的数量，以输出的cny数量为准
+  async getTokenToCnyOutputPrice(tokenId, cny_bought) {
+    if (cny_bought <= 0) {
+      return -1;
+    }
+
+    const exchange = await this.getExchange(tokenId);
+    if (exchange === null) return -1;
+    const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+    const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+
+    return this.getOutputPrice(cny_bought, token_reserve, cny_reserve);
+  }
+
+  /* 计算token A 兑换token B 的数量，以输入的A数量为准，计算方法：
+    先把token A卖掉换成cny，再用换来的cny买token B
+  */
+  async getTokenToTokenInputPrice(in_tokenId, out_tokenId, in_tokens_sold) {
+    const cny_bought = await this.getTokenToCnyInputPrice(in_tokenId, in_tokens_sold);
+    const out_token_bought = await this.getCnyToTokenInputPrice(out_tokenId, cny_bought);
+    return out_token_bought;
+  }
+
+  // 计算token A 兑换token B 的数量，以输出的B数量为准，计算方法：
+  // 先计算买token B需要多少cny，然后再计算得到这么多cny需要卖多少token A
+  async getTokenToTokenOutputPrice(in_tokenId, out_tokenId, out_tokens_bought) {
+    const cny_sold = await this.getCnyToTokenOutputPrice(out_tokenId, out_tokens_bought);
+    const in_token_sold = await this.getTokenToCnyOutputPrice(in_tokenId, cny_sold);
+    return in_token_sold;
+  }
+
   async getCurrentPoolSize(tokenId) {
     const exchange = await this.getExchange(tokenId);
     if (exchange === null) return -1;
@@ -561,6 +607,7 @@ class ExchangeService extends Service {
       total_supply: exchange.total_supply,
     };
   }
+
   async getYourPoolSize(uid, tokenId) {
     const exchange = await this.getExchange(tokenId);
     if (exchange === null) return -1;
@@ -584,6 +631,7 @@ class ExchangeService extends Service {
       token_amount,
     };
   }
+
   async getYourMintToken(cny_amount, tokenId) {
     const exchange = await this.getExchange(tokenId);
     if (exchange === null) return -1;
