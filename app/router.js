@@ -253,7 +253,7 @@ module.exports = app => {
   router.get('/exchange/outputAmount', passport.verify, controller.exchange.getOutputAmount);
   // 获取input amount
   router.get('/exchange/inputAmount', passport.verify, controller.exchange.getInputAmount);
-  // swap
-  router.get('/exchange/swap', passport.authorize, controller.exchange.swap);
+  // swap，// token 换 token / cny接口
+  router.post('/exchange/swap', passport.authorize, controller.exchange.swap);
 };
 
