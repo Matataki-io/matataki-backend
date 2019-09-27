@@ -93,8 +93,12 @@ class ExchangeService extends Service {
   }
   // 用户持有的币
   async getTokenListByUser(id, page = 1, pagesize = 20) {
-    const sql = 'SELECT a.*, b.* FROM assets_minetokens AS a LEFT JOIN minetokens AS b ON a.token_id = b.id WHERE a.uid = :id ORDER BY b.create_time DESC LIMIT :offset, :limit;'
-    + 'SELECT count(1) as count FROM assets_minetokens WHERE uid = :id;';
+    const sql = 'SELECT a.token_id, a.amount, b.symbol, b.decimals, b.uid, u.username, u.nickname, u.avatar '
+      + 'FROM assets_minetokens AS a '
+      + 'LEFT JOIN minetokens AS b ON a.token_id = b.id '
+      + 'LEFT JOIN users u ON b.uid = u.id '
+      + 'WHERE a.uid = :id AND a.amount > 0 ORDER BY b.create_time DESC LIMIT :offset, :limit;'
+      + 'SELECT count(1) as count FROM assets_minetokens WHERE uid = :id AND amount > 0;';
     const result = await this.app.mysql.query(sql, {
       id,
       offset: (page - 1) * pagesize,
@@ -108,8 +112,8 @@ class ExchangeService extends Service {
   // 根据粉丝币获取持仓用户列表
   async getUserListByToken(id, page = 1, pagesize = 20) {
     id = parseInt(id);
-    const sql = 'SELECT a.*, b.username, b.email, b.nickname, b.avatar FROM assets_minetokens AS a LEFT JOIN users AS b ON a.uid = b.id WHERE a.token_id = :id LIMIT :offset, :limit;'
-    + 'SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id;';
+    const sql = 'SELECT a.*, b.username, b.email, b.nickname, b.avatar FROM assets_minetokens AS a LEFT JOIN users AS b ON a.uid = b.id WHERE a.token_id = :id AND a.amount > 0 LIMIT :offset, :limit;'
+      + 'SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id AND amount > 0;';
     const result = await this.app.mysql.query(sql, {
       id,
       offset: (page - 1) * pagesize,
@@ -123,7 +127,7 @@ class ExchangeService extends Service {
   // 所有的token
   async getAllToken(page = 1, pagesize = 20) {
     const sql = 'SELECT * FROM mineTokens LIMIT :offset, :limit;'
-    + 'SELECT count(1) as count FROM mineTokens;';
+      + 'SELECT count(1) as count FROM mineTokens;';
     const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,
       limit: pagesize,

@@ -53,7 +53,7 @@ class WxpayService extends Service {
     const { ctx } = this;
     const refund_order = {
       out_trade_no, // 商户订单号
-      out_refund_no: nanoid(31), // 商户退款单号
+      out_refund_no: out_trade_no + '_1', // 商户退款单号
       total_fee: parseFloat(total_fee) * 100, // 订单金额，传入单位元
       refund_fee: parseFloat(refund_fee) * 100, // 退款金额，传入单位元
     };
