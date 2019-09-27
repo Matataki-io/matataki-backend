@@ -12,6 +12,8 @@ class MineTokenController extends Controller {
       ctx.body = ctx.msg.tokenAlreadyCreated;
     } else if (result === -2) {
       ctx.body = ctx.msg.tokenSymbolDuplicated;
+    } else if (result === -3) {
+      ctx.body = ctx.msg.tokenNoCreatePermission;
     } else if (result === 0) {
       ctx.body = ctx.msg.failure;
     } else {

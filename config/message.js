@@ -114,6 +114,7 @@ module.exports = {
   tokenNotExist: 10802,
   exchangeAlreadyCreated: 10803,
   tokenCantMint: 10804,
+  tokenNoCreatePermission: 10805,
 
   returnObj(lang) {
 
@@ -185,6 +186,7 @@ module.exports = {
       tokenNotExist: { code: this.tokenNotExist, message: 'The token does not exist.' },
       exchangeAlreadyCreated: { code: this.exchangeAlreadyCreated, message: 'The exchange pair already exists.' },
       tokenCantMint: { code: this.tokenCantMint, message: 'The token can not mint.' },
+      tokenNoCreatePermission: { code: this.tokenNoCreatePermission, message: 'You do not have permission to create a token.' },
     };
 
     const zh = {
@@ -255,6 +257,7 @@ module.exports = {
       tokenNotExist: { code: this.tokenNotExist, message: 'token不存在' },
       exchangeAlreadyCreated: { code: this.exchangeAlreadyCreated, message: '交易对已经存在' },
       tokenCantMint: { code: this.tokenCantMint, message: 'token发行已达上限' },
+      tokenNoCreatePermission: { code: this.tokenNoCreatePermission, message: '你没有权限发币' },
     };
 
     let message;
