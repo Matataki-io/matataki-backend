@@ -114,8 +114,9 @@ class ExchangeService extends Service {
       const res = await this.addLiquidity(userId, tokenId, cny_amount, token_amount, min_liquidity, max_tokens, deadline, conn);
       if (res < 0) {
         conn.rollback();
-        // 另起一个事务退钱
-        await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // 交易失败，退款
+        // 交易失败，另起一个事务退钱
+        await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);
+        await this.refundOrder(orderId);
         return -1;
       }
 
@@ -127,8 +128,10 @@ class ExchangeService extends Service {
     } catch (e) {
       // 有一种可能，两笔订单同时进来，代码同时走到首次add initial_liquidity，一笔订单会失败，这笔订单回退到status=6，成为问题订单，需要再次调用addLiquidity方法触发增加liquidity逻辑
       await conn.rollback();
-      await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // 交易失败，退款
       this.logger.error('ExchangeService.addLiquidity exception. %j', e);
+      // 交易失败，另起一个事务退钱
+      await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);
+      await this.refundOrder(orderId);
       return -1;
     }
   }
@@ -366,8 +369,9 @@ class ExchangeService extends Service {
       if (res < 0) {
         // 回滚
         conn.rollback();
-        // 另起一个事务退钱
-        await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // 交易失败，退款
+        // 交易失败，另起一个事务退钱
+        await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);
+        await this.refundOrder(orderId);
         return -1;
       }
 
@@ -382,8 +386,10 @@ class ExchangeService extends Service {
       return 0;
     } catch (e) {
       await conn.rollback();
-      // todo 交易失败退钱
       this.logger.error('Exchange.cnyToTokenInput exception. %j', e);
+      // 交易失败，另起一个事务退钱
+      await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);
+      await this.refundOrder(orderId);
       return -1;
     }
   }
@@ -459,8 +465,9 @@ class ExchangeService extends Service {
       if (res < 0) {
         // 回滚
         conn.rollback();
-        // 另起一个事务退钱
-        await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]); // 交易失败，退款
+        // 交易失败，另起一个事务退钱
+        await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);
+        await this.refundOrder(orderId);
         return -1;
       }
 
@@ -475,8 +482,10 @@ class ExchangeService extends Service {
       return 0;
     } catch (e) {
       await conn.rollback();
-      // 交易失败退钱
       this.logger.error('Exchange.cnyToTokenOutputOrder exception. %j', e);
+      // 交易失败，另起一个事务退钱
+      await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);
+      await this.refundOrder(orderId);
       return -1;
     }
   }
@@ -884,6 +893,35 @@ class ExchangeService extends Service {
     const mint_token = parseInt(cny_amount * total_liquidity / cny_reserve);
     return mint_token;
   }
+
+  // 订单退款
+  async refundOrder(orderId) {
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      // 锁定订单，更新锁，悲观锁
+      const result = await conn.query('SELECT * FROM exchange_orders WHERE id = ? AND status = 7 FOR UPDATE;', [ orderId ]);
+      if (!result || result.length <= 0) {
+        await conn.rollback();
+        return -1;
+      }
+      const order = result[0];
+      // 微信订单实际支付的CNY金额
+      const cny_sold = order.cny_amount;
+      const trade_no = order.trade_no;
+
+      const res = await this.service.wxpay.refund(trade_no, cny_sold / 10000, cny_sold / 10000);
+      // 申请退款接收成功，todo：处理退款结果通知，写到数据库status=10；todo：如果退款接收失败，还需要再次调用，放到schedule里面调用退款比较好
+      if (res.return_code === 'return_code' && res.result_code === 'SUCCESS') {
+        await conn.query('UPDATE exchange_orders SET status = 8 WHERE id = ?;', [ orderId ]);
+      }
+      await conn.commit();
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('ExchangeService.refundOrder exception. %j', e);
+      return -1;
+    }
+  }
+
 }
 
 module.exports = ExchangeService;

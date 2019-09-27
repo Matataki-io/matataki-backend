@@ -244,6 +244,8 @@ module.exports = app => {
 
   router.post('/exchange/tokenToTokenInput', passport.authorize, controller.exchange.tokenToTokenInput);
   router.post('/exchange/tokenToTokenOutput', passport.authorize, controller.exchange.tokenToTokenOutput);
+  router.post('/exchange/refundOrder', passport.authorize, controller.exchange.refundOrder);
+
   // -------------------------------- exchage计算 display API --------------------------------
   // 获取pool size & supply
   router.get('/exchange/currentPoolSize', passport.verify, controller.exchange.getCurrentPoolSize);

@@ -89,6 +89,14 @@ class ExchangeController extends Controller {
     ctx.body = result;
   }
 
+  async refundOrder() {
+    const ctx = this.ctx;
+    const orderId = parseInt(ctx.request.body.orderId);
+    const result = await ctx.service.token.exchange.refundOrder(orderId);
+    ctx.body = result;
+  }
+  // 以上测试待删除
+
   // 以input为准，获得output的数量
   async getOutputAmount() {
     const { ctx } = this;
