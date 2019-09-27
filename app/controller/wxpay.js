@@ -5,7 +5,8 @@ const nanoid = require('nanoid');
 
 const typeOptions = {
   add: 'add',
-  buy_token: 'buy_token',
+  buy_token_input: 'buy_token_input',
+  buy_token_output: 'buy_token_output',
   sale_token: 'sale_token',
 };
 
@@ -47,11 +48,11 @@ class WxPayController extends Controller {
       case 'add': // 添加流动性
         max_tokens = limit_value;
         break;
-      case 'buy_token': // 购买token
+      case 'buy_token_input': // 购买token
         min_tokens = limit_value;
         break;
-      case 'sale_token': // 出售token
-        max_tokens = limit_value;
+      case 'buy_token_output':
+        min_tokens = limit_value;
         break;
       default:
         ctx.body = ctx.msg.failure;
@@ -137,10 +138,11 @@ class WxPayController extends Controller {
         case 'add': // 添加流动性
           await ctx.service.token.exchange.addLiquidityOrder(orderId);
           break;
-        case 'buy_token': // 购买token
+        case 'buy_token_input': // 购买token
           await ctx.service.token.exchange.cnyToTokenInputOrder(orderId);
           break;
-        case 'sale_token': // 出售token
+        case 'buy_token_output': // 购买token
+          await ctx.service.token.exchange.cnyToTokenInputOrder(orderId);
           break;
         default:
           ctx.body = ctx.msg.failure;

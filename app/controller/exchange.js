@@ -222,7 +222,7 @@ class ExchangeController extends Controller {
   }
   async swap() {
     const { ctx } = this;
-    const { inputTokenId, outputTokenId, inputAmount, minValue } = ctx.request.body;
+    const { inputTokenId, outputTokenId, amount, limitValue, base } = ctx.request.body;
     if (inputTokenId === 0) {
       ctx.body = ctx.msg.failure;
       return;
@@ -232,11 +232,19 @@ class ExchangeController extends Controller {
     const recipient = ctx.user.id; // 接收者
     if (outputTokenId === 0) {
       // token 换 cny
-      result = await ctx.service.token.exchange.tokenToCnyInput(ctx.user.id, inputTokenId, inputAmount, minValue, deadline, recipient, this.clientIP);
+      if (base === 'input') {
+        result = await ctx.service.token.exchange.tokenToCnyInput(ctx.user.id, inputTokenId, amount, limitValue, deadline, recipient, this.clientIP);
+      } else {
+        result = await ctx.service.token.exchange.tokenToCnyOutput(ctx.user.id, inputTokenId, amount, limitValue, deadline, recipient, this.clientIP);
+      }
 
     } else {
       // token 换 token
-      result = await ctx.service.token.exchange.tokenToTokenInput(ctx.user.id, inputTokenId, inputAmount, minValue, deadline, recipient, outputTokenId, this.clientIP);
+      if (base === 'input') {
+        result = await ctx.service.token.exchange.tokenToTokenInput(ctx.user.id, inputTokenId, amount, limitValue, deadline, recipient, outputTokenId, this.clientIP);
+      } else {
+        result = await ctx.service.token.exchange.tokenToTokenOutput(ctx.user.id, inputTokenId, amount, limitValue, deadline, recipient, outputTokenId, this.clientIP);
+      }
 
     }
     if (result === -1) {
