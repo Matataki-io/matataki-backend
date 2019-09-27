@@ -45,9 +45,17 @@ class ExchangeController extends Controller {
 
   async removeLiquidity() {
     const ctx = this.ctx;
-    const { tokenId, amount, min_cny, min_tokens, deadline } = ctx.request.body;
+    const { tokenId, amount, min_cny, min_tokens } = ctx.request.body;
+    const deadline = parseInt(moment().format('X')) + DEADLINE; // 设置unix时间戳
     const result = await ctx.service.token.exchange.removeLiquidity(ctx.user.id, tokenId, amount, min_cny, min_tokens, deadline);
-    ctx.body = result;
+    if (result === -1) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
   }
 
   async cnyToTokenInput() {
@@ -238,6 +246,21 @@ class ExchangeController extends Controller {
         data: result,
       };
     }
+  }
+  // 获取份额
+  async getOutputPoolSize() {
+    const { ctx } = this;
+    const { amount, tokenId } = ctx.query;
+    const result = await ctx.service.token.exchange.getOutputPoolSize(amount, tokenId);
+    if (result === -1) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+
   }
 
 }
