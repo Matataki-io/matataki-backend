@@ -640,6 +640,20 @@ class ExchangeService extends Service {
     const mint_token = cny_amount * total_liquidity / cny_reserve;
     return mint_token;
   }
+
+  async getOutputPoolSize(amount, tokenId) {
+    const exchange = await this.getExchange(tokenId);
+    if (exchange === null) return -1;
+    const total_liquidity = exchange.total_supply;
+    const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+    const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+    const cny_amount = amount * cny_reserve / total_liquidity;
+    const token_amount = amount * token_reserve / total_liquidity;
+    return {
+      cny_amount,
+      token_amount,
+    };
+  }
 }
 
 module.exports = ExchangeService;

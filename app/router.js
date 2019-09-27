@@ -255,6 +255,8 @@ module.exports = app => {
   router.get('/exchange/inputAmount', passport.verify, controller.exchange.getInputAmount);
   // swap，// token 换 token / cny接口
   router.post('/exchange/swap', passport.authorize, controller.exchange.swap);
+  // 根据资金池通证获取输出
+  router.get('/exchange/outputPoolSize', passport.verify, controller.exchange.getOutputPoolSize);
   router.post('/wxpay/refund', passport.verify, controller.wxpay.refund);
 };
 
