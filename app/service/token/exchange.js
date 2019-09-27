@@ -854,8 +854,8 @@ class ExchangeService extends Service {
     const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
     const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
     return {
-      cny_amount: token_reserve,
-      token_amount: cny_reserve,
+      cny_amount: cny_reserve,
+      token_amount: token_reserve,
       total_supply: exchange.total_supply,
     };
   }
