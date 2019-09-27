@@ -223,8 +223,12 @@ class ExchangeService extends Service {
     return 0;
   }
 
-  // amount是什么？是与cny 1:1 换算的供应量
+  // amount是什么？是以cny衡量的份额
   async removeLiquidity(userId, tokenId, amount, min_cny, min_tokens, deadline) {
+    amount = parseInt(amount);
+    min_cny = parseInt(min_cny);
+    min_tokens = parseInt(min_tokens);
+
     // 因为不存在等待打包，基本上是实时的交易，所以这里的deadline仅仅是形式而已
     const timestamp = Math.floor(Date.now() / 1000);
     if (deadline < timestamp) {
@@ -252,9 +256,9 @@ class ExchangeService extends Service {
       const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
       const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
       // 根据用户remove的amount数量计算出cny数量
-      const cny_amount = amount * cny_reserve / total_liquidity;
+      const cny_amount = parseInt(amount * cny_reserve / total_liquidity);
       // 计算出token数量
-      const token_amount = amount * token_reserve / total_liquidity;
+      const token_amount = parseInt(amount * token_reserve / total_liquidity);
 
       if (cny_amount < min_cny || token_amount < min_tokens) {
         await conn.rollback();
@@ -386,6 +390,9 @@ class ExchangeService extends Service {
 
   // 通过cny兑换token，以输入的cny数量为准
   async cnyToTokenInput(userId, tokenId, cny_sold, min_tokens, deadline, recipient, conn) {
+    cny_sold = parseInt(cny_sold);
+    min_tokens = parseInt(min_tokens);
+
     // 超时
     const timestamp = Math.floor(Date.now() / 1000);
     if (deadline < timestamp) {
@@ -476,6 +483,9 @@ class ExchangeService extends Service {
 
   // max_cny 订单转入金额，可能存在退款
   async cnyToTokenOutput(userId, tokenId, tokens_bought, max_cny, deadline, recipient, conn) {
+    tokens_bought = parseInt(tokens_bought);
+    max_cny = parseInt(max_cny);
+
     const timestamp = Math.floor(Date.now() / 1000);
     if (deadline < timestamp) {
       return -1;
@@ -522,6 +532,9 @@ class ExchangeService extends Service {
 
   // 通过token兑换cny，以输入的token数量为准
   async tokenToCnyInput(userId, tokenId, tokens_sold, min_cny, deadline, recipient, ip) {
+    tokens_sold = parseInt(tokens_sold);
+    min_cny = parseInt(min_cny);
+
     // 因为不存在等待打包，基本上是实时的交易，所以这里的deadline仅仅是形式而已
     const timestamp = Math.floor(Date.now() / 1000);
     if (deadline < timestamp) {
@@ -575,6 +588,9 @@ class ExchangeService extends Service {
 
   // 通过token兑换cny，以输出的cny数量为准
   async tokenToCnyOutput(userId, tokenId, cny_bought, max_tokens, deadline, recipient, ip) {
+    cny_bought = parseInt(cny_bought);
+    max_tokens = parseInt(max_tokens);
+
     // 因为不存在等待打包，基本上是实时的交易，所以这里的deadline仅仅是形式而已
     const timestamp = Math.floor(Date.now() / 1000);
     if (deadline < timestamp) {
@@ -624,13 +640,15 @@ class ExchangeService extends Service {
       this.logger.error('ExchangeService.tokenToCnyOutput exception. %j', e);
       return -1;
     }
-
   }
 
   // 使用token兑换token
   // tokens_sold：要卖出的inTokenId数量
   // min_tokens_bought：要买入的outTokenId最小数量
   async tokenToTokenInput(userId, inTokenId, tokens_sold, min_tokens_bought, deadline, recipient, outTokenId, ip) {
+    tokens_sold = parseInt(tokens_sold);
+    min_tokens_bought = parseInt(min_tokens_bought);
+
     // 因为不存在等待打包，基本上是实时的交易，所以这里的deadline仅仅是形式而已
     const timestamp = Math.floor(Date.now() / 1000);
     if (deadline < timestamp) {
@@ -681,6 +699,9 @@ class ExchangeService extends Service {
   // tokens_bought：要买入的outTokenId数量
   // max_tokens_sold：要卖出的inTokenId最大数量
   async tokenToTokenOutput(userId, inTokenId, tokens_bought, max_tokens_sold, deadline, recipient, outTokenId, ip) {
+    tokens_bought = parseInt(tokens_bought);
+    max_tokens_sold = parseInt(max_tokens_sold);
+
     const timestamp = Math.floor(Date.now() / 1000);
     if (deadline < timestamp) {
       return -1;
@@ -740,6 +761,7 @@ class ExchangeService extends Service {
 
   // 计算使用cny兑换token的数量，以输入的cny数量为准
   async getCnyToTokenInputPrice(tokenId, cny_sold) {
+    cny_sold = parseInt(cny_sold);
     if (cny_sold <= 0) {
       return -1;
     }
@@ -754,6 +776,7 @@ class ExchangeService extends Service {
 
   // 计算使用cny兑换token的数量，以输出的token数量为准
   async getCnyToTokenOutputPrice(tokenId, tokens_bought) {
+    tokens_bought = parseInt(tokens_bought);
     if (tokens_bought <= 0) {
       return -1;
     }
@@ -768,6 +791,7 @@ class ExchangeService extends Service {
 
   // 计算使用token兑换cny的数量，以输入的token数量为准
   async getTokenToCnyInputPrice(tokenId, tokens_sold) {
+    tokens_sold = parseInt(tokens_sold);
     if (tokens_sold <= 0) {
       return -1;
     }
@@ -782,6 +806,7 @@ class ExchangeService extends Service {
 
   // 计算使用token兑换cny的数量，以输出的cny数量为准
   async getTokenToCnyOutputPrice(tokenId, cny_bought) {
+    cny_bought = parseInt(cny_bought);
     if (cny_bought <= 0) {
       return -1;
     }
@@ -798,6 +823,7 @@ class ExchangeService extends Service {
     先把token A卖掉换成cny，再用换来的cny买token B
   */
   async getTokenToTokenInputPrice(in_tokenId, out_tokenId, in_tokens_sold) {
+    in_tokens_sold = parseInt(in_tokens_sold);
     const cny_bought = await this.getTokenToCnyInputPrice(in_tokenId, in_tokens_sold);
     const out_token_bought = await this.getCnyToTokenInputPrice(out_tokenId, cny_bought);
     return out_token_bought;
@@ -806,6 +832,7 @@ class ExchangeService extends Service {
   // 计算token A 兑换token B 的数量，以输出的B数量为准，计算方法：
   // 先计算买token B需要多少cny，然后再计算得到这么多cny需要卖多少token A
   async getTokenToTokenOutputPrice(in_tokenId, out_tokenId, out_tokens_bought) {
+    out_tokens_bought = parseInt(out_tokens_bought);
     const cny_sold = await this.getCnyToTokenOutputPrice(out_tokenId, out_tokens_bought);
     const in_token_sold = await this.getTokenToCnyOutputPrice(in_tokenId, cny_sold);
     return in_token_sold;
@@ -839,9 +866,9 @@ class ExchangeService extends Service {
     const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
     const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
     // 根据用户remove的amount数量计算出cny数量
-    const cny_amount = liquidity_balance * cny_reserve / total_liquidity;
+    const cny_amount = parseInt(liquidity_balance * cny_reserve / total_liquidity);
     // 计算出token数量
-    const token_amount = liquidity_balance * token_reserve / total_liquidity;
+    const token_amount = parseInt(liquidity_balance * token_reserve / total_liquidity);
     return {
       cny_amount,
       token_amount,
@@ -849,11 +876,12 @@ class ExchangeService extends Service {
   }
 
   async getYourMintToken(cny_amount, tokenId) {
+    cny_amount = parseInt(cny_amount);
     const exchange = await this.getExchange(tokenId);
     if (exchange === null) return -1;
     const total_liquidity = exchange.total_supply;
     const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
-    const mint_token = cny_amount * total_liquidity / cny_reserve;
+    const mint_token = parseInt(cny_amount * total_liquidity / cny_reserve);
     return mint_token;
   }
 }
