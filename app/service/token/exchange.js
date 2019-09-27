@@ -881,6 +881,7 @@ class ExchangeService extends Service {
     return {
       cny_amount,
       token_amount,
+      your_supply: liquidity_balance,
     };
   }
 
