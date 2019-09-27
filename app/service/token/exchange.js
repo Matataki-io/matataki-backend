@@ -13,10 +13,12 @@ class ExchangeService extends Service {
   √ CNY账号不要插入ES
   √ 控制发行上限1亿
   √ Output为准计算
+  √ 验证tokenToTokenOutput、cnyToTokenOutputOrder
 
-    验证tokenToTokenOutput、cnyToTokenOutputOrder
     失败直接退款
+
     控制谁可以发币
+
     buy_token 改为 buy_token_input
 
     大数问题，所有的计算在node中计算，使用bignumber.js，数据库使用varchar存储，到时可以放开发行量和decimals
@@ -316,7 +318,7 @@ class ExchangeService extends Service {
     const input_amount_with_fee = input_amount * 997;
     const numerator = input_amount_with_fee * output_reserve;
     const denominator = (input_reserve * 1000) + input_amount_with_fee;
-    return numerator / denominator;
+    return parseInt(numerator / denominator);
   }
 
   // 以输出为准计算输入的数量
@@ -332,7 +334,7 @@ class ExchangeService extends Service {
 
     const numerator = input_reserve * output_amount * 1000;
     const denominator = (output_reserve - output_amount) * 997;
-    return numerator / denominator + 1;
+    return parseInt(numerator / denominator + 1);
   }
 
   // cny兑换token，微信付款订单
@@ -340,7 +342,7 @@ class ExchangeService extends Service {
     const conn = await this.app.mysql.beginTransaction();
     try {
       // 锁定订单，更新锁，悲观锁
-      const result = await conn.query('SELECT * FROM exchange_orders WHERE id = ? AND status = 6 AND type=\'buy_token\' FOR UPDATE;', [ orderId ]); // todo: buy_token 改为 buy_token_input
+      const result = await conn.query('SELECT * FROM exchange_orders WHERE id = ? AND status = 6 AND type=\'buy_token_input\' FOR UPDATE;', [ orderId ]); // todo: buy_token 改为 buy_token_input
       if (!result || result.length <= 0) {
         await conn.rollback();
         return -1;
@@ -492,7 +494,7 @@ class ExchangeService extends Service {
 
     // 计算需要的cny数量
     const cny_sold = this.getOutputPrice(tokens_bought, cny_reserve, token_reserve);
-    if (cny_sold < 0) {
+    if (cny_sold <= 0) {
       return -1;
     }
 
@@ -699,7 +701,7 @@ class ExchangeService extends Service {
 
       // 1. 计算兑换这些out Token需要的cny数量cny_bought
       const cny_bought = await this.getCnyToTokenOutputPrice(outTokenId, tokens_bought);
-      if (cny_bought < 0) { // 出错了
+      if (cny_bought <= 0) { // 出错了
         await conn.rollback();
         return -1;
       }
@@ -708,7 +710,7 @@ class ExchangeService extends Service {
       const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, inTokenId);
       const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
       const tokens_sold = await this.getOutputPrice(cny_bought, token_reserve, cny_reserve);
-      if (tokens_sold < 0 || tokens_sold > max_tokens_sold) {
+      if (tokens_sold <= 0 || tokens_sold > max_tokens_sold) {
         await conn.rollback();
         return -1;
       }
