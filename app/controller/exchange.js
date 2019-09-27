@@ -222,7 +222,7 @@ class ExchangeController extends Controller {
   }
   async swap() {
     const { ctx } = this;
-    const { inputTokenId, outputTokenId, inputAmount, minValue } = ctx.query;
+    const { inputTokenId, outputTokenId, inputAmount, minValue } = ctx.request.body;
     if (inputTokenId === 0) {
       ctx.body = ctx.msg.failure;
       return;
