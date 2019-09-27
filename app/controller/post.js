@@ -38,7 +38,7 @@ class PostController extends Controller {
 
     // 评论需要支付的积分
     const comment_pay_point = parseInt(commentPayPoint);
-    if (comment_pay_point > 20 || comment_pay_point < 1) {
+    if (comment_pay_point > 99999 || comment_pay_point < 1) {
       ctx.body = ctx.msg.pointCommentSettingError;
       return;
     }

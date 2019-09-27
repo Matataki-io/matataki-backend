@@ -3,6 +3,7 @@
 const Service = require('egg').Service;
 const elastic = require('@elastic/elasticsearch');
 const moment = require('moment');
+const consts = require('./consts');
 
 class SearchService extends Service {
   constructor(ctx, app) {
@@ -276,7 +277,7 @@ class SearchService extends Service {
     }
 
     // 交易所虚拟账号不要插入ES
-    if (user.platform === 'cny') {
+    if (user[0].platform === consts.platforms.cny) {
       return null;
     }
 

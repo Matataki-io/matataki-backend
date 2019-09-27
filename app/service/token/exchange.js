@@ -1,6 +1,8 @@
 'use strict';
 const moment = require('moment');
 const Service = require('egg').Service;
+const consts = require('../consts');
+const virtualUserPrefix = 'exchange_';
 
 class ExchangeService extends Service {
 
@@ -37,15 +39,17 @@ class ExchangeService extends Service {
       return -2;
     }
 
+    const username = virtualUserPrefix + tokenId;
+    const platform = consts.platforms.cny;
     // 虚拟账号
-    let exchangeUser = await this.service.auth.getUser('cny_' + tokenId, 'cny');
+    let exchangeUser = await this.service.auth.getUser(username, platform);
     if (!exchangeUser) {
       try {
-        await this.service.auth.insertUser('cny_' + tokenId, '', 'cny', 'ss', '', 'cv46BYasKvID933R', 0); // todo：确认该类账号不可从前端登录
+        await this.service.auth.insertUser(username, '', platform, 'ss', '', 'cv46BYasKvID933R', 0); // todo：确认该类账号不可从前端登录
       } catch (e) {
         this.logger.error('ExchangeService.create exception. %j', e);
       }
-      exchangeUser = await this.service.auth.getUser('cny_' + tokenId, 'cny');
+      exchangeUser = await this.service.auth.getUser(username, platform);
     }
 
     // 创建交易对

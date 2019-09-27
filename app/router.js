@@ -228,7 +228,7 @@ module.exports = app => {
   // 用户持仓token list
   router.get('/token/tokenlist', passport.verify, controller.token.tokenList);
   // token 详情
-  router.get('/token/detail', passport.verify, controller.token.tokenDetail);
+  router.get('/token/minetoken', passport.verify, controller.token.minetokenDetail);
   // 所有的token 分页
   router.get('/token/all', passport.verify, controller.token.allToken);
 
@@ -237,8 +237,13 @@ module.exports = app => {
   router.post('/exchange/removeLiquidity', passport.authorize, controller.exchange.removeLiquidity);
 
   router.post('/exchange/cnyToTokenInput', passport.authorize, controller.exchange.cnyToTokenInput);
+  router.post('/exchange/cnyToTokenOutput', passport.authorize, controller.exchange.cnyToTokenOutput);
+
   router.post('/exchange/tokenToCnyInput', passport.authorize, controller.exchange.tokenToCnyInput);
+  router.post('/exchange/tokenToCnyOutput', passport.authorize, controller.exchange.tokenToCnyOutput);
+
   router.post('/exchange/tokenToTokenInput', passport.authorize, controller.exchange.tokenToTokenInput);
+  router.post('/exchange/tokenToTokenOutput', passport.authorize, controller.exchange.tokenToTokenOutput);
   // -------------------------------- exchage计算 display API --------------------------------
   // 获取pool size & supply
   router.get('/exchange/currentPoolSize', passport.verify, controller.exchange.getCurrentPoolSize);

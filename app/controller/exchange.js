@@ -40,36 +40,55 @@ class ExchangeController extends Controller {
     const ctx = this.ctx;
     const orderId = parseInt(ctx.request.body.orderId);
     const result = await ctx.service.token.exchange.addLiquidityOrder(orderId);
-    ctx.body = ctx.msg.success;
+    ctx.body = result;
   }
 
   async removeLiquidity() {
     const ctx = this.ctx;
     const { tokenId, amount, min_cny, min_tokens, deadline } = ctx.request.body;
     const result = await ctx.service.token.exchange.removeLiquidity(ctx.user.id, tokenId, amount, min_cny, min_tokens, deadline);
-    ctx.body = ctx.msg.success;
+    ctx.body = result;
   }
 
   async cnyToTokenInput() {
     const ctx = this.ctx;
     const orderId = parseInt(ctx.request.body.orderId);
     const result = await ctx.service.token.exchange.cnyToTokenInputOrder(orderId);
-    ctx.body = ctx.msg.success;
+    ctx.body = result;
+  }
+  async cnyToTokenOutput() {
+    const ctx = this.ctx;
+    const orderId = parseInt(ctx.request.body.orderId);
+    const result = await ctx.service.token.exchange.cnyToTokenOutputOrder(orderId);
+    ctx.body = result;
   }
 
   async tokenToCnyInput() {
     const ctx = this.ctx;
     const { tokenId, tokens_sold, min_cny, deadline, recipient } = ctx.request.body;
     const result = await ctx.service.token.exchange.tokenToCnyInput(ctx.user.id, tokenId, tokens_sold, min_cny, deadline, recipient, this.clientIP);
-    ctx.body = ctx.msg.success;
+    ctx.body = result;
+  }
+  async tokenToCnyOutput() {
+    const ctx = this.ctx;
+    const { tokenId, tokens_sold, min_cny, deadline, recipient } = ctx.request.body;
+    const result = await ctx.service.token.exchange.tokenToCnyOutput(ctx.user.id, tokenId, tokens_sold, min_cny, deadline, recipient, this.clientIP);
+    ctx.body = result;
   }
 
   async tokenToTokenInput() {
     const ctx = this.ctx;
     const { inTokenId, tokens_sold, min_tokens_bought, deadline, recipient, outTokenId } = ctx.request.body;
     const result = await ctx.service.token.exchange.tokenToTokenInput(ctx.user.id, inTokenId, tokens_sold, min_tokens_bought, deadline, recipient, outTokenId, this.clientIP);
-    ctx.body = ctx.msg.success;
+    ctx.body = result;
   }
+  async tokenToTokenOutput() {
+    const ctx = this.ctx;
+    const { inTokenId, tokens_bought, max_tokens_sold, deadline, recipient, outTokenId } = ctx.request.body;
+    const result = await ctx.service.token.exchange.tokenToTokenOutput(ctx.user.id, inTokenId, tokens_bought, max_tokens_sold, deadline, recipient, outTokenId, this.clientIP);
+    ctx.body = result;
+  }
+
   // 以input为准，获得output的数量
   async getOutputAmount() {
     const { ctx } = this;
