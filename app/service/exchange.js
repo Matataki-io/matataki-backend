@@ -125,16 +125,29 @@ class ExchangeService extends Service {
     };
   }
   // 所有的token
-  async getAllToken(page = 1, pagesize = 20) {
-    const sql = 'SELECT * FROM mineTokens LIMIT :offset, :limit;'
-      + 'SELECT count(1) as count FROM mineTokens;';
-    const result = await this.app.mysql.query(sql, {
+  async getAllToken(page = 1, pagesize = 20, search = '') {
+    if (search === '') {
+      const sql = 'SELECT * FROM mineTokens LIMIT :offset, :limit;'
+        + 'SELECT count(1) as count FROM mineTokens;';
+      const result = await this.app.mysql.query(sql, {
+        offset: (page - 1) * pagesize,
+        limit: pagesize,
+      });
+      return {
+        count: result[1][0].count,
+        list: result[0],
+      };
+    }
+    const searchSql = 'SELECT * FROM mineTokens WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search LIMIT :offset, :limit;'
+      + 'SELECT count(1) as count FROM mineTokens WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search;';
+    const searchResult = await this.app.mysql.query(searchSql, {
+      search: '%' + search.toLowerCase() + '%',
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
     return {
-      count: result[1][0].count,
-      list: result[0],
+      count: searchResult[1][0].count,
+      list: searchResult[0],
     };
   }
 }
