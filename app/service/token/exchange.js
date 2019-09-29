@@ -776,6 +776,9 @@ class ExchangeService extends Service {
     if (exchange === null) return -1;
     const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
     const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+    if (cny_reserve <= 0) {
+      return -1;
+    }
     // 非首次add，按照当前的价格计算出token数量
     const token_amount = cny_amount * token_reserve / cny_reserve + 1;
     return token_amount;
