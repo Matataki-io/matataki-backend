@@ -955,7 +955,7 @@ class ExchangeService extends Service {
 
       const res = await this.service.wxpay.refund(trade_no, cny_sold / 10000, cny_sold / 10000);
       // 申请退款接收成功，todo：处理退款结果通知，写到数据库status=10；todo：如果退款接收失败，还需要再次调用，放到schedule里面调用退款比较好
-      if (res.return_code === 'return_code' && res.result_code === 'SUCCESS') {
+      if (res.return_code === 'SUCCESS' && res.result_code === 'SUCCESS') {
         await conn.query('UPDATE exchange_orders SET status = 8 WHERE id = ?;', [ orderId ]);
       }
       await conn.commit();
