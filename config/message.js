@@ -116,6 +116,7 @@ module.exports = {
   tokenCantMint: 10804,
   tokenNoCreatePermission: 10805,
   exchangeNotEnough: 10806,
+  exchangeNotExist: 10807,
 
   returnObj(lang) {
 
@@ -189,6 +190,7 @@ module.exports = {
       tokenCantMint: { code: this.tokenCantMint, message: 'The token can not mint.' },
       tokenNoCreatePermission: { code: this.tokenNoCreatePermission, message: 'You do not have permission to create a token.' },
       exchangeNotEnough: { code: this.exchangeNotEnough, message: 'There is not enough liquidity.' },
+      exchangeNotExist: { code: this.exchangeNotExist, message: 'No swap pairs.' },
     };
 
     const zh = {
@@ -261,6 +263,7 @@ module.exports = {
       tokenCantMint: { code: this.tokenCantMint, message: 'token发行已达上限' },
       tokenNoCreatePermission: { code: this.tokenNoCreatePermission, message: '你没有权限发币' },
       exchangeNotEnough: { code: this.exchangeNotEnough, message: '流动性不足' },
+      exchangeNotExist: { code: this.exchangeNotExist, message: '没有交易对.' },
     };
 
     let message;
