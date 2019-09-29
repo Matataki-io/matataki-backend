@@ -164,7 +164,7 @@ class ExchangeService extends Service {
       token_amount = cny_amount * token_reserve / cny_reserve + 1;
       // 计算实际份额，如果池子里现有的cny多（也就是有人来拿cny买token），那么liquidity_minted就会变小，也就是同样往池子里打入10000 cny，视cny_reserve多少份额不一样
       // 你打入的钱按照池子里现有的cny_reserve来计算你的份额
-      const liquidity_minted = cny_amount * total_liquidity / cny_reserve;
+      const liquidity_minted = parseInt(cny_amount * total_liquidity / cny_reserve);
 
       // 不满足token最大值和份额最小值条件
       if (max_tokens < token_amount || liquidity_minted < min_liquidity) {
