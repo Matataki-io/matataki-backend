@@ -850,6 +850,9 @@ class ExchangeService extends Service {
   async getTokenToTokenInputPrice(in_tokenId, out_tokenId, in_tokens_sold) {
     in_tokens_sold = parseInt(in_tokens_sold);
     const cny_bought = await this.getTokenToCnyInputPrice(in_tokenId, in_tokens_sold);
+    if (cny_bought < 0) {
+      return cny_bought;
+    }
     const out_token_bought = await this.getCnyToTokenInputPrice(out_tokenId, cny_bought);
     return out_token_bought;
   }
@@ -859,6 +862,9 @@ class ExchangeService extends Service {
   async getTokenToTokenOutputPrice(in_tokenId, out_tokenId, out_tokens_bought) {
     out_tokens_bought = parseInt(out_tokens_bought);
     const cny_sold = await this.getCnyToTokenOutputPrice(out_tokenId, out_tokens_bought);
+    if (cny_sold < 0) {
+      return cny_sold;
+    }
     const in_token_sold = await this.getTokenToCnyOutputPrice(in_tokenId, cny_sold);
     return in_token_sold;
   }
