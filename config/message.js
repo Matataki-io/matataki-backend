@@ -115,6 +115,7 @@ module.exports = {
   exchangeAlreadyCreated: 10803,
   tokenCantMint: 10804,
   tokenNoCreatePermission: 10805,
+  exchangeNotEnough: 10806,
 
   returnObj(lang) {
 
@@ -187,6 +188,7 @@ module.exports = {
       exchangeAlreadyCreated: { code: this.exchangeAlreadyCreated, message: 'The exchange pair already exists.' },
       tokenCantMint: { code: this.tokenCantMint, message: 'The token can not mint.' },
       tokenNoCreatePermission: { code: this.tokenNoCreatePermission, message: 'You do not have permission to create a token.' },
+      exchangeNotEnough: { code: this.exchangeNotEnough, message: 'There is not enough liquidity.' },
     };
 
     const zh = {
@@ -258,6 +260,7 @@ module.exports = {
       exchangeAlreadyCreated: { code: this.exchangeAlreadyCreated, message: '交易对已经存在' },
       tokenCantMint: { code: this.tokenCantMint, message: 'token发行已达上限' },
       tokenNoCreatePermission: { code: this.tokenNoCreatePermission, message: '你没有权限发币' },
+      exchangeNotEnough: { code: this.exchangeNotEnough, message: '流动性不足' },
     };
 
     let message;

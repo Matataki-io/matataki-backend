@@ -121,6 +121,9 @@ class ExchangeController extends Controller {
     if (amount === -1) {
       ctx.body = ctx.msg.failure;
       return;
+    } else if (amount === -2) {
+      ctx.body = ctx.msg.exchangeNotEnough;
+      return;
     }
     ctx.body = {
       ...ctx.msg.success,
@@ -142,6 +145,9 @@ class ExchangeController extends Controller {
     // 判断
     if (amount === -1) {
       ctx.body = ctx.msg.failure;
+      return;
+    } else if (amount === -2) {
+      ctx.body = ctx.msg.exchangeNotEnough;
       return;
     }
     ctx.body = {

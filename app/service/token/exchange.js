@@ -319,7 +319,7 @@ class ExchangeService extends Service {
 
     input_amount = parseInt(input_amount);
     if (input_amount >= input_reserve) {
-      return -1;
+      return -2;
     }
 
     const input_amount_with_fee = input_amount * 997;
@@ -336,7 +336,7 @@ class ExchangeService extends Service {
 
     output_amount = parseInt(output_amount);
     if (output_amount >= output_reserve) {
-      return -1;
+      return -2;
     }
 
     const numerator = input_reserve * output_amount * 1000;
