@@ -15,13 +15,24 @@ class MineTokenService extends Service {
       return -2;
     }
 
-    // todo: 查询是否有发币权限
+    // 是否有权限发币
+    if (!await this.hasCreatePermission(userId)) {
+      return -3;
+    }
+
     const sql = 'INSERT INTO minetokens(uid, name, symbol, decimals, total_supply, create_time, status) '
       + 'SELECT ?,?,?,?,0,?,1 FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
     const result = await this.app.mysql.query(sql,
       [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), userId, symbol ]);
-    // if ( result.affectedRows > 0)
     return result.insertId;
+  }
+
+  async hasCreatePermission(userId) {
+    const user = await this.service.user.get(userId);
+    if (user.level > 0) {
+      return true;
+    }
+    return false;
   }
 
   async hasMintPermission(tokenId, userId) {

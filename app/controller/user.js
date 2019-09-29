@@ -43,7 +43,7 @@ class UserController extends Controller {
     const countsql = 'SELECT COUNT(*) AS count FROM assets_change_log a LEFT JOIN posts b ON a.signid = b.id ';
     const listsql = 'SELECT a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, a.trx, a.toaddress, a.memo, a.status, b.title FROM assets_change_log a LEFT JOIN posts b ON a.signid = b.id ';
     const wheresql = 'WHERE a.uid = ? AND a.symbol = ? ';
-    const ordersql = 'ORDER BY a.create_time DESC LIMIT ? ,? ';
+    const ordersql = 'ORDER BY a.id DESC LIMIT ? ,? ';
     const sqlcode = countsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
 
     const queryResult = await this.app.mysql.query(
