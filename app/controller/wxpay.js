@@ -196,6 +196,21 @@ class WxPayController extends Controller {
       data: result,
     };
   }
+  async refundNotify() {
+    const { ctx } = this;
+    const { return_code, out_trade_no } = ctx.request.body;// 订单号
+    ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.body);
+    ctx.body = `<xml>
+                  <return_code><![CDATA[SUCCESS]]></return_code>
+                  <return_msg><![CDATA[OK]]></return_msg>
+                </xml>`;
+    if (return_code === 'SUCCESS') {
+      ctx.body = `<xml>
+                    <return_code><![CDATA[SUCCESS]]></return_code>
+                    <return_msg><![CDATA[OK]]></return_msg>
+                  </xml>`;
+    }
+  }
 }
 
 module.exports = WxPayController;

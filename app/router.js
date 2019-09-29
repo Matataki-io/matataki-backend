@@ -208,6 +208,8 @@ module.exports = app => {
   // -------------------------------- 微信支付相关API --------------------------------
   // 微信支付回调
   router.post('/wx/notify', app.wxpay.notify, controller.wxpay.notify);
+  // 微信退款结果通知
+  router.post('/wx/refundNotify', app.wxpay.notify, controller.wxpay.refundNotify);
   // 微信支付接口
   router.post('/wx/pay', passport.authorize, controller.wxpay.pay);
   // 微信登录获取openid
@@ -253,6 +255,7 @@ module.exports = app => {
   router.get('/exchange/userPoolSize', passport.authorize, controller.exchange.getYourPoolSize);
   // 获取your mint token
   router.get('/exchange/userMintToken', passport.verify, controller.exchange.getYourMintToken);
+  router.get('/exchange/poolCnyToTokenPrice', passport.verify, controller.exchange.getPoolCnyToTokenPrice);
 
   // 支付后订单状态修改通知接口
   router.get('/exchange/notify', passport.verify, controller.exchange.notify);
