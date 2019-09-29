@@ -125,15 +125,16 @@ class WxPayController extends Controller {
       trade_type: 'NATIVE',
       transaction_id: '4200000416201909240710109485'
     }*/
-    const { return_code, out_trade_no } = ctx.request.body;// 订单号
+    const { result_code, return_code, out_trade_no } = ctx.request.body;// 订单号
     ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.body);
     // 支付成功
-    if (return_code === 'SUCCESS') {
+    if (return_code === 'SUCCESS' && result_code === 'SUCCESS') {
       // 修改订单状态
       await ctx.service.exchange.setStatusPayed(out_trade_no);
       const order = await ctx.service.exchange.getOrderBytradeNo(out_trade_no);
       const orderId = order.id;
       const type = order.type;
+      ctx.set('Content-Type', 'text/xml');
       switch (typeOptions[type]) {
         case 'add': // 添加流动性
           await ctx.service.token.exchange.addLiquidityOrder(orderId);
@@ -144,9 +145,18 @@ class WxPayController extends Controller {
         case 'buy_token_output': // 购买token
           await ctx.service.token.exchange.cnyToTokenInputOrder(orderId);
           break;
-        default:
-          ctx.body = ctx.msg.failure;
+        default: {
+          ctx.body = `<xml>
+                        <return_code><![CDATA[FAIL]]></return_code>
+                        <return_msg><![CDATA[update error]]></return_msg>
+                      </xml>`;
+          return;
+        }
       }
+      ctx.body = `<xml>
+                    <return_code><![CDATA[SUCCESS]]></return_code>
+                    <return_msg><![CDATA[OK]]></return_msg>
+                  </xml>`;
     }
   }
   async login() {
@@ -185,6 +195,21 @@ class WxPayController extends Controller {
       ...ctx.msg.success,
       data: result,
     };
+  }
+  async refundNotify() {
+    const { ctx } = this;
+    const { return_code, out_trade_no } = ctx.request.body;// 订单号
+    ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.body);
+    ctx.body = `<xml>
+                  <return_code><![CDATA[SUCCESS]]></return_code>
+                  <return_msg><![CDATA[OK]]></return_msg>
+                </xml>`;
+    if (return_code === 'SUCCESS') {
+      ctx.body = `<xml>
+                    <return_code><![CDATA[SUCCESS]]></return_code>
+                    <return_msg><![CDATA[OK]]></return_msg>
+                  </xml>`;
+    }
   }
 }
 

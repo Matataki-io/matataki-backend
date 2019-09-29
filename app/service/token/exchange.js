@@ -767,6 +767,19 @@ class ExchangeService extends Service {
       return -1;
     }
   }
+  async getPoolCnyToTokenPrice(tokenId, cny_amount) {
+    cny_amount = parseInt(cny_amount);
+    if (cny_amount <= 0) {
+      return -1;
+    }
+    const exchange = await this.getExchange(tokenId);
+    if (exchange === null) return -1;
+    const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+    const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
+    // 非首次add，按照当前的价格计算出token数量
+    const token_amount = cny_amount * token_reserve / cny_reserve + 1;
+    return token_amount;
+  }
 
   // 计算使用cny兑换token的数量，以输入的cny数量为准
   async getCnyToTokenInputPrice(tokenId, cny_sold) {

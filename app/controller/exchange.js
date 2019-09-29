@@ -155,6 +155,20 @@ class ExchangeController extends Controller {
       data: amount,
     };
   }
+  async getPoolCnyToTokenPrice() {
+    const { ctx } = this;
+    const { outputTokenId, inputAmount } = ctx.query;
+    const amount = await ctx.service.token.exchange.getPoolCnyToTokenPrice(outputTokenId, inputAmount);
+    // 判断
+    if (amount === -1) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: amount,
+    };
+  }
   async getCurrentPoolSize() {
     const { ctx } = this;
     const { tokenId } = ctx.query;
