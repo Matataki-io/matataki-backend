@@ -891,7 +891,13 @@ class ExchangeService extends Service {
     if (exchange === null) return -1;
     const total_liquidity = exchange.total_supply;
     const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
-    const mint_token = parseInt(cny_amount * total_liquidity / cny_reserve);
+
+    let mint_token = 0;
+    if (total_liquidity <= 0) {
+      mint_token = cny_amount;
+    } else {
+      mint_token = parseInt(cny_amount * total_liquidity / cny_reserve);
+    }
     return mint_token;
   }
 
