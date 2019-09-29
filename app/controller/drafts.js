@@ -117,6 +117,7 @@ class DraftsController extends Controller {
       if (updateSuccess) {
         this.ctx.logger.info('create draft success ..');
         this.ctx.body = this.ctx.msg.success;
+        this.ctx.body.data = result.insertId;
 
       } else {
         this.ctx.logger.error('create draft err ');
