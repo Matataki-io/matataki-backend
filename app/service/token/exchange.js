@@ -871,7 +871,15 @@ class ExchangeService extends Service {
         token_amount: 0,
       };
     }
+
     const liquidity_balance = user_balance.liquidity_balance;
+    if (liquidity_balance <= 0) {
+      return {
+        cny_amount: 0,
+        token_amount: 0,
+      };
+    }
+
     const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
     const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
     // 根据用户remove的amount数量计算出cny数量
