@@ -29,6 +29,8 @@ class MineTokenService extends Service {
 
   async hasCreatePermission(userId) {
     const user = await this.service.user.get(userId);
+    /* // eslint-disable-next-line no-bitwise
+    return (user.status & 1) === 1; */
     if (user.level > 0) {
       return true;
     }
