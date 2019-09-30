@@ -93,7 +93,7 @@ class ExchangeService extends Service {
   }
   // 用户持有的币
   async getTokenListByUser(id, page = 1, pagesize = 20) {
-    const sql = 'SELECT a.token_id, a.amount, b.symbol, b.decimals, b.uid, u.username, u.nickname, u.avatar '
+    const sql = 'SELECT a.token_id, a.amount, b.symbol, b.name, b.decimals, b.uid, u.username, u.nickname, u.avatar '
       + 'FROM assets_minetokens AS a '
       + 'LEFT JOIN minetokens AS b ON a.token_id = b.id '
       + 'LEFT JOIN users u ON b.uid = u.id '

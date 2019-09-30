@@ -56,6 +56,8 @@ class WxpayService extends Service {
       out_refund_no: out_trade_no + '_1', // 商户退款单号
       total_fee: parseFloat(total_fee) * 100, // 订单金额，传入单位元
       refund_fee: parseFloat(refund_fee) * 100, // 退款金额，传入单位元
+      // notify_url: this.config.refund.notifyUrl,
+      notify_url: 'https://apitest.smartsignature.io/wx/refundNotify',
     };
     ctx.logger.info('service refund refund_order', refund_order);
     // TODO 查找订单号
