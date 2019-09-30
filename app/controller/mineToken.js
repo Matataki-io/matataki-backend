@@ -1,13 +1,12 @@
 'use strict';
-
 const Controller = require('../core/base_controller');
 
 class MineTokenController extends Controller {
   async create() {
     const ctx = this.ctx;
 
-    const { name, symbol, decimals } = this.ctx.request.body;
-    const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, 4); // decimals默认4位
+    const { name, symbol, decimals, logo } = this.ctx.request.body;
+    const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, 4, logo); // decimals默认4位
     if (result === -1) {
       ctx.body = ctx.msg.tokenAlreadyCreated;
     } else if (result === -2) {

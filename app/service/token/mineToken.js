@@ -4,7 +4,7 @@ const Service = require('egg').Service;
 
 class MineTokenService extends Service {
   // 作者创建一个token
-  async create(userId, name, symbol, decimals) {
+  async create(userId, name, symbol, decimals, logo) {
     let token = await this.getByUserId(userId);
     if (token) {
       return -1;
@@ -20,10 +20,10 @@ class MineTokenService extends Service {
       return -3;
     }
 
-    const sql = 'INSERT INTO minetokens(uid, name, symbol, decimals, total_supply, create_time, status) '
-      + 'SELECT ?,?,?,?,0,?,1 FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
+    const sql = 'INSERT INTO minetokens(uid, name, symbol, decimals, total_supply, create_time, status, logo) '
+      + 'SELECT ?,?,?,?,0,?,1,? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
     const result = await this.app.mysql.query(sql,
-      [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), userId, symbol ]);
+      [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), logo, userId, symbol ]);
     return result.insertId;
   }
 
