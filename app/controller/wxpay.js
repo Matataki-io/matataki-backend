@@ -143,7 +143,7 @@ class WxPayController extends Controller {
           await ctx.service.token.exchange.cnyToTokenInputOrder(orderId);
           break;
         case 'buy_token_output': // 购买token
-          await ctx.service.token.exchange.cnyToTokenInputOrder(orderId);
+          await ctx.service.token.exchange.cnyToTokenOutputOrder(orderId);
           break;
         default: {
           ctx.body = `<xml>
