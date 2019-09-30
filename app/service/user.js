@@ -132,7 +132,7 @@ class UserService extends Service {
     basicInfo.articles = counts[2][0].articles;
     basicInfo.drafts = counts[3][0].drafts;
     basicInfo.supports = counts[4][0].supports;
-    basicInfo.points = counts[5][0].amount;
+    basicInfo.points = counts[5].length > 0 ? counts[5][0].amount : 0;
     basicInfo.referral_amount = counts[6][0].referral_amount;
     // console.log(counts, basicInfo.id);
 
