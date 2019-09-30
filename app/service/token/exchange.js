@@ -317,10 +317,10 @@ class ExchangeService extends Service {
       return -1;
     }
 
-    input_amount = parseInt(input_amount);
-    if (input_amount >= input_reserve) {
-      return -2;
-    }
+    // input_amount = parseInt(input_amount);
+    // if (input_amount >= input_reserve) {
+    //   return -2;
+    // }
 
     const input_amount_with_fee = input_amount * 997;
     const numerator = input_amount_with_fee * output_reserve;
