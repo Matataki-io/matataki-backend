@@ -1,6 +1,7 @@
 'use strict';
 const moment = require('moment');
 const Service = require('egg').Service;
+const consts = require('../consts');
 
 class MineTokenService extends Service {
   // 作者创建一个token
@@ -29,12 +30,13 @@ class MineTokenService extends Service {
 
   async hasCreatePermission(userId) {
     const user = await this.service.user.get(userId);
-    /* // eslint-disable-next-line no-bitwise
-    return (user.status & 1) === 1; */
-    if (user.level > 0) {
+    const hasMineTokenPermission = consts.userStatus.hasMineTokenPermission;
+    // eslint-disable-next-line no-bitwise
+    return (user.status & hasMineTokenPermission) === hasMineTokenPermission;
+    /* if (user.level > 0) {
       return true;
     }
-    return false;
+    return false; */
   }
 
   async hasMintPermission(tokenId, userId) {

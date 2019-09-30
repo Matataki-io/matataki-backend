@@ -71,4 +71,9 @@ module.exports = {
     cny: 'cny',
   },
 
+  // 用户权限控制，二进制
+  userStatus: {
+    hasMineTokenPermission: 2, // 10
+    isSeedUser: 1, // 01
+  },
 };
