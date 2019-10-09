@@ -281,7 +281,9 @@ class UserService extends Service {
       row.introduction = introduction;
     }
 
-    row.accept = accept;
+    if (accept === 0 || accept === 1) {
+      row.accept = accept;
+    }
 
     const options = {
       where: {
