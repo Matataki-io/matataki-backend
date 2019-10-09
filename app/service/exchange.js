@@ -150,5 +150,33 @@ class ExchangeService extends Service {
       list: searchResult[0],
     };
   }
+  async getFlowDetail(tokenId, page = 1, pagesize = 20) {
+    console.log(tokenId);
+    const sql = 'SELECT * from exchange_orders WHERE token_id = :tokenId LIMIT :offset, :limit;'
+        + 'SELECT count(1) as count FROM exchange_orders WHERE token_id = :tokenId;';
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      tokenId,
+    });
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
+  }
+  async getUserFlowDetail(userId, tokenId, page = 1, pagesize = 20) {
+    const sql = 'SELECT * from exchange_orders WHERE token_id = :tokenId AND uid = :userId LIMIT :offset, :limit;'
+        + 'SELECT count(1) as count FROM exchange_orders WHERE token_id = :tokenId AND uid = :userId;';
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      userId,
+      tokenId,
+    });
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
+  }
 }
 module.exports = ExchangeService;
