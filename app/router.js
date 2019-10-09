@@ -227,8 +227,10 @@ module.exports = app => {
   // -------------------------------- token display API --------------------------------
   // 根据token获取持仓用户list
   router.get('/token/userlist', passport.verify, controller.token.userList);
+  router.get('/token/usertokenflow', passport.verify, controller.token.userTokenFlow);
   // 用户持仓token list
   router.get('/token/tokenlist', passport.verify, controller.token.tokenList);
+  router.get('/token/tokenflow', passport.verify, controller.token.tokenFlow);
   // token 详情
   router.get('/token/minetoken', passport.verify, controller.token.minetokenDetail);
   // 所有的token 分页
