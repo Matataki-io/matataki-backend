@@ -146,8 +146,10 @@ class PostService extends Service {
       return null;
     }
 
-    const post = posts[0];
-    return this.getPostProfile(post);
+    let post = posts[0];
+    post = await this.getPostProfile(post);
+    post.tokens = await this.getMineTokens(id);
+    return post;
   }
 
   // 获取文章阅读数等属性
