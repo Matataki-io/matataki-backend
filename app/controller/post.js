@@ -465,7 +465,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const hash = ctx.params.hash;
 
-    const post = await this.service.post.getByHash(hash, ctx.user.id);
+    const post = await this.service.post.getByHash(hash, true);
 
     if (!post) {
       ctx.body = ctx.msg.postNotFound;
@@ -723,18 +723,19 @@ class PostController extends Controller {
 
   async catchPost() {
     const ctx = this.ctx;
-    const id = ctx.params.id;
+    const hash = ctx.params.hash;
+
+    const post = await this.service.post.getByHash(hash, false);
 
     // 增加判断是否有权限
-    const result = await this.service.post.isHoldMineTokens(id, ctx.user.id);
+    const result = await this.service.post.isHoldMineTokens(post.id, ctx.user.id);
     if (!result) {
       ctx.body = ctx.msg.postNoPermission;
       return;
     }
 
-    const post = await this.service.post.get(id);
     // 从ipfs获取内容
-    const catchRequest = await this.service.post.ipfsCatch(post.hash);
+    const catchRequest = await this.service.post.ipfsCatch(hash);
 
     if (catchRequest) {
       ctx.body = ctx.msg.success;

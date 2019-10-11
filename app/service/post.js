@@ -84,15 +84,18 @@ class PostService extends Service {
   }
 
   // 根据hash获取文章
-  async getByHash(hash, userId) {
+  async getByHash(hash, requireProfile) {
     // const post = await this.app.mysql.get('posts', { hash });
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
       + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE hash = ?;',
       [ hash ]
     );
-    const post = posts[0];
-    return this.getPostProfile(post, userId);
+    let post = posts[0];
+    if (requireProfile) {
+      post = await this.getPostProfile(post);
+    }
+    return post;
   }
 
   // 根据id获取文章-简单版
