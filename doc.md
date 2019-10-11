@@ -2314,11 +2314,78 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 	]
 }
 ```
+#### 买入粉丝币-流水明细
+* GET /token/tokenflow
+* 响应状态码： 200
+* 参数：page || 1, pagesize || 10, tokenId
+* 请求头：x-access-token
+* 返回值：
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "count": 1,
+        "list": [
+          {
+            "id": 79,
+            "uid": 1042,
+            "token_id": 14,
+            "cny_amount": 10000,
+            "token_amount": 758573,
+            "type": "buy_token_input",
+            "trade_no": "i9T5PmF6Xnufe4z1lA3HNEwqrLY8ETq",
+            "openid": "",
+            "status": 9,
+            "create_time": "2019-09-29T07:02:12.000Z",
+            "pay_time": null,
+            "ip": "112.118.225.21",
+            "deadline": 1569740832,
+            "min_liquidity": 0,
+            "max_tokens": 0,
+            "min_tokens": 750987,
+            "recipient": 1042
+          }
+        ]
+    }
+}
+```
+
+#### 我的粉丝币-流水明细
+* GET /token/usertokenflow
+* 响应状态码： 200
+* 参数：page || 1, pagesize || 10
 * 请求头：x-access-token
 * 返回值：
 ```
 {
   "code": 0,
   "message": "成功"
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "count": 1,
+        "list": [
+          {
+            "id": 79,
+            "uid": 1042,
+            "token_id": 14,
+            "cny_amount": 10000,
+            "token_amount": 758573,
+            "type": "buy_token_input",
+            "trade_no": "i9T5PmF6Xnufe4z1lA3HNEwqrLY8ETq",
+            "openid": "",
+            "status": 9,
+            "create_time": "2019-09-29T07:02:12.000Z",
+            "pay_time": null,
+            "ip": "112.118.225.21",
+            "deadline": 1569740832,
+            "min_liquidity": 0,
+            "max_tokens": 0,
+            "min_tokens": 750987,
+            "recipient": 1042
+          }
+        ]
+    }
 }
 ```
