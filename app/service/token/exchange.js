@@ -436,6 +436,8 @@ class ExchangeService extends Service {
       return -1;
     }
 
+    await this.addExchangeLog(userId, 0, cny_sold, tokenId, tokens_bought, recipient, '', conn);
+
     return 0;
   }
 
@@ -536,6 +538,8 @@ class ExchangeService extends Service {
       return -1;
     }
 
+    await this.addExchangeLog(userId, 0, cny_sold, tokenId, tokens_bought, recipient, '', conn);
+
     return 0;
   }
 
@@ -585,7 +589,8 @@ class ExchangeService extends Service {
         return -1;
       }
 
-      // todo orders里面插入订单？？？
+      await this.addExchangeLog(userId, tokenId, tokens_sold, 0, cny_bought, recipient, ip, conn);
+
       conn.commit();
       return 0;
     } catch (e) {
@@ -641,7 +646,8 @@ class ExchangeService extends Service {
         return -1;
       }
 
-      // todo orders里面插入订单？？？
+      await this.addExchangeLog(userId, tokenId, tokens_sold, 0, cny_bought, recipient, ip, conn);
+
       conn.commit();
       return 0;
     } catch (e) {
@@ -687,6 +693,8 @@ class ExchangeService extends Service {
         await conn.rollback();
         return -1;
       }
+
+      await this.addExchangeLog(userId, inTokenId, tokens_sold, 0, cny_bought, exchange.exchange_uid, ip, conn);
 
       // 使用交易对虚拟账号帮用户购买out token
       const res = await this.cnyToTokenInput(exchange.exchange_uid, outTokenId, cny_bought, min_tokens_bought, deadline, recipient, conn);
@@ -752,6 +760,8 @@ class ExchangeService extends Service {
         return -1;
       }
 
+      await this.addExchangeLog(userId, inTokenId, tokens_sold, 0, cny_bought, exchange.exchange_uid, ip, conn);
+
       // 4. 使用in token交易对虚拟账号帮用户购买out token
       const res = await this.cnyToTokenOutput(exchange.exchange_uid, outTokenId, tokens_bought, cny_bought, deadline, recipient, conn);
       if (res < 0) {
@@ -767,6 +777,15 @@ class ExchangeService extends Service {
       return -1;
     }
   }
+
+  // 记录交易日志
+  async addExchangeLog(buyer, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, ip, conn) {
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    await conn.insert('exchange_logs', {
+      buyer, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, create_time: now, ip,
+    });
+  }
+
   async getPoolCnyToTokenPrice(tokenId, cny_amount) {
     cny_amount = parseInt(cny_amount);
     if (cny_amount <= 0) {
