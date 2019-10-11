@@ -27,7 +27,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
       publickey, sign, hash, fissionFactor = 2000,
-      cover, is_original = 0, platform = 'eos', tags = '', commentPayPoint = 0 } = ctx.request.body;
+      cover, is_original = 0, platform = 'eos', tags = '', commentPayPoint = 0, shortContent = null } = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, is_original);
 
@@ -86,7 +86,10 @@ class PostController extends Controller {
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(articleJson.content);
     // 设置短摘要
-    const shortContent = articleContent.substring(0, 300);
+    let short_content = shortContent;
+    if (short_content === null) {
+      short_content = articleContent.substring(0, 300);
+    }
 
     const id = await ctx.service.post.publish({
       author,
@@ -103,7 +106,7 @@ class PostController extends Controller {
       uid: ctx.user.id,
       is_recommend: 0,
       category_id: 0,
-      short_content: shortContent,
+      short_content,
       comment_pay_point,
     });
 
@@ -129,7 +132,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { signId, author = '', title = '', content = '',
       publickey, sign, hash, fissionFactor = 2000, cover,
-      is_original = 0, platform = 'eos', tags = '' } = ctx.request.body;
+      is_original = 0, platform = 'eos', tags = '', shortContent = null } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -188,7 +191,11 @@ class PostController extends Controller {
     const articleJson = JSON.parse(articleData.toString());
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(articleJson.content);
-    const shortContent = articleContent.substring(0, 300);
+
+    let short_content = shortContent;
+    if (short_content === null) {
+      short_content = articleContent.substring(0, 300);
+    }
 
     let elaTitle = post.title;
     try {
@@ -212,7 +219,7 @@ class PostController extends Controller {
           hash,
           public_key: publickey,
           sign,
-          short_content: shortContent,
+          short_content,
         };
 
         if (title) {
@@ -716,6 +723,23 @@ class PostController extends Controller {
     const ctx = this.ctx;
     ctx.body = ctx.msg.success;
     ctx.body.data = await this.service.post.stats();
+  }
+
+  // 持币阅读
+  async addMineTokens() {
+    const ctx = this.ctx;
+    const { signId, tokens } = ctx.request.body;
+    if (!signId) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const result = await ctx.service.post.addMineTokens(ctx.user.id, signId, tokens);
+    if (result === 0) {
+      ctx.body = ctx.msg.success;
+    } else {
+      ctx.body = ctx.msg.failure;
+    }
   }
 
 }

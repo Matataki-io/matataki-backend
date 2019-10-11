@@ -115,8 +115,32 @@ class PostService extends Service {
       + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE id = ?;',
       [ id ]
     );
+
+    if (posts === null || posts.length === 0) {
+      return null;
+    }
+
+    let post = posts[0];
+    post = await this.getPostProfile(post, userId);
+    post.isHoldMineTokens = await this.isHoldMineTokens(id, userId);
+    post.tokens = this.getMineTokens(id);
+    // todo：增加minetokens，以及自己持有多少token
+    return post;
+  }
+
+  async getForEdit(id, current_user) {
+    const posts = await this.app.mysql.query(
+      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE id = ? AND uid = ?;',
+      [ id, current_user ]
+    );
+
+    if (posts === null || posts.length === 0) {
+      return null;
+    }
+
     const post = posts[0];
-    return this.getPostProfile(post, userId);
+    return this.getPostProfile(post, current_user);
   }
 
   // 获取文章阅读数等属性
@@ -778,17 +802,6 @@ class PostService extends Service {
     return false;
   }
 
-  async getForEdit(id, current_user) {
-    // const post = await this.app.mysql.get('posts', { id });
-    const posts = await this.app.mysql.query(
-      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id FROM posts WHERE id = ?;',
-      [ id ]
-    );
-    const post = posts[0];
-    return this.getPostProfile(post, current_user);
-  }
-
   async transferOwner(uid, signid, current_uid) {
     const post = await this.app.mysql.get('posts', { id: signid });
     if (!post) {
@@ -890,6 +903,66 @@ class PostService extends Service {
 
     return { users: queryResult[0][0].count, articles: queryResult[1][0].count, points: queryResult[2][0].amount };
   }
+
+  // 持币阅读
+  async addMineTokens(current_uid, id, tokens) {
+    const post = await this.get(id);
+    if (!post) {
+      return -1;
+    }
+
+    if (post.uid !== current_uid) {
+      return -2;
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      await conn.query('DELETE FROM post_minetokens WHERE sign_id = ?;', [ id ]);
+      for (const token of tokens) {
+        await conn.insert('post_minetokens', {
+          sign_id: id,
+          token_id: token.tokenId,
+          amount: token.amount,
+          create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        });
+      }
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.ctx.logger.error(e);
+      return -3;
+    }
+  }
+
+  // 获取阅读文章需要持有的tokens
+  async getMineTokens(id) {
+    const tokens = await this.app.mysql.select('post_minetokens', {
+      columns: [ 'token_id', 'amount' ],
+      where: { sign_id: id },
+    });
+
+    return tokens;
+  }
+
+  // 判断持币阅读
+  async isHoldMineTokens(id, userId) {
+    const tokens = await this.getMineTokens(id);
+    if (tokens === null || tokens.length === 0) {
+      return true;
+    }
+
+    if (tokens && tokens.length > 0) {
+      for (const token of tokens) {
+        const amount = await this.service.token.mineToken.balanceOf(userId, token.token_id);
+        if (amount < token.amount) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
 }
 
 module.exports = PostService;

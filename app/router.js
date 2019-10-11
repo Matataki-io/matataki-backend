@@ -268,5 +268,8 @@ module.exports = app => {
   // 根据资金池通证获取输出
   router.get('/exchange/outputPoolSize', passport.verify, controller.exchange.getOutputPoolSize);
   router.post('/wxpay/refund', passport.verify, controller.wxpay.refund);
+
+  // 持币阅读
+  router.post('/post/addMineTokens', passport.authorize, controller.post.addMineTokens);
 };
 

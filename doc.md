@@ -5,7 +5,7 @@
 * POST /post/publish
 * 响应状态码：200
 
-* curl -d "author=tengavinwood&title=xxxxx&publickey=EOS8QP2Z6tApaUYPEC6hm9f1pZrSEMmZ7n5SsvjzA3VTnRXUyra9E&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy&sign=SIG_K1_KZU9PyXP8YAePjCfCcmBjGHARkvTVDjKpKvVgS6XL8o2FXTXUdhP3rqrL38dJYgJo2WNBdYubsY9LKTo47RUUE4N3ZHjZQ" -X POST https://api.smartsignature.io/post/publish
+* curl -d "author=tengavinwood&title=xxxxx&publickey=EOS8QP2Z6tApaUYPEC6hm9f1pZrSEMmZ7n5SsvjzA3VTnRXUyra9E&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy&sign=SIG_K1_KZU9PyXP8YAePjCfCcmBjGHARkvTVDjKpKvVgS6XL8o2FXTXUdhP3rqrL38dJYgJo2WNBdYubsY9LKTo47RUUE4N3ZHjZQ&shortContent=aaa" -X POST https://api.smartsignature.io/post/publish
 
 * 增加参数：commentPayPoint 评论需要花的积分
 
@@ -1158,7 +1158,9 @@ curl https://api.smartsignature.io/p/123 | jq
 			"amount": 3,
 			"type": "reading",
 			"create_time": "2019-08-13T09:08:52.000Z"…
-		}]
+		}],
+    is_readnew": 0,
+    "isHoldMineTokens": true
 	}
 }
 ```
@@ -2292,3 +2294,31 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
   "code": 0,
   "message": "成功"
 }
+```
+
+#### 增加文章持币阅读
+* POST /post/addMineTokens
+* 响应状态码： 200
+* 参数：
+```
+{
+	"signId": 100783,
+	"tokens": [{
+			"tokenId": 14,
+			"amount": 100
+		},
+		{
+			"tokenId": 15,
+			"amount": 20
+		}
+	]
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
