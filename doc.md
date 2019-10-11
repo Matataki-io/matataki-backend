@@ -1121,46 +1121,34 @@ curl https://api.smartsignature.io/p/123 | jq
 	"code": 0,
 	"message": "成功",
 	"data": {
-		"id": 100531,
-		"username": "xiaotiandada",
-		"author": "xiaotiandada",
-		"title": "占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页",
-		"short_content": "占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页",
-		"hash": "QmcHTp2NdrZcweq1Do3v4g1iK2yq6ANHBfyCeF98jLqgti",
+		"id": 100783,
+		"username": "cnchenhao",
+		"author": "aaa",
+		"title": "aaa",
+		"short_content": "bbb",
+		"hash": "QmaAfkojHxjyhq5rrf7PXxkkEVYxc7GiiRCvhPWd97MDxd",
 		"status": 0,
 		"onchain_status": 0,
-		"create_time": "2019-06-21T03:59:59.000Z",
+		"create_time": "2019-10-10T11:38:26.000Z",
 		"fission_factor": 2000,
-		"cover": "/image/2019/07/11/561ad457a2368a4be4909cef0ac328c7.jpg",
+		"cover": "",
 		"is_original": 0,
 		"channel_id": 1,
 		"fission_rate": 100,
 		"referral_rate": 0,
-		"uid": 65,
-		"is_recommend": 1,
+		"uid": 1022,
+		"is_recommend": 0,
 		"category_id": 0,
-		"read": 114,
-		"sale": 0,
-		"ups": 2,
-		"value": 0,
-		"ontvalue": 20000,
-		"likes": 2,
-		"dislikes": 0,
-		"tags": [{
-			"id": 10,
-			"name": "我看不行"
-		}],
-		"is_support": false,
-		"nickname": "11我321哈11112",
-		"is_liked": 1,
-		"points": [{
-			"uid": 1048,
-			"amount": 3,
-			"type": "reading",
-			"create_time": "2019-08-13T09:08:52.000Z"…
-		}],
-    is_readnew": 0,
-    "isHoldMineTokens": true
+		"comment_pay_point": 15,
+		"tokens": [{
+				"token_id": 14,
+				"amount": 100
+			},
+			{
+				"token_id": 15,
+				"amount": 20
+			}
+		]
 	}
 }
 ```
@@ -2314,6 +2302,15 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 	]
 }
 ```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
 #### 买入粉丝币-流水明细
 * GET /token/tokenflow
 * 响应状态码： 200
@@ -2389,3 +2386,55 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
     }
 }
 ```
+
+#### 当前用户视角查看文章属性
+* POST /post/currentProfile
+* 响应状态码： 200
+* 参数：
+```
+{
+	"id": 100783
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"id": 100783,
+		"hash": "QmaAfkojHxjyhq5rrf7PXxkkEVYxc7GiiRCvhPWd97MDxd",
+		"uid": 1022,
+		"title": "aaa",
+		"status": 0,
+		"create_time": "2019-10-10T11:38:26.000Z",
+		"comment_pay_point": 15,
+		"channel_id": 1,
+		"holdMineTokens": [{
+				"token_id": 14,
+				"amount": 100
+			},
+			{
+				"token_id": 15,
+				"amount": 100
+			}
+		],
+		"is_support": false,
+		"is_liked": 0,
+		"points": [{
+				"amount": 1,
+				"type": "beread_new",
+				"create_time": "2019-10-10T12:20:16.000Z"
+			},
+			{
+				"amount": 100,
+				"type": "publish",
+				"create_time": "2019-10-10T11:38:30.000Z"
+			}
+		],
+		"is_readnew": 0
+	}
+}
+```
+

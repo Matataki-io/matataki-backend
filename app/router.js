@@ -33,7 +33,7 @@ module.exports = app => {
   // 上传文章到IPFS
   router.post('/post/ipfs', passport.authorize, controller.post.uploadPost);
   // 从IPFS拿取文章内容
-  router.get('/post/ipfs/:hash', passport.verify, controller.post.catchPost);
+  router.get('/post/ipfs/:id', passport.verify, controller.post.catchPost);
   // 上传图片
   router.post('/post/uploadImage', passport.authorize, controller.post.uploadImage);
   // 文章编辑
@@ -273,5 +273,6 @@ module.exports = app => {
 
   // 持币阅读
   router.post('/post/addMineTokens', passport.authorize, controller.post.addMineTokens);
+  router.post('/post/currentProfile', passport.authorize, controller.post.currentProfile);
 };
 

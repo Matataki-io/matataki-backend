@@ -221,10 +221,8 @@ class SearchService extends Service {
 
   // 新建和更新文章， 都可以用这个
   async importPost(postid, userid, title, content) {
-    const author = await this.app.mysql.query(
-      'SELECT id, username, nickname FROM users WHERE id = ?;',
-      [ userid ]
-    );
+    const author = await this.service.user.get(userid);
+
     if (author.length === 0) {
       return null;
     }

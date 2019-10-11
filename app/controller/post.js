@@ -128,6 +128,7 @@ class PostController extends Controller {
   }
 
   // 编辑文章， 处理逻辑和发布相似
+  /* 目前没有判断ipfs hash是否是现在用户上传的文章，所以可能会伪造一个已有的hash */
   async edit() {
     const ctx = this.ctx;
     const { signId, author = '', title = '', content = '',
@@ -146,9 +147,13 @@ class PostController extends Controller {
     }
 
     const post = await this.app.mysql.get('posts', { id: signId });
-
     if (!post) {
       ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+
+    if (post.uid !== ctx.user.id) {
+      ctx.body = ctx.msg.notYourPost;
       return;
     }
 
@@ -430,7 +435,22 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const id = ctx.params.id;
 
-    const post = await this.service.post.getById(id, ctx.user.id);
+    const post = await this.service.post.getById(id);
+
+    if (!post) {
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = post;
+  }
+
+  // 获取当前用户查看文章的属性
+  async currentProfile() {
+    const ctx = this.ctx;
+    const { id } = ctx.request.body;
+    const post = await this.service.post.getPostProfileOf(id, ctx.user.id);
 
     if (!post) {
       ctx.body = ctx.msg.postNotFound;
@@ -703,10 +723,18 @@ class PostController extends Controller {
 
   async catchPost() {
     const ctx = this.ctx;
-    const hash = ctx.params.hash;
+    const id = ctx.params.id;
 
+    // 增加判断是否有权限
+    const result = await this.service.post.isHoldMineTokens(id, ctx.user.id);
+    if (!result) {
+      ctx.body = ctx.msg.postNoPermission;
+      return;
+    }
+
+    const post = await this.service.post.get(id);
     // 从ipfs获取内容
-    const catchRequest = await this.service.post.ipfsCatch(hash);
+    const catchRequest = await this.service.post.ipfsCatch(post.hash);
 
     if (catchRequest) {
       ctx.body = ctx.msg.success;
