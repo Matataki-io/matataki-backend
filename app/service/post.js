@@ -986,11 +986,8 @@ class PostService extends Service {
 
   // 获取阅读文章需要持有的tokens
   async getMineTokens(id) {
-    const tokens = await this.app.mysql.select('post_minetokens', {
-      columns: [ 'token_id', 'amount' ],
-      where: { sign_id: id },
-    });
-
+    const tokens = await this.app.mysql.query('SELECT t.id, p.amount, t.name, t.symbol, t.decimals FROM post_minetokens p INNER JOIN minetokens t ON p.token_id = t.id WHERE p.sign_id = ?;',
+      [ id ]);
     return tokens;
   }
 
@@ -1005,7 +1002,7 @@ class PostService extends Service {
 
     if (tokens && tokens.length > 0) {
       for (const token of tokens) {
-        const amount = await this.service.token.mineToken.balanceOf(userId, token.token_id);
+        const amount = await this.service.token.mineToken.balanceOf(userId, token.id);
         token.amount = amount;
         mytokens.push(token);
       }
@@ -1022,7 +1019,7 @@ class PostService extends Service {
 
     if (tokens && tokens.length > 0) {
       for (const token of tokens) {
-        const amount = await this.service.token.mineToken.balanceOf(userId, token.token_id);
+        const amount = await this.service.token.mineToken.balanceOf(userId, token.id);
         if (amount < token.amount) {
           return false;
         }

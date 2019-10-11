@@ -1150,12 +1150,18 @@ curl https://api.smartsignature.io/p/123 | jq
 		"tags": [],
 		"nickname": "cnchenhao",
 		"tokens": [{
-				"token_id": 14,
-				"amount": 100
+				"id": 14,
+				"amount": 100,
+				"name": "小田币",
+				"symbol": "XTB",
+				"decimals": 4
 			},
 			{
-				"token_id": 15,
-				"amount": 20
+				"id": 15,
+				"amount": 20,
+				"name": "chen token",
+				"symbol": "CHT",
+				"decimals": 4
 			}
 		]
 	}
@@ -2421,12 +2427,18 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 		"comment_pay_point": 15,
 		"channel_id": 1,
 		"holdMineTokens": [{
-				"token_id": 14,
-				"amount": 100
+				"id": 14,
+				"amount": 100,
+				"name": "小田币",
+				"symbol": "XTB",
+				"decimals": 4
 			},
 			{
-				"token_id": 15,
-				"amount": 100
+				"id": 15,
+				"amount": 100,
+				"name": "chen token",
+				"symbol": "CHT",
+				"decimals": 4
 			}
 		],
 		"is_support": false,
