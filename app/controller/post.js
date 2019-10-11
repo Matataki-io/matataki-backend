@@ -569,8 +569,8 @@ class PostController extends Controller {
     }
   }
 
-  // 获取我的文章，不是我的文章会报401
-  // 新创建的没有id， 用的hash问题
+  // 获取我的文章
+  // 新创建的没有id，用的hash问题
   async mypost() {
     const ctx = this.ctx;
     const id = ctx.params.id;
@@ -727,11 +727,13 @@ class PostController extends Controller {
 
     const post = await this.service.post.getByHash(hash, false);
 
-    // 增加判断是否有权限
-    const result = await this.service.post.isHoldMineTokens(post.id, ctx.user.id);
-    if (!result) {
-      ctx.body = ctx.msg.postNoPermission;
-      return;
+    if (post.uid !== ctx.user.id) {
+      // 增加判断是否有权限
+      const result = await this.service.post.isHoldMineTokens(post.id, ctx.user.id);
+      if (!result) {
+        ctx.body = ctx.msg.postNoPermission;
+        return;
+      }
     }
 
     // 从ipfs获取内容
