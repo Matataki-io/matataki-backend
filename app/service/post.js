@@ -155,81 +155,81 @@ class PostService extends Service {
     // 如果是商品，返回价格
     if (post.channel_id === consts.postChannels.product) {
       post.prices = await this.getPrices(post.id);
-
-      // 阅读次数
-      const count = await this.app.mysql.query(
-        'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue, likes, dislikes'
-        + ' FROM post_read_count WHERE post_id = ?;',
-        [ post.id ]
-      );
-      if (count.length) {
-        post.read = count[0].num;
-        post.sale = count[0].sale;
-        post.ups = count[0].ups;
-        post.value = count[0].eosvalue;
-        post.ontvalue = count[0].ontvalue;
-        post.likes = count[0].likes;
-        post.dislikes = count[0].dislikes;
-      } else {
-        post.read = post.sale = post.ups = post.value = post.ontvalue = post.likes = post.dislikes = 0;
-      }
-
-      // tags
-      const tags = await this.app.mysql.query(
-        'select a.id, a.name from tags a left join post_tag b on a.id = b.tid where b.sid = ? ',
-        [ post.id ]
-      );
-
-      post.tags = tags;
-
-      /*
-            // 当前用户是否已赞赏
-            post.is_support = false;
-            if (userId) {
-              const support = await this.app.mysql.get('supports', { signid: post.id, uid: userId, status: 1 });
-              if (support) {
-                post.is_support = true;
-              }
-            }
-
-            // 如果是商品，当前用户是否已购买
-            if (userId && post.channel_id === consts.postChannels.product) {
-              post.is_buy = false;
-              const buy = await this.app.mysql.get('orders', { signid: post.id, uid: userId, status: 1 });
-              if (buy) {
-                post.is_buy = true;
-              }
-            }
-      */
-
-      // nickname
-      // const name = post.username || post.author;
-      const user = await this.service.user.get(post.uid); // this.app.mysql.get('users', { username: name });
-      if (user) {
-        post.nickname = user.nickname;
-      }
-
-      /*
-            if (userId) {
-              // 是否点过推荐/不推荐，每个人只能点一次推荐/不推荐
-              post.is_liked = await this.service.mining.liked(userId, post.id);
-              // 获取用户从单篇文章阅读获取的积分
-              post.points = await this.service.mining.getPointslogBySignId(userId, post.id);
-
-              // 判断3天内的文章是否领取过阅读新文章奖励，3天以上的就不查询了
-              if ((Date.now() - post.create_time) / (24 * 3600 * 1000) <= 3) {
-                post.is_readnew = await this.service.mining.getReadNew(userId, post.id);
-              }
-            }
-       */
-
-      // update cahce
-      // this.app.read_cache[post.id] = post.read;
-      // this.app.value_cache[post.id] = post.value;
-      // this.app.ups_cache[post.id] = post.ups;
-
-      // this.app.post_cache[post.id] = post;
     }
+
+    // 阅读次数
+    const count = await this.app.mysql.query(
+      'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue, likes, dislikes'
+      + ' FROM post_read_count WHERE post_id = ?;',
+      [ post.id ]
+    );
+    if (count.length) {
+      post.read = count[0].num;
+      post.sale = count[0].sale;
+      post.ups = count[0].ups;
+      post.value = count[0].eosvalue;
+      post.ontvalue = count[0].ontvalue;
+      post.likes = count[0].likes;
+      post.dislikes = count[0].dislikes;
+    } else {
+      post.read = post.sale = post.ups = post.value = post.ontvalue = post.likes = post.dislikes = 0;
+    }
+
+    // tags
+    const tags = await this.app.mysql.query(
+      'select a.id, a.name from tags a left join post_tag b on a.id = b.tid where b.sid = ? ',
+      [ post.id ]
+    );
+
+    post.tags = tags;
+
+    /*
+          // 当前用户是否已赞赏
+          post.is_support = false;
+          if (userId) {
+            const support = await this.app.mysql.get('supports', { signid: post.id, uid: userId, status: 1 });
+            if (support) {
+              post.is_support = true;
+            }
+          }
+
+          // 如果是商品，当前用户是否已购买
+          if (userId && post.channel_id === consts.postChannels.product) {
+            post.is_buy = false;
+            const buy = await this.app.mysql.get('orders', { signid: post.id, uid: userId, status: 1 });
+            if (buy) {
+              post.is_buy = true;
+            }
+          }
+    */
+
+    // nickname
+    // const name = post.username || post.author;
+    const user = await this.service.user.get(post.uid); // this.app.mysql.get('users', { username: name });
+    if (user) {
+      post.nickname = user.nickname;
+    }
+
+    /*
+          if (userId) {
+            // 是否点过推荐/不推荐，每个人只能点一次推荐/不推荐
+            post.is_liked = await this.service.mining.liked(userId, post.id);
+            // 获取用户从单篇文章阅读获取的积分
+            post.points = await this.service.mining.getPointslogBySignId(userId, post.id);
+
+            // 判断3天内的文章是否领取过阅读新文章奖励，3天以上的就不查询了
+            if ((Date.now() - post.create_time) / (24 * 3600 * 1000) <= 3) {
+              post.is_readnew = await this.service.mining.getReadNew(userId, post.id);
+            }
+          }
+     */
+
+    // update cahce
+    // this.app.read_cache[post.id] = post.read;
+    // this.app.value_cache[post.id] = post.value;
+    // this.app.ups_cache[post.id] = post.ups;
+
+    // this.app.post_cache[post.id] = post;
 
     return post;
   }

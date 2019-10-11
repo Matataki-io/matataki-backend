@@ -1140,6 +1140,15 @@ curl https://api.smartsignature.io/p/123 | jq
 		"is_recommend": 0,
 		"category_id": 0,
 		"comment_pay_point": 15,
+		"read": 15,
+		"sale": 0,
+		"ups": 0,
+		"value": 0,
+		"ontvalue": 0,
+		"likes": 0,
+		"dislikes": 0,
+		"tags": [],
+		"nickname": "cnchenhao",
 		"tokens": [{
 				"token_id": 14,
 				"amount": 100
