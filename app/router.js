@@ -258,6 +258,7 @@ module.exports = app => {
   // 获取your mint token
   router.get('/exchange/userMintToken', passport.verify, controller.exchange.getYourMintToken);
   router.get('/exchange/poolCnyToTokenPrice', passport.verify, controller.exchange.getPoolCnyToTokenPrice);
+  router.get('/exchange/balance', passport.authorize, controller.exchange.getUserBalance);
 
   // 支付后订单状态修改通知接口
   router.get('/exchange/notify', passport.verify, controller.exchange.notify);

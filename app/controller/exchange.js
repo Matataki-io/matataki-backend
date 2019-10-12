@@ -289,7 +289,17 @@ class ExchangeController extends Controller {
       ...ctx.msg.success,
       data: result,
     };
+  }
 
+  async getUserBalance() {
+    const { ctx } = this;
+    const userId = ctx.user.id; // 接收者
+    const { tokenId } = ctx.query;
+    const result = await ctx.service.exchange.getUserBalance(userId, tokenId);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
   }
 
 }
