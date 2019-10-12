@@ -194,6 +194,8 @@ class ExchangeService extends Service {
       await conn.query('INSERT INTO exchange_balances(uid, token_id, liquidity_balance, create_time) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE liquidity_balance = liquidity_balance + ?;',
         [ userId, tokenId, liquidity_minted, moment().format('YYYY-MM-DD HH:mm:ss'), liquidity_minted ]
       );
+
+      await this.addLiquidityLog(userId, tokenId, cny_amount, token_amount, liquidity_minted, '', conn);
     } else {
       // 首次add
       const initial_liquidity = cny_amount;
@@ -221,13 +223,15 @@ class ExchangeService extends Service {
       await conn.query('INSERT INTO exchange_balances(uid, token_id, liquidity_balance, create_time) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE liquidity_balance = liquidity_balance + ?;',
         [ userId, tokenId, initial_liquidity, moment().format('YYYY-MM-DD HH:mm:ss'), initial_liquidity ]
       );
+
+      await this.addLiquidityLog(userId, tokenId, cny_amount, token_amount, initial_liquidity, '', conn);
     }
 
     return 0;
   }
 
   // amount是什么？是以cny衡量的份额
-  async removeLiquidity(userId, tokenId, amount, min_cny, min_tokens, deadline) {
+  async removeLiquidity(userId, tokenId, amount, min_cny, min_tokens, deadline, ip) {
     amount = parseInt(amount);
     min_cny = parseInt(min_cny);
     min_tokens = parseInt(min_tokens);
@@ -287,7 +291,7 @@ class ExchangeService extends Service {
       }
 
       // 转移token
-      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, userId, token_amount, '', conn);
+      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, userId, token_amount, ip, conn);
       if (!tokenTransferResult) {
         await conn.rollback();
         return -1;
@@ -299,6 +303,8 @@ class ExchangeService extends Service {
         await conn.rollback();
         return -1;
       }
+
+      await this.addLiquidityLog(userId, tokenId, cny_amount, token_amount, -amount, ip, conn);
 
       conn.commit();
 
@@ -436,7 +442,7 @@ class ExchangeService extends Service {
       return -1;
     }
 
-    await this.addExchangeLog(userId, 0, cny_sold, tokenId, tokens_bought, recipient, '', conn);
+    await this.addPurchaseLog(userId, 0, cny_sold, tokenId, tokens_bought, recipient, '', conn);
 
     return 0;
   }
@@ -538,7 +544,7 @@ class ExchangeService extends Service {
       return -1;
     }
 
-    await this.addExchangeLog(userId, 0, cny_sold, tokenId, tokens_bought, recipient, '', conn);
+    await this.addPurchaseLog(userId, 0, cny_sold, tokenId, tokens_bought, recipient, '', conn);
 
     return 0;
   }
@@ -589,7 +595,7 @@ class ExchangeService extends Service {
         return -1;
       }
 
-      await this.addExchangeLog(userId, tokenId, tokens_sold, 0, cny_bought, recipient, ip, conn);
+      await this.addPurchaseLog(userId, tokenId, tokens_sold, 0, cny_bought, recipient, ip, conn);
 
       conn.commit();
       return 0;
@@ -646,7 +652,7 @@ class ExchangeService extends Service {
         return -1;
       }
 
-      await this.addExchangeLog(userId, tokenId, tokens_sold, 0, cny_bought, recipient, ip, conn);
+      await this.addPurchaseLog(userId, tokenId, tokens_sold, 0, cny_bought, recipient, ip, conn);
 
       conn.commit();
       return 0;
@@ -694,7 +700,7 @@ class ExchangeService extends Service {
         return -1;
       }
 
-      await this.addExchangeLog(userId, inTokenId, tokens_sold, 0, cny_bought, exchange.exchange_uid, ip, conn);
+      await this.addPurchaseLog(userId, inTokenId, tokens_sold, 0, cny_bought, exchange.exchange_uid, ip, conn);
 
       // 使用交易对虚拟账号帮用户购买out token
       const res = await this.cnyToTokenInput(exchange.exchange_uid, outTokenId, cny_bought, min_tokens_bought, deadline, recipient, conn);
@@ -760,7 +766,7 @@ class ExchangeService extends Service {
         return -1;
       }
 
-      await this.addExchangeLog(userId, inTokenId, tokens_sold, 0, cny_bought, exchange.exchange_uid, ip, conn);
+      await this.addPurchaseLog(userId, inTokenId, tokens_sold, 0, cny_bought, exchange.exchange_uid, ip, conn);
 
       // 4. 使用in token交易对虚拟账号帮用户购买out token
       const res = await this.cnyToTokenOutput(exchange.exchange_uid, outTokenId, tokens_bought, cny_bought, deadline, recipient, conn);
@@ -779,10 +785,20 @@ class ExchangeService extends Service {
   }
 
   // 记录交易日志
-  async addExchangeLog(buyer, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, ip, conn) {
+  async addPurchaseLog(buyer, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, ip, conn) {
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    await conn.insert('exchange_logs', {
+    await conn.insert('exchange_purchase_logs', {
       buyer, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, create_time: now, ip,
+    });
+  }
+
+  // 记录流动性日志
+  // 交易池的流动性份额在uniswap里也是看成一种ERC20 Token，uniswap里这个token可以transfer、approval等操作。
+  // 本系统没有把它当成标准的ERC20 Token处理，没有transfer、approval等操作，所以这个日志可以看成是流动性token的日志
+  async addLiquidityLog(uid, token_id, cny_amount, token_amount, liquidity, ip, conn) {
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    await conn.insert('exchange_liquidity_logs', {
+      uid, token_id, cny_amount, token_amount, liquidity, create_time: now, ip,
     });
   }
 

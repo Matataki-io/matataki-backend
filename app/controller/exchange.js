@@ -47,7 +47,7 @@ class ExchangeController extends Controller {
     const ctx = this.ctx;
     const { tokenId, amount, min_cny, min_tokens } = ctx.request.body;
     const deadline = parseInt(moment().format('X')) + DEADLINE; // 设置unix时间戳
-    const result = await ctx.service.token.exchange.removeLiquidity(ctx.user.id, tokenId, amount, min_cny, min_tokens, deadline);
+    const result = await ctx.service.token.exchange.removeLiquidity(ctx.user.id, tokenId, amount, min_cny, min_tokens, deadline, this.clientIP);
     if (result === -1) {
       ctx.body = ctx.msg.failure;
       return;
