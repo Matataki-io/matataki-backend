@@ -992,3 +992,86 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- 2019/10/10 sprint11 v2.10，持币阅读
 新增表：
 post_minetokens
+exchange_purchase_logs
+exchange_liquidity_logs
+
+新增列：
+assets_minetokens_log.type
+posts.require_holdtokens
+
+索引：
+posts.uid
+
+修改字段：
+-- assets_minetokens_log.amount 去掉无符号
+
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for exchange_purchase_logs
+-- ----------------------------
+DROP TABLE IF EXISTS `exchange_purchase_logs`;
+CREATE TABLE `exchange_purchase_logs`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `buyer` int(11) NOT NULL COMMENT '购买人',
+  `sold_token_id` int(11) NOT NULL COMMENT '卖掉的tokenId',
+  `sold_amount` bigint(20) NOT NULL COMMENT '卖掉的数量',
+  `bought_token_id` int(11) NOT NULL COMMENT '购买的tokenId',
+  `bought_amount` bigint(20) NOT NULL COMMENT '购买的数量',
+  `recipient` int(11) NOT NULL COMMENT '接收人',
+  `create_time` timestamp(0) NOT NULL COMMENT '创建时间',
+  `ip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT 'IP',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for exchange_liquidity_logs
+-- ----------------------------
+DROP TABLE IF EXISTS `exchange_liquidity_logs`;
+CREATE TABLE `exchange_liquidity_logs`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL,
+  `token_id` int(11) NOT NULL,
+  `cny_amount` bigint(20) NOT NULL,
+  `token_amount` bigint(20) NOT NULL,
+  `liquidity` bigint(20) NOT NULL,
+  `create_time` timestamp(0) NOT NULL,
+  `ip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for post_minetokens
+-- ----------------------------
+DROP TABLE IF EXISTS `post_minetokens`;
+CREATE TABLE `post_minetokens`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sign_id` int(11) NOT NULL,
+  `token_id` int(11) NOT NULL,
+  `amount` bigint(20) NOT NULL,
+  `create_time` timestamp(0) NOT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 47 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+ALTER TABLE assets_minetokens_log ADD COLUMN type varchar(50) NULL default '';
+
+ALTER TABLE posts ADD COLUMN require_holdtokens tinyint(1) NOT NULL default 0 comment '是否需要持币阅读';
+
+CREATE INDEX idx_uid ON posts (uid);
