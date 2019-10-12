@@ -2513,7 +2513,7 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 
 
 #### 查看token日志，以发币人视角
-* GET /token/userlogs
+* GET /token/tokenlogs
 * 响应状态码： 200
 * 参数：page=1&pagesize=10&tokenId=15
 * 请求头：x-access-token
