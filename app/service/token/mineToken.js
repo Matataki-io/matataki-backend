@@ -98,8 +98,8 @@ class MineTokenService extends Service {
       await conn.query('UPDATE minetokens SET total_supply = total_supply + ? WHERE id = ?;',
         [ amount, tokenId ]);
 
-      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?,?);',
-        [ 0, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip ]);
+      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type) VALUES(?,?,?,?,?,?,?);',
+        [ 0, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, consts.mineTokenTransferTypes.mint ]);
 
       await conn.commit();
       return 0;
@@ -110,7 +110,7 @@ class MineTokenService extends Service {
     }
   }
 
-  async transferFrom(tokenId, from, to, value, ip, conn) {
+  async transferFrom(tokenId, from, to, value, ip, type = '', conn) {
     // 有可能在其他事务中调用该方法，如果conn是传进来的，不要在此commit和rollback
     let isOutConn = false;
     if (conn) {
@@ -137,8 +137,8 @@ class MineTokenService extends Service {
         [ to, tokenId, amount, amount ]);
 
       // 记录日志
-      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip) VALUES(?,?,?,?,?,?);',
-        [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip ]);
+      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type) VALUES(?,?,?,?,?,?,?);',
+        [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type ]);
 
       if (!isOutConn) {
         await conn.commit();
@@ -166,6 +166,55 @@ class MineTokenService extends Service {
     }
 
     return balance.amount;
+  }
+
+  async getTokenLogs(tokenId, page = 1, pagesize = 20) {
+    const sql
+      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type,
+        m.name, m.symbol, m.decimals,
+        u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar, 
+        u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar
+        FROM (
+          SELECT * FROM assets_minetokens_log WHERE token_id = :tokenId ORDER BY id DESC LIMIT :offset, :limit
+        ) t
+        JOIN minetokens m ON m.id = t.token_id
+        LEFT JOIN users u1 ON t.from_uid = u1.id
+        LEFT JOIN users u2 ON t.to_uid = u2.id;
+        SELECT count(1) AS count FROM assets_minetokens_log WHERE token_id = :tokenId;`;
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      tokenId,
+    });
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
+  }
+
+  // 查看用户的token日志
+  async getUserLogs(userId, page = 1, pagesize = 20) {
+    const sql
+      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type,
+        m.name, m.symbol, m.decimals,
+        u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar, 
+        u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar
+        FROM (
+          SELECT * FROM assets_minetokens_log WHERE from_uid = :userId OR to_uid = :userId ORDER BY id DESC LIMIT :offset, :limit
+        ) t
+        JOIN minetokens m ON m.id = t.token_id
+        LEFT JOIN users u1 ON t.from_uid = u1.id
+        LEFT JOIN users u2 ON t.to_uid = u2.id;
+        SELECT count(1) AS count FROM assets_minetokens_log WHERE from_uid = :userId OR to_uid = :userId;`;
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      userId,
+    });
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
   }
 }
 

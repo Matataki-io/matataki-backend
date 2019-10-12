@@ -76,4 +76,14 @@ module.exports = {
     hasMineTokenPermission: 2, // 10
     isSeedUser: 1, // 01
   },
+
+  mineTokenTransferTypes: {
+    mint: 'mint',
+    transfer: 'transfer',
+    exchange_purchase: 'exchange_purchase',
+    exchange_addliquidity: 'exchange_addliquidity',
+    exchange_removeliquidity: 'exchange_removeliquidity',
+  },
+
+
 };

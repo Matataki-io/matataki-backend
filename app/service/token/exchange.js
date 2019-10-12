@@ -172,7 +172,7 @@ class ExchangeService extends Service {
       }
 
       // 转移资产
-      const transferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, token_amount, '', conn);
+      const transferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, token_amount, '', consts.mineTokenTransferTypes.exchange_addliquidity, conn);
       // 转移资产失败
       if (!transferResult) {
         return -1;
@@ -201,7 +201,7 @@ class ExchangeService extends Service {
       const initial_liquidity = cny_amount;
 
       // 转移token
-      const transferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, token_amount, '', conn);
+      const transferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, token_amount, '', consts.mineTokenTransferTypes.exchange_addliquidity, conn);
       // 转移资产失败
       if (!transferResult) {
         return -1;
@@ -291,7 +291,7 @@ class ExchangeService extends Service {
       }
 
       // 转移token
-      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, userId, token_amount, ip, conn);
+      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, userId, token_amount, ip, consts.mineTokenTransferTypes.exchange_removeliquidity, conn);
       if (!tokenTransferResult) {
         await conn.rollback();
         return -1;
@@ -429,7 +429,7 @@ class ExchangeService extends Service {
     }
 
     // 转移token
-    const transferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, recipient, tokens_bought, '', conn);
+    const transferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, recipient, tokens_bought, '', consts.mineTokenTransferTypes.exchange_purchase, conn);
     // 转移资产失败
     if (!transferResult) {
       return -1;
@@ -531,7 +531,7 @@ class ExchangeService extends Service {
     }
 
     // 转移token
-    const transferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, recipient, tokens_bought, '', conn);
+    const transferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, recipient, tokens_bought, '', consts.mineTokenTransferTypes.exchange_purchase, conn);
     // 转移资产失败
     if (!transferResult) {
       return -1;
@@ -581,7 +581,7 @@ class ExchangeService extends Service {
       }
 
       // 转移token
-      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, tokens_sold, ip, conn);
+      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, tokens_sold, ip, consts.mineTokenTransferTypes.exchange_purchase, conn);
       if (!tokenTransferResult) {
         await conn.rollback();
         return -1;
@@ -638,7 +638,7 @@ class ExchangeService extends Service {
       }
 
       // 转移token
-      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, tokens_sold, ip, conn);
+      const tokenTransferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, tokens_sold, ip, consts.mineTokenTransferTypes.exchange_purchase, conn);
       if (!tokenTransferResult) {
         await conn.rollback();
         return -1;
@@ -694,7 +694,7 @@ class ExchangeService extends Service {
       const cny_bought = this.getInputPrice(tokens_sold, token_reserve, cny_reserve);
 
       // 把用户的in token转移到交易对虚拟账号
-      const tokenTransferResult = await this.service.token.mineToken.transferFrom(inTokenId, userId, exchange.exchange_uid, tokens_sold, ip, conn);
+      const tokenTransferResult = await this.service.token.mineToken.transferFrom(inTokenId, userId, exchange.exchange_uid, tokens_sold, ip, consts.mineTokenTransferTypes.exchange_purchase, conn);
       if (!tokenTransferResult) {
         await conn.rollback();
         return -1;
@@ -760,7 +760,7 @@ class ExchangeService extends Service {
       }
 
       // 3. 把用户的in token转移到交易对虚拟账号
-      const tokenTransferResult = await this.service.token.mineToken.transferFrom(inTokenId, userId, exchange.exchange_uid, tokens_sold, ip, conn);
+      const tokenTransferResult = await this.service.token.mineToken.transferFrom(inTokenId, userId, exchange.exchange_uid, tokens_sold, ip, consts.mineTokenTransferTypes.exchange_purchase, conn);
       if (!tokenTransferResult) {
         await conn.rollback();
         return -1;

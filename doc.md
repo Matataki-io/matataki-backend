@@ -2459,3 +2459,106 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 }
 ```
 
+
+#### 查看用户的token日志
+* GET /token/userlogs
+* 响应状态码： 200
+* 参数：page=1&pagesize=10
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"count": 10,
+		"list": [{
+				"token_id": 15,
+				"from_uid": 1048,
+				"to_uid": 1087,
+				"amount": 9000,
+				"create_time": "2019-10-12T10:03:26.000Z",
+				"type": "exchange_purchase",
+				"name": "chen token",
+				"symbol": "CHT",
+				"decimals": 4,
+				"from_username": "6644596@qq.com",
+				"from_nickname": "陈浩的邮箱",
+				"from_avatar": "/avatar/2019/08/09/32476061ab5fc966a3aef98d441c6069.png",
+				"to_username": "exchange_15",
+				"to_nickname": null,
+				"to_avatar": ""
+			},
+			{
+				"token_id": 15,
+				"from_uid": 1087,
+				"to_uid": 1048,
+				"amount": 878041,
+				"create_time": "2019-10-12T10:02:22.000Z",
+				"type": "exchange_removeliquidity",
+				"name": "chen token",
+				"symbol": "CHT",
+				"decimals": 4,
+				"from_username": "exchange_15",
+				"from_nickname": null,
+				"from_avatar": "",
+				"to_username": "6644596@qq.com",
+				"to_nickname": "陈浩的邮箱",
+				"to_avatar": "/avatar/2019/08/09/32476061ab5fc966a3aef98d441c6069.png"
+			}
+		]
+	}
+}
+```
+
+
+#### 查看token日志，以发币人视角
+* GET /token/userlogs
+* 响应状态码： 200
+* 参数：page=1&pagesize=10&tokenId=15
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"count": 10,
+		"list": [{
+				"token_id": 15,
+				"from_uid": 1048,
+				"to_uid": 1087,
+				"amount": 9000,
+				"create_time": "2019-10-12T10:03:26.000Z",
+				"type": "exchange_purchase",
+				"name": "chen token",
+				"symbol": "CHT",
+				"decimals": 4,
+				"from_username": "6644596@qq.com",
+				"from_nickname": "陈浩的邮箱",
+				"from_avatar": "/avatar/2019/08/09/32476061ab5fc966a3aef98d441c6069.png",
+				"to_username": "exchange_15",
+				"to_nickname": null,
+				"to_avatar": ""
+			},
+			{
+				"token_id": 15,
+				"from_uid": 1087,
+				"to_uid": 1048,
+				"amount": 878041,
+				"create_time": "2019-10-12T10:02:22.000Z",
+				"type": "exchange_removeliquidity",
+				"name": "chen token",
+				"symbol": "CHT",
+				"decimals": 4,
+				"from_username": "exchange_15",
+				"from_nickname": null,
+				"from_avatar": "",
+				"to_username": "6644596@qq.com",
+				"to_nickname": "陈浩的邮箱",
+				"to_avatar": "/avatar/2019/08/09/32476061ab5fc966a3aef98d441c6069.png"
+			}
+		]
+	}
+}
+```

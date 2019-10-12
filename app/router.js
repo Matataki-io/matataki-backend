@@ -236,6 +236,9 @@ module.exports = app => {
   // 所有的token 分页
   router.get('/token/all', passport.verify, controller.token.allToken);
 
+  router.get('/token/userlogs', passport.verify, controller.token.getUserLogs);
+  router.get('/token/tokenlogs', passport.verify, controller.token.getTokenLogs);
+
   // todo:测试代码
   router.post('/exchange/addLiquidity', passport.authorize, controller.exchange.addLiquidity);
   router.post('/exchange/removeLiquidity', passport.authorize, controller.exchange.removeLiquidity);
