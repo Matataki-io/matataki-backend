@@ -178,5 +178,15 @@ class ExchangeService extends Service {
       list: result[0],
     };
   }
+  async getUserBalance(userId, tokenId) {
+    const sql = 'SELECT t1.*, t2.decimals FROM `assets_minetokens` as t1'
+    + ' LEFT JOIN `minetokens` as t2 ON t1.token_id = t2.id '
+    + 'WHERE t1.uid = :userId AND t1.token_id = :tokenId';
+    const result = await this.app.mysql.query(sql, {
+      userId,
+      tokenId,
+    });
+    return result[0];
+  }
 }
 module.exports = ExchangeService;
