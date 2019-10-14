@@ -85,16 +85,16 @@ class PostService extends Service {
 
   // 根据hash获取文章
   async getByHash(hash, requireProfile) {
-    // const post = await this.app.mysql.get('posts', { hash });
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE hash = ?;',
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens FROM posts WHERE hash = ?;',
       [ hash ]
     );
     let post = posts[0];
     if (requireProfile) {
       post = await this.getPostProfile(post);
     }
+    post.tokens = await this.getMineTokens(post.id);
     return post;
   }
 
@@ -117,7 +117,6 @@ class PostService extends Service {
     其他和当前登录相关的属性放入新接口返回
   */
   async getById(id) {
-    // const post = await this.app.mysql.get('posts', { id });
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
       + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens FROM posts WHERE id = ?;',
@@ -131,7 +130,6 @@ class PostService extends Service {
     let post = posts[0];
     post = await this.getPostProfile(post);
     post.tokens = await this.getMineTokens(id);
-    // post.isHoldMineTokens = (post.tokens !== null && post.tokens.length > 0);
     return post;
   }
 
