@@ -52,7 +52,7 @@ class WxPayController extends Controller {
         min_tokens = limit_value;
         break;
       case 'buy_token_output':
-        min_tokens = limit_value;
+        max_tokens = limit_value;
         break;
       default:
         ctx.body = ctx.msg.failure;
