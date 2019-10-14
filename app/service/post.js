@@ -720,7 +720,7 @@ class PostService extends Service {
       }
     }
 
-    sqlcode += ' a.hash, a.create_time, a.cover, b.nickname, b.avatar FROM posts a';
+    sqlcode += ' a.hash, a.create_time, a.cover, a.require_holdtokens, b.nickname, b.avatar FROM posts a';
     sqlcode += ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (?) AND a.status = 0 ORDER BY id DESC;';
     postList = await this.app.mysql.query(
       sqlcode,
