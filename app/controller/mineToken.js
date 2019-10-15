@@ -1,4 +1,5 @@
 'use strict';
+const consts = require('../service/consts');
 const Controller = require('../core/base_controller');
 
 class MineTokenController extends Controller {
@@ -40,7 +41,7 @@ class MineTokenController extends Controller {
     const ctx = this.ctx;
     const { tokenId, to, amount } = this.ctx.request.body;
     // amount 客户端*精度，10^decimals
-    const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP);
+    const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP, consts.mineTokenTransferTypes.transfer);
     ctx.body = result ? ctx.msg.success : ctx.msg.failure;
   }
 

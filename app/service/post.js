@@ -85,16 +85,16 @@ class PostService extends Service {
 
   // 根据hash获取文章
   async getByHash(hash, requireProfile) {
-    // const post = await this.app.mysql.get('posts', { hash });
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE hash = ?;',
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens FROM posts WHERE hash = ?;',
       [ hash ]
     );
     let post = posts[0];
     if (requireProfile) {
       post = await this.getPostProfile(post);
     }
+    post.tokens = await this.getMineTokens(post.id);
     return post;
   }
 
@@ -117,10 +117,9 @@ class PostService extends Service {
     其他和当前登录相关的属性放入新接口返回
   */
   async getById(id) {
-    // const post = await this.app.mysql.get('posts', { id });
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE id = ?;',
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens FROM posts WHERE id = ?;',
       [ id ]
     );
 
@@ -131,14 +130,13 @@ class PostService extends Service {
     let post = posts[0];
     post = await this.getPostProfile(post);
     post.tokens = await this.getMineTokens(id);
-    // post.isHoldMineTokens = (post.tokens !== null && post.tokens.length > 0);
     return post;
   }
 
   async getForEdit(id, current_user) {
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE id = ? AND uid = ?;',
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens FROM posts WHERE id = ? AND uid = ?;',
       [ id, current_user ]
     );
 
@@ -185,46 +183,11 @@ class PostService extends Service {
 
     post.tags = tags;
 
-    /*
-          // 当前用户是否已赞赏
-          post.is_support = false;
-          if (userId) {
-            const support = await this.app.mysql.get('supports', { signid: post.id, uid: userId, status: 1 });
-            if (support) {
-              post.is_support = true;
-            }
-          }
-
-          // 如果是商品，当前用户是否已购买
-          if (userId && post.channel_id === consts.postChannels.product) {
-            post.is_buy = false;
-            const buy = await this.app.mysql.get('orders', { signid: post.id, uid: userId, status: 1 });
-            if (buy) {
-              post.is_buy = true;
-            }
-          }
-    */
-
     // nickname
-    // const name = post.username || post.author;
     const user = await this.service.user.get(post.uid); // this.app.mysql.get('users', { username: name });
     if (user) {
       post.nickname = user.nickname;
     }
-
-    /*
-          if (userId) {
-            // 是否点过推荐/不推荐，每个人只能点一次推荐/不推荐
-            post.is_liked = await this.service.mining.liked(userId, post.id);
-            // 获取用户从单篇文章阅读获取的积分
-            post.points = await this.service.mining.getPointslogBySignId(userId, post.id);
-
-            // 判断3天内的文章是否领取过阅读新文章奖励，3天以上的就不查询了
-            if ((Date.now() - post.create_time) / (24 * 3600 * 1000) <= 3) {
-              post.is_readnew = await this.service.mining.getReadNew(userId, post.id);
-            }
-          }
-     */
 
     // update cahce
     // this.app.read_cache[post.id] = post.read;
@@ -757,7 +720,7 @@ class PostService extends Service {
       }
     }
 
-    sqlcode += ' a.hash, a.create_time, a.cover, b.nickname, b.avatar FROM posts a';
+    sqlcode += ' a.hash, a.create_time, a.cover, a.require_holdtokens, b.nickname, b.avatar FROM posts a';
     sqlcode += ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (?) AND a.status = 0 ORDER BY id DESC;';
     postList = await this.app.mysql.query(
       sqlcode,
@@ -977,6 +940,18 @@ class PostService extends Service {
           create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
         });
       }
+
+      const require = tokens !== null && tokens.length > 0 ? 1 : 0;
+      await conn.update('posts',
+        {
+          require_holdtokens: require,
+        },
+        {
+          where: {
+            id,
+          },
+        });
+
       await conn.commit();
       return 0;
     } catch (e) {

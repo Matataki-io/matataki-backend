@@ -97,6 +97,29 @@ class TokenController extends Controller {
       data: result,
     };
   }
+
+  // 查看token的日志
+  async getTokenLogs() {
+    const { ctx } = this;
+    const { tokenId, pagesize = 10, page = 1 } = ctx.query;
+    const result = await ctx.service.token.mineToken.getTokenLogs(tokenId, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+
+  // 查看用户的token日志
+  async getUserLogs() {
+    const { ctx } = this;
+    const { pagesize = 10, page = 1 } = ctx.query;
+    const result = await ctx.service.token.mineToken.getUserLogs(ctx.user.id, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+
 }
 
 module.exports = TokenController;
