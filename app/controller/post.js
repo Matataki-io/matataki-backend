@@ -27,7 +27,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
       publickey, sign, hash, fissionFactor = 2000,
-      cover, is_original = 0, platform = 'eos', tags = '', commentPayPoint = 0 } = ctx.request.body;
+      cover, is_original = 0, platform = 'eos', tags = '', commentPayPoint = 0, shortContent = null } = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, is_original);
 
@@ -86,7 +86,10 @@ class PostController extends Controller {
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(articleJson.content);
     // 设置短摘要
-    const shortContent = articleContent.substring(0, 300);
+    let short_content = shortContent;
+    if (short_content === null) {
+      short_content = articleContent.substring(0, 300);
+    }
 
     const id = await ctx.service.post.publish({
       author,
@@ -103,7 +106,7 @@ class PostController extends Controller {
       uid: ctx.user.id,
       is_recommend: 0,
       category_id: 0,
-      short_content: shortContent,
+      short_content,
       comment_pay_point,
     });
 
@@ -125,11 +128,12 @@ class PostController extends Controller {
   }
 
   // 编辑文章， 处理逻辑和发布相似
+  /* 目前没有判断ipfs hash是否是现在用户上传的文章，所以可能会伪造一个已有的hash */
   async edit() {
     const ctx = this.ctx;
     const { signId, author = '', title = '', content = '',
       publickey, sign, hash, fissionFactor = 2000, cover,
-      is_original = 0, platform = 'eos', tags = '' } = ctx.request.body;
+      is_original = 0, platform = 'eos', tags = '', shortContent = null } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -143,9 +147,13 @@ class PostController extends Controller {
     }
 
     const post = await this.app.mysql.get('posts', { id: signId });
-
     if (!post) {
       ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+
+    if (post.uid !== ctx.user.id) {
+      ctx.body = ctx.msg.notYourPost;
       return;
     }
 
@@ -188,7 +196,11 @@ class PostController extends Controller {
     const articleJson = JSON.parse(articleData.toString());
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(articleJson.content);
-    const shortContent = articleContent.substring(0, 300);
+
+    let short_content = shortContent;
+    if (short_content === null) {
+      short_content = articleContent.substring(0, 300);
+    }
 
     let elaTitle = post.title;
     try {
@@ -212,7 +224,7 @@ class PostController extends Controller {
           hash,
           public_key: publickey,
           sign,
-          short_content: shortContent,
+          short_content,
         };
 
         if (title) {
@@ -423,7 +435,22 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const id = ctx.params.id;
 
-    const post = await this.service.post.getById(id, ctx.user.id);
+    const post = await this.service.post.getById(id);
+
+    if (!post) {
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = post;
+  }
+
+  // 获取当前用户查看文章的属性
+  async currentProfile() {
+    const ctx = this.ctx;
+    const { id } = ctx.request.body;
+    const post = await this.service.post.getPostProfileOf(id, ctx.user.id);
 
     if (!post) {
       ctx.body = ctx.msg.postNotFound;
@@ -438,7 +465,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const hash = ctx.params.hash;
 
-    const post = await this.service.post.getByHash(hash, ctx.user.id);
+    const post = await this.service.post.getByHash(hash, true);
 
     if (!post) {
       ctx.body = ctx.msg.postNotFound;
@@ -542,8 +569,8 @@ class PostController extends Controller {
     }
   }
 
-  // 获取我的文章，不是我的文章会报401
-  // 新创建的没有id， 用的hash问题
+  // 获取我的文章
+  // 新创建的没有id，用的hash问题
   async mypost() {
     const ctx = this.ctx;
     const id = ctx.params.id;
@@ -698,6 +725,17 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const hash = ctx.params.hash;
 
+    const post = await this.service.post.getByHash(hash, false);
+
+    if (post.uid !== ctx.user.id) {
+      // 增加判断是否有权限
+      const result = await this.service.post.isHoldMineTokens(post.id, ctx.user.id);
+      if (!result) {
+        ctx.body = ctx.msg.postNoPermission;
+        return;
+      }
+    }
+
     // 从ipfs获取内容
     const catchRequest = await this.service.post.ipfsCatch(hash);
 
@@ -716,6 +754,23 @@ class PostController extends Controller {
     const ctx = this.ctx;
     ctx.body = ctx.msg.success;
     ctx.body.data = await this.service.post.stats();
+  }
+
+  // 持币阅读
+  async addMineTokens() {
+    const ctx = this.ctx;
+    const { signId, tokens } = ctx.request.body;
+    if (!signId) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const result = await ctx.service.post.addMineTokens(ctx.user.id, signId, tokens);
+    if (result === 0) {
+      ctx.body = ctx.msg.success;
+    } else {
+      ctx.body = ctx.msg.failure;
+    }
   }
 
 }

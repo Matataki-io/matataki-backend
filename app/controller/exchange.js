@@ -47,7 +47,7 @@ class ExchangeController extends Controller {
     const ctx = this.ctx;
     const { tokenId, amount, min_cny, min_tokens } = ctx.request.body;
     const deadline = parseInt(moment().format('X')) + DEADLINE; // 设置unix时间戳
-    const result = await ctx.service.token.exchange.removeLiquidity(ctx.user.id, tokenId, amount, min_cny, min_tokens, deadline);
+    const result = await ctx.service.token.exchange.removeLiquidity(ctx.user.id, tokenId, amount, min_cny, min_tokens, deadline, this.clientIP);
     if (result === -1) {
       ctx.body = ctx.msg.failure;
       return;
@@ -289,7 +289,17 @@ class ExchangeController extends Controller {
       ...ctx.msg.success,
       data: result,
     };
+  }
 
+  async getUserBalance() {
+    const { ctx } = this;
+    const userId = ctx.user.id; // 接收者
+    const { tokenId } = ctx.query;
+    const result = await ctx.service.exchange.getUserBalance(userId, tokenId);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
   }
 
 }

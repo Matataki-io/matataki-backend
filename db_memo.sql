@@ -820,3 +820,175 @@ ALTER TABLE drafts ADD COLUMN comment_pay_point INT UNSIGNED NOT NULL DEFAULT 0 
 
 UPDATE posts SET comment_pay_point=5 WHERE comment_pay_point=0;
 
+-- 创建job
+create event test1
+on schedule every 1 day
+starts  '2019-09-12 0:10:00'
+on completion not preserve 
+do 
+insert into report_daily(date,create_time,num,type) 
+select DATE_FORMAT(date_sub(now(), interval 1 day),'%Y-%m-%d'), now(), count, 'login' 
+from (select count(1) as count from users_login_log where login_time > DATE_FORMAT(date_sub(now(), interval 1 day),'%Y-%m-%d') and login_time<DATE_FORMAT(now(),'%Y-%m-%d')) t;
+
+
+-- 2019/9/10 sprint11 v2.9，粉丝币
+新增表：
+minetokens
+exchanges
+exchange_orders
+exchange_balances
+assets_minetokens
+assets_minetokens_log
+
+post_read_count.down 人工干预热门排序
+posts.time_down 人工干预时间排序，越大越靠后
+users.level，等级，控制谁可以发币
+
+ALTER TABLE users ADD COLUMN level INT NOT NULL DEFAULT 0 COMMENT '等级';
+ALTER TABLE users ADD COLUMN status INT NOT NULL DEFAULT 0 COMMENT '用户状态';
+ALTER TABLE posts ADD COLUMN time_down INT NOT NULL DEFAULT 0;
+ALTER TABLE post_read_count ADD COLUMN down INT NOT NULL DEFAULT 0;
+
+修改assets表amount类型，int -> bigint，长度20
+修改assets_change_log表amount类型，int -> bigint，长度20
+
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for minetokens
+-- ----------------------------
+DROP TABLE IF EXISTS `minetokens`;
+CREATE TABLE `minetokens`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL COMMENT 'userId',
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'token name',
+  `symbol` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'token symbol',
+  `decimals` int(11) UNSIGNED NOT NULL COMMENT '精度',
+  `total_supply` bigint(20) NOT NULL COMMENT '总发行量',
+  `create_time` timestamp(0) NOT NULL COMMENT '创建时间',
+  `status` int(11) NOT NULL DEFAULT 0 COMMENT '状态：0不可用，1可用',
+  `logo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_uid`(`uid`) USING BTREE,
+  UNIQUE INDEX `idx_symbol`(`symbol`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for exchanges
+-- ----------------------------
+DROP TABLE IF EXISTS `exchanges`;
+CREATE TABLE `exchanges`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `token_id` int(10) UNSIGNED NOT NULL,
+  `total_supply` bigint(20) NOT NULL COMMENT '以cny计价的总的流动性',
+  `create_time` datetime(0) NOT NULL,
+  `exchange_uid` int(10) UNSIGNED NOT NULL COMMENT '为exchange交易对虚拟一个uid',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_tokenid`(`token_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for exchange_orders
+-- ----------------------------
+DROP TABLE IF EXISTS `exchange_orders`;
+CREATE TABLE `exchange_orders`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(10) UNSIGNED NOT NULL COMMENT '操作人',
+  `token_id` int(10) UNSIGNED NOT NULL,
+  `cny_amount` bigint(20) NOT NULL COMMENT 'todo：待修改',
+  `token_amount` bigint(20) NOT NULL COMMENT 'todo：待修改',
+  `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '类型：add，buy_token，sale_token',
+  `trade_no` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '微信或支付宝的订单号',
+  `openid` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '微信或支付宝的openId',
+  `status` int(11) NOT NULL COMMENT '状态，0初始，3支付中，6支付成功，9处理完成',
+  `create_time` timestamp(0) NOT NULL,
+  `pay_time` timestamp(0) NULL DEFAULT NULL COMMENT '支付成功的时间',
+  `ip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL,
+  `deadline` int(11) NOT NULL COMMENT '超时时间',
+  `min_liquidity` bigint(20) NOT NULL COMMENT '做市商份额的最小值',
+  `max_tokens` bigint(20) NOT NULL COMMENT '需要的token最大值',
+  `min_tokens` bigint(20) NOT NULL DEFAULT 0 COMMENT '页面显示的可以购买token的最小值',
+  `recipient` int(11) NOT NULL DEFAULT 0 COMMENT '接收者地址，默认填写操作人uid',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 89 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for exchange_balances
+-- ----------------------------
+DROP TABLE IF EXISTS `exchange_balances`;
+CREATE TABLE `exchange_balances`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(10) UNSIGNED NOT NULL,
+  `token_id` int(10) UNSIGNED NOT NULL,
+  `liquidity_balance` bigint(20) NOT NULL COMMENT '以人民币计算的流动性份额',
+  `create_time` timestamp(0) NOT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_uid_tokenid`(`uid`, `token_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '流动性池提供者的份额' ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for assets_minetokens_log
+-- ----------------------------
+DROP TABLE IF EXISTS `assets_minetokens_log`;
+CREATE TABLE `assets_minetokens_log`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `from_uid` int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'from',
+  `to_uid` int(10) NOT NULL DEFAULT 0 COMMENT 'to',
+  `token_id` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `amount` bigint(20) UNSIGNED NOT NULL COMMENT '数量',
+  `create_time` timestamp(0) NOT NULL,
+  `ip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 146 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for assets_minetokens
+-- ----------------------------
+DROP TABLE IF EXISTS `assets_minetokens`;
+CREATE TABLE `assets_minetokens`  (
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uid` int(10) UNSIGNED NOT NULL COMMENT '用户id',
+  `token_id` int(10) UNSIGNED NOT NULL,
+  `amount` bigint(20) UNSIGNED NOT NULL DEFAULT 0 COMMENT '数量',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_uid_tokenid`(`uid`, `token_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 149 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+-- 2019/10/10 sprint11 v2.10，持币阅读
+新增表：
+post_minetokens

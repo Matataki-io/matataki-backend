@@ -227,8 +227,10 @@ module.exports = app => {
   // -------------------------------- token display API --------------------------------
   // 根据token获取持仓用户list
   router.get('/token/userlist', passport.verify, controller.token.userList);
+  router.get('/token/usertokenflow', passport.verify, controller.token.userTokenFlow);
   // 用户持仓token list
   router.get('/token/tokenlist', passport.verify, controller.token.tokenList);
+  router.get('/token/tokenflow', passport.verify, controller.token.tokenFlow);
   // token 详情
   router.get('/token/minetoken', passport.verify, controller.token.minetokenDetail);
   // 所有的token 分页
@@ -256,6 +258,7 @@ module.exports = app => {
   // 获取your mint token
   router.get('/exchange/userMintToken', passport.verify, controller.exchange.getYourMintToken);
   router.get('/exchange/poolCnyToTokenPrice', passport.verify, controller.exchange.getPoolCnyToTokenPrice);
+  router.get('/exchange/balance', passport.authorize, controller.exchange.getUserBalance);
 
   // 支付后订单状态修改通知接口
   router.get('/exchange/notify', passport.verify, controller.exchange.notify);
@@ -268,5 +271,9 @@ module.exports = app => {
   // 根据资金池通证获取输出
   router.get('/exchange/outputPoolSize', passport.verify, controller.exchange.getOutputPoolSize);
   router.post('/wxpay/refund', passport.verify, controller.wxpay.refund);
+
+  // 持币阅读
+  router.post('/post/addMineTokens', passport.authorize, controller.post.addMineTokens);
+  router.post('/post/currentProfile', passport.authorize, controller.post.currentProfile);
 };
 

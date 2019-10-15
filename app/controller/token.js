@@ -62,6 +62,41 @@ class TokenController extends Controller {
       data: result,
     };
   }
+  // token流水详情
+  async userTokenFlow() {
+    const { ctx } = this;
+    const { pagesize = 10, page = 1 } = ctx.query;
+    // user id
+    const user_id = ctx.user.id;
+    // 根据user_id查找用户发行的token
+    const token = await ctx.service.token.mineToken.getByUserId(user_id);
+    if (token === null) {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: {},
+      };
+      return;
+    }
+    const token_id = token.id;
+    const result = await ctx.service.exchange.getFlowDetail(token_id, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+  // 用户视角下token流水
+  async tokenFlow() {
+    const { ctx } = this;
+    const { tokenId, pagesize = 10, page = 1 } = ctx.query;
+    console.log(ctx.user);
+    // user id
+    const user_id = ctx.user.id;
+    const result = await ctx.service.exchange.getUserFlowDetail(user_id, tokenId, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
 }
 
 module.exports = TokenController;

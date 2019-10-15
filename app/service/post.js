@@ -84,22 +84,25 @@ class PostService extends Service {
   }
 
   // 根据hash获取文章
-  async getByHash(hash, userId) {
+  async getByHash(hash, requireProfile) {
     // const post = await this.app.mysql.get('posts', { hash });
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
       + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE hash = ?;',
       [ hash ]
     );
-    const post = posts[0];
-    return this.getPostProfile(post, userId);
+    let post = posts[0];
+    if (requireProfile) {
+      post = await this.getPostProfile(post);
+    }
+    return post;
   }
 
   // 根据id获取文章-简单版
   async get(id) {
     const posts = await this.app.mysql.select('posts', {
       where: { id },
-      columns: [ 'id', 'uid', 'title', 'status', 'create_time', 'comment_pay_point', 'channel_id' ], // todo：需要再增加
+      columns: [ 'id', 'hash', 'uid', 'title', 'status', 'create_time', 'comment_pay_point', 'channel_id' ], // todo：需要再增加
     });
     if (posts && posts.length > 0) {
       return posts[0];
@@ -108,95 +111,167 @@ class PostService extends Service {
   }
 
   // 根据id获取文章
-  async getById(id, userId) {
+  /*
+  查询太多影响性能，修改计划：
+    把公共属性和持币阅读权限放到一起返回
+    其他和当前登录相关的属性放入新接口返回
+  */
+  async getById(id) {
     // const post = await this.app.mysql.get('posts', { id });
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
       + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE id = ?;',
       [ id ]
     );
-    const post = posts[0];
-    return this.getPostProfile(post, userId);
+
+    if (posts === null || posts.length === 0) {
+      return null;
+    }
+
+    let post = posts[0];
+    post = await this.getPostProfile(post);
+    post.tokens = await this.getMineTokens(id);
+    // post.isHoldMineTokens = (post.tokens !== null && post.tokens.length > 0);
+    return post;
+  }
+
+  async getForEdit(id, current_user) {
+    const posts = await this.app.mysql.query(
+      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point FROM posts WHERE id = ? AND uid = ?;',
+      [ id, current_user ]
+    );
+
+    if (posts === null || posts.length === 0) {
+      return null;
+    }
+
+    let post = posts[0];
+    post = await this.getPostProfile(post);
+    post.tokens = await this.getMineTokens(id);
+    return post;
   }
 
   // 获取文章阅读数等属性
-  async getPostProfile(post, userId) {
-    if (post) {
+  async getPostProfile(post) {
+    // 如果是商品，返回价格
+    if (post.channel_id === consts.postChannels.product) {
+      post.prices = await this.getPrices(post.id);
+    }
 
-      // 如果是商品，返回价格
-      if (post.channel_id === consts.postChannels.product) {
-        post.prices = await this.getPrices(post.id);
+    // 阅读次数
+    const count = await this.app.mysql.query(
+      'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue, likes, dislikes'
+      + ' FROM post_read_count WHERE post_id = ?;',
+      [ post.id ]
+    );
+    if (count.length) {
+      post.read = count[0].num;
+      post.sale = count[0].sale;
+      post.ups = count[0].ups;
+      post.value = count[0].eosvalue;
+      post.ontvalue = count[0].ontvalue;
+      post.likes = count[0].likes;
+      post.dislikes = count[0].dislikes;
+    } else {
+      post.read = post.sale = post.ups = post.value = post.ontvalue = post.likes = post.dislikes = 0;
+    }
+
+    // tags
+    const tags = await this.app.mysql.query(
+      'select a.id, a.name from tags a left join post_tag b on a.id = b.tid where b.sid = ? ',
+      [ post.id ]
+    );
+
+    post.tags = tags;
+
+    /*
+          // 当前用户是否已赞赏
+          post.is_support = false;
+          if (userId) {
+            const support = await this.app.mysql.get('supports', { signid: post.id, uid: userId, status: 1 });
+            if (support) {
+              post.is_support = true;
+            }
+          }
+
+          // 如果是商品，当前用户是否已购买
+          if (userId && post.channel_id === consts.postChannels.product) {
+            post.is_buy = false;
+            const buy = await this.app.mysql.get('orders', { signid: post.id, uid: userId, status: 1 });
+            if (buy) {
+              post.is_buy = true;
+            }
+          }
+    */
+
+    // nickname
+    // const name = post.username || post.author;
+    const user = await this.service.user.get(post.uid); // this.app.mysql.get('users', { username: name });
+    if (user) {
+      post.nickname = user.nickname;
+    }
+
+    /*
+          if (userId) {
+            // 是否点过推荐/不推荐，每个人只能点一次推荐/不推荐
+            post.is_liked = await this.service.mining.liked(userId, post.id);
+            // 获取用户从单篇文章阅读获取的积分
+            post.points = await this.service.mining.getPointslogBySignId(userId, post.id);
+
+            // 判断3天内的文章是否领取过阅读新文章奖励，3天以上的就不查询了
+            if ((Date.now() - post.create_time) / (24 * 3600 * 1000) <= 3) {
+              post.is_readnew = await this.service.mining.getReadNew(userId, post.id);
+            }
+          }
+     */
+
+    // update cahce
+    // this.app.read_cache[post.id] = post.read;
+    // this.app.value_cache[post.id] = post.value;
+    // this.app.ups_cache[post.id] = post.ups;
+
+    // this.app.post_cache[post.id] = post;
+
+    return post;
+  }
+
+  async getPostProfileOf(id, userId) {
+    if (!userId) {
+      return null;
+    }
+
+    const post = await this.get(id);
+    if (!post) {
+      return null;
+    }
+
+    post.holdMineTokens = await this.getHoldMineTokens(id, userId);
+
+    // 当前用户是否已赞赏
+    post.is_support = false;
+    const support = await this.app.mysql.get('supports', { signid: post.id, uid: userId, status: 1 });
+    if (support) {
+      post.is_support = true;
+    }
+
+    // 如果是商品，当前用户是否已购买
+    if (post.channel_id === consts.postChannels.product) {
+      post.is_buy = false;
+      const buy = await this.app.mysql.get('orders', { signid: post.id, uid: userId, status: 1 });
+      if (buy) {
+        post.is_buy = true;
       }
+    }
 
-      // 阅读次数
-      const count = await this.app.mysql.query(
-        'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue, likes, dislikes'
-        + ' FROM post_read_count WHERE post_id = ?;',
-        [ post.id ]
-      );
-      if (count.length) {
-        post.read = count[0].num;
-        post.sale = count[0].sale;
-        post.ups = count[0].ups;
-        post.value = count[0].eosvalue;
-        post.ontvalue = count[0].ontvalue;
-        post.likes = count[0].likes;
-        post.dislikes = count[0].dislikes;
-      } else {
-        post.read = post.sale = post.ups = post.value = post.ontvalue = post.likes = post.dislikes = 0;
-      }
+    // 是否点过推荐/不推荐，每个人只能点一次推荐/不推荐
+    post.is_liked = await this.service.mining.liked(userId, post.id);
+    // 获取用户从单篇文章阅读获取的积分
+    post.points = await this.service.mining.getPointslogBySignId(userId, post.id);
 
-      // tags
-      const tags = await this.app.mysql.query(
-        'select a.id, a.name from tags a left join post_tag b on a.id = b.tid where b.sid = ? ',
-        [ post.id ]
-      );
-
-      post.tags = tags;
-
-      // 当前用户是否已赞赏
-      post.is_support = false;
-      if (userId) {
-        const support = await this.app.mysql.get('supports', { signid: post.id, uid: userId, status: 1 });
-        if (support) {
-          post.is_support = true;
-        }
-      }
-
-      // 如果是商品，当前用户是否已购买
-      if (userId && post.channel_id === consts.postChannels.product) {
-        post.is_buy = false;
-        const buy = await this.app.mysql.get('orders', { signid: post.id, uid: userId, status: 1 });
-        if (buy) {
-          post.is_buy = true;
-        }
-      }
-
-      // nickname
-      const name = post.username || post.author;
-      const user = await this.app.mysql.get('users', { username: name });
-      if (user) {
-        post.nickname = user.nickname;
-      }
-
-      if (userId) {
-        // 是否点过推荐/不推荐，每个人只能点一次推荐/不推荐
-        post.is_liked = await this.service.mining.liked(userId, post.id);
-        // 获取用户从单篇文章阅读获取的积分
-        post.points = await this.service.mining.getPointslogBySignId(userId, post.id);
-
-        // 判断3天内的文章是否领取过阅读新文章奖励，3天以上的就不查询了
-        if ((Date.now() - post.create_time) / (24 * 3600 * 1000) <= 3) {
-          post.is_readnew = await this.service.mining.getReadNew(userId, post.id);
-        }
-      }
-
-      // update cahce
-      // this.app.read_cache[post.id] = post.read;
-      // this.app.value_cache[post.id] = post.value;
-      // this.app.ups_cache[post.id] = post.ups;
-
-      // this.app.post_cache[post.id] = post;
+    // 判断3天内的文章是否领取过阅读新文章奖励，3天以上的就不查询了
+    if ((Date.now() - post.create_time) / (24 * 3600 * 1000) <= 3) {
+      post.is_readnew = await this.service.mining.getReadNew(userId, post.id);
     }
 
     return post;
@@ -778,17 +853,6 @@ class PostService extends Service {
     return false;
   }
 
-  async getForEdit(id, current_user) {
-    // const post = await this.app.mysql.get('posts', { id });
-    const posts = await this.app.mysql.query(
-      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id FROM posts WHERE id = ?;',
-      [ id ]
-    );
-    const post = posts[0];
-    return this.getPostProfile(post, current_user);
-  }
-
   async transferOwner(uid, signid, current_uid) {
     const post = await this.app.mysql.get('posts', { id: signid });
     if (!post) {
@@ -890,6 +954,83 @@ class PostService extends Service {
 
     return { users: queryResult[0][0].count, articles: queryResult[1][0].count, points: queryResult[2][0].amount };
   }
+
+  // 持币阅读
+  async addMineTokens(current_uid, id, tokens) {
+    const post = await this.get(id);
+    if (!post) {
+      return -1;
+    }
+
+    if (post.uid !== current_uid) {
+      return -2;
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      await conn.query('DELETE FROM post_minetokens WHERE sign_id = ?;', [ id ]);
+      for (const token of tokens) {
+        await conn.insert('post_minetokens', {
+          sign_id: id,
+          token_id: token.tokenId,
+          amount: token.amount,
+          create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        });
+      }
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.ctx.logger.error(e);
+      return -3;
+    }
+  }
+
+  // 获取阅读文章需要持有的tokens
+  async getMineTokens(id) {
+    const tokens = await this.app.mysql.query('SELECT t.id, p.amount, t.name, t.symbol, t.decimals FROM post_minetokens p INNER JOIN minetokens t ON p.token_id = t.id WHERE p.sign_id = ?;',
+      [ id ]);
+    return tokens;
+  }
+
+  // 获取用户持币情况
+  async getHoldMineTokens(id, userId) {
+    const tokens = await this.getMineTokens(id);
+    if (tokens === null || tokens.length === 0) {
+      return null;
+    }
+
+    const mytokens = [];
+
+    if (tokens && tokens.length > 0) {
+      for (const token of tokens) {
+        const amount = await this.service.token.mineToken.balanceOf(userId, token.id);
+        token.amount = amount;
+        mytokens.push(token);
+      }
+    }
+    return mytokens;
+  }
+
+  // 判断持币阅读
+  async isHoldMineTokens(id, userId) {
+    const tokens = await this.getMineTokens(id);
+    if (tokens === null || tokens.length === 0) {
+      return true;
+    }
+
+    if (tokens && tokens.length > 0) {
+      for (const token of tokens) {
+        const amount = await this.service.token.mineToken.balanceOf(userId, token.id);
+        if (amount < token.amount) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+
 }
 
 module.exports = PostService;

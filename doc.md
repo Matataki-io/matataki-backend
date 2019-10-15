@@ -5,7 +5,7 @@
 * POST /post/publish
 * 响应状态码：200
 
-* curl -d "author=tengavinwood&title=xxxxx&publickey=EOS8QP2Z6tApaUYPEC6hm9f1pZrSEMmZ7n5SsvjzA3VTnRXUyra9E&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy&sign=SIG_K1_KZU9PyXP8YAePjCfCcmBjGHARkvTVDjKpKvVgS6XL8o2FXTXUdhP3rqrL38dJYgJo2WNBdYubsY9LKTo47RUUE4N3ZHjZQ" -X POST https://api.smartsignature.io/post/publish
+* curl -d "author=tengavinwood&title=xxxxx&publickey=EOS8QP2Z6tApaUYPEC6hm9f1pZrSEMmZ7n5SsvjzA3VTnRXUyra9E&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy&sign=SIG_K1_KZU9PyXP8YAePjCfCcmBjGHARkvTVDjKpKvVgS6XL8o2FXTXUdhP3rqrL38dJYgJo2WNBdYubsY9LKTo47RUUE4N3ZHjZQ&shortContent=aaa" -X POST https://api.smartsignature.io/post/publish
 
 * 增加参数：commentPayPoint 评论需要花的积分
 
@@ -1121,44 +1121,49 @@ curl https://api.smartsignature.io/p/123 | jq
 	"code": 0,
 	"message": "成功",
 	"data": {
-		"id": 100531,
-		"username": "xiaotiandada",
-		"author": "xiaotiandada",
-		"title": "占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页",
-		"short_content": "占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页占据首页",
-		"hash": "QmcHTp2NdrZcweq1Do3v4g1iK2yq6ANHBfyCeF98jLqgti",
+		"id": 100783,
+		"username": "cnchenhao",
+		"author": "aaa",
+		"title": "aaa",
+		"short_content": "bbb",
+		"hash": "QmaAfkojHxjyhq5rrf7PXxkkEVYxc7GiiRCvhPWd97MDxd",
 		"status": 0,
 		"onchain_status": 0,
-		"create_time": "2019-06-21T03:59:59.000Z",
+		"create_time": "2019-10-10T11:38:26.000Z",
 		"fission_factor": 2000,
-		"cover": "/image/2019/07/11/561ad457a2368a4be4909cef0ac328c7.jpg",
+		"cover": "",
 		"is_original": 0,
 		"channel_id": 1,
 		"fission_rate": 100,
 		"referral_rate": 0,
-		"uid": 65,
-		"is_recommend": 1,
+		"uid": 1022,
+		"is_recommend": 0,
 		"category_id": 0,
-		"read": 114,
+		"comment_pay_point": 15,
+		"read": 15,
 		"sale": 0,
-		"ups": 2,
+		"ups": 0,
 		"value": 0,
-		"ontvalue": 20000,
-		"likes": 2,
+		"ontvalue": 0,
+		"likes": 0,
 		"dislikes": 0,
-		"tags": [{
-			"id": 10,
-			"name": "我看不行"
-		}],
-		"is_support": false,
-		"nickname": "11我321哈11112",
-		"is_liked": 1,
-		"points": [{
-			"uid": 1048,
-			"amount": 3,
-			"type": "reading",
-			"create_time": "2019-08-13T09:08:52.000Z"…
-		}]
+		"tags": [],
+		"nickname": "cnchenhao",
+		"tokens": [{
+				"id": 14,
+				"amount": 100,
+				"name": "小田币",
+				"symbol": "XTB",
+				"decimals": 4
+			},
+			{
+				"id": 15,
+				"amount": 20,
+				"name": "chen token",
+				"symbol": "CHT",
+				"decimals": 4
+			}
+		]
 	}
 }
 ```
@@ -2292,3 +2297,165 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
   "code": 0,
   "message": "成功"
 }
+```
+
+#### 增加文章持币阅读
+* POST /post/addMineTokens
+* 响应状态码： 200
+* 参数：
+```
+{
+	"signId": 100783,
+	"tokens": [{
+			"tokenId": 14,
+			"amount": 100
+		},
+		{
+			"tokenId": 15,
+			"amount": 20
+		}
+	]
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 买入粉丝币-流水明细
+* GET /token/tokenflow
+* 响应状态码： 200
+* 参数：page || 1, pagesize || 10, tokenId
+* 请求头：x-access-token
+* 返回值：
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "count": 1,
+        "list": [
+          {
+            "id": 79,
+            "uid": 1042,
+            "token_id": 14,
+            "cny_amount": 10000,
+            "token_amount": 758573,
+            "type": "buy_token_input",
+            "trade_no": "i9T5PmF6Xnufe4z1lA3HNEwqrLY8ETq",
+            "openid": "",
+            "status": 9,
+            "create_time": "2019-09-29T07:02:12.000Z",
+            "pay_time": null,
+            "ip": "112.118.225.21",
+            "deadline": 1569740832,
+            "min_liquidity": 0,
+            "max_tokens": 0,
+            "min_tokens": 750987,
+            "recipient": 1042
+          }
+        ]
+    }
+}
+```
+
+#### 我的粉丝币-流水明细
+* GET /token/usertokenflow
+* 响应状态码： 200
+* 参数：page || 1, pagesize || 10
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "count": 1,
+        "list": [
+          {
+            "id": 79,
+            "uid": 1042,
+            "token_id": 14,
+            "cny_amount": 10000,
+            "token_amount": 758573,
+            "type": "buy_token_input",
+            "trade_no": "i9T5PmF6Xnufe4z1lA3HNEwqrLY8ETq",
+            "openid": "",
+            "status": 9,
+            "create_time": "2019-09-29T07:02:12.000Z",
+            "pay_time": null,
+            "ip": "112.118.225.21",
+            "deadline": 1569740832,
+            "min_liquidity": 0,
+            "max_tokens": 0,
+            "min_tokens": 750987,
+            "recipient": 1042
+          }
+        ]
+    }
+}
+```
+
+#### 当前用户视角查看文章属性
+* POST /post/currentProfile
+* 响应状态码： 200
+* 参数：
+```
+{
+	"id": 100783
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"id": 100783,
+		"hash": "QmaAfkojHxjyhq5rrf7PXxkkEVYxc7GiiRCvhPWd97MDxd",
+		"uid": 1022,
+		"title": "aaa",
+		"status": 0,
+		"create_time": "2019-10-10T11:38:26.000Z",
+		"comment_pay_point": 15,
+		"channel_id": 1,
+		"holdMineTokens": [{
+				"id": 14,
+				"amount": 100,
+				"name": "小田币",
+				"symbol": "XTB",
+				"decimals": 4
+			},
+			{
+				"id": 15,
+				"amount": 100,
+				"name": "chen token",
+				"symbol": "CHT",
+				"decimals": 4
+			}
+		],
+		"is_support": false,
+		"is_liked": 0,
+		"points": [{
+				"amount": 1,
+				"type": "beread_new",
+				"create_time": "2019-10-10T12:20:16.000Z"
+			},
+			{
+				"amount": 100,
+				"type": "publish",
+				"create_time": "2019-10-10T11:38:30.000Z"
+			}
+		],
+		"is_readnew": 0
+	}
+}
+```
+
