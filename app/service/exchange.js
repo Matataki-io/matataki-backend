@@ -127,7 +127,12 @@ class ExchangeService extends Service {
   // 所有的token
   async getAllToken(page = 1, pagesize = 20, search = '') {
     if (search === '') {
-      const sql = 'SELECT t1.*, t2.username, t2.nickname, t2.email FROM mineTokens AS t1 Left JOIN users AS t2 ON t1.uid = t2.id LIMIT :offset, :limit;'
+      const sql = `SELECT t1.*, t2.username, t2.nickname, t2.email, t4.amount
+          FROM mineTokens AS t1 
+          Left JOIN users AS t2 ON t1.uid = t2.id 
+          LEFT JOIN exchanges as t3 ON t1.id = t3.token_id 
+          LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id 
+          LIMIT :offset, :limit;`
         + 'SELECT count(1) as count FROM mineTokens;';
       const result = await this.app.mysql.query(sql, {
         offset: (page - 1) * pagesize,
@@ -138,11 +143,12 @@ class ExchangeService extends Service {
         list: result[0],
       };
     }
-    const searchSql = `SELECT t1.*, t2.username, t2.nickname, t2.email 
+    const searchSql = `SELECT t1.*, t2.username, t2.nickname, t2.email, t4.amount
         FROM mineTokens AS t1 
-        Left JOIN users AS t2 
-        ON t1.uid = t2.id 
-        WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search 
+        Left JOIN users AS t2 ON t1.uid = t2.id 
+        LEFT JOIN exchanges as t3 ON t1.id = t3.token_id 
+        LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id 
+        WHERE Lower(t1.name) LIKE :search OR Lower(t1.symbol) LIKE :search 
         LIMIT :offset, :limit;`
       + 'SELECT count(1) as count FROM mineTokens WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search;';
     const searchResult = await this.app.mysql.query(searchSql, {
