@@ -127,7 +127,7 @@ class ExchangeService extends Service {
   // 所有的token
   async getAllToken(page = 1, pagesize = 20, search = '') {
     if (search === '') {
-      const sql = 'SELECT * FROM mineTokens LIMIT :offset, :limit;'
+      const sql = 'SELECT t1.*, t2.username, t2.nickname, t2.email FROM mineTokens AS t1 Left JOIN users AS t2 ON t1.uid = t2.id LIMIT :offset, :limit;'
         + 'SELECT count(1) as count FROM mineTokens;';
       const result = await this.app.mysql.query(sql, {
         offset: (page - 1) * pagesize,
@@ -138,7 +138,12 @@ class ExchangeService extends Service {
         list: result[0],
       };
     }
-    const searchSql = 'SELECT * FROM mineTokens WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search LIMIT :offset, :limit;'
+    const searchSql = `SELECT t1.*, t2.username, t2.nickname, t2.email 
+        FROM mineTokens AS t1 
+        Left JOIN users AS t2 
+        ON t1.uid = t2.id 
+        WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search 
+        LIMIT :offset, :limit;`
       + 'SELECT count(1) as count FROM mineTokens WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search;';
     const searchResult = await this.app.mysql.query(searchSql, {
       search: '%' + search.toLowerCase() + '%',
