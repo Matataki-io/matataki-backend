@@ -62,7 +62,7 @@ class TokenController extends Controller {
       data: result,
     };
   }
-  // token流水详情
+  // 我发行的粉丝币-流水详情
   async userTokenFlow() {
     const { ctx } = this;
     const { pagesize = 10, page = 1 } = ctx.query;
@@ -84,7 +84,7 @@ class TokenController extends Controller {
       data: result,
     };
   }
-  // 用户视角下token流水
+  // 我持有的粉丝币-流水明细
   async tokenFlow() {
     const { ctx } = this;
     const { tokenId, pagesize = 10, page = 1 } = ctx.query;
@@ -92,9 +92,15 @@ class TokenController extends Controller {
     // user id
     const user_id = ctx.user.id;
     const result = await ctx.service.exchange.getUserFlowDetail(user_id, tokenId, parseInt(page), parseInt(pagesize));
+    const tokenDetail = await ctx.service.token.mineToken.get(tokenId)
+    const userDetail = await ctx.service.user.get(tokenDetail.uid)
     ctx.body = {
       ...ctx.msg.success,
-      data: result,
+      data: {
+        ...result,
+        tokenDetail,
+        userDetail
+      }
     };
   }
 
