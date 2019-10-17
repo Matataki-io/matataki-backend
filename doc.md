@@ -45,7 +45,8 @@
             "read": 234,
             "eosvalue": 200,
             "ups": 2,
-            "ontvalue": 20000
+            "ontvalue": 20000,
+            "require_holdtokens": 0
         },
     ]
 }
@@ -83,7 +84,8 @@
             "read": 234,
             "eosvalue": 200,
             "ups": 2,
-            "ontvalue": 20000
+            "ontvalue": 20000,
+            "require_holdtokens": 0
         },
     ]
 }
@@ -121,7 +123,8 @@
             "eosvalue": 200,
             "ups": 2,
             "ontvalue": 20000,
-            "sale": 0
+            "sale": 0,
+            "require_holdtokens": 0
         }
     ]
 }
@@ -164,7 +167,8 @@
       "tags": [
         5
       ],
-      "sale": 0
+      "sale": 0,
+      "require_holdtokens": 0
     }
   ]
 }
@@ -2463,7 +2467,7 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 #### 查看用户的token日志
 * GET /token/userlogs
 * 响应状态码： 200
-* 参数：page=1&pagesize=10
+* 参数：page=1&pagesize=10&tokenId=15
 * 请求头：x-access-token
 * 返回值：
 ```
@@ -2515,7 +2519,7 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 #### 查看token日志，以发币人视角
 * GET /token/tokenlogs
 * 响应状态码： 200
-* 参数：page=1&pagesize=10&tokenId=15
+* 参数：page=1&pagesize=10
 * 请求头：x-access-token
 * 返回值：
 ```

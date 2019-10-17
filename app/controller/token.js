@@ -92,23 +92,31 @@ class TokenController extends Controller {
     // user id
     const user_id = ctx.user.id;
     const result = await ctx.service.exchange.getUserFlowDetail(user_id, tokenId, parseInt(page), parseInt(pagesize));
-    const tokenDetail = await ctx.service.token.mineToken.get(tokenId)
-    const userDetail = await ctx.service.user.get(tokenDetail.uid)
+    const tokenDetail = await ctx.service.token.mineToken.get(tokenId);
+    const userDetail = await ctx.service.user.get(tokenDetail.uid);
     ctx.body = {
       ...ctx.msg.success,
       data: {
         ...result,
         tokenDetail,
-        userDetail
-      }
+        userDetail,
+      },
     };
   }
 
   // 查看token的日志
   async getTokenLogs() {
     const { ctx } = this;
-    const { tokenId, pagesize = 10, page = 1 } = ctx.query;
-    const result = await ctx.service.token.mineToken.getTokenLogs(tokenId, parseInt(page), parseInt(pagesize));
+    const { pagesize = 10, page = 1 } = ctx.query;
+
+    // 根据user_id查找用户发行的token
+    const token = await ctx.service.token.mineToken.getByUserId(ctx.user.id);
+    if (!token) {
+      ctx.body = ctx.msg.tokenNotExist;
+      return;
+    }
+
+    const result = await ctx.service.token.mineToken.getTokenLogs(token.id, parseInt(page), parseInt(pagesize));
     ctx.body = {
       ...ctx.msg.success,
       data: result,
@@ -118,8 +126,9 @@ class TokenController extends Controller {
   // 查看用户的token日志
   async getUserLogs() {
     const { ctx } = this;
-    const { pagesize = 10, page = 1 } = ctx.query;
-    const result = await ctx.service.token.mineToken.getUserLogs(ctx.user.id, parseInt(page), parseInt(pagesize));
+    const { tokenId, pagesize = 10, page = 1 } = ctx.query;
+
+    const result = await ctx.service.token.mineToken.getUserLogs(tokenId, ctx.user.id, parseInt(page), parseInt(pagesize));
     ctx.body = {
       ...ctx.msg.success,
       data: result,
