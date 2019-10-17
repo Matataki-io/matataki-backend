@@ -127,14 +127,15 @@ class TokenController extends Controller {
   async getUserLogs() {
     const { ctx } = this;
     const { tokenId, pagesize = 10, page = 1 } = ctx.query;
-    const token = await ctx.service.token.mineToken.get(tokenId);
-
+    const tokenDetail = await ctx.service.token.mineToken.get(tokenId);
+    const userDetail = await ctx.service.user.get(tokenDetail.uid);
     const result = await ctx.service.token.mineToken.getUserLogs(tokenId, ctx.user.id, parseInt(page), parseInt(pagesize));
     ctx.body = {
       ...ctx.msg.success,
       data: {
         ...result,
-        token,
+        tokenDetail,
+        userDetail,
       },
     };
   }
