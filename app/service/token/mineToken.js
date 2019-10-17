@@ -200,12 +200,12 @@ class MineTokenService extends Service {
         u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar, 
         u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar
         FROM (
-          SELECT * FROM assets_minetokens_log WHERE tokenId = :tokenId AND (from_uid = :userId OR to_uid = :userId) ORDER BY id DESC LIMIT :offset, :limit
+          SELECT * FROM assets_minetokens_log WHERE token_id = :tokenId AND (from_uid = :userId OR to_uid = :userId) ORDER BY id DESC LIMIT :offset, :limit
         ) t
         JOIN minetokens m ON m.id = t.token_id
         LEFT JOIN users u1 ON t.from_uid = u1.id
         LEFT JOIN users u2 ON t.to_uid = u2.id;
-        SELECT count(1) AS count FROM assets_minetokens_log WHERE tokenId = :tokenId AND (from_uid = :userId OR to_uid = :userId);`;
+        SELECT count(1) AS count FROM assets_minetokens_log WHERE token_id = :tokenId AND (from_uid = :userId OR to_uid = :userId);`;
     const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,
       limit: pagesize,
