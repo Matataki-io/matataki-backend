@@ -41,7 +41,7 @@ class ExchangeService extends Service {
       return -2;
     }
 
-    const username = virtualUserPrefix + tokenId;
+    const username = virtualUserPrefix + token.symbol;
     const platform = consts.platforms.cny;
     // 虚拟账号
     let exchangeUser = await this.service.auth.getUser(username, platform);
@@ -52,6 +52,7 @@ class ExchangeService extends Service {
         this.logger.error('ExchangeService.create exception. %j', e);
       }
       exchangeUser = await this.service.auth.getUser(username, platform);
+      await this.service.user.setAvatar('/avatar/exchange.png', exchangeUser.id);
     }
 
     // 创建交易对
@@ -926,7 +927,7 @@ class ExchangeService extends Service {
       return {
         cny_amount: 0,
         token_amount: 0,
-        your_supply: 0
+        your_supply: 0,
       };
     }
 
@@ -935,7 +936,7 @@ class ExchangeService extends Service {
       return {
         cny_amount: 0,
         token_amount: 0,
-        your_supply: 0
+        your_supply: 0,
       };
     }
 
