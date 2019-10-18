@@ -926,6 +926,7 @@ class ExchangeService extends Service {
       return {
         cny_amount: 0,
         token_amount: 0,
+        your_supply: 0
       };
     }
 
@@ -934,6 +935,7 @@ class ExchangeService extends Service {
       return {
         cny_amount: 0,
         token_amount: 0,
+        your_supply: 0
       };
     }
 
