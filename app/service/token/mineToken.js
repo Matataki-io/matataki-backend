@@ -111,6 +111,10 @@ class MineTokenService extends Service {
   }
 
   async transferFrom(tokenId, from, to, value, ip, type = '', conn) {
+    if (from === to) {
+      return false;
+    }
+
     // 有可能在其他事务中调用该方法，如果conn是传进来的，不要在此commit和rollback
     let isOutConn = false;
     if (conn) {

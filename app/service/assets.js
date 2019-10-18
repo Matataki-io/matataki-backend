@@ -24,6 +24,10 @@ class AssetsService extends Service {
 
   // 转移资产
   async transferFrom(symbol, from, to, value, conn) {
+    if (from === to) {
+      return false;
+    }
+
     // 有可能在其他事务中调用该方法，如果conn是传进来的，不要此commit和rollback
     let isOutConn = false;
     if (conn) {
