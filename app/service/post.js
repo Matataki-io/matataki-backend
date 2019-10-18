@@ -742,7 +742,7 @@ class PostService extends Service {
     // 有关阅读次数,赞赏金额,赞赏次数的统计
     // 还有产品信息， 标签
     const statsQuery = await this.app.mysql.query(
-      'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue'
+      'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue, likes'
       + ' FROM post_read_count WHERE post_id IN (:signid);'
       + 'SELECT sign_id, symbol, price, decimals FROM product_prices WHERE sign_id IN (:signid);'
       + 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);',
@@ -763,6 +763,7 @@ class PostService extends Service {
           row.eosvalue = row2.eosvalue;
           row.ups = row2.ups;
           row.ontvalue = row2.ontvalue;
+          row.likes = row2.likes;
         }
       });
       // 如果有标签的话，其标签数据
