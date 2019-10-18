@@ -9,6 +9,7 @@ const axios = require('axios');
 const htmlparser = require('node-html-parser');
 const pretty = require('pretty');
 const turndown = require('turndown');
+const path = require('path');
 
 class PostImportService extends Service {
 
@@ -220,20 +221,20 @@ class PostImportService extends Service {
     const parsedTitle = parsedPage.querySelector('h1');
     const turndownService = new turndown();
     const parsedCoverList = parsedPage.querySelectorAll('article img');
+    let coverLocation = null;
     for (let i = 0; i < parsedCoverList.length; i++) {
       parsedCoverList[i].rawAttrs = parsedCoverList[i].rawAttrs.replace('data-original-src', 'src');
+      let originalSrc = parsedCoverList[i].rawAttributes.src;
+      if (originalSrc.indexOf('http') === -1) originalSrc = 'https:' + originalSrc;
+      let parsedCoverUpload = './uploads/today_jianshu_' + Date.now() + '.jpg';
+      let imgUpUrl = await this.uploadArticleImage(originalSrc, parsedCoverUpload);
+      if (i === 0) coverLocation = imgUpUrl
+      if (imgUpUrl) {
+        parsedCoverList[i].rawAttrs = parsedCoverList[i].rawAttrs.replace(
+          /[https:]?\/\/upload-images\.jianshu\.io\/upload_images\/[a-z0-9_=&\.\-]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
+      }
     }
     const articleContent = turndownService.turndown(parsedContent.toString());
-    // console.log(parsedContent.toString());
-
-    const parsedCover = parsedPage.querySelector('article img');
-    let coverLocation = null;
-    if (parsedCover) {
-      let originalSrc = parsedCover.rawAttributes.src;
-      if (originalSrc.indexOf('http') === -1) originalSrc = 'https:' + originalSrc;
-      const parsedCoverUpload = './uploads/today_jianshu_' + Date.now() + '.jpg';
-      coverLocation = await this.uploadArticleImage(originalSrc, parsedCoverUpload);
-    }
 
     const articleObj = {
       title: parsedTitle.childNodes[0].rawText,
