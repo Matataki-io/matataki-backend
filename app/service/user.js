@@ -95,6 +95,7 @@ class UserService extends Service {
       follows: follows[0].follows,
       fans: fans[0].fans,
       is_follow,
+      status: user.status,
     };
 
     ctx.logger.info('debug info', result);
