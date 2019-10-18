@@ -32,6 +32,16 @@ class TokenController extends Controller {
     };
   }
 
+  async getUserId() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const tokenDetail = await ctx.service.token.mineToken.getByUserId(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: tokenDetail,
+    };
+  }
+
   async minetokenDetail() {
     const ctx = this.ctx;
     // user id

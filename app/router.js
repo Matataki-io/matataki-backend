@@ -238,6 +238,7 @@ module.exports = app => {
 
   router.get('/token/userlogs', passport.verify, controller.token.getUserLogs);
   router.get('/token/tokenlogs', passport.verify, controller.token.getTokenLogs);
+  router.get('/token/user/:id', passport.verify, controller.token.getUserId);
 
   // todo:测试代码
   router.post('/exchange/addLiquidity', passport.authorize, controller.exchange.addLiquidity);

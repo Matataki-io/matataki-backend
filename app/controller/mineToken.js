@@ -3,6 +3,7 @@ const consts = require('../service/consts');
 const Controller = require('../core/base_controller');
 
 class MineTokenController extends Controller {
+  // 创建
   async create() {
     const ctx = this.ctx;
 
@@ -21,6 +22,7 @@ class MineTokenController extends Controller {
     }
   }
 
+  // 增发
   async mint() {
     const ctx = this.ctx;
     // amount 客户端*精度，10^decimals
@@ -37,6 +39,7 @@ class MineTokenController extends Controller {
     }
   }
 
+  // 转账
   async transfer() {
     const ctx = this.ctx;
     const { tokenId, to, amount } = this.ctx.request.body;
