@@ -32,7 +32,7 @@ class TokenController extends Controller {
     };
   }
 
-  async getUserId() {
+  async getByUserId() {
     const { ctx } = this;
     const id = ctx.params.id;
     const tokenDetail = await ctx.service.token.mineToken.getByUserId(id);

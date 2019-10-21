@@ -225,22 +225,25 @@ module.exports = app => {
   // 查询交易对
   router.get('/exchange/', passport.verify, controller.exchange.get);
   // -------------------------------- token display API --------------------------------
-  // 根据token获取持仓用户list
-  router.get('/token/userlist', passport.verify, controller.token.userList);
-  router.get('/token/usertokenflow', passport.verify, controller.token.userTokenFlow);
+  // 查询用户发行的token持仓用户list
+  router.get('/token/userlist', passport.authorize, controller.token.userList);
+  // router.get('/token/usertokenflow', passport.verify, controller.token.userTokenFlow);
   // 用户持仓token list
-  router.get('/token/tokenlist', passport.verify, controller.token.tokenList);
-  router.get('/token/tokenflow', passport.verify, controller.token.tokenFlow);
-  // token 详情
-  router.get('/token/minetoken', passport.verify, controller.token.minetokenDetail);
+  router.get('/token/tokenlist', passport.authorize, controller.token.tokenList);
+  // router.get('/token/tokenflow', passport.verify, controller.token.tokenFlow);
+  // 查询我发行的token详情
+  router.get('/token/minetoken', passport.authorize, controller.token.minetokenDetail);
   // 所有的token 分页
   router.get('/token/all', passport.verify, controller.token.allToken);
 
-  router.get('/token/userlogs', passport.verify, controller.token.getUserLogs);
-  router.get('/token/tokenlogs', passport.verify, controller.token.getTokenLogs);
-  router.get('/token/user/:id', passport.verify, controller.token.getUserId);
+  // 我的token transfer日志
+  router.get('/token/userlogs', passport.authorize, controller.token.getUserLogs);
+  // 我发行的token transfer日志
+  router.get('/token/tokenlogs', passport.authorize, controller.token.getTokenLogs);
+  // 查询用户:id发行的token
+  router.get('/token/user/:id', passport.verify, controller.token.getByUserId);
 
-  // todo:测试代码
+  // todo:测试代码，待删除
   router.post('/exchange/addLiquidity', passport.authorize, controller.exchange.addLiquidity);
   router.post('/exchange/removeLiquidity', passport.authorize, controller.exchange.removeLiquidity);
 
