@@ -29,6 +29,19 @@ class ExchangeService extends Service {
   而区块链用户支付的eth，天然进入交易对地址
   */
 
+  constructor(ctx, app) {
+    super(ctx, app);
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+  }
+
   async create(tokenId) {
     const token = await this.service.token.mineToken.get(tokenId);
     if (!token) {
@@ -104,17 +117,20 @@ class ExchangeService extends Service {
       const min_liquidity = order.min_liquidity;
       // max_tokens：页面上显示的做市商支付的token最大值
       const max_tokens = order.max_tokens;
-      // cnyAmount：微信订单实际支付的CNY金额
+      // pay_cny_amount：微信订单实际支付的CNY金额
+      const pay_cny_amount = order.pay_cny_amount;
+      // 用户填写的或根据公式计算的金额
       const cny_amount = order.cny_amount;
+      // 用户填写的或根据公式计算的金额
       const token_amount = order.token_amount;
       const deadline = order.deadline;
 
       // 订单付款成功，给用户充值
-      await this.service.assets.recharge(userId, 'CNY', cny_amount, conn);
+      await this.service.assets.recharge(userId, 'CNY', pay_cny_amount, conn);
 
       const res = await this.addLiquidity(userId, tokenId, cny_amount, token_amount, min_liquidity, max_tokens, deadline, conn);
       if (res < 0) {
-        conn.rollback();
+        await conn.rollback();
         // 交易失败，另起一个事务退钱
         await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);
         await this.refundOrder(orderId);
@@ -129,10 +145,29 @@ class ExchangeService extends Service {
     } catch (e) {
       // 有一种可能，两笔订单同时进来，代码同时走到首次add initial_liquidity，一笔订单会失败，这笔订单回退到status=6，成为问题订单，需要再次调用addLiquidity方法触发增加liquidity逻辑
       await conn.rollback();
-      this.logger.error('ExchangeService.addLiquidity exception. %j', e);
+      this.logger.error('ExchangeService.addLiquidityOrder exception. %j', e);
       // 交易失败，另起一个事务退钱
       await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);
       await this.refundOrder(orderId);
+      return -1;
+    }
+  }
+
+  // 通过余额添加流动性
+  async addLiquidityBalance(userId, tokenId, cny_amount, token_amount, min_liquidity, max_tokens, deadline) {
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      const res = await this.addLiquidity(userId, tokenId, cny_amount, token_amount, min_liquidity, max_tokens, deadline, conn);
+      if (res < 0) {
+        await conn.rollback();
+        this.logger.error('ExchangeService.addLiquidityBalance failure. %j');
+        return -1;
+      }
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('ExchangeService.addLiquidityBalance exception. %j', e);
       return -1;
     }
   }
@@ -231,7 +266,7 @@ class ExchangeService extends Service {
     return 0;
   }
 
-  // amount是什么？是以cny衡量的份额
+  // amount是什么？是以cny衡量的份额，liquidity token
   async removeLiquidity(userId, tokenId, amount, min_cny, min_tokens, deadline, ip) {
     amount = parseInt(amount);
     min_cny = parseInt(min_cny);
@@ -364,18 +399,21 @@ class ExchangeService extends Service {
       const order = result[0];
       const userId = order.uid;
       const tokenId = order.token_id;
+
+      // pay_cny_amount：微信订单实际支付的CNY金额
+      const pay_cny_amount = order.pay_cny_amount;
+      // 用户输入的金额，定值
+      const cny_sold = order.cny_amount;
       // min_tokens：页面上显示的可以购买到的最小值
       const min_tokens = order.min_tokens;
-      // cnyAmount：微信订单实际支付的CNY金额
-      const cny_sold = order.cny_amount;
 
       // 订单付款成功，给用户充值
-      await this.service.assets.recharge(userId, 'CNY', cny_sold, conn);
+      await this.service.assets.recharge(userId, 'CNY', pay_cny_amount, conn);
 
       const res = await this.cnyToTokenInput(userId, tokenId, cny_sold, min_tokens, order.deadline, order.recipient, conn);
       if (res < 0) {
         // 回滚
-        conn.rollback();
+        await conn.rollback();
         // 交易失败，另起一个事务退钱
         await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);
         await this.refundOrder(orderId);
@@ -401,7 +439,27 @@ class ExchangeService extends Service {
     }
   }
 
+  async cnyToTokenInputBalance(userId, tokenId, cny_sold, min_tokens, deadline, recipient) {
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      const res = await this.cnyToTokenInput(userId, tokenId, cny_sold, min_tokens, deadline, recipient, conn);
+      if (res < 0) {
+        await conn.rollback();
+        return -1;
+      }
+
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('Exchange.cnyToTokenInputBalance exception. %j', e);
+      return -1;
+    }
+  }
+
   // 通过cny兑换token，以输入的cny数量为准
+  // cny_sold：要卖出的cny，定值
+  // min_tokens：要买入的token，最小值
   async cnyToTokenInput(userId, tokenId, cny_sold, min_tokens, deadline, recipient, conn) {
     cny_sold = parseInt(cny_sold);
     min_tokens = parseInt(min_tokens);
@@ -448,7 +506,13 @@ class ExchangeService extends Service {
     return 0;
   }
 
-  // 通过cny兑换token，以token数量为准，因为会产生退款
+  // 通过cny兑换token，以token数量为准，可能会产生退款
+  /*
+  todo：是否需要调整为页面计算出最大cny金额，前端让用户按照最大值付款？？？
+  最多需要多少CNY，
+  max_input, min_input
+  max_output, min_output
+  */
   async cnyToTokenOutputOrder(orderId) {
     const conn = await this.app.mysql.beginTransaction();
     try {
@@ -461,19 +525,20 @@ class ExchangeService extends Service {
       const order = result[0];
       const userId = order.uid;
       const tokenId = order.token_id;
-
-      // 页面上显示的购买数量
-      const tokens_bought = order.token_amount;
-      // 微信订单实际支付的CNY金额
+      // pay_cny_amount：微信订单实际支付的CNY金额
+      const pay_cny_amount = order.pay_cny_amount;
+      // 根据公式计算的金额，todo：应该是用max？？？
       const cny_sold = order.cny_amount;
+      // 页面上填写的购买数量
+      const tokens_bought = order.token_amount;
 
       // 订单付款成功，给用户充值
-      await this.service.assets.recharge(userId, 'CNY', cny_sold, conn);
+      await this.service.assets.recharge(userId, 'CNY', pay_cny_amount, conn);
 
       const res = await this.cnyToTokenOutput(userId, tokenId, tokens_bought, cny_sold, order.deadline, order.recipient, conn);
       if (res < 0) {
         // 回滚
-        conn.rollback();
+        await conn.rollback();
         // 交易失败，另起一个事务退钱
         await this.app.mysql.query('UPDATE exchange_orders SET status = 7 WHERE id = ?;', [ orderId ]);
         await this.refundOrder(orderId);
@@ -499,7 +564,27 @@ class ExchangeService extends Service {
     }
   }
 
-  // max_cny 订单转入金额，可能存在退款
+  async cnyToTokenOutputBalance(userId, tokenId, tokens_bought, max_cny, deadline, recipient) {
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      const res = await this.cnyToTokenOutput(userId, tokenId, tokens_bought, max_cny, deadline, recipient, conn);
+      if (res < 0) {
+        await conn.rollback();
+        return -1;
+      }
+
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('Exchange.cnyToTokenOutputBalance exception. %j', e);
+      return -1;
+    }
+  }
+
+  // 通过cny兑换token，以输出的token数量为准
+  // tokens_bought：要买入的token数量，定值
+  // max_cny：要卖出的cny数量，最大值
   async cnyToTokenOutput(userId, tokenId, tokens_bought, max_cny, deadline, recipient, conn) {
     tokens_bought = parseInt(tokens_bought);
     max_cny = parseInt(max_cny);
@@ -551,6 +636,8 @@ class ExchangeService extends Service {
   }
 
   // 通过token兑换cny，以输入的token数量为准
+  // tokens_sold：要卖出的token数量，定值
+  // min_cny：要买入的cny数量，最小值
   async tokenToCnyInput(userId, tokenId, tokens_sold, min_cny, deadline, recipient, ip) {
     tokens_sold = parseInt(tokens_sold);
     min_cny = parseInt(min_cny);
@@ -608,6 +695,8 @@ class ExchangeService extends Service {
   }
 
   // 通过token兑换cny，以输出的cny数量为准
+  // cny_bought：要买入的cny数量，定值
+  // max_tokens：要卖出的token数量，最大值
   async tokenToCnyOutput(userId, tokenId, cny_bought, max_tokens, deadline, recipient, ip) {
     cny_bought = parseInt(cny_bought);
     max_tokens = parseInt(max_tokens);
@@ -664,9 +753,9 @@ class ExchangeService extends Service {
     }
   }
 
-  // 使用token兑换token
-  // tokens_sold：要卖出的inTokenId数量
-  // min_tokens_bought：要买入的outTokenId最小数量
+  // 使用token兑换token，以输入的token数量为准
+  // tokens_sold：要卖出的inTokenId数量，定值
+  // min_tokens_bought：要买入的outTokenId数量，最小值
   async tokenToTokenInput(userId, inTokenId, tokens_sold, min_tokens_bought, deadline, recipient, outTokenId, ip) {
     tokens_sold = parseInt(tokens_sold);
     min_tokens_bought = parseInt(min_tokens_bought);
@@ -719,9 +808,9 @@ class ExchangeService extends Service {
     }
   }
 
-  // 使用token兑换token
-  // tokens_bought：要买入的outTokenId数量
-  // max_tokens_sold：要卖出的inTokenId最大数量
+  // 使用token兑换token，以输出的token数量为准
+  // tokens_bought：要买入的outTokenId数量，定值
+  // max_tokens_sold：要卖出的inTokenId数量，最大值
   async tokenToTokenOutput(userId, inTokenId, tokens_bought, max_tokens_sold, deadline, recipient, outTokenId, ip) {
     tokens_bought = parseInt(tokens_bought);
     max_tokens_sold = parseInt(max_tokens_sold);
@@ -786,10 +875,10 @@ class ExchangeService extends Service {
   }
 
   // 记录交易日志
-  async addPurchaseLog(buyer, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, ip, conn) {
+  async addPurchaseLog(uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, ip, conn) {
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
     await conn.insert('exchange_purchase_logs', {
-      buyer, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, create_time: now, ip,
+      uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, create_time: now, ip,
     });
   }
 
@@ -1008,6 +1097,39 @@ class ExchangeService extends Service {
       this.logger.error('ExchangeService.refundOrder exception. %j', e);
       return -1;
     }
+  }
+
+  // async volume_24hour(tokenId) {
+  //   const sql = `SELECT IFNULL(SUM(sold_amount), 0) AS total FROM exchange_purchase_logs WHERE sold_token_id = ? AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY);
+  //   SELECT IFNULL(SUM(bought_amount), 0) AS total FROM exchange_purchase_logs WHERE bought_token_id = ? AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY);`;
+  //   const result = await this.app.mysql.query(sql, [ tokenId, tokenId ]);
+
+  //   return result[0][0].total + result[1][0].total;
+  // }
+
+  async trans_24hour(tokenId) {
+    const sql = `SELECT * FROM exchange_purchase_logs WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId) AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY) LIMIT 1, 1;
+                SELECT * FROM exchange_purchase_logs WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId) AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY) ORDER BY id DESC LIMIT 1, 1;
+                SELECT * FROM exchange_purchase_logs WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId) ORDER BY id DESC LIMIT 1, 1;
+                SELECT IFNULL(SUM(sold_amount), 0) AS total FROM exchange_purchase_logs WHERE sold_token_id = :tokenId AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY);
+                SELECT IFNULL(SUM(bought_amount), 0) AS total FROM exchange_purchase_logs WHERE bought_token_id = :tokenId AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY);`;
+    const result = await this.app.mysql.query(sql, { tokenId });
+
+    let first_price = 0;
+    let last_price = 0;
+    if (result[0].length > 0) {
+      first_price = result[0][0].sold_token_id === 0 ? result[0][0].sold_amount / result[0][0].bought_amount : result[0][0].bought_amount / result[0][0].sold_amount;
+      last_price = result[1][0].sold_token_id === 0 ? result[1][0].sold_amount / result[1][0].bought_amount : result[1][0].bought_amount / result[1][0].sold_amount;
+    } else {
+      first_price = last_price = result[2][0].sold_token_id === 0 ? result[2][0].sold_amount / result[2][0].bought_amount : result[2][0].bought_amount / result[2][0].sold_amount;
+    }
+
+    const change_24h = (last_price - first_price) / first_price;
+    const volume_24h = result[3][0].total + result[4][0].total;
+    return {
+      change_24h,
+      volume_24h,
+    };
   }
 
 }

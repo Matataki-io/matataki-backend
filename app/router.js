@@ -219,11 +219,12 @@ module.exports = app => {
   router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
   router.post('/minetoken/mint', passport.authorize, controller.mineToken.mint);
   router.post('/minetoken/transfer', passport.authorize, controller.mineToken.transfer);
+  // 查询当前用户的token余额
+  router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
+  // 查询任意用户的token余额
+  // router.get('/minetoken/balanceOf', passport.authorize, controller.mineToken.getUserBalance);
+  router.get('/minetoken/:id', passport.verify, controller.mineToken.get);
 
-  // 创建交易对
-  router.post('/exchange/create', passport.authorize, controller.exchange.create);
-  // 查询交易对
-  router.get('/exchange/', passport.verify, controller.exchange.get);
   // -------------------------------- token display API --------------------------------
   // 查询用户发行的token持仓用户list
   router.get('/token/userlist', passport.authorize, controller.token.userList);
@@ -243,12 +244,23 @@ module.exports = app => {
   // 查询用户:id发行的token
   router.get('/token/user/:id', passport.verify, controller.token.getByUserId);
 
+  // 查询当前用户的资产余额
+  router.get('/asset/balance', passport.verify, controller.asset.getBalance);
+
+  // 创建交易对
+  router.post('/exchange/create', passport.authorize, controller.exchange.create);
+  // 查询交易对
+  router.get('/exchange/', passport.verify, controller.exchange.get);
+
   // todo:测试代码，待删除
-  router.post('/exchange/addLiquidity', passport.authorize, controller.exchange.addLiquidity);
+  router.post('/exchange/addLiquidityOrder', passport.authorize, controller.exchange.addLiquidityOrder);
+  router.post('/exchange/addLiquidityBalance', passport.authorize, controller.exchange.addLiquidityBalance);
   router.post('/exchange/removeLiquidity', passport.authorize, controller.exchange.removeLiquidity);
 
-  router.post('/exchange/cnyToTokenInput', passport.authorize, controller.exchange.cnyToTokenInput);
-  router.post('/exchange/cnyToTokenOutput', passport.authorize, controller.exchange.cnyToTokenOutput);
+  router.post('/exchange/cnyToTokenInputOrder', passport.authorize, controller.exchange.cnyToTokenInputOrder);
+  router.post('/exchange/cnyToTokenInputBalance', passport.authorize, controller.exchange.cnyToTokenInputBalance);
+  router.post('/exchange/cnyToTokenOutputOrder', passport.authorize, controller.exchange.cnyToTokenOutputOrder);
+  router.post('/exchange/cnyToTokenOutputBalance', passport.authorize, controller.exchange.cnyToTokenOutputBalance);
 
   router.post('/exchange/tokenToCnyInput', passport.authorize, controller.exchange.tokenToCnyInput);
   router.post('/exchange/tokenToCnyOutput', passport.authorize, controller.exchange.tokenToCnyOutput);
@@ -265,7 +277,7 @@ module.exports = app => {
   // 获取your mint token
   router.get('/exchange/userMintToken', passport.verify, controller.exchange.getYourMintToken);
   router.get('/exchange/poolCnyToTokenPrice', passport.verify, controller.exchange.getPoolCnyToTokenPrice);
-  router.get('/exchange/balance', passport.authorize, controller.exchange.getUserBalance);
+  // router.get('/exchange/balance', passport.authorize, controller.exchange.getUserBalance);
 
   // 支付后订单状态修改通知接口
   router.get('/exchange/notify', passport.verify, controller.exchange.notify);

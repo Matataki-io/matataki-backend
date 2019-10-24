@@ -48,6 +48,41 @@ class MineTokenController extends Controller {
     ctx.body = result ? ctx.msg.success : ctx.msg.failure;
   }
 
+  // 查询当前用户token余额
+  async getBalance() {
+    const { ctx } = this;
+    const userId = ctx.user.id;
+    const { tokenId } = ctx.query;
+    const result = await ctx.service.token.mineToken.balanceOf(userId, tokenId);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+
+  async get() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+
+    const token = await ctx.service.token.mineToken.get(id);
+    const exchange = await ctx.service.token.exchange.detail(id);
+    const user = await ctx.service.user.get(token.uid);
+    // const vol_24h = await ctx.service.token.exchange.volume_24hour(id);
+    const trans_24hour = await ctx.service.token.exchange.trans_24hour(id);
+    exchange.volume_24h = trans_24hour.volume_24h;
+    exchange.change_24h = trans_24hour.change_24h;
+    exchange.price = exchange.cny_reserve / exchange.token_reserve;
+    ctx.body = {
+      ...ctx.msg.success,
+      data:
+      {
+        user,
+        token,
+        exchange,
+      },
+    };
+  }
+
 }
 
 module.exports = MineTokenController;

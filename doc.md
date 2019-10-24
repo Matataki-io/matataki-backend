@@ -2115,6 +2115,23 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 }
 ```
 
+#### 查询当前用户token余额
+* GET /minetoken/balance
+* 响应状态码： 200
+* 参数：
+```
+tokenId=5
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": 8899420221,
+}
+```
+
 #### 创建交易对，前提条件是先查到tokenId
 * POST /exchange/create
 * 响应状态码： 200
@@ -2563,6 +2580,78 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 				"to_avatar": "/avatar/2019/08/09/32476061ab5fc966a3aef98d441c6069.png"
 			}
 		]
+	}
+}
+```
+
+
+#### 查询当前用户CNY资产余额
+* GET /asset/balance
+* 响应状态码： 200
+* 参数：
+```
+symbol=CNY
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": 8899420221,
+}
+```
+
+#### 粉丝币详情
+* GET /minetoken/:id
+* 响应状态码： 200
+* 参数：:id
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"user": {
+			"id": 1048,
+			"username": "6644596@qq.com",
+			"nickname": "陈浩的邮箱",
+			"platform": "email",
+			"referral_uid": 0,
+			"create_time": "2019-08-09T00:09:45.000Z",
+			"avatar": "/avatar/2019/08/09/32476061ab5fc966a3aef98d441c6069.png",
+			"level": 1,
+			"status": 2,
+			"email": "6644596@qq.com",
+			"introduction": "",
+			"accept": 0
+		},
+		"token": {
+			"id": 15,
+			"uid": 1048,
+			"name": "chen token",
+			"symbol": "CHT",
+			"decimals": 4,
+			"total_supply": 10001000000,
+			"create_time": "2019-09-27T13:54:47.000Z",
+			"status": 1,
+			"logo": null,
+			"brief": null,
+			"introduction": null
+		},
+		"exchange": {
+			"id": 15,
+			"token_id": 15,
+			"total_supply": 110001,
+			"create_time": "2019-10-18T07:45:52.000Z",
+			"exchange_uid": 1093,
+			"token_reserve": 1099113163,
+			"cny_reserve": 110094,
+			"volume_24h": 0,
+			"change_24h": 0,
+			"price": 0.000100166210092054
+		}
 	}
 }
 ```

@@ -1075,3 +1075,8 @@ ALTER TABLE assets_minetokens_log ADD COLUMN type varchar(50) NULL default '';
 ALTER TABLE posts ADD COLUMN require_holdtokens tinyint(1) NOT NULL default 0 comment '是否需要持币阅读';
 
 CREATE INDEX idx_uid ON posts (uid);
+
+
+
+-- 2019-10-22 sprint13 
+exchange_purchase_logs.buyer -> uid

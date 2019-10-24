@@ -3,6 +3,7 @@
 const Controller = require('../core/base_controller');
 
 class TokenController extends Controller {
+  // 查询当前用户持仓token list
   async tokenList() {
     const ctx = this.ctx;
     const { pagesize = 10, page = 1 } = this.ctx.query;
@@ -16,6 +17,7 @@ class TokenController extends Controller {
     };
   }
 
+  // 查询当前用户发行的token持仓用户list
   async userList() {
     const ctx = this.ctx;
     const { pagesize = 10, page = 1 } = this.ctx.query;
@@ -32,6 +34,7 @@ class TokenController extends Controller {
     };
   }
 
+  // 查询某用户发行的token
   async getByUserId() {
     const { ctx } = this;
     const id = ctx.params.id;
@@ -42,6 +45,7 @@ class TokenController extends Controller {
     };
   }
 
+  // 查询当前用户发行的token详情
   async minetokenDetail() {
     const ctx = this.ctx;
     // user id
@@ -63,6 +67,8 @@ class TokenController extends Controller {
       },
     };
   }
+
+  // 粉丝币分页列表
   async allToken() {
     const ctx = this.ctx;
     const { pagesize = 10, page = 1, search = '' } = this.ctx.query;
@@ -114,7 +120,7 @@ class TokenController extends Controller {
     };
   }
 
-  // 查看token的日志
+  // 查看当前用户发行的token的日志
   async getTokenLogs() {
     const { ctx } = this;
     const { pagesize = 10, page = 1 } = ctx.query;
@@ -133,7 +139,7 @@ class TokenController extends Controller {
     };
   }
 
-  // 查看用户的token日志
+  // 查看当前用户的token日志
   async getUserLogs() {
     const { ctx } = this;
     const { tokenId, pagesize = 10, page = 1 } = ctx.query;

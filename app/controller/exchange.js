@@ -36,10 +36,16 @@ class ExchangeController extends Controller {
   }
 
   // todo : 测试代码
-  async addLiquidity() {
+  async addLiquidityOrder() {
     const ctx = this.ctx;
     const orderId = parseInt(ctx.request.body.orderId);
     const result = await ctx.service.token.exchange.addLiquidityOrder(orderId);
+    ctx.body = result;
+  }
+  async addLiquidityBalance() {
+    const ctx = this.ctx;
+    const { tokenId, cny_amount, token_amount, min_liquidity, max_tokens, deadline } = ctx.request.body;
+    const result = await ctx.service.token.exchange.addLiquidityBalance(ctx.user.id, tokenId, cny_amount, token_amount, min_liquidity, max_tokens, deadline);
     ctx.body = result;
   }
 
@@ -58,16 +64,29 @@ class ExchangeController extends Controller {
     };
   }
 
-  async cnyToTokenInput() {
+  async cnyToTokenInputOrder() {
     const ctx = this.ctx;
     const orderId = parseInt(ctx.request.body.orderId);
     const result = await ctx.service.token.exchange.cnyToTokenInputOrder(orderId);
     ctx.body = result;
   }
-  async cnyToTokenOutput() {
+  async cnyToTokenInputBalance() {
+    const ctx = this.ctx;
+    const { tokenId, cny_sold, min_tokens, deadline, recipient } = ctx.request.body;
+    const result = await ctx.service.token.exchange.cnyToTokenInputBalance(ctx.user.id, tokenId, cny_sold, min_tokens, deadline, ctx.user.id);
+    ctx.body = result;
+  }
+
+  async cnyToTokenOutputOrder() {
     const ctx = this.ctx;
     const orderId = parseInt(ctx.request.body.orderId);
     const result = await ctx.service.token.exchange.cnyToTokenOutputOrder(orderId);
+    ctx.body = result;
+  }
+  async cnyToTokenOutputBalance() {
+    const ctx = this.ctx;
+    const { tokenId, tokens_bought, max_cny, deadline, recipient } = ctx.request.body;
+    const result = await ctx.service.token.exchange.cnyToTokenOutputBalance(ctx.user.id, tokenId, tokens_bought, max_cny, deadline, ctx.user.id);
     ctx.body = result;
   }
 
@@ -103,6 +122,8 @@ class ExchangeController extends Controller {
     const result = await ctx.service.token.exchange.refundOrder(orderId);
     ctx.body = result;
   }
+
+
   // 以上测试待删除
 
   // 以input为准，获得output的数量
@@ -291,17 +312,18 @@ class ExchangeController extends Controller {
     };
   }
 
-  async getUserBalance() {
-    const { ctx } = this;
-    const userId = ctx.user.id; // 接收者
-    const { tokenId } = ctx.query;
-    // const result = await ctx.service.exchange.getUserBalance(userId, tokenId);
-    const result = await ctx.service.token.mineToken.balanceOf(userId, tokenId);
-    ctx.body = {
-      ...ctx.msg.success,
-      data: result,
-    };
-  }
+  // 已经转移到mineToken.getBalance()
+  // async getUserBalance() {
+  //   const { ctx } = this;
+  //   const userId = ctx.user.id; // 接收者
+  //   const { tokenId } = ctx.query;
+  //   // const result = await ctx.service.exchange.getUserBalance(userId, tokenId);
+  //   const result = await ctx.service.token.mineToken.balanceOf(userId, tokenId);
+  //   ctx.body = {
+  //     ...ctx.msg.success,
+  //     data: result,
+  //   };
+  // }
 
 }
 

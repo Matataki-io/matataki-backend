@@ -970,6 +970,7 @@ class PostService extends Service {
   }
 
   // 获取用户持币情况
+  // id：文章的Id
   async getHoldMineTokens(id, userId) {
     const tokens = await this.getMineTokens(id);
     if (tokens === null || tokens.length === 0) {
