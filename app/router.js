@@ -224,6 +224,8 @@ module.exports = app => {
   // 查询任意用户的token余额
   // router.get('/minetoken/balanceOf', passport.authorize, controller.mineToken.getUserBalance);
   router.get('/minetoken/:id', passport.verify, controller.mineToken.get);
+  router.put('/minetoken/:id', passport.authorize, controller.mineToken.update);
+  router.put('/minetoken/:id/resources', passport.authorize, controller.mineToken.saveResources);
 
   // -------------------------------- token display API --------------------------------
   // 查询用户发行的token持仓用户list

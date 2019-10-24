@@ -85,5 +85,25 @@ module.exports = {
     exchange_removeliquidity: 'exchange_removeliquidity',
   },
 
+  socialTypes1: {
+    qq: 'QQ',
+    wechat: 'Wechat',
+    weibo: 'Weibo',
+    telegram: 'Telegram',
+    twitter: 'Twitter',
+    facebook: 'Facebook',
+    github: 'Github',
+  },
+
+  socialTypes: [
+    'QQ',
+    'Wechat',
+    'Weibo',
+    'Telegram',
+    'Twitter',
+    'Facebook',
+    'Github',
+  ],
+
 
 };

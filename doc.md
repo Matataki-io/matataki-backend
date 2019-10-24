@@ -2065,7 +2065,9 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 {
 	"name": "chenhao token",
 	"symbol": "CHT",
-	"decimals": 1111
+	"decimals": 1111,
+  "brief":"sfdfdsf",
+  "introduction":"sfdsfdsf"
 }
 ```
 * 请求头：x-access-token
@@ -2653,5 +2655,73 @@ symbol=CNY
 			"price": 0.000100166210092054
 		}
 	}
+}
+```
+
+#### 修改token详情
+* PUT /minetoken/:tokenId
+* 响应状态码： 200
+* 参数：
+```
+{
+	"name": "chenhao vnt token",
+  "logo": "/avatar.png",
+  "brief": "sfdfdsf",
+  "introduction": "sfdsfdsf"
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 修改token资源
+* PUT /minetoken/:tokenId/resources
+* 响应状态码： 200
+* 参数：
+```
+{
+	"websites": ["a.com", "b.com", "c.com"],
+	"socials": [{
+			"type": "QQ",
+			"content": "1234657"
+		},
+		{
+			"type": "Wechat",
+			"content": "aaa"
+		},
+		{
+			"type": "Weibo",
+			"content": "bbb"
+		},
+		{
+			"type": "Telegram",
+			"content": "ccc"
+		},
+		{
+			"type": "Twitter",
+			"content": "ddd"
+		},
+		{
+			"type": "Facebook",
+			"content": "eee"
+		},
+		{
+			"type": "Github",
+			"content": "fff"
+		}
+	]
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
 }
 ```

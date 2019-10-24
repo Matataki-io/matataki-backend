@@ -4,8 +4,22 @@ const Service = require('egg').Service;
 const consts = require('../consts');
 
 class MineTokenService extends Service {
+
+  constructor(ctx, app) {
+    super(ctx, app);
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
+  }
+
   // 作者创建一个token
-  async create(userId, name, symbol, decimals, logo) {
+  async create(userId, name, symbol, decimals, logo, brief, introduction) {
     let token = await this.getByUserId(userId);
     if (token) {
       return -1;
@@ -21,11 +35,67 @@ class MineTokenService extends Service {
       return -3;
     }
 
-    const sql = 'INSERT INTO minetokens(uid, name, symbol, decimals, total_supply, create_time, status, logo) '
-      + 'SELECT ?,?,?,?,0,?,1,? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
+    const sql = 'INSERT INTO minetokens(uid, name, symbol, decimals, total_supply, create_time, status, logo, brief, introduction) '
+      + 'SELECT ?,?,?,?,0,?,1,?,?,? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
     const result = await this.app.mysql.query(sql,
-      [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), logo, userId, symbol ]);
+      [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), logo, brief, introduction, userId, symbol ]);
     return result.insertId;
+  }
+
+  // 更新粉丝币信息
+  async update(userId, tokenId, name, logo, brief, introduction) {
+    const row = {};
+    row.name = name;
+    row.logo = logo;
+    row.brief = brief;
+    row.introduction = introduction;
+
+    const options = {
+      where: { uid: userId, id: tokenId },
+    };
+
+    const result = await this.app.mysql.update('minetokens', row, options);
+    return result.affectedRows > 0;
+  }
+
+  // 保存网址、社交媒体账号
+  async saveResources(userId, tokenId, websites, socials) {
+    const token = await this.getByUserId(userId);
+    if (token.id !== tokenId) {
+      return -1;
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      await conn.query('DELETE FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
+
+      for (const website of websites) {
+        await conn.insert('minetoken_resources', {
+          token_id: tokenId,
+          type: 'website',
+          content: website,
+          create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        });
+      }
+
+      for (const social of socials) {
+        if (consts.socialTypes.indexOf(social.type) >= 0) {
+          await conn.insert('minetoken_resources', {
+            token_id: tokenId,
+            type: social.type,
+            content: social.content,
+            create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+          });
+        }
+      }
+
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.ctx.logger.error(e);
+      return -1;
+    }
   }
 
   async hasCreatePermission(userId) {

@@ -7,8 +7,8 @@ class MineTokenController extends Controller {
   async create() {
     const ctx = this.ctx;
 
-    const { name, symbol, decimals, logo } = this.ctx.request.body;
-    const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, 4, logo); // decimals默认4位
+    const { name, symbol, decimals, logo, brief, introduction } = this.ctx.request.body;
+    const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, 4, logo, brief, introduction); // decimals默认4位
     if (result === -1) {
       ctx.body = ctx.msg.tokenAlreadyCreated;
     } else if (result === -2) {
@@ -19,6 +19,30 @@ class MineTokenController extends Controller {
       ctx.body = ctx.msg.failure;
     } else {
       ctx.body = ctx.msg.success;
+    }
+  }
+
+  async update() {
+    const ctx = this.ctx;
+    const tokenId = parseInt(ctx.params.id);
+    const { name, logo, brief, introduction } = ctx.request.body;
+    const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction);
+    if (result) {
+      ctx.body = ctx.msg.success;
+    } else {
+      ctx.body = ctx.msg.failure;
+    }
+  }
+
+  async saveResources() {
+    const ctx = this.ctx;
+    const tokenId = parseInt(ctx.params.id);
+    const { websites, socials } = this.ctx.request.body;
+    const result = await ctx.service.token.mineToken.saveResources(ctx.user.id, tokenId, websites, socials);
+    if (result === 0) {
+      ctx.body = ctx.msg.success;
+    } else {
+      ctx.body = ctx.msg.failure;
     }
   }
 
