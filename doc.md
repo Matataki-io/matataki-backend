@@ -2725,3 +2725,121 @@ symbol=CNY
   "message": "成功"
 }
 ```
+
+#### 查看token资源
+* GET /minetoken/:tokenId/resources
+* 响应状态码： 200
+* 参数：
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"websites": [{
+			"type": "website",
+			"content": "a.com"
+		}, {
+			"type": "website",
+			"content": "b.com"
+		}, {
+			"type": "website",
+			"content": "c.com"
+		}],
+		"socials": [{
+			"type": "Wechat",
+			"content": "aaa"
+		}, {
+			"type": "Weibo",
+			"content": "bbb"
+		}, {
+			"type": "Telegram",
+			"content": "ccc"
+		}, {
+			"type": "Twitter",
+			"content": "ddd"
+		}, {
+			"type": "Facebook",
+			"content": "eee"
+		}, {
+			"type": "Github",
+			"content": "fff"
+		}]
+	}
+}
+```
+
+
+#### 查看所有token列表
+* GET /token/all
+* 响应状态码： 200
+* 参数：
+```
+?page=1&pagesize=10&sort=symbol-asc&search=空气币
+sort说明：
+id-asc：id（时间）顺序
+id-desc：id（时间）倒序
+symbol-asc：字母顺序
+symbol-desc：字母倒序
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"count": 3,
+		"list": [{
+			"id": 22,
+			"uid": 1070,
+			"name": "空气币",
+			"symbol": "KQ",
+			"decimals": 4,
+			"total_supply": 1000000000000,
+			"create_time": "2019-10-25T07:41:10.000Z",
+			"status": 1,
+			"logo": "/image/2019/10/25/58e34682f2bf5e226c11abde5979745a.png",
+			"brief": "空气币你敢买吗?",
+			"introduction": "空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?",
+			"username": "0x40bea1877367d15d9560df5f8d83d0a307f843fb",
+			"nickname": null,
+			"avatar": "",
+			"amount": null
+		}, {
+			"id": 23,
+			"uid": 1069,
+			"name": "空气币啊",
+			"symbol": "KQB",
+			"decimals": 4,
+			"total_supply": 10000000000,
+			"create_time": "2019-10-25T07:45:11.000Z",
+			"status": 1,
+			"logo": "/image/2019/10/25/2d3a97571d46b58456d928466589bc4a.png",
+			"brief": "空气币你敢买吗?",
+			"introduction": "空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?空气币你敢买吗?",
+			"username": "0x8ce9862bb4371f32f45bae391b23173a1abba751",
+			"nickname": "vnt",
+			"avatar": "/avatar/2019/09/05/720eebbddc6deac5f9bf0504968bb18a.jpeg",
+			"amount": null
+		}, {
+			"id": 24,
+			"uid": 1094,
+			"name": "空气币1号",
+			"symbol": "KQBA",
+			"decimals": 4,
+			"total_supply": 11110000,
+			"create_time": "2019-10-25T08:23:52.000Z",
+			"status": 1,
+			"logo": "/image/2019/10/25/eb2e53fd1912ecf5a3d590c1766f62af.png",
+			"brief": "111",
+			"introduction": "111",
+			"username": "0xb3f13683611b4a4589f56cd627ae51c0e5f14b73",
+			"nickname": null,
+			"avatar": "",
+			"amount": null
+		}]
+	}
+}
+```
