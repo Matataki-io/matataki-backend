@@ -112,7 +112,7 @@ class ExchangeService extends Service {
   // 根据粉丝币获取持仓用户列表
   async getUserListByToken(id, page = 1, pagesize = 20) {
     id = parseInt(id);
-    const sql = 'SELECT a.*, b.username, b.email, b.nickname, b.avatar FROM assets_minetokens AS a LEFT JOIN users AS b ON a.uid = b.id WHERE a.token_id = :id AND a.amount > 0 LIMIT :offset, :limit;'
+    const sql = 'SELECT a.*, b.username, b.nickname, b.avatar FROM assets_minetokens AS a LEFT JOIN users AS b ON a.uid = b.id WHERE a.token_id = :id AND a.amount > 0 LIMIT :offset, :limit;'
       + 'SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id AND amount > 0;';
     const result = await this.app.mysql.query(sql, {
       id,

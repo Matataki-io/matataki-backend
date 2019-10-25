@@ -3,6 +3,32 @@
 const Controller = require('../core/base_controller');
 
 class TokenController extends Controller {
+
+  // 持仓详情
+  async balances() {
+    const ctx = this.ctx;
+    const { pagesize = 10, page = 1 } = this.ctx.query;
+    const tokenId = parseInt(ctx.params.id);
+    // token list
+    const result = await ctx.service.exchange.getUserListByToken(tokenId, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+
+  // 流水明细
+  async transactions() {
+    const { ctx } = this;
+    const { pagesize = 10, page = 1 } = ctx.query;
+    const tokenId = parseInt(ctx.params.id);
+    const result = await ctx.service.token.mineToken.getTokenLogs(tokenId, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+
   // 查询当前用户持仓token list
   async tokenList() {
     const ctx = this.ctx;

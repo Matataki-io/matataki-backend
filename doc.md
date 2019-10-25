@@ -2635,7 +2635,7 @@ symbol=CNY
 			"name": "chen token",
 			"symbol": "CHT",
 			"decimals": 4,
-			"total_supply": 10001000000,
+			"total_supply": 10001000000, //总发行量
 			"create_time": "2019-09-27T13:54:47.000Z",
 			"status": 1,
 			"logo": null,
@@ -2648,11 +2648,11 @@ symbol=CNY
 			"total_supply": 110001,
 			"create_time": "2019-10-18T07:45:52.000Z",
 			"exchange_uid": 1093,
-			"token_reserve": 1099113163,
-			"cny_reserve": 110094,
-			"volume_24h": 0,
-			"change_24h": 0,
-			"price": 0.000100166210092054
+			"token_reserve": 1099113163, //流动金池token数量
+			"cny_reserve": 110094, //流动金池CNY数量
+			"volume_24h": 0, //24小时token成交量
+			"change_24h": 0, //24小时价格涨跌幅，换算成百分比
+			"price": 0.000100166210092054 //当前价格
 		}
 	}
 }

@@ -240,6 +240,9 @@ module.exports = app => {
   // 所有的token 分页
   router.get('/token/all', passport.verify, controller.token.allToken);
 
+  router.get('/token/:id/balances', passport.verify, controller.token.balances);
+  router.get('/token/:id/transactions', passport.verify, controller.token.transactions);
+
   // 我的token transfer日志
   router.get('/token/userlogs', passport.authorize, controller.token.getUserLogs);
   // 我发行的token transfer日志
