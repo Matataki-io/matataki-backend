@@ -35,56 +35,50 @@ class WxPayController extends Controller {
     // token_amount: 输出的token的数值
     // limit_value：极限值
     // pay_cny_amount扣除余额后微信实际支付的金额
-    let { total, title, type, token_id, token_amount, limit_value, decimals, min_liquidity = 0, out_trade_no, pay_cny_amount } = ctx.request.body;
+    let { total, title, type, token_id, token_amount, limit_value, decimals, min_liquidity = 0, pay_cny_amount } = ctx.request.body;
     const ip = ctx.ips.length > 0 ? ctx.ips[0] !== '127.0.0.1' ? ctx.ips[0] : ctx.ips[1] : ctx.ip;
     const token = await ctx.service.token.mineToken.get(token_id);
     if (!token) {
       ctx.body = ctx.msg.failure;
       return;
     }
-    let existOrder = null
-    if (out_trade_no) {
-      existOrder = await ctx.service.exchange.getOrderBytradeNo(out_trade_no)
-    }
-    if (!existOrder) {
-      out_trade_no = nanoid(31);
-      let max_tokens = 0;
-      let min_tokens = 0;
-      switch (typeOptions[type]) {
-        case 'add': // 添加流动性
-          max_tokens = limit_value;
-          break;
-        case 'buy_token_input': // 购买token
-          min_tokens = limit_value;
-          break;
-        case 'buy_token_output':
-          max_tokens = limit_value;
-          break;
-        default:
-          ctx.body = ctx.msg.failure;
-      }
-      // 创建订单，status为0
-      const createSuccess = await ctx.service.exchange.createOrder({
-        uid: ctx.user.id, // 用户id
-        token_id, // 购买的token id
-        cny_amount: total,
-        pay_cny_amount,
-        token_amount,
-        type: typeOptions[type], // 类型：add，buy_token，sale_token
-        trade_no: out_trade_no, // 订单号
-        openid: '',
-        status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成
-        min_liquidity, // 资金池pool最小流动性，type = add
-        max_tokens, // output为准，最多获得CNY，type = sale_token
-        min_tokens, // input为准时，最少获得Token，type = buy_token
-        recipient: ctx.user.id, // 接收者
-        ip, // ip
-      });
-      // 创建失败直接返回错误
-      if (!createSuccess) {
+    const out_trade_no = nanoid(31);
+    let max_tokens = 0;
+    let min_tokens = 0;
+    switch (typeOptions[type]) {
+      case 'add': // 添加流动性
+        max_tokens = limit_value;
+        break;
+      case 'buy_token_input': // 购买token
+        min_tokens = limit_value;
+        break;
+      case 'buy_token_output':
+        max_tokens = limit_value;
+        break;
+      default:
         ctx.body = ctx.msg.failure;
-        return;
-      }
+    }
+    // 创建订单，status为0
+    const createSuccess = await ctx.service.exchange.createOrder({
+      uid: ctx.user.id, // 用户id
+      token_id, // 购买的token id
+      cny_amount: total,
+      pay_cny_amount,
+      token_amount,
+      type: typeOptions[type], // 类型：add，buy_token，sale_token
+      trade_no: out_trade_no, // 订单号
+      openid: '',
+      status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成
+      min_liquidity, // 资金池pool最小流动性，type = add
+      max_tokens, // output为准，最多获得CNY，type = sale_token
+      min_tokens, // input为准时，最少获得Token，type = buy_token
+      recipient: ctx.user.id, // 接收者
+      ip, // ip
+    });
+    // 创建失败直接返回错误
+    if (!createSuccess) {
+      ctx.body = ctx.msg.failure;
+      return;
     }
     // 如果订单金额小于0元
     if (pay_cny_amount <= 0) {
