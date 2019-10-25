@@ -89,7 +89,7 @@ class WxPayController extends Controller {
     // 如果订单金额小于0元
     if (pay_cny_amount <= 0) {
         ctx.body = {
-          "timestamp": Math.floor(Date.now() / 1000),
+          "timeStamp": Math.floor(Date.now() / 1000),
           "trade_no": out_trade_no
         }
         return;
