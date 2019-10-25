@@ -127,7 +127,7 @@ class ExchangeService extends Service {
   // 所有的token
   async getAllToken(page = 1, pagesize = 20, search = '') {
     if (search === '') {
-      const sql = `SELECT t1.*, t2.username, t2.nickname, t2.email, t4.amount
+      const sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount
           FROM mineTokens AS t1 
           Left JOIN users AS t2 ON t1.uid = t2.id 
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id 
@@ -143,7 +143,7 @@ class ExchangeService extends Service {
         list: result[0],
       };
     }
-    const searchSql = `SELECT t1.*, t2.username, t2.nickname, t2.email, t4.amount
+    const searchSql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount
         FROM mineTokens AS t1 
         Left JOIN users AS t2 ON t1.uid = t2.id 
         LEFT JOIN exchanges as t3 ON t1.id = t3.token_id 
@@ -164,7 +164,7 @@ class ExchangeService extends Service {
   async getFlowDetail(tokenId, page = 1, pagesize = 20) {
     console.log(tokenId);
     const sql = 'SELECT * from exchange_orders WHERE token_id = :tokenId LIMIT :offset, :limit;'
-        + 'SELECT count(1) as count FROM exchange_orders WHERE token_id = :tokenId;';
+      + 'SELECT count(1) as count FROM exchange_orders WHERE token_id = :tokenId;';
     const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,
       limit: pagesize,
@@ -177,7 +177,7 @@ class ExchangeService extends Service {
   }
   async getUserFlowDetail(userId, tokenId, page = 1, pagesize = 20) {
     const sql = 'SELECT * from exchange_orders WHERE token_id = :tokenId AND uid = :userId LIMIT :offset, :limit;'
-        + 'SELECT count(1) as count FROM exchange_orders WHERE token_id = :tokenId AND uid = :userId;';
+      + 'SELECT count(1) as count FROM exchange_orders WHERE token_id = :tokenId AND uid = :userId;';
     const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,
       limit: pagesize,
@@ -191,8 +191,8 @@ class ExchangeService extends Service {
   }
   async getUserBalance(userId, tokenId) {
     const sql = 'SELECT t1.*, t2.decimals FROM `assets_minetokens` as t1'
-    + ' LEFT JOIN `minetokens` as t2 ON t1.token_id = t2.id '
-    + 'WHERE t1.uid = :userId AND t1.token_id = :tokenId';
+      + ' LEFT JOIN `minetokens` as t2 ON t1.token_id = t2.id '
+      + 'WHERE t1.uid = :userId AND t1.token_id = :tokenId';
     const result = await this.app.mysql.query(sql, {
       userId,
       tokenId,
