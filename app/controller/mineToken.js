@@ -95,10 +95,12 @@ class MineTokenController extends Controller {
     const exchange = await ctx.service.token.exchange.detail(id);
     const user = await ctx.service.user.get(token.uid);
     // const vol_24h = await ctx.service.token.exchange.volume_24hour(id);
-    const trans_24hour = await ctx.service.token.exchange.trans_24hour(id);
-    exchange.volume_24h = trans_24hour.volume_24h;
-    exchange.change_24h = trans_24hour.change_24h;
-    exchange.price = exchange.cny_reserve / exchange.token_reserve;
+    if (exchange) {
+      const trans_24hour = await ctx.service.token.exchange.trans_24hour(id);
+      exchange.volume_24h = trans_24hour.volume_24h;
+      exchange.change_24h = trans_24hour.change_24h;
+      exchange.price = exchange.cny_reserve / exchange.token_reserve;
+    }
     ctx.body = {
       ...ctx.msg.success,
       data:

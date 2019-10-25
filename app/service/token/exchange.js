@@ -1120,11 +1120,13 @@ class ExchangeService extends Service {
     if (result[0].length > 0) {
       first_price = result[0][0].sold_token_id === 0 ? result[0][0].sold_amount / result[0][0].bought_amount : result[0][0].bought_amount / result[0][0].sold_amount;
       last_price = result[1][0].sold_token_id === 0 ? result[1][0].sold_amount / result[1][0].bought_amount : result[1][0].bought_amount / result[1][0].sold_amount;
-    } else {
+    } else if (result[2].length > 0) {
       first_price = last_price = result[2][0].sold_token_id === 0 ? result[2][0].sold_amount / result[2][0].bought_amount : result[2][0].bought_amount / result[2][0].sold_amount;
     }
-
-    const change_24h = (last_price - first_price) / first_price;
+    let change_24h = 0;
+    if (first_price > 0) {
+      change_24h = (last_price - first_price) / first_price;
+    }
     const volume_24h = result[3][0].total + result[4][0].total;
     return {
       change_24h,
