@@ -119,17 +119,19 @@ class MineTokenService extends Service {
   // 获取网址、社交媒体账号
   async getResources(tokenId) {
     const result = await this.app.mysql.query('SELECT type, content FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
-    const websites = result.filter(row => row.type === 'website');
-    const socials = result.filter(row => row.type !== 'website');
-    // if (result) {
-    //   for (const row of result) {
-    //     if (row.type === 'website') {
-    //       websites.push(row.content);
-    //     } else {
-    //       socials.push(row);
-    //     }
-    //   }
-    // }
+    // const websites = result.filter(row => row.type === 'website');
+    // const socials = result.filter(row => row.type !== 'website');;
+    const websites = [];
+    const socials = [];
+    if (result) {
+      for (const row of result) {
+        if (row.type === 'website') {
+          websites.push(row.content);
+        } else {
+          socials.push(row);
+        }
+      }
+    }
 
     return {
       websites,
