@@ -125,14 +125,28 @@ class ExchangeService extends Service {
     };
   }
   // 所有的token
-  async getAllToken(page = 1, pagesize = 20, search = '') {
+  async getAllToken(page = 1, pagesize = 20, search = '', sort) {
+    let sortArray = null;
+    let sqlOrder = ' ORDER BY id DESC';
+    if (sort) {
+      sortArray = sort.split('-');
+      if (sortArray[0] === 'id' && sortArray[1] === 'asc') {
+        sqlOrder = ' ORDER BY id';
+      } else if (sortArray[0] === 'symbol' && sortArray[1] === 'asc') {
+        sqlOrder = ' ORDER BY symbol';
+      } else if (sortArray[0] === 'symbol' && sortArray[1] === 'desc') {
+        sqlOrder = ' ORDER BY symbol DESC';
+      }
+    }
+
     if (search === '') {
       const sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount
           FROM mineTokens AS t1 
           Left JOIN users AS t2 ON t1.uid = t2.id 
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id 
-          LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id 
-          LIMIT :offset, :limit;`
+          LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id `
+        + sqlOrder
+        + ' LIMIT :offset, :limit;'
         + 'SELECT count(1) as count FROM mineTokens;';
       const result = await this.app.mysql.query(sql, {
         offset: (page - 1) * pagesize,
@@ -143,13 +157,15 @@ class ExchangeService extends Service {
         list: result[0],
       };
     }
+
     const searchSql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount
         FROM mineTokens AS t1 
         Left JOIN users AS t2 ON t1.uid = t2.id 
         LEFT JOIN exchanges as t3 ON t1.id = t3.token_id 
         LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id 
-        WHERE Lower(t1.name) LIKE :search OR Lower(t1.symbol) LIKE :search 
-        LIMIT :offset, :limit;`
+        WHERE Lower(t1.name) LIKE :search OR Lower(t1.symbol) LIKE :search `
+      + sqlOrder
+      + ' LIMIT :offset, :limit;'
       + 'SELECT count(1) as count FROM mineTokens WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search;';
     const searchResult = await this.app.mysql.query(searchSql, {
       search: '%' + search.toLowerCase() + '%',
