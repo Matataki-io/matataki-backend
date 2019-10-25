@@ -18,7 +18,10 @@ class MineTokenController extends Controller {
     } else if (result === 0) {
       ctx.body = ctx.msg.failure;
     } else {
-      ctx.body = ctx.msg.success;
+      ctx.body = {
+        ...ctx.msg.success,
+        data: result,
+      };
     }
   }
 
