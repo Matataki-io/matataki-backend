@@ -225,6 +225,7 @@ module.exports = app => {
   // router.get('/minetoken/balanceOf', passport.authorize, controller.mineToken.getUserBalance);
   router.get('/minetoken/:id', passport.verify, controller.mineToken.get);
   router.put('/minetoken/:id', passport.authorize, controller.mineToken.update);
+  router.get('/minetoken/:id/resources', passport.verify, controller.mineToken.getResources);
   router.put('/minetoken/:id/resources', passport.authorize, controller.mineToken.saveResources);
 
   // -------------------------------- token display API --------------------------------

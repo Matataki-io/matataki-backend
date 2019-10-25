@@ -58,6 +58,24 @@ class MineTokenService extends Service {
     return result.affectedRows > 0;
   }
 
+  // 获取token信息
+  async get(tokenId) {
+    const token = await this.app.mysql.get('minetokens', { id: tokenId });
+    return token;
+  }
+
+  // 获取token
+  async getBySymbol(symbol) {
+    const token = await this.app.mysql.get('minetokens', { symbol });
+    return token;
+  }
+
+  // 获取token
+  async getByUserId(userId) {
+    const token = await this.app.mysql.get('minetokens', { uid: userId });
+    return token;
+  }
+
   // 保存网址、社交媒体账号
   async saveResources(userId, tokenId, websites, socials) {
     const token = await this.getByUserId(userId);
@@ -98,6 +116,27 @@ class MineTokenService extends Service {
     }
   }
 
+  // 获取网址、社交媒体账号
+  async getResources(tokenId) {
+    const result = await this.app.mysql.query('SELECT type, content FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
+    const websites = result.filter(row => row.type === 'website');
+    const socials = result.filter(row => row.type !== 'website');
+    // if (result) {
+    //   for (const row of result) {
+    //     if (row.type === 'website') {
+    //       websites.push(row.content);
+    //     } else {
+    //       socials.push(row);
+    //     }
+    //   }
+    // }
+
+    return {
+      websites,
+      socials,
+    };
+  }
+
   async hasCreatePermission(userId) {
     const user = await this.service.user.get(userId);
     const hasMineTokenPermission = consts.userStatus.hasMineTokenPermission;
@@ -113,24 +152,6 @@ class MineTokenService extends Service {
     const sql = 'SELECT 1 FROM minetokens WHERE id=? AND uid=?;';
     const result = await this.app.mysql.query(sql, [ tokenId, userId ]);
     return result;
-  }
-
-  // 获取token信息
-  async get(tokenId) {
-    const token = await this.app.mysql.get('minetokens', { id: tokenId });
-    return token;
-  }
-
-  // 获取token
-  async getBySymbol(symbol) {
-    const token = await this.app.mysql.get('minetokens', { symbol });
-    return token;
-  }
-
-  // 获取token
-  async getByUserId(userId) {
-    const token = await this.app.mysql.get('minetokens', { uid: userId });
-    return token;
   }
 
   // 是否可以发行
