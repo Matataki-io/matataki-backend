@@ -314,6 +314,52 @@ class MineTokenService extends Service {
       list: result[0],
     };
   }
+
+  async getHoldLiquidityLogs(userId, page = 1, pagesize = 10) {
+    const sql = `
+      SELECT t1.token_id, t1.liquidity_balance, t1.create_time,
+        t2.total_supply, 
+        t3.name, t3.symbol, decimals, 
+        t4.username, t4.nickname
+      FROM exchange_balances AS t1 
+      LEFT JOIN exchanges AS t2 ON t1.token_id = t2.token_id 
+      LEFT JOIN minetokens AS t3 ON t1.token_id = t3.id 
+      LEFT JOIN users as t4 ON t3.uid = t4.id
+      WHERE t1.uid = :userId 
+      LIMIT :offset, :limit;
+      SELECT count(1) AS count FROM exchange_balances WHERE uid = :userId;`;
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      userId,
+    });
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
+  }
+
+  async getHoldLiquidityDetail(tokenId, userId, page = 1, pagesize = 10) {
+    const sql = `
+      SELECT t1.*, t2.*, t3.username, t3.nickname
+      FROM exchange_liquidity_logs AS t1 
+      Left JOIN minetokens AS t2 ON t1.token_id = t2.id 
+      LEFT JOIN users as t3 ON t2.uid = t3.id 
+      WHERE t1.uid = :userId AND t1.token_id = :tokenId
+      LIMIT :offset, :limit;
+      SELECT count(1) AS count FROM exchange_liquidity_logs
+      WHERE uid = :userId AND token_id = :tokenId;`;
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      userId,
+      tokenId,
+    });
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
+  }
 }
 
 module.exports = MineTokenService;
