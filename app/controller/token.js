@@ -182,6 +182,36 @@ class TokenController extends Controller {
     };
   }
 
+  // 持有的流动金list
+  async getHoldLiquidityLogs() {
+    const { ctx } = this;
+    const { pagesize = 10, page = 1 } = ctx.query;
+    const userId = ctx.user.id;
+    const result = await ctx.service.token.mineToken.getHoldLiquidityLogs(userId, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        ...result
+      },
+    };
+  }
+
+  // 持有的流动金详情
+  async getHoldLiquidityDetail() {
+    const { ctx } = this;
+    const tokenId = ctx.params.tokenId;
+    const { pagesize = 10, page = 1 } = ctx.query;
+    const userId = ctx.user.id;
+    const result = await ctx.service.token.mineToken.getHoldLiquidityDetail(tokenId, userId, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        ...result
+      },
+    };
+
+  }
+
 }
 
 module.exports = TokenController;

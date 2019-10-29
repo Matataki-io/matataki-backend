@@ -300,5 +300,9 @@ module.exports = app => {
   // 持币阅读
   router.post('/post/addMineTokens', passport.authorize, controller.post.addMineTokens);
   router.post('/post/currentProfile', passport.authorize, controller.post.currentProfile);
+
+  // 持有流动金
+  router.get('/token/liquidityLogs', passport.authorize, controller.token.getHoldLiquidityLogs);
+  router.get('/token/liquidityLogs/:tokenId', passport.authorize, controller.token.getHoldLiquidityDetail);
 };
 
