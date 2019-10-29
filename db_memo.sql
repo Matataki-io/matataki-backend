@@ -1079,4 +1079,18 @@ CREATE INDEX idx_uid ON posts (uid);
 
 
 -- 2019-10-22 sprint13 
+修改字段：
 exchange_purchase_logs.buyer -> uid
+新增字段：
+minetokens.brief
+minetokens.introduction
+exchange_orders.pay_cny_amount
+新增表：
+minetoken_resources
+
+-- 2019-10-29 sprint13
+新增字段：
+exchange_purchase_logs.cny_reserve_before
+exchange_purchase_logs.token_reserve_before
+新增表：
+post_references

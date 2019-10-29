@@ -933,16 +933,19 @@ class PostService extends Service {
     const conn = await this.app.mysql.beginTransaction();
     try {
       await conn.query('DELETE FROM post_minetokens WHERE sign_id = ?;', [ id ]);
+      let require = 0;
       for (const token of tokens) {
-        await conn.insert('post_minetokens', {
-          sign_id: id,
-          token_id: token.tokenId,
-          amount: token.amount,
-          create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-        });
+        if (token.amount > 0) {
+          require = 1;
+          await conn.insert('post_minetokens', {
+            sign_id: id,
+            token_id: token.tokenId,
+            amount: token.amount,
+            create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+          });
+        }
       }
 
-      const require = tokens !== null && tokens.length > 0 ? 1 : 0;
       await conn.update('posts',
         {
           require_holdtokens: require,
@@ -1005,6 +1008,72 @@ class PostService extends Service {
       }
     }
     return true;
+  }
+
+  // 添加引用文章
+  async addReferences(current_uid, id, refs) {
+    const post = await this.get(id);
+    if (!post) {
+      return -1;
+    }
+
+    if (post.uid !== current_uid) {
+      return -2;
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      await conn.query('DELETE FROM post_references WHERE sign_id = ?;', [ id ]);
+      for (const ref of refs) {
+        let ref_sign_id = 0;
+        let type = 'outer';
+        if (ref.url.startsWith('https://matataki.io/p/') || ref.url.startsWith('https://www.matataki.io/p/') || ref.url.startsWith('https://smartsignature.frontenduse.top/p/')) {
+          ref_sign_id = parseInt(ref.url.match(/\/p\/(\d+)/)[1]);
+          type = 'inner';
+        }
+
+        await conn.insert('post_references', {
+          sign_id: id,
+          ref_sign_id,
+          url: ref.url,
+          title: ref.title,
+          summary: ref.summary,
+          type,
+          create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        });
+      }
+
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.ctx.logger.error(e);
+      return -3;
+    }
+  }
+
+  // 获取引用的文章列表
+  async getReferences(id) {
+    const articles = await this.app.mysql.query(`
+    SELECT url, title AS outer_title, type, p.id p.title, u.nickname, u.avatar 
+    FROM post_references r
+    LEFT OUTER JOIN posts p ON r.ref_sign_id = p.id
+    LEFT OUTER JOIN users u ON p.uid = u.id
+    WHERE sign_id = ?;`,
+    [ id ]);
+    return articles;
+  }
+
+  // 获取被引用的文章别表
+  async getBeReferences(id) {
+    const articles = await this.app.mysql.query(`
+    SELECT p.id, p.title, p.cover, p.uid, u.nickname, u.avatar
+    FROM post_references r 
+    INNER JOIN posts p ON r.sign_id=p.id 
+    INNER JOIN users u ON p.uid = u.id
+    WHERE ref_sign_id = ?;`,
+    [ id ]);
+    return articles;
   }
 
 

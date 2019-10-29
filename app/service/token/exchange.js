@@ -501,7 +501,7 @@ class ExchangeService extends Service {
       return -1;
     }
 
-    await this.addPurchaseLog(userId, 0, cny_sold, tokenId, tokens_bought, recipient, '', conn);
+    await this.addPurchaseLog(userId, 0, cny_sold, tokenId, tokens_bought, recipient, '', cny_reserve, token_reserve, conn);
 
     return 0;
   }
@@ -630,7 +630,7 @@ class ExchangeService extends Service {
       return -1;
     }
 
-    await this.addPurchaseLog(userId, 0, cny_sold, tokenId, tokens_bought, recipient, '', conn);
+    await this.addPurchaseLog(userId, 0, cny_sold, tokenId, tokens_bought, recipient, '', cny_reserve, token_reserve, conn);
 
     return 0;
   }
@@ -683,7 +683,7 @@ class ExchangeService extends Service {
         return -1;
       }
 
-      await this.addPurchaseLog(userId, tokenId, tokens_sold, 0, cny_bought, recipient, ip, conn);
+      await this.addPurchaseLog(userId, tokenId, tokens_sold, 0, cny_bought, recipient, ip, cny_reserve, token_reserve, conn);
 
       conn.commit();
       return 0;
@@ -742,7 +742,7 @@ class ExchangeService extends Service {
         return -1;
       }
 
-      await this.addPurchaseLog(userId, tokenId, tokens_sold, 0, cny_bought, recipient, ip, conn);
+      await this.addPurchaseLog(userId, tokenId, tokens_sold, 0, cny_bought, recipient, ip, cny_reserve, token_reserve, conn);
 
       conn.commit();
       return 0;
@@ -790,7 +790,7 @@ class ExchangeService extends Service {
         return -1;
       }
 
-      await this.addPurchaseLog(userId, inTokenId, tokens_sold, 0, cny_bought, exchange.exchange_uid, ip, conn);
+      await this.addPurchaseLog(userId, inTokenId, tokens_sold, 0, cny_bought, exchange.exchange_uid, ip, cny_reserve, token_reserve, conn);
 
       // 使用交易对虚拟账号帮用户购买out token
       const res = await this.cnyToTokenInput(exchange.exchange_uid, outTokenId, cny_bought, min_tokens_bought, deadline, recipient, conn);
@@ -856,7 +856,7 @@ class ExchangeService extends Service {
         return -1;
       }
 
-      await this.addPurchaseLog(userId, inTokenId, tokens_sold, 0, cny_bought, exchange.exchange_uid, ip, conn);
+      await this.addPurchaseLog(userId, inTokenId, tokens_sold, 0, cny_bought, exchange.exchange_uid, ip, cny_reserve, token_reserve, conn);
 
       // 4. 使用in token交易对虚拟账号帮用户购买out token
       const res = await this.cnyToTokenOutput(exchange.exchange_uid, outTokenId, tokens_bought, cny_bought, deadline, recipient, conn);
@@ -875,10 +875,10 @@ class ExchangeService extends Service {
   }
 
   // 记录交易日志
-  async addPurchaseLog(uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, ip, conn) {
+  async addPurchaseLog(uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, ip, cny_reserve_before, token_reserve_before, conn) {
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
     await conn.insert('exchange_purchase_logs', {
-      uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, create_time: now, ip,
+      uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, create_time: now, ip, cny_reserve_before, token_reserve_before,
     });
   }
 
