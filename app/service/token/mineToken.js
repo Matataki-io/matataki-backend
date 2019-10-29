@@ -317,7 +317,10 @@ class MineTokenService extends Service {
 
   async getHoldLiquidityLogs(userId, page = 1, pagesize = 10) {
     const sql = `
-      SELECT t1.*, t2.total_supply, t3.*, t4.username, t4.nickname
+      SELECT t1.token_id, t1.liquidity_balance, t1.create_time,
+        t2.total_supply, 
+        t3.name, t3.symbol, decimals, 
+        t4.username, t4.nickname
       FROM exchange_balances AS t1 
       LEFT JOIN exchanges AS t2 ON t1.token_id = t2.token_id 
       LEFT JOIN minetokens AS t3 ON t1.token_id = t3.id 
