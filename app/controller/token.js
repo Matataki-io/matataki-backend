@@ -199,8 +199,7 @@ class TokenController extends Controller {
   // 持有的流动金详情
   async getHoldLiquidityDetail() {
     const { ctx } = this;
-    const tokenId = ctx.params.tokenId;
-    const { pagesize = 10, page = 1 } = ctx.query;
+    const { tokenId, pagesize = 10, page = 1 } = ctx.query;
     const userId = ctx.user.id;
     const result = await ctx.service.token.mineToken.getHoldLiquidityDetail(tokenId, userId, parseInt(page), parseInt(pagesize));
     ctx.body = {

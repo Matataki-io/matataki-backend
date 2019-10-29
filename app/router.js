@@ -303,6 +303,6 @@ module.exports = app => {
 
   // 持有流动金
   router.get('/token/liquidityLogs', passport.authorize, controller.token.getHoldLiquidityLogs);
-  router.get('/token/liquidityLogs/:tokenId', passport.authorize, controller.token.getHoldLiquidityDetail);
+  router.get('/token/liquidityLogsDetail', passport.authorize, controller.token.getHoldLiquidityDetail);
 };
 
