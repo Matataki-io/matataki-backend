@@ -201,11 +201,15 @@ class TokenController extends Controller {
     const { ctx } = this;
     const { tokenId, pagesize = 10, page = 1 } = ctx.query;
     const userId = ctx.user.id;
+    const tokenDetail = await ctx.service.token.mineToken.get(tokenId);
+    const userDetail = await ctx.service.user.get(tokenDetail.uid);
     const result = await ctx.service.token.mineToken.getHoldLiquidityDetail(tokenId, userId, parseInt(page), parseInt(pagesize));
     ctx.body = {
       ...ctx.msg.success,
       data: {
-        ...result
+        ...result,
+        tokenDetail,
+        userDetail,
       },
     };
 
