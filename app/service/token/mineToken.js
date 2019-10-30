@@ -35,6 +35,11 @@ class MineTokenService extends Service {
       return -3;
     }
 
+    // 与主流币种重名
+    if (this.config.token.maintokens.indexOf(symbol) >= 0) {
+      return -2;
+    }
+
     const sql = 'INSERT INTO minetokens(uid, name, symbol, decimals, total_supply, create_time, status, logo, brief, introduction) '
       + 'SELECT ?,?,?,?,0,?,1,?,?,? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
     const result = await this.app.mysql.query(sql,

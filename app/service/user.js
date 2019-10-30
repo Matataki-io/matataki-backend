@@ -272,6 +272,12 @@ class UserService extends Service {
       if (!nicknameCheck.test(nickname)) {
         return nicknameInvalid;
       }
+
+      // 普通用户不能以exchange打头
+      if (nickname.toLocaleString().startWith(this.config.user.virtualUserPrefix)) {
+        return nicknameInvalid;
+      }
+
       row.nickname = nickname;
     }
 
@@ -452,34 +458,35 @@ class UserService extends Service {
     return 3;
   }
 
-  async setNickname(nickname, current_user) {
+  // 待删除 2019-10-30 chenhao
+  // async setNickname(nickname, current_user) {
 
-    const sameNickname = await this.app.mysql.query(
-      'SELECT COUNT(*) AS same_count FROM users WHERE nickname = ?',
-      [ nickname ]
-    );
+  //   const sameNickname = await this.app.mysql.query(
+  //     'SELECT COUNT(*) AS same_count FROM users WHERE nickname = ?',
+  //     [ nickname ]
+  //   );
 
-    if (sameNickname[0].same_count) {
-      return nicknameDuplicated;
-    }
-    try {
-      const row = {
-        nickname,
-      };
+  //   if (sameNickname[0].same_count) {
+  //     return nicknameDuplicated;
+  //   }
+  //   try {
+  //     const row = {
+  //       nickname,
+  //     };
 
-      const options = {
-        where: {
-          username: current_user,
-        },
-      };
+  //     const options = {
+  //       where: {
+  //         username: current_user,
+  //       },
+  //     };
 
-      const result = await this.app.mysql.update('users', row, options);
-      return result.affectedRows === 1;
-    } catch (err) {
-      this.logger.error('UserService:: setNickname error: %j', err);
-    }
-    return false;
-  }
+  //     const result = await this.app.mysql.update('users', row, options);
+  //     return result.affectedRows === 1;
+  //   } catch (err) {
+  //     this.logger.error('UserService:: setNickname error: %j', err);
+  //   }
+  //   return false;
+  // }
 
   // EOS: 从链上取得数据, 判断address的合法性
   async isEosAddress(address) {

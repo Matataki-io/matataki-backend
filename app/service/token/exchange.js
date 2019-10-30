@@ -2,7 +2,6 @@
 const moment = require('moment');
 const Service = require('egg').Service;
 const consts = require('../consts');
-const virtualUserPrefix = 'exchange_';
 
 class ExchangeService extends Service {
 
@@ -54,7 +53,7 @@ class ExchangeService extends Service {
       return -2;
     }
 
-    const username = virtualUserPrefix + token.symbol;
+    const username = this.config.user.virtualUserPrefix + token.symbol;
     const platform = consts.platforms.cny;
     // 虚拟账号
     let exchangeUser = await this.service.auth.getUser(username, platform);
