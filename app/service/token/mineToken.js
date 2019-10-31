@@ -320,7 +320,7 @@ class MineTokenService extends Service {
     };
   }
 
-  async getHoldLiquidityLogs(userId, page = 1, pagesize = 10) {
+  async getHoldLiquidity(userId, page = 1, pagesize = 10) {
     const sql = `
       SELECT t1.token_id, t1.liquidity_balance, t1.create_time,
         t2.total_supply, 
@@ -344,21 +344,40 @@ class MineTokenService extends Service {
     };
   }
 
-  async getHoldLiquidityDetail(tokenId, userId, page = 1, pagesize = 10) {
-    const sql = `
+  async getLiquidityLogs(tokenId, userId = null, page = 1, pagesize = 10) {
+    let sql = `
       SELECT t1.*, t2.*, t3.username, t3.nickname
       FROM exchange_liquidity_logs AS t1 
       Left JOIN minetokens AS t2 ON t1.token_id = t2.id 
       LEFT JOIN users as t3 ON t2.uid = t3.id 
-      WHERE t1.uid = :userId AND t1.token_id = :tokenId
-      LIMIT :offset, :limit;
-      SELECT count(1) AS count FROM exchange_liquidity_logs
-      WHERE uid = :userId AND token_id = :tokenId;`;
+      `;
+    let params = {
+      tokenId,
+    };
+    if (userId) {
+      sql += `
+        WHERE t1.uid = :userId AND t1.token_id = :tokenId
+        ORDER BY t1.create_time DESC
+        LIMIT :offset, :limit;
+        SELECT count(1) AS count FROM exchange_liquidity_logs
+        WHERE uid = :userId AND token_id = :tokenId;`;
+      params = {
+        ...params,
+        userId,
+      };
+    } else {
+      sql += `
+        WHERE t1.token_id = :tokenId
+        ORDER BY t1.create_time DESC
+        LIMIT :offset, :limit;
+        SELECT count(1) AS count FROM exchange_liquidity_logs
+        WHERE token_id = :tokenId;`;
+    }
+
     const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,
       limit: pagesize,
-      userId,
-      tokenId,
+      ...params,
     });
     return {
       count: result[1][0].count,
@@ -379,13 +398,13 @@ class MineTokenService extends Service {
     };
     // 如果useId存在
     if (userId) {
-      sql += ' AND uid = :userId ORDER BY create_time DESC;';
+      sql += ' AND uid = :userId ORDER BY create_time DESC LIMIT :offset, :limit;';
       params = {
         ...params,
         userId,
       };
     } else {
-      sql += ' ORDER BY create_time DESC;';
+      sql += ' ORDER BY create_time DESC LIMIT :offset, :limit;';
     }
     const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,

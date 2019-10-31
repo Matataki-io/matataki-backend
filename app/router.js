@@ -302,8 +302,9 @@ module.exports = app => {
   router.post('/post/currentProfile', passport.authorize, controller.post.currentProfile);
 
   // 持有流动金
-  router.get('/token/liquidityLogs', passport.authorize, controller.token.getHoldLiquidityLogs);
-  router.get('/token/liquidityLogsDetail', passport.authorize, controller.token.getHoldLiquidityDetail);
+  router.get('/token/holdLiquidity', passport.authorize, controller.token.getHoldLiquidity);
+  router.get('/token/liquidityLogs', passport.verify, controller.token.getLiquidityLogs);
+  router.get('/token/myLiquidityLogs', passport.authorize, controller.token.getMyLiquidityLogs);
   router.get('/token/purchaseLogs', passport.verify, controller.token.getPurchaseLog);
   router.get('/token/myPurchaseLogs', passport.authorize, controller.token.getMyPurchaseLog);
 };

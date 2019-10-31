@@ -183,11 +183,11 @@ class TokenController extends Controller {
   }
 
   // 持有的流动金list
-  async getHoldLiquidityLogs() {
+  async getHoldLiquidity() {
     const { ctx } = this;
     const { pagesize = 10, page = 1 } = ctx.query;
     const userId = ctx.user.id;
-    const result = await ctx.service.token.mineToken.getHoldLiquidityLogs(userId, parseInt(page), parseInt(pagesize));
+    const result = await ctx.service.token.mineToken.getHoldLiquidity(userId, parseInt(page), parseInt(pagesize));
     ctx.body = {
       ...ctx.msg.success,
       data: {
@@ -197,19 +197,31 @@ class TokenController extends Controller {
   }
 
   // 持有的流动金详情
-  async getHoldLiquidityDetail() {
+  async getMyLiquidityLogs() {
     const { ctx } = this;
     const { tokenId, pagesize = 10, page = 1 } = ctx.query;
     const userId = ctx.user.id;
     const tokenDetail = await ctx.service.token.mineToken.get(tokenId);
     const userDetail = await ctx.service.user.get(tokenDetail.uid);
-    const result = await ctx.service.token.mineToken.getHoldLiquidityDetail(tokenId, userId, parseInt(page), parseInt(pagesize));
+    const result = await ctx.service.token.mineToken.getLiquidityLogs(tokenId, userId, parseInt(page), parseInt(pagesize));
     ctx.body = {
       ...ctx.msg.success,
       data: {
         ...result,
         tokenDetail,
         userDetail,
+      },
+    };
+  }
+  // 流动金日志
+  async getLiquidityLogs() {
+    const { ctx } = this;
+    const { tokenId, pagesize = 100, page = 1 } = ctx.query;
+    const result = await ctx.service.token.mineToken.getLiquidityLogs(tokenId, null, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        ...result,
       },
     };
   }
