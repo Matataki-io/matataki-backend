@@ -412,7 +412,6 @@ class MineTokenService extends Service {
       ...params,
     });
     for (let i = 0; i < result.length; i++) {
-      result[i].create_time = moment(result[i].create_time).format('YYYY.MM.DD hh:mm');
       if (result[i].sold_token_id === 0) {
         result[i].cny_amount = result[i].sold_amount;
         result[i].token_amount = result[i].bought_amount;
