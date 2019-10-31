@@ -191,7 +191,7 @@ class TokenController extends Controller {
     ctx.body = {
       ...ctx.msg.success,
       data: {
-        ...result
+        ...result,
       },
     };
   }
@@ -212,7 +212,27 @@ class TokenController extends Controller {
         userDetail,
       },
     };
-
+  }
+  // 全部
+  async getPurchaseLog() {
+    const { ctx } = this;
+    const { tokenId, pagesize = 100, page = 1 } = ctx.query;
+    const result = await ctx.service.token.mineToken.getPurchaseLog(tokenId, null, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+  // 我的
+  async getMyPurchaseLog() {
+    const { ctx } = this;
+    const { tokenId, pagesize = 100, page = 1 } = ctx.query;
+    const userId = ctx.user.id;
+    const result = await ctx.service.token.mineToken.getPurchaseLog(tokenId, userId, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
   }
 
 }

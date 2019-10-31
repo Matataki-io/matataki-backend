@@ -365,6 +365,45 @@ class MineTokenService extends Service {
       list: result[0],
     };
   }
+
+  async getPurchaseLog(tokenId, userId = null, page = 1, pagesize = 100) {
+    let sql = `
+      SELECT t1.*,
+      CASE WHEN t1.sold_token_id = :tokenId 
+      THEN 'sell' ELSE 'buy'
+      END 'direction' 
+      FROM exchange_purchase_logs AS t1 
+      WHERE (t1.sold_token_id = :tokenId OR t1.bought_token_id = :tokenId)`;
+    let params = {
+      tokenId,
+    };
+    // 如果useId存在
+    if (userId) {
+      sql += ' AND uid = :userId ORDER BY create_time DESC;';
+      params = {
+        ...params,
+        userId,
+      };
+    } else {
+      sql += ' ORDER BY create_time DESC;';
+    }
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      ...params,
+    });
+    for (let i = 0; i < result.length; i++) {
+      result[i].create_time = moment(result[i].create_time).format('YYYY.MM.DD hh:mm');
+      if (result[i].sold_token_id === 0) {
+        result[i].cnyAmount = result[i].sold_amount;
+        result[i].tokenAmount = result[i].bought_amount;
+      } else {
+        result[i].cnyAmount = result[i].bought_amount;
+        result[i].tokenAmount = result[i].sold_amount;
+      }
+    }
+    return result;
+  }
 }
 
 module.exports = MineTokenService;
