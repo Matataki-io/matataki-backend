@@ -414,11 +414,11 @@ class MineTokenService extends Service {
     for (let i = 0; i < result.length; i++) {
       result[i].create_time = moment(result[i].create_time).format('YYYY.MM.DD hh:mm');
       if (result[i].sold_token_id === 0) {
-        result[i].cnyAmount = result[i].sold_amount;
-        result[i].tokenAmount = result[i].bought_amount;
+        result[i].cny_amount = result[i].sold_amount;
+        result[i].token_amount = result[i].bought_amount;
       } else {
-        result[i].cnyAmount = result[i].bought_amount;
-        result[i].tokenAmount = result[i].sold_amount;
+        result[i].cny_amount = result[i].bought_amount;
+        result[i].token_amount = result[i].sold_amount;
       }
     }
     return result;
