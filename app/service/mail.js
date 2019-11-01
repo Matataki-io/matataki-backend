@@ -56,14 +56,16 @@ class MailService extends Service {
     let result = null;
     try {
       // 配置以及发送邮件
-      const mailData = { username: user[0].username,
+      const mailData = {
+        username: user[0].username,
         productname: stock[0].title,
         productamount: user[0].num,
         stocks: stock,
         totalprice: (user[0].amount / 10000),
         time: user[0].create_time.toLocaleString(),
         symbol: user[0].symbol,
-        category: category[0].category_id };
+        category: category[0].category_id,
+      };
       const mailContent = await this.ctx.renderView('mail.tpl', mailData, { viewEngine: 'nunjucks' });
       // 不发送邮件, 只返回预览
       // if (this.ctx.app.config.mailPreview === true) {
@@ -73,7 +75,7 @@ class MailService extends Service {
         //   from: this.config.mail.auth.user,
         from: `Smart Signature<${this.config.mail.auth.user}>`,
         to: user[0].email,
-        subject: '智能签名:您购买的商品',
+        subject: '瞬Matataki:您购买的商品',
         html: mailContent,
       };
 
@@ -106,7 +108,7 @@ class MailService extends Service {
       const mailOptions = {
         from: `Smart Signature<${this.config.mail.auth.user}>`,
         to: email,
-        subject: '智能签名:用户注册',
+        subject: '瞬Matataki:用户注册',
         html: mailContent,
       };
       const transpoter = await nodemailer.createTransport(this.config.mail);
