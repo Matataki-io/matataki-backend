@@ -320,11 +320,11 @@ class MineTokenService extends Service {
     };
   }
 
-  async getHoldLiquidityLogs(userId, page = 1, pagesize = 10) {
+  async getHoldLiquidity(userId, page = 1, pagesize = 10) {
     const sql = `
       SELECT t1.token_id, t1.liquidity_balance, t1.create_time,
         t2.total_supply, 
-        t3.name, t3.symbol, decimals, 
+        t3.name, t3.symbol, decimals, t3.logo,
         t4.username, t4.nickname
       FROM exchange_balances AS t1 
       LEFT JOIN exchanges AS t2 ON t1.token_id = t2.token_id 
@@ -344,26 +344,85 @@ class MineTokenService extends Service {
     };
   }
 
-  async getHoldLiquidityDetail(tokenId, userId, page = 1, pagesize = 10) {
-    const sql = `
+  async getLiquidityLogs(tokenId, userId = null, page = 1, pagesize = 10) {
+    let sql = `
       SELECT t1.*, t2.*, t3.username, t3.nickname
       FROM exchange_liquidity_logs AS t1 
       Left JOIN minetokens AS t2 ON t1.token_id = t2.id 
       LEFT JOIN users as t3 ON t2.uid = t3.id 
-      WHERE t1.uid = :userId AND t1.token_id = :tokenId
-      LIMIT :offset, :limit;
-      SELECT count(1) AS count FROM exchange_liquidity_logs
-      WHERE uid = :userId AND token_id = :tokenId;`;
+      `;
+    let params = {
+      tokenId,
+    };
+    if (userId) {
+      sql += `
+        WHERE t1.uid = :userId AND t1.token_id = :tokenId
+        ORDER BY t1.create_time DESC
+        LIMIT :offset, :limit;
+        SELECT count(1) AS count FROM exchange_liquidity_logs
+        WHERE uid = :userId AND token_id = :tokenId;`;
+      params = {
+        ...params,
+        userId,
+      };
+    } else {
+      sql += `
+        WHERE t1.token_id = :tokenId
+        ORDER BY t1.create_time DESC
+        LIMIT :offset, :limit;
+        SELECT count(1) AS count FROM exchange_liquidity_logs
+        WHERE token_id = :tokenId;`;
+    }
+
     const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,
       limit: pagesize,
-      userId,
-      tokenId,
+      ...params,
     });
     return {
       count: result[1][0].count,
       list: result[0],
     };
+  }
+
+  async getPurchaseLog(tokenId, userId = null, page = 1, pagesize = 100) {
+    let sql = `
+      SELECT t1.*,
+      CASE WHEN t1.sold_token_id = :tokenId 
+      THEN 'sell' ELSE 'buy'
+      END 'direction' 
+      FROM exchange_purchase_logs AS t1 
+      WHERE (t1.sold_token_id = :tokenId OR t1.bought_token_id = :tokenId)`;
+    let params = {
+      tokenId,
+    };
+    // 如果useId存在
+    if (userId) {
+      sql += `
+        AND (uid = :userId OR recipient = :userId) 
+        ORDER BY create_time DESC LIMIT :offset, :limit;`;
+      params = {
+        ...params,
+        userId,
+      };
+    } else {
+      sql += ' ORDER BY create_time DESC LIMIT :offset, :limit;';
+    }
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      ...params,
+    });
+    for (let i = 0; i < result.length; i++) {
+      if (result[i].sold_token_id === 0) {
+        result[i].cny_amount = result[i].sold_amount;
+        result[i].token_amount = result[i].bought_amount;
+      } else {
+        result[i].cny_amount = result[i].bought_amount;
+        result[i].token_amount = result[i].sold_amount;
+      }
+    }
+    return result;
   }
 }
 
