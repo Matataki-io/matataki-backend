@@ -346,7 +346,9 @@ class MineTokenService extends Service {
 
   async getLiquidityLogs(tokenId, userId = null, page = 1, pagesize = 10) {
     let sql = `
-      SELECT t1.*, t2.*, t3.username, t3.nickname
+      SELECT t1.id, t1.uid, t1.token_id,t1.cny_amount,t1.token_amount,t1.liquidity,t1.create_time,
+      t2.name,t2.symbol,t2.decimals,t2.total_supply,t2.logo, 
+      t3.username, t3.nickname
       FROM exchange_liquidity_logs AS t1 
       Left JOIN minetokens AS t2 ON t1.token_id = t2.id 
       LEFT JOIN users as t3 ON t2.uid = t3.id 
@@ -360,7 +362,7 @@ class MineTokenService extends Service {
         ORDER BY t1.create_time DESC
         LIMIT :offset, :limit;
         SELECT count(1) AS count FROM exchange_liquidity_logs
-        WHERE uid = :userId AND token_id = :tokenId;`;
+        WHERE t1.uid = :userId AND t1.token_id = :tokenId;`;
       params = {
         ...params,
         userId,
@@ -371,7 +373,7 @@ class MineTokenService extends Service {
         ORDER BY t1.create_time DESC
         LIMIT :offset, :limit;
         SELECT count(1) AS count FROM exchange_liquidity_logs
-        WHERE token_id = :tokenId;`;
+        WHERE t1.token_id = :tokenId;`;
     }
 
     const result = await this.app.mysql.query(sql, {
