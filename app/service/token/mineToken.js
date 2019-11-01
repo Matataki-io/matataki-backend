@@ -36,7 +36,7 @@ class MineTokenService extends Service {
     }
 
     // 与主流币种重名
-    if (this.config.token.maintokens.indexOf(symbol) >= 0) {
+    if (this.config.token.maintokens.indexOf(symbol.toUpperCase()) >= 0) {
       return -2;
     }
 
