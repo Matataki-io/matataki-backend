@@ -362,7 +362,7 @@ class MineTokenService extends Service {
         ORDER BY t1.create_time DESC
         LIMIT :offset, :limit;
         SELECT count(1) AS count FROM exchange_liquidity_logs
-        WHERE t1.uid = :userId AND t1.token_id = :tokenId;`;
+        WHERE uid = :userId AND token_id = :tokenId;`;
       params = {
         ...params,
         userId,
@@ -373,7 +373,7 @@ class MineTokenService extends Service {
         ORDER BY t1.create_time DESC
         LIMIT :offset, :limit;
         SELECT count(1) AS count FROM exchange_liquidity_logs
-        WHERE t1.token_id = :tokenId;`;
+        WHERE token_id = :tokenId;`;
     }
 
     const result = await this.app.mysql.query(sql, {
