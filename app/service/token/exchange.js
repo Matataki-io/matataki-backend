@@ -1105,11 +1105,11 @@ class ExchangeService extends Service {
 
   //   return result[0][0].total + result[1][0].total;
   // }
-
+  // todo 第三句是否可以去掉了
   async trans_24hour(tokenId) {
-    const sql = `SELECT * FROM exchange_purchase_logs WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId) AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY) LIMIT 1, 1;
-                SELECT * FROM exchange_purchase_logs WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId) AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY) ORDER BY id DESC LIMIT 1, 1;
-                SELECT * FROM exchange_purchase_logs WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId) ORDER BY id DESC LIMIT 1, 1;
+    const sql = `SELECT * FROM exchange_purchase_logs WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId) AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY) LIMIT 0, 1;
+                SELECT * FROM exchange_purchase_logs WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId) AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY) ORDER BY id DESC LIMIT 0, 1;
+                SELECT * FROM exchange_purchase_logs WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId) ORDER BY id DESC LIMIT 0, 1;
                 SELECT IFNULL(SUM(sold_amount), 0) AS total FROM exchange_purchase_logs WHERE sold_token_id = :tokenId AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY);
                 SELECT IFNULL(SUM(bought_amount), 0) AS total FROM exchange_purchase_logs WHERE bought_token_id = :tokenId AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY);`;
     const result = await this.app.mysql.query(sql, { tokenId });
