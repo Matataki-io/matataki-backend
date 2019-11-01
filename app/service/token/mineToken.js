@@ -398,7 +398,9 @@ class MineTokenService extends Service {
     };
     // 如果useId存在
     if (userId) {
-      sql += ' AND uid = :userId ORDER BY create_time DESC LIMIT :offset, :limit;';
+      sql += `
+        AND (uid = :userId OR recipient = :userId) 
+        ORDER BY create_time DESC LIMIT :offset, :limit;`;
       params = {
         ...params,
         userId,
