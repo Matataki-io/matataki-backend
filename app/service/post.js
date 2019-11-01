@@ -91,6 +91,10 @@ class PostService extends Service {
       [ hash ]
     );
     let post = posts[0];
+    if (!post) {
+      return null;
+    }
+
     if (requireProfile) {
       post = await this.getPostProfile(post);
     }
