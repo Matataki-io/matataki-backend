@@ -1088,9 +1088,21 @@ exchange_orders.pay_cny_amount
 新增表：
 minetoken_resources
 
+
 -- 2019-10-29 sprint13
 新增字段：
 exchange_purchase_logs.cny_reserve_before
 exchange_purchase_logs.token_reserve_before
 新增表：
 post_references
+
+增加配置项：
+config.user
+config.token
+
+修改tags表数据，智能签名->瞬Matataki
+
+
+--2019-10-5
+修改表：
+post_cites

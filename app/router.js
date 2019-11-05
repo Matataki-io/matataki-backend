@@ -301,6 +301,9 @@ module.exports = app => {
   router.post('/post/addMineTokens', passport.authorize, controller.post.addMineTokens);
   router.post('/post/currentProfile', passport.authorize, controller.post.currentProfile);
 
+  // 解析引用网址内容，提取标题
+  router.post('/post/parseCiteHTML', passport.verify, controller.post.parseCiteHTML);
+
   // 持有流动金
   router.get('/token/holdLiquidity', passport.authorize, controller.token.getHoldLiquidity);
   router.get('/token/liquidityLogs', passport.verify, controller.token.getLiquidityLogs);

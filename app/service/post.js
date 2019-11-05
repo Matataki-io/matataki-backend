@@ -6,6 +6,8 @@ const _ = require('lodash');
 const moment = require('moment');
 const fs = require('fs');
 const removemd = require('remove-markdown');
+const axios = require('axios');
+const htmlparser = require('node-html-parser');
 // const IpfsHttpClientLite = require('ipfs-http-client-lite');
 
 class PostService extends Service {
@@ -1011,6 +1013,57 @@ class PostService extends Service {
         }
       }
     }
+    return true;
+  }
+
+
+  async parseCiteHTML(url) {
+    let cite_sign_id = 0;
+    if (url.startsWith('https://matataki.io/p/') || url.startsWith('https://www.matataki.io/p/') || url.startsWith('https://smartsignature.frontenduse.top/p/')) {
+      cite_sign_id = parseInt(url.match(/\/p\/(\d+)/)[1]);
+    }
+
+    if (cite_sign_id > 0) {
+      const post = await this.getById(cite_sign_id);
+      return {
+        cite_sign_id,
+        title: post.title,
+        summary: post.short_content,
+      };
+    }
+
+    try {
+      const rawPage = await axios.get(url, {
+        method: 'get',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        },
+      });
+
+      const title = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/);
+      return {
+        cite_sign_id,
+        title,
+      };
+    } catch (err) {
+      this.logger.error('PostService::parseCiteHTML: error:', err);
+      return null;
+    }
+  }
+
+  async addCiteNote(uid, id, url, title, summary) {
+    const sql = ` INSERT INTO post_cites (sign_id, cite_sign_id, url, title, summary, number) 
+                  SELECT :sign_id, :cite_sign_id, :url, :title, :summary, (SELECT IFNULL(MAX(number), 1) + 1 FROM post_cites WHERE sign_id = :sign_id); `;
+
+    // if (ref.url.startsWith('https://matataki.io/p/') || ref.url.startsWith('https://www.matataki.io/p/') || ref.url.startsWith('https://smartsignature.frontenduse.top/p/')) {
+    //   ref_sign_id = parseInt(ref.url.match(/\/p\/(\d+)/)[1]);
+    //   type = 'inner';
+    // }
+
+  }
+
+  async isCitePermission(uid, sign_id) {
     return true;
   }
 

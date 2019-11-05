@@ -773,6 +773,12 @@ class PostController extends Controller {
     }
   }
 
+  async parseCiteHTML() {
+    const ctx = this.ctx;
+    const { url } = ctx.request.body;
+    return ctx.service.post.parseCiteHTML(url);
+  }
+
 }
 
 module.exports = PostController;
