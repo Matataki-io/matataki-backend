@@ -90,7 +90,7 @@ class WxPayController extends Controller {
         ...order,
         openid,
       };
-      // 获取微信JSSDK支付参数(自动下单, 兼容小程序)
+      // 获取微信JSSDK支付参数
       payargs = await this.app.tenpay.getPayParams(order);
     } else {
       order = {
