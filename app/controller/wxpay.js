@@ -35,7 +35,7 @@ class WxPayController extends Controller {
     // token_amount: 输出的token的数值
     // limit_value：极限值
     // pay_cny_amount扣除余额后微信实际支付的金额
-    let { total, title, type, token_id, token_amount, limit_value, decimals, min_liquidity = 0, pay_cny_amount } = ctx.request.body;
+    const { total, title, type, token_id, token_amount, limit_value, decimals, min_liquidity = 0, pay_cny_amount } = ctx.request.body;
     const ip = ctx.ips.length > 0 ? ctx.ips[0] !== '127.0.0.1' ? ctx.ips[0] : ctx.ips[1] : ctx.ip;
     const token = await ctx.service.token.mineToken.get(token_id);
     if (!token) {
@@ -82,11 +82,11 @@ class WxPayController extends Controller {
     }
     // 如果订单金额小于0元
     if (pay_cny_amount <= 0) {
-        ctx.body = {
-          "timeStamp": Math.floor(Date.now() / 1000),
-          "trade_no": out_trade_no
-        }
-        return;
+      ctx.body = {
+        timeStamp: Math.floor(Date.now() / 1000),
+        trade_no: out_trade_no,
+      };
+      return;
     }
     // pay_cny_amount扣除余额后微信实际支付的金额
     const total_fee = Math.floor(pay_cny_amount / Math.pow(10, parseInt(decimals) - 2));
@@ -101,7 +101,6 @@ class WxPayController extends Controller {
       product_id: token.symbol,
     };
     ctx.logger.info('controller wxpay pay params', order);
-    
     // 微信统一下单
     const payargs = await this.app.wxpay.getBrandWCPayRequestParams(order);
     ctx.logger.info('controller wxpay pay result', payargs);
@@ -173,17 +172,20 @@ class WxPayController extends Controller {
   }
   async login() {
     const { ctx } = this;
-    const { code } = ctx.request.body; // total单位为元
-    const { appId, appSecret } = this.config.wechat;
-    ctx.logger.info('controller wxpay login start', code, appId, appSecret);
-    const result = await ctx.curl(`https://api.weixin.qq.com/sns/oauth2/access_token?appid=${appId}&secret=${appSecret}&code=${code}&grant_type=authorization_code`, {
-      // 自动解析 JSON response
-      dataType: 'json',
-      // 3 秒超时
-      // timeout: 3000,
-    });
-    ctx.logger.info('controller wxpay login end', result);
-    this.ctx.body = result.data;
+    const { code } = ctx.request.body;
+    /* access_token: "27_8Dodh7tGSrmgPKj-oXBfSM4c0COZ-jTF-pL19Urpz-e5xO-y60PMbsi4rtCHYtLwzku6xVAbkDs9K4ZcvYIt-w"
+      expires_in: 7200
+      openid: "oH_q_wQMBPr_FUTuAL3YA2nDQMMg"
+      refresh_token: "27_a8C1CBwx_VITK0NYk2upmbpWqbQjuiVuEY-5boJsArcr3AYGckuMzGJAOagtPjosk-CdIYzyRo0-gBiHMQDniQ"
+      scope: "snsapi_userinfo"
+    */
+    const accessTokenResult = await ctx.service.wechat.getAccessToken(code);
+    const { access_token, openid } = accessTokenResult;
+    const useInfo = await ctx.service.wechat.getUserInfo(access_token, openid);
+    this.ctx.body = {
+      accessToken: accessTokenResult.data,
+      useInfo: useInfo.data,
+    };
   }
   // 企业付款
   async transfers() {

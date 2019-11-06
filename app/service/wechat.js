@@ -90,6 +90,44 @@ class WechatService extends Service {
 
     return ticket;
   }
+  // 通过code换取网页授权access_token
+  async getAccessToken(code) {
+    const { ctx } = this;
+    const { appId, appSecret } = this.config.wechat;
+    ctx.logger.info('service getAccessToken', code, appId, appSecret);
+    const result = await ctx.curl(`https://api.weixin.qq.com/sns/oauth2/access_token?appid=${appId}&secret=${appSecret}&code=${code}&grant_type=authorization_code`, {
+      dataType: 'json',
+      // 3 秒超时
+      // timeout: 3000,
+    });
+    ctx.logger.info('service getAccessToken result:', result);
+    return result;
+  }
+  // 刷新access_token（如果需要）
+  async refreshToken(refresh_token) {
+    const { ctx } = this;
+    const { appId, appSecret } = this.config.wechat;
+    ctx.logger.info('service refreshToken', appId, appSecret);
+    const result = await ctx.curl(`https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=${appId}&grant_type=refresh_token&refresh_token=${refresh_token}`, {
+      dataType: 'json',
+      // 3 秒超时
+      // timeout: 3000,
+    });
+    ctx.logger.info('service refreshToken result:', result);
+    return result;
+  }
+  // 拉取用户信息(需scope为 snsapi_userinfo)
+  async getUserInfo(access_token, openid) {
+    const { ctx } = this;
+    ctx.logger.info('service getUserInfo');
+    const result = await ctx.curl(`https://api.weixin.qq.com/sns/userinfo?access_token=${access_token}&openid=${openid}&lang=zh_CN`, {
+      dataType: 'json',
+      // 3 秒超时
+      // timeout: 3000,
+    });
+    ctx.logger.info('service getUserInfo result:', result);
+    return result;
+  }
 }
 
 module.exports = WechatService;
