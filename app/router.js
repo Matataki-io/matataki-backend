@@ -302,7 +302,15 @@ module.exports = app => {
   router.post('/post/currentProfile', passport.authorize, controller.post.currentProfile);
 
   // 解析引用网址内容，提取标题
-  router.post('/post/parseCiteHTML', passport.verify, controller.post.parseCiteHTML);
+  router.post('/cite/parseCiteHTML', passport.verify, controller.post.parseCiteHTML);
+  router.put('/posts/:id/cites', passport.authorize, controller.post.addCiteNote);
+  router.delete('/posts/:id/cites/:number', passport.authorize, controller.post.deleteCiteNote);
+  router.get('/posts/:id/cites/:number', passport.authorize, controller.post.getCiteNote);
+
+  router.put('/drafts/:id/cites', passport.authorize, controller.post.addDraftCiteNote);
+  router.delete('/drafts/:id/cites/:number', passport.authorize, controller.post.deleteDraftCiteNote);
+  router.get('/drafts/:id/cites/:number', passport.authorize, controller.post.getDraftCiteNote);
+  router.post('/drafts/:id/cites/publish', passport.authorize, controller.post.publishCites);
 
   // 持有流动金
   router.get('/token/holdLiquidity', passport.authorize, controller.token.getHoldLiquidity);
