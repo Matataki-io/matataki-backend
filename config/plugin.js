@@ -35,4 +35,8 @@ module.exports = {
     enable: true,
     package: 'egg-wxpay',
   },
+  tenpay: {
+    enable: true,
+    package: 'egg-tenpay',
+  },
 };
