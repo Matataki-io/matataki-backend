@@ -19,6 +19,7 @@
     "egg-ratelimiter": "^0.1.0",
     "egg-redis": "^2.4.0",
     "egg-scripts": "^2.11.0",
+    "egg-tenpay": "^1.0.1",
     "egg-view-nunjucks": "^2.2.0",
     "egg-wxpay": "^0.1.0",
     "eosjs": "^16.0.9",
