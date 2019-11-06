@@ -78,26 +78,31 @@ class WxPayController extends Controller {
     // pay_cny_amount扣除余额后微信实际支付的金额
     const total_fee = Math.floor(pay_cny_amount / Math.pow(10, parseInt(decimals) - 2));
     let order = {
-      body: title,
       out_trade_no, // 订单号 唯一id商户系统内部订单号，要求32个字符内，只能是数字、大小写字母_-|* 且在同一个商户号下唯一。
+      body: title,
       total_fee, // 微信最小单位是分
       spbill_create_ip: ip, // 请求的ip地址
-      // openid,
-      // trade_type: 'JSAPI',
-      trade_type,
-      product_id: token.symbol,
     };
+    ctx.logger.info('controller wxpay pay params', order);
+    let payargs = {};
     if (trade_type === 'JSAPI') {
       order = {
         ...order,
         openid,
       };
+      // 获取微信JSSDK支付参数(自动下单, 兼容小程序)
+      payargs = await this.app.tenpay.getPayParams(order);
+    } else {
+      order = {
+        ...order,
+        trade_type,
+        product_id: token.symbol,
+      };
+      // 微信统一下单
+      payargs = await this.app.tenpay.unifiedOrder(order);
     }
-    ctx.logger.info('controller wxpay pay params', order);
-    // 微信统一下单
-    const payargs = await this.app.wxpay.getBrandWCPayRequestParams(order);
     ctx.logger.info('controller wxpay pay result', payargs);
-    if (payargs.code_url) {
+    if (payargs.appId) {
       // 更新订单状态为‘支付中’：3
       await ctx.service.exchange.setStatusPending(order.out_trade_no);
       ctx.body = {
