@@ -134,10 +134,8 @@ class WxPayController extends Controller {
       trade_type: 'NATIVE',
       transaction_id: '4200000416201909240710109485'
     }*/
-    const { result_code, return_code, out_trade_no } = ctx.request.body;// 订单号
-    console.log(ctx.request.weixin);
-    ctx.logger.info('wxpay notify weixin info', ctx.request.weixin, ctx.request, ctx);
-    ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.body);
+    const { result_code, return_code, out_trade_no } = ctx.request.weixin;
+    ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.weixin);
     // 支付成功
     if (return_code === 'SUCCESS' && result_code === 'SUCCESS') {
       // 修改订单状态
@@ -208,8 +206,8 @@ class WxPayController extends Controller {
   }
   async refundNotify() {
     const { ctx } = this;
-    const { return_code, out_trade_no } = ctx.request.body;// 订单号
-    ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.body);
+    const { return_code, out_trade_no } = ctx.request.weixin;// 订单号
+    ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.weixin);
     ctx.body = `<xml>
                   <return_code><![CDATA[SUCCESS]]></return_code>
                   <return_msg><![CDATA[OK]]></return_msg>
