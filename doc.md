@@ -3023,7 +3023,7 @@ symbol-desc：字母倒序
 ```
 
 #### 解析引用网址的title
-* POST /posts/extractReferenceTitle
+* POST /posts/extractRefTitle
 * 响应状态码： 200
 * 参数：
 ```
