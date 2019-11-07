@@ -45,7 +45,7 @@ class ReferencesService extends Service {
         },
       });
 
-      const result = rawPage.data.match(/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/); // /<title.*?>([\S\s]*?)<\/title>/
+      const result = rawPage.data.match(/(?<=\<title.*?\>)[\S\s]*?(?=\<\/title\>)/); // /<title.*?>([\S\s]*?)<\/title>/   /(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/
       let title = '';
       if (result && result.length > 0) {
         title = result[0];
