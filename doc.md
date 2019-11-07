@@ -2843,3 +2843,224 @@ symbol-desc：字母倒序
 	}
 }
 ```
+
+
+#### 添加/修改文章引用
+* PUT /posts/:signId/references
+* 响应状态码： 200
+* 参数：
+```
+{
+  "url": "https://www.jianshu.com/p/41071a1eea",
+  "title": "ddd",
+  "summary": "dddttt"
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 删除文章引用
+* DELETE /posts/:signId/references/:number
+* 响应状态码： 200
+* 参数：无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 根据文章Id、number获取文章引用
+* GET /posts/:signId/references/:number
+* 响应状态码： 200
+* 参数：无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"id": 17,
+		"url": "https://www.jianshu.com/p/1071a1eea",
+		"title": "ddd",
+		"summary": "dddttt",
+		"number": 1
+	}
+}
+```
+
+#### 获取文章引用列表
+* GET /posts/:signId/references?pagesize=20&page=1
+* 响应状态码： 200
+* 参数：无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"count": 2,
+		"list": [{
+				"url": "https://www.jianshu.com/p/21071a1eea",
+				"title": "ddd",
+				"summary": "dddttt",
+				"number": 2
+			},
+			{
+				"url": "https://www.jianshu.com/p/41071a1eea",
+				"title": "ddd",
+				"summary": "dddttt",
+				"number": 4
+			}
+		]
+	}
+}
+```
+
+#### 草稿发布时发布引用的文章
+* POST /drafts/:draftId/references/publish
+* 响应状态码： 200
+* 参数：无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 添加/修改草稿引用
+* PUT /drafts/:signId/references
+* 响应状态码： 200
+* 参数：
+```
+{
+  "url": "https://www.jianshu.com/p/41071a1eea",
+  "title": "ddd",
+  "summary": "dddttt"
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 删除草稿引用
+* DELETE /drafts/:signId/references/:number
+* 响应状态码： 200
+* 参数：无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+
+#### 根据草稿Id、number获取文章引用
+* GET /drafts/:signId/references/:number
+* 响应状态码： 200
+* 参数：无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"id": 17,
+		"url": "https://www.jianshu.com/p/1071a1eea",
+		"title": "ddd",
+		"summary": "dddttt",
+		"number": 1
+	}
+}
+```
+
+#### 获取草稿引用列表
+* GET /drafts/:signId/references?pagesize=20&page=1
+* 响应状态码： 200
+* 参数：无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"count": 2,
+		"list": [{
+				"url": "https://www.jianshu.com/p/21071a1eea",
+				"title": "ddd",
+				"summary": "dddttt",
+				"number": 2
+			},
+			{
+				"url": "https://www.jianshu.com/p/41071a1eea",
+				"title": "ddd",
+				"summary": "dddttt",
+				"number": 4
+			}
+		]
+	}
+}
+```
+
+#### 解析引用网址的title
+* POST /posts/extractReferenceTitle
+* 响应状态码： 200
+* 参数：
+```
+{
+  "url": "https://www.jianshu.com/p/6030071a1eea"
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"ref_sign_id": 0,
+		"title": "清华学霸日程表曝光：所有牛逼背后，都有你熬不了的苦 - 简书"
+	}
+}
+```
+
+
+#### 查看本文被引用的文章列表
+* GET /posts/:signId/posts?pagesize=20&page=1
+* 响应状态码： 200
+* 参数：无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"count": 1,
+		"list": [{
+			"id": 100823,
+			"title": "比特币或是相对避险资产"
+		}]
+	}
+}
+```

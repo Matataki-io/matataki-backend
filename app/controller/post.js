@@ -773,10 +773,166 @@ class PostController extends Controller {
     }
   }
 
-  async parseCiteHTML() {
+  async extractRefTitle() {
     const ctx = this.ctx;
     const { url } = ctx.request.body;
-    return ctx.service.post.parseCiteHTML(url);
+    const result = await ctx.service.references.extractRefTitle(url);
+
+    if (result === null) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
+
+  async addReference() {
+    const ctx = this.ctx;
+    const signId = parseInt(ctx.params.id);
+    const { url, title, summary } = ctx.request.body;
+    const result = await ctx.service.references.addReference(ctx.user.id, signId, url, title, summary);
+
+    ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
+  }
+
+  async deleteReference() {
+    const ctx = this.ctx;
+    const signId = parseInt(ctx.params.id);
+    const number = parseInt(ctx.params.number);
+
+    const result = await ctx.service.references.deleteReferenceNode(ctx.user.id, signId, number);
+
+    ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
+  }
+
+  async getReference() {
+    const ctx = this.ctx;
+    const signId = parseInt(ctx.params.id);
+    const number = parseInt(ctx.params.number);
+
+    const ref = await ctx.service.references.getReference(ctx.user.id, signId, number);
+
+    if (ref === null) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = ref;
+  }
+
+  async addDraftReference() {
+    const ctx = this.ctx;
+    const draftId = parseInt(ctx.params.id);
+    const { url, title, summary } = ctx.request.body;
+    const result = await ctx.service.references.addDraftReference(ctx.user.id, draftId, url, title, summary);
+
+    ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
+  }
+
+  async deleteDraftReference() {
+    const ctx = this.ctx;
+    const draftId = parseInt(ctx.params.id);
+    const number = parseInt(ctx.params.number);
+
+    const result = await ctx.service.references.deleteDraftReferenceNode(ctx.user.id, draftId, number);
+
+    ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
+  }
+
+  async getDraftReference() {
+    const ctx = this.ctx;
+    const draftId = parseInt(ctx.params.id);
+    const number = parseInt(ctx.params.number);
+
+    const ref = await ctx.service.references.getDraftReference(ctx.user.id, draftId, number);
+
+    if (ref === null) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = ref;
+  }
+
+  async publishReferences() {
+    const ctx = this.ctx;
+    const draftId = parseInt(ctx.params.id);
+    const { signId } = ctx.request.body;
+    const result = await ctx.service.references.publish(ctx.user.id, draftId, signId);
+
+    ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
+  }
+
+  async getReferences() {
+    const ctx = this.ctx;
+    const { pagesize = 20, page = 1 } = this.ctx.query;
+
+    const signId = parseInt(ctx.params.id);
+
+    // singid缺少,此种情况用户正常使用时候不会出现
+    if (!signId) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const references = await this.service.references.getReferences(signId, parseInt(page), parseInt(pagesize));
+
+    if (references === null) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = references;
+  }
+
+  async getDraftReferences() {
+    const ctx = this.ctx;
+    const { pagesize = 20, page = 1 } = this.ctx.query;
+
+    const signId = parseInt(ctx.params.id);
+
+    // singid缺少,此种情况用户正常使用时候不会出现
+    if (!signId) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const references = await this.service.references.getDraftReferences(signId, parseInt(page), parseInt(pagesize));
+
+    if (references === null) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = references;
+  }
+
+  async refPosts() {
+    const ctx = this.ctx;
+    const { pagesize = 20, page = 1 } = this.ctx.query;
+
+    const signId = parseInt(ctx.params.id);
+
+    // singid缺少,此种情况用户正常使用时候不会出现
+    if (!signId) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const posts = await this.service.references.getPosts(signId, parseInt(page), parseInt(pagesize));
+
+    if (posts === null) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = posts;
   }
 
 }

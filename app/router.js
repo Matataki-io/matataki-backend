@@ -302,15 +302,23 @@ module.exports = app => {
   router.post('/post/currentProfile', passport.authorize, controller.post.currentProfile);
 
   // 解析引用网址内容，提取标题
-  router.post('/cite/parseCiteHTML', passport.verify, controller.post.parseCiteHTML);
-  router.put('/posts/:id/cites', passport.authorize, controller.post.addCiteNote);
-  router.delete('/posts/:id/cites/:number', passport.authorize, controller.post.deleteCiteNote);
-  router.get('/posts/:id/cites/:number', passport.authorize, controller.post.getCiteNote);
+  router.post('/posts/extractRefTitle', passport.verify, controller.post.extractRefTitle);
+  // 添加/修改引用
+  router.put('/posts/:id/references', passport.authorize, controller.post.addReference);
+  // 删除引用
+  router.delete('/posts/:id/references/:number', passport.authorize, controller.post.deleteReference);
+  // 查看单个引用
+  router.get('/posts/:id/references/:number', passport.verify, controller.post.getReference);
+  // 查看本文引用列表
+  router.get('/posts/:id/references', passport.verify, controller.post.getReferences);
+  // 查看本文被引用的文章列表
+  router.get('/posts/:id/posts', passport.verify, controller.post.refPosts);
 
-  router.put('/drafts/:id/cites', passport.authorize, controller.post.addDraftCiteNote);
-  router.delete('/drafts/:id/cites/:number', passport.authorize, controller.post.deleteDraftCiteNote);
-  router.get('/drafts/:id/cites/:number', passport.authorize, controller.post.getDraftCiteNote);
-  router.post('/drafts/:id/cites/publish', passport.authorize, controller.post.publishCites);
+  router.put('/drafts/:id/references', passport.authorize, controller.post.addDraftReference);
+  router.delete('/drafts/:id/references/:number', passport.authorize, controller.post.deleteDraftReference);
+  router.get('/drafts/:id/references/:number', passport.verify, controller.post.getDraftReference);
+  router.post('/drafts/:id/references/publish', passport.authorize, controller.post.publishReferences);
+  router.get('/drafts/:id/references', passport.verify, controller.post.getDraftReferences);
 
   // 持有流动金
   router.get('/token/holdLiquidity', passport.authorize, controller.token.getHoldLiquidity);

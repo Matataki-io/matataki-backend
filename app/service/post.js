@@ -6,8 +6,6 @@ const _ = require('lodash');
 const moment = require('moment');
 const fs = require('fs');
 const removemd = require('remove-markdown');
-const axios = require('axios');
-const htmlparser = require('node-html-parser');
 // const IpfsHttpClientLite = require('ipfs-http-client-lite');
 
 class PostService extends Service {
@@ -108,7 +106,7 @@ class PostService extends Service {
   async get(id) {
     const posts = await this.app.mysql.select('posts', {
       where: { id },
-      columns: [ 'id', 'hash', 'uid', 'title', 'status', 'create_time', 'comment_pay_point', 'channel_id' ], // todo：需要再增加
+      columns: [ 'id', 'hash', 'uid', 'title', 'short_content', 'status', 'create_time', 'comment_pay_point', 'channel_id' ], // todo：需要再增加
     });
     if (posts && posts.length > 0) {
       return posts[0];
@@ -972,16 +970,16 @@ class PostService extends Service {
   }
 
   // 获取阅读文章需要持有的tokens
-  async getMineTokens(id) {
+  async getMineTokens(signId) {
     const tokens = await this.app.mysql.query('SELECT t.id, p.amount, t.name, t.symbol, t.decimals FROM post_minetokens p INNER JOIN minetokens t ON p.token_id = t.id WHERE p.sign_id = ?;',
-      [ id ]);
+      [ signId ]);
     return tokens;
   }
 
   // 获取用户持币情况
   // id：文章的Id
-  async getHoldMineTokens(id, userId) {
-    const tokens = await this.getMineTokens(id);
+  async getHoldMineTokens(signId, userId) {
+    const tokens = await this.getMineTokens(signId);
     if (tokens === null || tokens.length === 0) {
       return null;
     }
@@ -999,8 +997,8 @@ class PostService extends Service {
   }
 
   // 判断持币阅读
-  async isHoldMineTokens(id, userId) {
-    const tokens = await this.getMineTokens(id);
+  async isHoldMineTokens(signId, userId) {
+    const tokens = await this.getMineTokens(signId);
     if (tokens === null || tokens.length === 0) {
       return true;
     }
@@ -1014,123 +1012,6 @@ class PostService extends Service {
       }
     }
     return true;
-  }
-
-
-  async parseCiteHTML(url) {
-    let cite_sign_id = 0;
-    if (url.startsWith('https://matataki.io/p/') || url.startsWith('https://www.matataki.io/p/') || url.startsWith('https://smartsignature.frontenduse.top/p/')) {
-      cite_sign_id = parseInt(url.match(/\/p\/(\d+)/)[1]);
-    }
-
-    if (cite_sign_id > 0) {
-      const post = await this.getById(cite_sign_id);
-      return {
-        cite_sign_id,
-        title: post.title,
-        summary: post.short_content,
-      };
-    }
-
-    try {
-      const rawPage = await axios.get(url, {
-        method: 'get',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        },
-      });
-
-      const title = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/);
-      return {
-        cite_sign_id,
-        title,
-      };
-    } catch (err) {
-      this.logger.error('PostService::parseCiteHTML: error:', err);
-      return null;
-    }
-  }
-
-  async addCiteNote(uid, id, url, title, summary) {
-    const sql = ` INSERT INTO post_cites (sign_id, cite_sign_id, url, title, summary, number) 
-                  SELECT :sign_id, :cite_sign_id, :url, :title, :summary, (SELECT IFNULL(MAX(number), 1) + 1 FROM post_cites WHERE sign_id = :sign_id); `;
-
-    // if (ref.url.startsWith('https://matataki.io/p/') || ref.url.startsWith('https://www.matataki.io/p/') || ref.url.startsWith('https://smartsignature.frontenduse.top/p/')) {
-    //   ref_sign_id = parseInt(ref.url.match(/\/p\/(\d+)/)[1]);
-    //   type = 'inner';
-    // }
-
-  }
-
-  async isCitePermission(uid, sign_id) {
-    return true;
-  }
-
-  // 添加引用文章
-  async addReferences(current_uid, id, refs) {
-    const post = await this.get(id);
-    if (!post) {
-      return -1;
-    }
-
-    if (post.uid !== current_uid) {
-      return -2;
-    }
-
-    const conn = await this.app.mysql.beginTransaction();
-    try {
-      await conn.query('DELETE FROM post_references WHERE sign_id = ?;', [ id ]);
-      for (const ref of refs) {
-        let ref_sign_id = 0;
-        let type = 'outer';
-        if (ref.url.startsWith('https://matataki.io/p/') || ref.url.startsWith('https://www.matataki.io/p/') || ref.url.startsWith('https://smartsignature.frontenduse.top/p/')) {
-          ref_sign_id = parseInt(ref.url.match(/\/p\/(\d+)/)[1]);
-          type = 'inner';
-        }
-
-        await conn.insert('post_references', {
-          sign_id: id,
-          ref_sign_id,
-          url: ref.url,
-          title: ref.title,
-          summary: ref.summary,
-          type,
-          create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-        });
-      }
-
-      await conn.commit();
-      return 0;
-    } catch (e) {
-      await conn.rollback();
-      this.ctx.logger.error(e);
-      return -3;
-    }
-  }
-
-  // 获取引用的文章列表
-  async getReferences(id) {
-    const articles = await this.app.mysql.query(`
-    SELECT url, title AS outer_title, type, p.id p.title, u.nickname, u.avatar 
-    FROM post_references r
-    LEFT OUTER JOIN posts p ON r.ref_sign_id = p.id
-    LEFT OUTER JOIN users u ON p.uid = u.id
-    WHERE sign_id = ?;`,
-    [ id ]);
-    return articles;
-  }
-
-  // 获取被引用的文章别表
-  async getBeReferences(id) {
-    const articles = await this.app.mysql.query(`
-    SELECT p.id, p.title, p.cover, p.uid, u.nickname, u.avatar
-    FROM post_references r 
-    INNER JOIN posts p ON r.sign_id=p.id 
-    INNER JOIN users u ON p.uid = u.id
-    WHERE ref_sign_id = ?;`,
-    [ id ]);
-    return articles;
   }
 
 
