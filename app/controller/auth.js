@@ -172,6 +172,61 @@ class AuthController extends Controller {
     ctx.body.data = jwttoken;
   }
 
+  // 微信登陆
+  async weixinLogin() {
+    const { ctx } = this;
+    const { code = null, referral = 0 } = ctx.request.body;
+    if (code === null) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    /* {
+      "access_token":"ACCESS_TOKEN",
+      "expires_in":7200,
+      "refresh_token":"REFRESH_TOKEN",
+      "openid":"OPENID",
+      "scope":"SCOPE"
+    } */
+    const accessTokenResult = await ctx.service.wechat.getAccessToken(code);
+    if (accessTokenResult.data.errcode) {
+      ctx.body = {
+        ...ctx.msg.generateTokenError,
+        data: accessTokenResult.data,
+      };
+      return;
+    }
+    const { access_token, openid } = accessTokenResult.data;
+    const userInfo = await ctx.service.wechat.getUserInfo(access_token, openid);
+    if (userInfo.data.errcode) {
+      ctx.body = {
+        ...ctx.msg.generateTokenError,
+        data: userInfo.data,
+      };
+      return;
+    }
+    /* {
+      "openid":" OPENID",
+      "nickname": NICKNAME,
+      "sex":"1",
+      "province":"PROVINCE"
+      "city":"CITY",
+      "country":"COUNTRY",
+      "headimgurl": "http://thirdwx.qlogo.cn/mmopen/g3MonUZtNHkdmzicIlibx6iaFqAc56vxLSUfpb6n5WKSYVY0ChQKkiaJSgQ1dZuTOgvLLrhJbERQQ4eMsv84eavHiaiceqxibJxCfHe/46",
+      "privilege":[ "PRIVILEGE1" "PRIVILEGE2"     ],
+      "unionid": "o6_bmasdasdsad6_2sgVt7hMZOPfL"
+    } */
+    // 创建， 设置用户
+    const { nickname, headimgurl } = userInfo.data;
+    const jwttoken = await this.service.auth.saveUser(openid, nickname, headimgurl, this.clientIP, referral, 'weixin');
+    if (jwttoken === null) {
+      ctx.body = ctx.msg.generateTokenError;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: jwttoken,
+    };
+  }
 
   // 验证邮箱是否存在
   async verifyReg() {
