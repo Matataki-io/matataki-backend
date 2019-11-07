@@ -100,7 +100,7 @@ class AuthService extends Service {
         const duplicatedNickname = await this.app.mysql.get('users', { nickname });
 
         if (duplicatedNickname !== null) {
-          nickname = 'github_' + nickname;
+          nickname = `${platform}_${nickname}`;
         }
 
         const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);

@@ -188,8 +188,22 @@ class AuthController extends Controller {
       "scope":"SCOPE"
     } */
     const accessTokenResult = await ctx.service.wechat.getAccessToken(code);
+    if (accessTokenResult.data.errcode) {
+      ctx.body = {
+        ...ctx.msg.generateTokenError,
+        data: accessTokenResult.data,
+      };
+      return;
+    }
     const { access_token, openid } = accessTokenResult.data;
     const userInfo = await ctx.service.wechat.getUserInfo(access_token, openid);
+    if (userInfo.data.errcode) {
+      ctx.body = {
+        ...ctx.msg.generateTokenError,
+        data: userInfo.data,
+      };
+      return;
+    }
     /* {
       "openid":" OPENID",
       "nickname": NICKNAME,

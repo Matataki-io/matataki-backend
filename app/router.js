@@ -213,10 +213,10 @@ module.exports = app => {
   // 微信支付接口
   router.post('/wx/pay', passport.authorize, controller.wxpay.pay);
   // 微信登录获取openid
-  router.post('/wx/login', controller.wxpay.login);
+  router.post('/wx/login', passport.verify, controller.wxpay.login);
 
   // 微信登录
-  router.post('/login/weixin', controller.auth.weixinLogin);
+  router.post('/login/weixin', passport.verify, controller.auth.weixinLogin);
 
   // 创建token
   router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
