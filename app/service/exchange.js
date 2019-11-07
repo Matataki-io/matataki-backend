@@ -2,12 +2,6 @@
 const Service = require('egg').Service;
 const moment = require('moment');
 const DEADLINE = 300; // 超时时间300秒
-const typeOptions = {
-  add: 'add',
-  buy_token: 'buy_token',
-  sale_token: 'sale_token',
-};
-
 
 class ExchangeService extends Service {
   async createOrder(order) {
@@ -19,42 +13,6 @@ class ExchangeService extends Service {
     );
     const createSuccess = (result.affectedRows !== 0);
     return createSuccess;
-  }
-  async createOrderByInput(order) {
-    /* const { ctx } = this;
-    // 创建订单，status为0
-    const createSuccess = await this.createOrder({
-      uid: ctx.user.id, // 用户id
-      token_id, // 购买的token id
-      cny_amount: total,
-      token_amount: '',
-      type: typeOptions[type], // 类型：add，buy_token，sale_token
-      trade_no: order.out_trade_no, // 订单号
-      openid: '',
-      status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成
-      min_liquidity: 0, // 资金池pool最小流动性
-      max_tokens: 0, // output为准，最多获得CNY
-      min_tokens: 0, // input为准时，最少获得Token
-      recipient: ctx.user.id, // 接收者
-      ip: order.spbill_create_ip, // ip
-    });
-    if (!createSuccess) {
-      return false;
-    }
-    const payargs = await this.app.wxpay.getBrandWCPayRequestParams(order);
-    ctx.logger.info('controller wxpay pay result', payargs);
-    if (payargs.code_url) {
-      // 更新订单状态为‘支付中’：3
-      await this.setStatusPending(order.out_trade_no);
-      return payargs;
-    }
-    return false; */
-  }
-  async createOrderByOutput(order) {
-
-  }
-  async createOrderByPool(order) {
-
   }
   // 根据订单号查询
   async getOrderBytradeNo(trade_no) {

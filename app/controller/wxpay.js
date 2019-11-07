@@ -11,23 +11,6 @@ const typeOptions = {
 };
 
 class WxPayController extends Controller {
-
-  /* // 接口回调
-  async notify() {
-    const { ctx } = this;
-    const info = ctx.request.weixin;
-    ctx.logger.info('wxpay notify info', info);
-    // 业务逻辑...
-
-    // 回复消息(参数为空回复成功, 传值则为错误消息)
-    ctx.reply('错误消息' || '');
-  }
-
-  async pay() {
-    const { ctx } = this;
-    await ctx.service.wxpay.unifiedOrder();
-  } */
-
   async pay() {
     const { ctx } = this;
     // total: 输入的cny数值，单位元
@@ -183,7 +166,7 @@ class WxPayController extends Controller {
   }
   // 企业付款
   async transfers() {
-    const payargs = await this.app.wxpay.transfers({
+    const payargs = await this.app.tenpay.transfers({
       partner_trade_no: 'kfc003', // 商户订单号，需保持唯一性
       openid: '', // 用户openid
       check_name: 'NO_CHECK', // 校验用户姓名选项 NO_CHECK：不校验真实姓名 , FORCE_CHECK：强校验真实姓名
