@@ -102,7 +102,7 @@ class WxPayController extends Controller {
       payargs = await this.app.tenpay.unifiedOrder(order);
     }
     ctx.logger.info('controller wxpay pay result', payargs);
-    if (payargs.appId) {
+    if (payargs.appId || payargs.appid) {
       // 更新订单状态为‘支付中’：3
       await ctx.service.exchange.setStatusPending(order.out_trade_no);
       ctx.body = {
