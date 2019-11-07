@@ -179,23 +179,7 @@ class WxPayController extends Controller {
       "scope":"SCOPE"
     } */
     const accessTokenResult = await ctx.service.wechat.getAccessToken(code);
-    const { access_token, openid } = accessTokenResult.data;
-    const useInfo = await ctx.service.wechat.getUserInfo(access_token, openid);
-    /* {
-      "openid":" OPENID",
-      " nickname": NICKNAME,
-      "sex":"1",
-      "province":"PROVINCE"
-      "city":"CITY",
-      "country":"COUNTRY",
-      "headimgurl": "http://thirdwx.qlogo.cn/mmopen/g3MonUZtNHkdmzicIlibx6iaFqAc56vxLSUfpb6n5WKSYVY0ChQKkiaJSgQ1dZuTOgvLLrhJbERQQ4eMsv84eavHiaiceqxibJxCfHe/46",
-      "privilege":[ "PRIVILEGE1" "PRIVILEGE2"     ],
-      "unionid": "o6_bmasdasdsad6_2sgVt7hMZOPfL"
-    } */
-    this.ctx.body = {
-      accessToken: accessTokenResult.data,
-      useInfo: useInfo.data,
-    };
+    this.ctx.body = accessTokenResult;
   }
   // 企业付款
   async transfers() {

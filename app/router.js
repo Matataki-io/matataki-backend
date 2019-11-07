@@ -215,6 +215,9 @@ module.exports = app => {
   // 微信登录获取openid
   router.post('/wx/login', controller.wxpay.login);
 
+  // 微信登录
+  router.post('/login/weixin', controller.auth.weixinLogin);
+
   // 创建token
   router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
   router.post('/minetoken/mint', passport.authorize, controller.mineToken.mint);
