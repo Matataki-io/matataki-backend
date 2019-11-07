@@ -11,23 +11,6 @@ const typeOptions = {
 };
 
 class WxPayController extends Controller {
-
-  /* // 接口回调
-  async notify() {
-    const { ctx } = this;
-    const info = ctx.request.weixin;
-    ctx.logger.info('wxpay notify info', info);
-    // 业务逻辑...
-
-    // 回复消息(参数为空回复成功, 传值则为错误消息)
-    ctx.reply('错误消息' || '');
-  }
-
-  async pay() {
-    const { ctx } = this;
-    await ctx.service.wxpay.unifiedOrder();
-  } */
-
   async pay() {
     const { ctx } = this;
     // total: 输入的cny数值，单位元
@@ -102,7 +85,7 @@ class WxPayController extends Controller {
       payargs = await this.app.tenpay.unifiedOrder(order);
     }
     ctx.logger.info('controller wxpay pay result', payargs);
-    if (payargs.appId) {
+    if (payargs.appId || payargs.appid) {
       // 更新订单状态为‘支付中’：3
       await ctx.service.exchange.setStatusPending(order.out_trade_no);
       ctx.body = {
@@ -134,8 +117,8 @@ class WxPayController extends Controller {
       trade_type: 'NATIVE',
       transaction_id: '4200000416201909240710109485'
     }*/
-    const { result_code, return_code, out_trade_no } = ctx.request.body;// 订单号
-    ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.body);
+    const { result_code, return_code, out_trade_no } = ctx.request.weixin;
+    ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.weixin);
     // 支付成功
     if (return_code === 'SUCCESS' && result_code === 'SUCCESS') {
       // 修改订单状态
@@ -183,7 +166,7 @@ class WxPayController extends Controller {
   }
   // 企业付款
   async transfers() {
-    const payargs = await this.app.wxpay.transfers({
+    const payargs = await this.app.tenpay.transfers({
       partner_trade_no: 'kfc003', // 商户订单号，需保持唯一性
       openid: '', // 用户openid
       check_name: 'NO_CHECK', // 校验用户姓名选项 NO_CHECK：不校验真实姓名 , FORCE_CHECK：强校验真实姓名
@@ -206,8 +189,8 @@ class WxPayController extends Controller {
   }
   async refundNotify() {
     const { ctx } = this;
-    const { return_code, out_trade_no } = ctx.request.body;// 订单号
-    ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.body);
+    const { return_code, out_trade_no } = ctx.request.weixin;// 订单号
+    ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.weixin);
     ctx.body = `<xml>
                   <return_code><![CDATA[SUCCESS]]></return_code>
                   <return_msg><![CDATA[OK]]></return_msg>
