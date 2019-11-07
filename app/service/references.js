@@ -45,7 +45,9 @@ class ReferencesService extends Service {
         },
       });
 
-      this.logger.error('References::extractRefTitle: debug rawpage data:', rawPage.data);
+      const resultx = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/);
+      const t1 = resultx.length > 1 ? resultx[1] : '';
+      this.logger.error('References::extractRefTitle: debug rawpage data:', t1);
 
       const result = rawPage.data.match(/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/); // /<title.*?>([\S\s]*?)<\/title>/
       let title = '';
