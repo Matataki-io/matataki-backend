@@ -45,7 +45,9 @@ class ReferencesService extends Service {
         },
       });
 
-      const result = rawPage.data.match(/(?<=\<title.*?\>)[\S\s]*?(?=\<\/title\>)/); // /<title.*?>([\S\s]*?)<\/title>/   /(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/
+      this.logger.error('References::extractRefTitle: debug rawpage data:', rawPage.data);
+
+      const result = rawPage.data.match(/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/); // /<title.*?>([\S\s]*?)<\/title>/
       let title = '';
       if (result && result.length > 0) {
         title = result[0];
@@ -55,7 +57,7 @@ class ReferencesService extends Service {
         title,
       };
     } catch (err) {
-      this.logger.error('PostService::parseReferenceHTML: error:', err);
+      this.logger.error('References::extractRefTitle: error:', err);
       return null;
     }
   }
