@@ -3,8 +3,8 @@ const axios = require('axios');
 const moment = require('moment');
 const Service = require('egg').Service;
 
-const domains = [ 'https://wwwtest.smartsignature.io/p/', 'https://wwwtest.smartsignature.io/p/', 'https://test.frontenduse.top/p/',
-  'https://matataki.io/p/', 'https://www.matataki.io/p/', 'https://smartsignature.frontenduse.top/p/' ];
+const domains = ['https://wwwtest.smartsignature.io/p/', 'https://wwwtest.smartsignature.io/p/', 'https://test.frontenduse.top/p/',
+  'https://matataki.io/p/', 'https://www.matataki.io/p/', 'https://smartsignature.frontenduse.top/p/'];
 
 class ReferencesService extends Service {
   // 是否是内部的文章
@@ -36,6 +36,7 @@ class ReferencesService extends Service {
       };
     }
 
+    let title = '';
     try {
       const rawPage = await axios.get(url, {
         method: 'get',
@@ -46,7 +47,7 @@ class ReferencesService extends Service {
       });
 
       const result = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/); // /<title.*?>([\S\s]*?)<\/title>/，/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/
-      let title = '';
+
       if (result && result.length > 1) {
         title = result[1];
       }
@@ -56,7 +57,10 @@ class ReferencesService extends Service {
       };
     } catch (err) {
       this.logger.error('References::extractRefTitle: error:', err);
-      return null;
+      return {
+        ref_sign_id,
+        title,
+      };
     }
   }
 
@@ -170,7 +174,7 @@ class ReferencesService extends Service {
 
   async getDraftReference(uid, draftId, number) {
     const references = await this.app.mysql.select('post_references', {
-      columns: [ 'id', 'url', 'title', 'summary', 'number' ],
+      columns: ['id', 'url', 'title', 'summary', 'number'],
       where: { draft_id: draftId, number },
     });
     if (references.length > 0) {
@@ -181,7 +185,7 @@ class ReferencesService extends Service {
   }
   async getReference(uid, signId, number) {
     const references = await this.app.mysql.select('post_references', {
-      columns: [ 'id', 'url', 'title', 'summary', 'number' ],
+      columns: ['id', 'url', 'title', 'summary', 'number'],
       where: { sign_id: signId, number },
     });
     if (references.length > 0) {
@@ -221,7 +225,7 @@ class ReferencesService extends Service {
     WHERE draft_id = :draftId and status = 0
     LIMIT :start, :end;
     SELECT COUNT(*) AS count FROM post_references WHERE draft_id = :draftId and status = 0;`,
-    { draftId, start: (page - 1) * pagesize, end: 1 * pagesize });
+      { draftId, start: (page - 1) * pagesize, end: 1 * pagesize });
     return {
       count: references[1][0].count,
       list: references[0],
@@ -234,7 +238,7 @@ class ReferencesService extends Service {
     WHERE sign_id = :signId and status = 0
     LIMIT :start, :end;
     SELECT COUNT(*) AS count FROM post_references WHERE sign_id = :signId and status = 0;`,
-    { signId, start: (page - 1) * pagesize, end: 1 * pagesize });
+      { signId, start: (page - 1) * pagesize, end: 1 * pagesize });
     return {
       count: references[1][0].count,
       list: references[0],
@@ -250,7 +254,7 @@ class ReferencesService extends Service {
     WHERE r.ref_sign_id = :id AND r.status = 0
     LIMIT :start, :end;
     SELECT COUNT(*) AS count FROM post_references WHERE ref_sign_id = :id AND sign_id > 0 AND status = 0;`,
-    { id: signId, start: (page - 1) * pagesize, end: 1 * pagesize });
+      { id: signId, start: (page - 1) * pagesize, end: 1 * pagesize });
     return {
       count: references[1][0].count,
       list: references[0],
