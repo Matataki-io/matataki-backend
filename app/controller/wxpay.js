@@ -135,6 +135,8 @@ class WxPayController extends Controller {
       transaction_id: '4200000416201909240710109485'
     }*/
     const { result_code, return_code, out_trade_no } = ctx.request.body;// 订单号
+    console.log(ctx.request.weixin);
+    ctx.logger.info('wxpay notify weixin info', ctx.request.weixin, ctx.request, ctx);
     ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.body);
     // 支付成功
     if (return_code === 'SUCCESS' && result_code === 'SUCCESS') {
