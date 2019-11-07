@@ -45,14 +45,10 @@ class ReferencesService extends Service {
         },
       });
 
-      const resultx = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/);
-      const t1 = resultx.length > 1 ? resultx[1] : '';
-      this.logger.error('References::extractRefTitle: debug rawpage data:', t1);
-
-      const result = rawPage.data.match(/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/); // /<title.*?>([\S\s]*?)<\/title>/
+      const result = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/); // /<title.*?>([\S\s]*?)<\/title>/，/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/
       let title = '';
-      if (result && result.length > 0) {
-        title = result[0];
+      if (result && result.length > 1) {
+        title = result[1];
       }
       return {
         ref_sign_id,
