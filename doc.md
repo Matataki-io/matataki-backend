@@ -2974,7 +2974,7 @@ symbol-desc：字母倒序
 ```
 
 #### 根据草稿Id、number获取文章引用
-* GET /drafts/:signId/references/:number
+* GET /drafts/:draftId/references/:number
 * 响应状态码： 200
 * 参数：无
 * 请求头：x-access-token
