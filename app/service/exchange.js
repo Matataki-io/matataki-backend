@@ -82,6 +82,18 @@ class ExchangeService extends Service {
       list: result[0],
     };
   }
+  async getTokenBySymbol(symbol) {
+    const sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount
+                FROM mineTokens AS t1 
+                Left JOIN users AS t2 ON t1.uid = t2.id 
+                LEFT JOIN exchanges as t3 ON t1.id = t3.token_id 
+                LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id
+                WHERE t1.symbol = :symbol`;
+    const result = await this.app.mysql.query(sql, {
+      symbol,
+    });
+    return result;
+  }
   // 所有的token
   async getAllToken(page = 1, pagesize = 20, search = '', sort) {
     let sortArray = null;

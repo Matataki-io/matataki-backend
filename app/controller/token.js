@@ -104,6 +104,15 @@ class TokenController extends Controller {
       data: result,
     };
   }
+  async getTokenBySymbol() {
+    const { ctx } = this;
+    const { symbol } = ctx.query;
+    const result = await ctx.service.exchange.getTokenBySymbol(symbol);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
   // 我发行的粉丝币-流水详情
   async userTokenFlow() {
     const { ctx } = this;
