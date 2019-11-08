@@ -67,10 +67,7 @@ class WxPayController extends Controller {
       spbill_create_ip: ip, // 请求的ip地址
     };
     ctx.logger.info('controller wxpay pay params', order);
-    let payargs = {
-      // eslint-disable-next-line no-bitwise
-      timeStamp: '' + (Date.now() / 1000 | 0),
-    };
+    let payargs = {};
     if (trade_type === 'JSAPI') {
       order = {
         ...order,
@@ -92,6 +89,8 @@ class WxPayController extends Controller {
       // 更新订单状态为‘支付中’：3
       await ctx.service.exchange.setStatusPending(order.out_trade_no);
       ctx.body = {
+        // eslint-disable-next-line no-bitwise
+        timeStamp: '' + (Date.now() / 1000 | 0),
         ...payargs,
         trade_no: order.out_trade_no,
       };
