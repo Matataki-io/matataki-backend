@@ -92,7 +92,7 @@ class ExchangeService extends Service {
     const result = await this.app.mysql.query(sql, {
       symbol,
     });
-    return result;
+    return result[0] || null;
   }
   // 所有的token
   async getAllToken(page = 1, pagesize = 20, search = '', sort) {
