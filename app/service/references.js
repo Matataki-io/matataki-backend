@@ -2,6 +2,7 @@
 const axios = require('axios');
 const moment = require('moment');
 const Service = require('egg').Service;
+const htmlparser = require('node-html-parser');
 
 const domains = [ 'https://wwwtest.smartsignature.io/p/', 'https://wwwtest.smartsignature.io/p/', 'https://test.frontenduse.top/p/',
   'https://matataki.io/p/', 'https://www.matataki.io/p/', 'https://smartsignature.frontenduse.top/p/' ];
@@ -37,6 +38,7 @@ class ReferencesService extends Service {
     }
 
     let title = '';
+    let summary = '';
     try {
       const rawPage = await axios.get(url, {
         method: 'get',
@@ -46,20 +48,28 @@ class ReferencesService extends Service {
         },
       });
 
-      const result = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/); // /<title.*?>([\S\s]*?)<\/title>/，/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/
-
-      if (result && result.length > 1) {
-        title = result[1];
+      // const parsedPage = htmlparser.parse(rawPage.data);
+      const resultTitle = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/); // /<title.*?>([\S\s]*?)<\/title>/，/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/
+      if (resultTitle && resultTitle.length > 1) {
+        title = resultTitle[1];
       }
+
+      const resultContent = rawPage.data.match(/<meta.*?name="description".*?content=["|']*(.*?)["|'|\/]*>/);
+      if (resultContent && resultContent.length > 1) {
+        summary = resultContent[1];
+      }
+
       return {
         ref_sign_id,
         title,
+        summary,
       };
     } catch (err) {
       this.logger.error('References::extractRefTitle: error:', err);
       return {
         ref_sign_id,
         title,
+        summary,
       };
     }
   }
