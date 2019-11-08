@@ -88,7 +88,7 @@ class ExchangeService extends Service {
                 Left JOIN users AS t2 ON t1.uid = t2.id 
                 LEFT JOIN exchanges as t3 ON t1.id = t3.token_id 
                 LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id
-                WHERE t1.symbol = :symbol`;
+                WHERE LOWER(t1.symbol) = LOWER(:symbol)`;
     const result = await this.app.mysql.query(sql, {
       symbol,
     });
