@@ -164,7 +164,14 @@ class WxPayController extends Controller {
       "scope":"SCOPE"
     } */
     const accessTokenResult = await ctx.service.wechat.getAccessToken(code);
-    this.ctx.body = accessTokenResult;
+    if (accessTokenResult.data.errcode) {
+      ctx.body = {
+        ...ctx.msg.generateTokenError,
+        data: accessTokenResult.data,
+      };
+      return;
+    }
+    ctx.body = accessTokenResult.data;
   }
   // 企业付款
   async transfers() {
