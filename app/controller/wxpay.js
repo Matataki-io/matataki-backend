@@ -67,7 +67,9 @@ class WxPayController extends Controller {
       spbill_create_ip: ip, // 请求的ip地址
     };
     ctx.logger.info('controller wxpay pay params', order);
-    let payargs = {};
+    let payargs = {
+      timeStamp: '' + (Date.now() / 1000 | 0),
+    };
     if (trade_type === 'JSAPI') {
       order = {
         ...order,
