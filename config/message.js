@@ -118,6 +118,7 @@ module.exports = {
   tokenNoCreatePermission: 10805,
   exchangeNotEnough: 10806,
   exchangeNotExist: 10807,
+  orderHandled: 10900,
 
   returnObj(lang) {
 
@@ -193,6 +194,7 @@ module.exports = {
       tokenNoCreatePermission: { code: this.tokenNoCreatePermission, message: 'You do not have permission to create a token.' },
       exchangeNotEnough: { code: this.exchangeNotEnough, message: 'There is not enough liquidity.' },
       exchangeNotExist: { code: this.exchangeNotExist, message: 'No swap pairs.' },
+      orderHandled: { code: this.orderHandled, message: 'order handle' },
     };
 
     const zh = {
@@ -267,6 +269,7 @@ module.exports = {
       tokenNoCreatePermission: { code: this.tokenNoCreatePermission, message: '你没有权限发币' },
       exchangeNotEnough: { code: this.exchangeNotEnough, message: '流动性不足' },
       exchangeNotExist: { code: this.exchangeNotExist, message: '没有交易对.' },
+      orderHandled: { code: this.orderHandled, message: '订单已处理' },
     };
 
     let message;

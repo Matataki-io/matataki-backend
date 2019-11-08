@@ -330,5 +330,9 @@ module.exports = app => {
   router.get('/token/myLiquidityLogs', passport.authorize, controller.token.getMyLiquidityLogs);
   router.get('/token/purchaseLogs', passport.verify, controller.token.getPurchaseLog);
   router.get('/token/myPurchaseLogs', passport.authorize, controller.token.getMyPurchaseLog);
+
+  // 修改wxpay的微信支付
+  router.post('/order/create', passport.authorize, controller.wxpay.createOrder);
+  router.post('/order/pay', passport.authorize, controller.wxpay.wxpay);
 };
 
