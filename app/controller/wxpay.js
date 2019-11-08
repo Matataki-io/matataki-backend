@@ -68,6 +68,7 @@ class WxPayController extends Controller {
     };
     ctx.logger.info('controller wxpay pay params', order);
     let payargs = {
+      // eslint-disable-next-line no-bitwise
       timeStamp: '' + (Date.now() / 1000 | 0),
     };
     if (trade_type === 'JSAPI') {
