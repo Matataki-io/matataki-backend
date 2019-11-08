@@ -136,7 +136,7 @@ class ReferencesService extends Service {
 
     try {
       await this.app.mysql.update('post_references',
-        { sign_id: signId },
+        { draft_id: 0, sign_id: signId },
         {
           where: { draft_id: draftId },
         });
