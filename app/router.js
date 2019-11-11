@@ -333,6 +333,7 @@ module.exports = app => {
 
   // 修改wxpay的微信支付
   router.post('/order/create', passport.authorize, controller.wxpay.createOrder);
+  router.get('/order/get/:id', passport.authorize, controller.wxpay.getOrder);
   router.post('/order/pay', passport.authorize, controller.wxpay.wxpay);
 };
 
