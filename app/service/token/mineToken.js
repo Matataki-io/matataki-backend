@@ -274,7 +274,7 @@ class MineTokenService extends Service {
     const sql
       = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type,
         m.name, m.symbol, m.decimals,
-        u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar, 
+        u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar,
         u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar
         FROM (
           SELECT * FROM assets_minetokens_log WHERE token_id = :tokenId ORDER BY id DESC LIMIT :offset, :limit
@@ -299,7 +299,7 @@ class MineTokenService extends Service {
     const sql
       = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type,
         m.name, m.symbol, m.decimals,
-        u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar, 
+        u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar,
         u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar
         FROM (
           SELECT * FROM assets_minetokens_log WHERE token_id = :tokenId AND (from_uid = :userId OR to_uid = :userId) ORDER BY id DESC LIMIT :offset, :limit
@@ -323,14 +323,14 @@ class MineTokenService extends Service {
   async getHoldLiquidity(userId, page = 1, pagesize = 10) {
     const sql = `
       SELECT t1.token_id, t1.liquidity_balance, t1.create_time,
-        t2.total_supply, 
+        t2.total_supply,
         t3.name, t3.symbol, decimals, t3.logo,
         t4.username, t4.nickname
-      FROM exchange_balances AS t1 
-      LEFT JOIN exchanges AS t2 ON t1.token_id = t2.token_id 
-      LEFT JOIN minetokens AS t3 ON t1.token_id = t3.id 
-      LEFT JOIN users as t4 ON t3.uid = t4.id
-      WHERE t1.uid = :userId 
+      FROM exchange_balances AS t1
+      JOIN exchanges AS t2 USING (token_id)
+      JOIN minetokens AS t3 ON t1.token_id = t3.id
+      JOIN users as t4 ON t3.uid = t4.id
+      WHERE t1.uid = :userId
       LIMIT :offset, :limit;
       SELECT count(1) AS count FROM exchange_balances WHERE uid = :userId;`;
     const result = await this.app.mysql.query(sql, {
@@ -347,11 +347,11 @@ class MineTokenService extends Service {
   async getLiquidityLogs(tokenId, userId = null, page = 1, pagesize = 10) {
     let sql = `
       SELECT t1.id, t1.uid, t1.token_id,t1.cny_amount,t1.token_amount,t1.liquidity,t1.create_time,
-      t2.name,t2.symbol,t2.decimals,t2.total_supply,t2.logo, 
+      t2.name,t2.symbol,t2.decimals,t2.total_supply,t2.logo,
       t3.username, t3.nickname
-      FROM exchange_liquidity_logs AS t1 
-      Left JOIN minetokens AS t2 ON t1.token_id = t2.id 
-      LEFT JOIN users as t3 ON t2.uid = t3.id 
+      FROM exchange_liquidity_logs AS t1
+      JOIN minetokens AS t2 ON t1.token_id = t2.id
+      JOIN users as t3 ON t2.uid = t3.id
       `;
     let params = {
       tokenId,
@@ -390,10 +390,10 @@ class MineTokenService extends Service {
   async getPurchaseLog(tokenId, userId = null, page = 1, pagesize = 100) {
     let sql = `
       SELECT t1.*,
-      CASE WHEN t1.sold_token_id = :tokenId 
+      CASE WHEN t1.sold_token_id = :tokenId
       THEN 'sell' ELSE 'buy'
-      END 'direction' 
-      FROM exchange_purchase_logs AS t1 
+      END 'direction'
+      FROM exchange_purchase_logs AS t1
       WHERE (t1.sold_token_id = :tokenId OR t1.bought_token_id = :tokenId)`;
     let params = {
       tokenId,
@@ -401,7 +401,7 @@ class MineTokenService extends Service {
     // 如果useId存在
     if (userId) {
       sql += `
-        AND (uid = :userId OR recipient = :userId) 
+        AND (uid = :userId OR recipient = :userId)
         ORDER BY create_time DESC LIMIT :offset, :limit;`;
       params = {
         ...params,
@@ -434,9 +434,9 @@ class MineTokenService extends Service {
         t3.name, t3.symbol, decimals, t3.logo,
         t4.username, t4.nickname
       FROM exchange_balances AS t1
-      LEFT JOIN exchanges AS t2 USING (token_id)
-      LEFT JOIN minetokens AS t3 ON t1.token_id = t3.id
-      LEFT JOIN users as t4 ON t3.uid = t4.id
+      JOIN exchanges AS t2 USING (token_id)
+      JOIN minetokens AS t3 ON t1.token_id = t3.id
+      JOIN users as t4 ON t3.uid = t4.id
       WHERE token_id = :tokenId
       LIMIT :offset, :limit;
       SELECT count(1) AS count FROM exchange_balances WHERE token_id = :tokenId;`;
