@@ -256,6 +256,18 @@ class TokenController extends Controller {
     };
   }
 
+  // 流动金持仓用户列表
+  async getUserListOfLiquidity() {
+    const { ctx } = this;
+    const { tokenId, pagesize = 10, page = 1 } = ctx.query;
+    const result = await ctx.service.token.mineToken.getUserListOfLiquidity(tokenId, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        ...result,
+      },
+    };
+  }
 }
 
 module.exports = TokenController;

@@ -426,6 +426,30 @@ class MineTokenService extends Service {
     }
     return result;
   }
+
+  async getUserListOfLiquidity(tokenId, page = 1, pagesize = 10) {
+    const sql = `
+      SELECT t1.token_id, t1.liquidity_balance, t1.create_time,
+        t2.total_supply,
+        t3.name, t3.symbol, decimals, t3.logo,
+        t4.username, t4.nickname
+      FROM exchange_balances AS t1
+      LEFT JOIN exchanges AS t2 USING (token_id)
+      LEFT JOIN minetokens AS t3 ON t1.token_id = t3.id
+      LEFT JOIN users as t4 ON t3.uid = t4.id
+      WHERE token_id = :tokenId
+      LIMIT :offset, :limit;
+      SELECT count(1) AS count FROM exchange_balances WHERE token_id = :tokenId;`;
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      tokenId,
+    });
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
+  }
 }
 
 module.exports = MineTokenService;
