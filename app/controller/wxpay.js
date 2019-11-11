@@ -125,9 +125,13 @@ class WxPayController extends Controller {
     const { ctx } = this;
     const { id } = ctx.params;
     const result = await ctx.service.exchange.getOrderBytradeNo(id);
+    const token = await ctx.service.token.mineToken.get(result.token_id);
     ctx.body = {
       ...ctx.msg.success,
-      data: result,
+      data: {
+        order: result,
+        token,
+      },
     };
   }
   async pay() {
