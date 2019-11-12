@@ -269,6 +269,20 @@ class TokenController extends Controller {
       },
     };
   }
+
+  // 流动金流水列表
+  async getLiquidityTransactions() {
+    const { ctx } = this;
+    const { pagesize = 10, page = 1 } = ctx.query;
+    const tokenId = parseInt(ctx.params.id);
+    const result = await ctx.service.token.mineToken.getLiquidityTransactions(tokenId, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        ...result,
+      },
+    };
+  }
 }
 
 module.exports = TokenController;
