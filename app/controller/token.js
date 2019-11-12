@@ -257,11 +257,11 @@ class TokenController extends Controller {
   }
 
   // 流动金持仓用户列表
-  async getUserListOfLiquidity() {
+  async getLiquidityBalances() {
     const { ctx } = this;
     const { pagesize = 10, page = 1 } = ctx.query;
     const tokenId = parseInt(ctx.params.id);
-    const result = await ctx.service.token.mineToken.getUserListOfLiquidity(tokenId, parseInt(page), parseInt(pagesize));
+    const result = await ctx.service.token.mineToken.getLiquidityBalances(tokenId, parseInt(page), parseInt(pagesize));
     ctx.body = {
       ...ctx.msg.success,
       data: {

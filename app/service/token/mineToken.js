@@ -427,7 +427,7 @@ class MineTokenService extends Service {
     return result;
   }
 
-  async getUserListOfLiquidity(tokenId, page = 1, pagesize = 10) {
+  async getLiquidityBalances(tokenId, page = 1, pagesize = 10) {
     const sql = `
       SELECT t1.uid, t1.token_id, t1.liquidity_balance, t1.create_time,
         t2.total_supply,
