@@ -385,11 +385,14 @@ class AuthService extends Service {
     return await this.app.mysql.get('users', { username, platform });
   }
 
-  async eth_auth(sig, msgParams, publickey) {
+  eth_auth(sig, msgParams, publickey) {
+    // 目前仅允许 {signatureValidityPeriod} 秒内的签名请求
+    const signatureValidityPeriod = 3 * 60;
     const { message } = JSON.parse(msgParams);
     if (message.from !== publickey) return false; // 不能签别人钱包地址
-    // @Todo: 应该从msgParams.time 检测签署的时间，仅允许x分钟内的签名请求
-    // message.time < now - x ?
+    // 从msgParams.time 检测签署的时间，
+    const timeDiff = new Date().getTime() - message.time;
+    if (timeDiff > signatureValidityPeriod * 1000) return false;
     const recovered = sigUtil.recoverTypedSignature({ data: JSON.parse(msgParams), sig });
     return ethUtil.toChecksumAddress(recovered) === ethUtil.toChecksumAddress(publickey);
   }

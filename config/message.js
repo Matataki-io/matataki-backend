@@ -59,6 +59,8 @@ module.exports = {
   alreadyRegisted: 10016,
   // 密码错误
   passwordWrong: 10017,
+  // 签名过期
+  signatureExpired: 10018,
 
   // post相关
   postNotFound: 10100,
@@ -145,6 +147,7 @@ module.exports = {
       unsupportedPlatform: { code: this.unsupportedPlatform, message: 'Unsupported platform' },
       invalidSignature: { code: this.invalidSignature, message: 'Invalid signature' },
       signatureVerifyFailed: { code: this.signatureVerifyFailed, message: 'Signature verify failed' },
+      signatureExpired: { code: this.signatureExpired, message: 'Your signature was expired' },
 
       captchaRatelimit: { code: this.captchaRatelimit, message: 'Captcha rate limit' },
       captchaWrong: { code: this.captchaWrong, message: 'wrong captcha' },
@@ -220,6 +223,7 @@ module.exports = {
       unsupportedPlatform: { code: this.unsupportedPlatform, message: '不支持的授权平台' },
       invalidSignature: { code: this.invalidSignature, message: '错误的签名信息' },
       signatureVerifyFailed: { code: this.signatureVerifyFailed, message: '签名信息验证失败' },
+      signatureExpired: { code: this.signatureExpired, message: '签名已经过期' },
 
       captchaRatelimit: { code: this.captchaRatelimit, message: '获取验证码操作次数过多' },
       captchaWrong: { code: this.captchaWrong, message: '验证码错误' },
