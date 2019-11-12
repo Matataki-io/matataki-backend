@@ -1014,6 +1014,50 @@ class PostService extends Service {
     return true;
   }
 
+  async addPrices(signId, userId, symbol, price) {
+    const post = await this.get(signId);
+    if (!post) {
+      return -1;
+    }
+
+    if (post.uid !== userId) {
+      return -2;
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      await conn.query('DELETE FROM product_prices WHERE sign_id = ?;', [ signId ]);
+
+      await conn.insert('product_prices', {
+        sign_id: signId,
+        title: post.title,
+        sku: signId,
+        stock_quantity: 0,
+        platform: 'cny',
+        symbol: 'CNY',
+        price,
+        decimals: 4,
+        status: 1,
+      });
+
+      await conn.update('posts',
+        {
+          require_buy: require,
+        },
+        {
+          where: {
+            signId,
+          },
+        });
+
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.ctx.logger.error(e);
+      return -3;
+    }
+  }
 
 }
 
