@@ -2,13 +2,9 @@
 
 const Controller = require('../core/base_controller');
 
-const moment = require('moment');
 const ecc = require('eosjs-ecc');
-const base64url = require('base64url');
-const jwt = require('jwt-simple');
 const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
-const axios = require('axios');
 
 class AuthController extends Controller {
 
@@ -20,11 +16,13 @@ class AuthController extends Controller {
     });
   }
 
-  // eos、ont登录，首次登录自动注册
+  // eos、ont、eth登录，首次登录自动注册
   async auth() {
     const ctx = this.ctx;
     // 1. 取出签名
-    const { username, publickey, sign, platform = 'eos', source = 'ss', referral = 0 } = ctx.request.body;
+    let { username, publickey, sign,
+      platform = 'eos', source = 'ss', referral = 0,
+      msgParams = {} } = ctx.request.body;
 
     let flag = false;
     if (platform === 'eos') {
@@ -33,6 +31,10 @@ class AuthController extends Controller {
       flag = await this.ont_auth(sign, username, publickey);
     } else if (platform === 'vnt') {
       flag = await this.vnt_auth(sign, username, publickey);
+    } else if (platform === 'eth') {
+      // 以太坊没用户名, 使用 msgParams 及其签名来判断是否真实
+      flag = this.service.auth.eth_auth(sign, msgParams, publickey);
+      username = publickey.substr(-12); // 后十二位作为暂时用户名
     } else {
       ctx.body = ctx.msg.unsupportedPlatform;
       return;
@@ -50,7 +52,7 @@ class AuthController extends Controller {
     ctx.body.data = jwttoken;
   }
 
-  // eos、ont登录，首次登录自动注册
+  // eos、ont、eth登录，首次登录自动注册
   async get_or_create_user(username, platform, source, referral) {
     try {
       let user = await this.app.mysql.get('users', { username, platform });

@@ -1,9 +1,10 @@
 'use strict';
 
 const Service = require('egg').Service;
-const crypto = require('crypto');
 const md5 = require('crypto-js/md5');
 const sha256 = require('crypto-js/sha256');
+const ethUtil = require('ethereumjs-util');
+const sigUtil = require('eth-sig-util');
 const axios = require('axios');
 const moment = require('moment');
 const jwt = require('jwt-simple');
@@ -382,6 +383,15 @@ class AuthService extends Service {
 
   async getUser(username, platform) {
     return await this.app.mysql.get('users', { username, platform });
+  }
+
+  async eth_auth(sig, msgParams, publickey) {
+    const { message } = JSON.parse(msgParams);
+    if (message.from !== publickey) return false; // 不能签别人钱包地址
+    // @Todo: 应该从msgParams.time 检测签署的时间，仅允许x分钟内的签名请求
+    // message.time < now - x ?
+    const recovered = sigUtil.recoverTypedSignature({ data: JSON.parse(msgParams), sig });
+    return ethUtil.toChecksumAddress(recovered) === ethUtil.toChecksumAddress(publickey);
   }
 
 }
