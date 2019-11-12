@@ -59,23 +59,9 @@ class AuthController extends Controller {
 
       if (!user) {
         await this.service.auth.insertUser(username, '', platform, source, this.clientIP, '', referral);
-        // const newuser = await this.app.mysql.insert('users', {
-        //   username,
-        //   platform,
-        //   source,
-        //   create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-        // });
         user = await this.app.mysql.get('users', { username, platform });
         // await this.service.search.importUser(user.id);
       }
-
-      // login log
-      // await this.app.mysql.insert('users_login_log', {
-      //   uid: user.id,
-      //   ip: this.ctx.header['x-real-ip'],
-      //   source,
-      //   login_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-      // });
       // 插入登录日志
       await this.service.auth.insertLoginLog(user.id, this.clientIP);
 
