@@ -121,6 +121,19 @@ class WxPayController extends Controller {
       ctx.body = ctx.msg.failure;
     }
   }
+  async getOrder() {
+    const { ctx } = this;
+    const { id } = ctx.params;
+    const result = await ctx.service.exchange.getOrderBytradeNo(id);
+    const token = await ctx.service.token.mineToken.get(result.token_id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        order: result,
+        token,
+      },
+    };
+  }
   async pay() {
     const { ctx } = this;
     // total: 输入的cny数值，单位元
