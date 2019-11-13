@@ -14,7 +14,7 @@
 
 * GET /posts/timeRanking
 
-* 参数 
+* 参数
 * page: 页数，默认第一页
 * pagesize: 每页的数量， 默认20
 * author: 作者id，默认返回全部author的文章，传入author参数，则只返回指定author的文章。
@@ -56,7 +56,7 @@
 
 * GET /posts/supportsRanking
 
-* 参数 
+* 参数
 * page: 页数，默认第一页
 * pagesize: 每页的数量， 默认20
 * channel: 频道id, 1为普通文章, 2为商品文章, 不带则不筛选, 返回所有文章
@@ -134,7 +134,7 @@
 
 * GET /posts/getPostByTag
 
-* 参数 
+* 参数
 * page: 页数，默认第一页
 * pagesize: 每页的数量， 默认20
 * extra: 需要额外返回的项目， 以逗号分割， 如short_content,others,aaaabc
@@ -175,9 +175,9 @@
 ```
 
 
-#### 获取用户信息 
-    
- 返回 email, nickname, avatar, avatar, fans 数和 follow 数 , is_follow 是否关注， 
+#### 获取用户信息
+
+ 返回 email, nickname, avatar, avatar, fans 数和 follow 数 , is_follow 是否关注，
 
 * GET /user/:username
 * 响应状态码：200
@@ -187,7 +187,7 @@
 {"username":"minakokojima", "email": "251815992@qq.com", "nickname":"岛娘", "avatar": "QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT","follows":4,"fans":5, is_follow: false }
 ```
 
-请求示例: 
+请求示例:
 
 * curl -X GET https://api.smartsignature.io/user/minakokojima
 
@@ -195,7 +195,7 @@
 
 * GET /user/stats
 * 正常状态码: 200
-* 响应体: 
+* 响应体:
 
 ```$xslt
 {
@@ -229,7 +229,7 @@
 * user: 分享的用户
 * hash: 文章的唯一hash
 
-请求示例: 
+请求示例:
 
 * curl -d "user=joetothemoon&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy" -X POST https://api.smartsignature.io/share
 
@@ -238,12 +238,12 @@
 * POST /vote
 * 响应状态码：200
 
-参数: 
+参数:
 
 * user: 分享的用户
 * hash: 文章的唯一hash
 
-请求示例: 
+请求示例:
 * curl -d "user=joetothemoon&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy" -X POST https://api.smartsignature.io/vote
 
 #### IPFS add
@@ -268,7 +268,7 @@
 * 响应状态码：200
 
 
-请求示例: 
+请求示例:
 
 * curl -d "user=joetothemoon&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy" -X POST https://api.smartsignature.io/ipfs/add
 * curl -d "data=xxxx" -X POST https://api.smartsignature.io/ipfs/addJSON
@@ -295,7 +295,7 @@ curl -d "data" -H "x-access-token: your_access_token" -X POST https://apitest.sm
 #### 从IPFS获取文章
 GET /post/ipfs/:hash
 
-示例： 
+示例：
 * curl https://apitest.smartsignature.io/post/ipfs/Qm00000000
 
 响应内容：
@@ -319,7 +319,7 @@ GET /post/ipfs/:hash
 * username: 当前用户
 * followed: 关注的用户
 
-请求示例: 
+请求示例:
 * curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.smartsignature.io/follow/follow
 
 #### 取消关注
@@ -331,7 +331,7 @@ GET /post/ipfs/:hash
 * username: 当前用户
 * followed: 关注的用户
 
-请求示例: 
+请求示例:
 * curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.smartsignature.io/follow/unfollow
 
 
@@ -349,7 +349,7 @@ GET /post/ipfs/:hash
 * referral: 邀请人uid，非必填
 
 
-成功得到 access_token 后 
+成功得到 access_token 后
 在后续请求的请求头中带上access_token： req.header['x-access-token']
 
 demo:
@@ -372,7 +372,7 @@ const API = {
       ScatterJS.scatter.getArbitrarySignature(publicKey, sign_data, 'Auth').then(signature => {
         callback(account.name, publicKey, signature);
       }).catch(error => {
-        
+
       });
     })
   }
@@ -385,7 +385,7 @@ API.authSignature(function(username, publickey, sign){
     auth({ username, publickey, sign}, (error, response, body) => {
         console.log(body);
         if(!error){
-            // 3. save accessToken 
+            // 3. save accessToken
             const accessToken = body;
             localStorage.setItem("ACCESS_TOKEN", accessToken);
         }
@@ -542,7 +542,7 @@ http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 * comment: 留言内容
 * sign_id: 文章id
 
-请求示例: 
+请求示例:
 * curl -d "comment=this is comment&sign_id=1" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTM3NDQ2MzM0NjF9.hLHem3JxZrJxDDwDiYrs4YLKLT7Y5g0Bz_h7bDTu5zY"  -X POST https://api.smartsignature.io/post/comment
 
 
@@ -550,7 +550,7 @@ http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 * GET /comment/comments
 * 响应状态码： 200
 curl https://apitest.smartsignature.io/comments?signid=100591
-响应示例： 
+响应示例：
 ```
 {
   "code": 0,
@@ -586,7 +586,7 @@ curl https://apitest.smartsignature.io/comments?signid=100591
 
 获取支持过的文章列表，支持使用user进行筛选。
 
-请求示例: 
+请求示例:
 * curl -X GET https://api.smartsignature.io/posts/supported?page=2&user=998
 
 成功返回示例:
@@ -624,12 +624,12 @@ curl https://apitest.smartsignature.io/comments?signid=100591
 * page: 页数，默认第一页
 * user: 指定用户
 
-ps: 如果有传 access token, 服务端会检索 access token所属用户，是否已经关注了 列表中的人 ， 字段 is_follow 
+ps: 如果有传 access token, 服务端会检索 access token所属用户，是否已经关注了 列表中的人 ， 字段 is_follow
 
 根据 is_follow， 去表示UI界面上 “关注” 按钮的状态。
 
 
-请求示例: 
+请求示例:
 curl https://api.smartsignature.io/follow/follows?user=xiaotiandada | jq
 
 ```
@@ -686,10 +686,10 @@ curl https://api.smartsignature.io/follow/follows?user=xiaotiandada | jq
 * page: 页数，默认第一页
 * user: 指定用户
 
-ps: 如果有传 access token, 服务端会检索 access token所属用户，是否已经关注了 列表中的人 ， 字段 is_follow 
+ps: 如果有传 access token, 服务端会检索 access token所属用户，是否已经关注了 列表中的人 ， 字段 is_follow
 根据 is_follow， 去表示UI界面上 “关注” 按钮的状态。
 
-请求示例: 
+请求示例:
 curl https://api.smartsignature.io/follow/fans?user=xiaotiandada | jq
 
 
@@ -753,7 +753,7 @@ curl https://api.smartsignature.io/follow/fans?user=xiaotiandada | jq
 * user: 指定用户
 
 
-请求示例: 
+请求示例:
 curl https://api.smartsignature.io/assets?user=gaojin.game | jq
 
 
@@ -918,7 +918,7 @@ curl https://api.smartsignature.io/assets?user=gaojin.game | jq
 * GET /post/:hash
 * 响应状态码：200
 
-请求示例: 
+请求示例:
 curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiyLF8cW1 | jq
 
 * 响应体：
@@ -947,7 +947,7 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 
 * GET /getSupportTimesRanking
 
-* 参数 
+* 参数
 * page: 页数，默认第一页
 
 请求示例：
@@ -1023,7 +1023,7 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
     "create_time": "2019-04-02T10:28:09.000Z",
     "times": 1
   },
-] 
+]
 
 ```
 
@@ -1032,7 +1032,7 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 
 * GET /getSupportAmountRanking
 
-* 参数 
+* 参数
 * page: 页数，默认第一页
 
 请求示例：
@@ -1090,7 +1090,7 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
     "create_time": "2019-04-02T07:21:55.000Z",
     "value": 1000
   }
-] 
+]
 
 ```
 
@@ -1103,7 +1103,7 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 参数：
 * nickname: 昵称
 
-请求示例: 
+请求示例:
 * curl -d "nickname=joenick" -H "x-access-token: access-token"  -X POST https://api.smartsignature.io/user/setNickname
 
 
@@ -1115,7 +1115,7 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 * GET /p/:id
 * 响应状态码：200
 
-请求示例: 
+请求示例:
 curl https://api.smartsignature.io/p/123 | jq
 
 * 响应体：
@@ -1208,7 +1208,7 @@ curl https://api.smartsignature.io/p/123 | jq
 
 * 响应状态码：200
 
-请求示例： 
+请求示例：
 https://ssimg.frontenduse.top/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.png
 
 #### ~~上传图像到ipfs服务器~~
@@ -1217,7 +1217,7 @@ https://ssimg.frontenduse.top/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.
 * 响应状态码：200
 
 参数：
-* avatar: 
+* avatar:
 
 上传示例：
 
@@ -1267,7 +1267,7 @@ https://ssimg.frontenduse.top/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.
 * GET /image/:hash
 * 响应状态码：200
 
-请求示例： 
+请求示例：
 
 https://apitest.smartsignature.io/image/QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT
 
@@ -1281,7 +1281,7 @@ https://apitest.smartsignature.io/image/QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd
 参数：
 * avatar: 头像的ipfs hash
 
-请求示例: 
+请求示例:
 
 * curl -d "avatar=QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT" -H "x-access-token: access-token"  -X POST https://api.smartsignature.io/user/setAvatar
 
@@ -1319,11 +1319,11 @@ Body参数（application/x-www-form-urlencoded）：
 * 响应状态码：200
 * id: 需要删除的文章的id
 
-请求示例: 
+请求示例:
 
 * curl  -H "x-access-token: access-token"  -X DELETE https://api.smartsignature.io/post/100010
 
-成功返回示例: 
+成功返回示例:
 ```$xslt
 {
     "code": 0,
@@ -1345,9 +1345,9 @@ Body参数（application/x-www-form-urlencoded）：
 4. publickey 签名时的公钥，必传
 5. hash:  新文章内容的ipfs hash，必传
 6. sign: 签名, 必传
-7. 
+7.
 
-请求示例: 
+请求示例:
 
 ```
 
@@ -1361,13 +1361,13 @@ curl -H "x-access-token: access-token" -d "signId=1&author=joetothemoon&title=dd
 * GET /draft/drafts
 * 响应状态码：201
 
-* 参数 
+* 参数
 * page: 页数，默认第一页
 
 * 请求示例
 
 ```
-curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io/draft/drafts 
+curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io/draft/drafts
 
 ```
 
@@ -1387,14 +1387,14 @@ curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io
   }
 ]
 
-``` 
+```
 
 #### create draft
 
 * POST /draft/save
 * 响应状态码：201
 
-* 参数 
+* 参数
 * title: 标题
 * content: 内容
 * cover: 封面
@@ -1404,7 +1404,7 @@ curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io
 
 ```
 
-curl -H "x-access-token: access-token" -d "title=112121&content=223312122" -X POST https://apitest.smartsignature.io/draft/save 
+curl -H "x-access-token: access-token" -d "title=112121&content=223312122" -X POST https://apitest.smartsignature.io/draft/save
 
 ```
 
@@ -1413,7 +1413,7 @@ curl -H "x-access-token: access-token" -d "title=112121&content=223312122" -X PO
 * POST /draft/save
 * 响应状态码：201
 
-* 参数 
+* 参数
 * id : 草稿id
 * title: 标题
 * content: 内容
@@ -1455,7 +1455,7 @@ curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io
 * 请求示例
 
 ```
-curl -H "x-access-token: access-token"  -X DELETE https://apitest.smartsignature.io/draft/1 
+curl -H "x-access-token: access-token"  -X DELETE https://apitest.smartsignature.io/draft/1
 
 ```
 
@@ -1464,7 +1464,7 @@ curl -H "x-access-token: access-token"  -X DELETE https://apitest.smartsignature
 * POST /support/support
 * 响应状态码：201
 
-* 参数 
+* 参数
 * signId : 文章id
 * contract: 打赏货币的合约名
 * symbol: 货币符号
@@ -1475,7 +1475,7 @@ curl -H "x-access-token: access-token"  -X DELETE https://apitest.smartsignature
 * 请求示例：
 
 ```
-curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referrer=joetothemoon" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTc5NzE5MDUwNTR9.9BxHyx9T1Tw-_a8-yX-cNO72R45YEIrRuzJh5jMI3ko"  -X POST http://localhost:7001/support/support 
+curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referrer=joetothemoon" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTc5NzE5MDUwNTR9.9BxHyx9T1Tw-_a8-yX-cNO72R45YEIrRuzJh5jMI3ko"  -X POST http://localhost:7001/support/support
 
 ```
 
@@ -1561,7 +1561,7 @@ curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referr
 * POST /user/withdraw
 * 响应状态码：201
 
-* 参数 
+* 参数
 * contract : 提现币种的合约地址
 * symbol: 提现币种的符号
 * amount: 提现数量（ 1 EOS和1 ONT都是 传10000的格式）
@@ -1700,7 +1700,7 @@ curl http://localhost:7001/posts/getPostByTag?tagid=1&page=2
 * POST /post/transferOwner
 * 响应状态码：201
 
-* 参数 
+* 参数
 * signid : 要转移的文章的id
 * uid: 接收者的user id
 
@@ -1711,7 +1711,7 @@ curl -d "signid=1&uid=10" -X POST  http://127.0.0.1:7001/post/transferOwner
 * POST /draft/transferOwner
 * 响应状态码：201
 
-* 参数 
+* 参数
 * draftid : 要转移的草稿的id
 * uid: 接收者的user id
 
@@ -1723,7 +1723,7 @@ curl -d "draftid=1&uid=10" -X POST  http://127.0.0.1:7001/draft/transferOwner
 * GET /user/search
 * 响应状态码：200
 
-* 参数 
+* 参数
 * q : 搜索的字段：昵称或用户名
 
 curl -X GET  http://127.0.0.1:7001/user/search?q=xiaotiandada
@@ -1734,7 +1734,7 @@ curl -X GET  http://127.0.0.1:7001/user/search?q=xiaotiandada
 * POST /order/order
 * 响应状态码：201
 
-* 参数 
+* 参数
 * signId : 文章id
 * contract: 打赏货币的合约名
 * symbol: 货币符号
@@ -1756,7 +1756,7 @@ curl -d "num=10&signId=100418&contract=eosio.token&symbol=EOS&amount=1&platform=
 	}
 }
 
-购买流程: 
+购买流程:
 
 1. 前端调用后端的 order/create， 参数和打赏差不多，多了一个num（商品数量），成功后返回一个 orderid，
 2. 拿到ordreid后， 转账给合约，格式就是 buy orderid 推荐人 , 比如（buy 1 xiaotiandada）
@@ -3062,5 +3062,74 @@ symbol-desc：字母倒序
 			"title": "比特币或是相对避险资产"
 		}]
 	}
+}
+```
+
+#### 设置用户网站和社交帐号信息
+* POST /user/links
+* 响应状态码： 200
+* 请求头：x-access-token
+* 参数：
+```json
+{
+	"websites": [
+		"https://matataki.io/",
+		"https://www.google.com/",
+		"https://www.jianshu.com"
+	],
+	"socialAccounts": {
+		// 以下属性可省略
+		"wechat": "xxx",
+		"qq": "12345678", // 字符串
+		"telegram": "aaa",
+		"twitter": "bbb",
+		"facebook": "ccc"
+	}
+}
+```
+* 返回值：
+```json
+{
+	"code": 0,
+	"message": "成功"
+}
+```
+
+#### 获取用户网站和社交帐号信息
+* GET /user/:id/links
+* 响应状态码： 200
+* 参数：无
+* 返回值：
+```json
+{
+	"code": 0,
+	"message": "成功",
+	"websites": [
+		"https://matataki.io/",
+		"https://www.google.com/",
+		"https://www.jianshu.com"
+	],
+	"socialAccounts": [
+		{
+			"type": "wechat",
+			"value": "xxx"
+		},
+		{
+			"type": "qq",
+			"value": "12345678"
+		},
+		{
+			"type": "telegram",
+			"value": "aaa"
+		},
+		{
+			"type": "twitter",
+			"value": "bbb"
+		},
+		{
+			"type": "facebook",
+			"value": "ccc"
+		}
+	]
 }
 ```
