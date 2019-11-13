@@ -119,6 +119,20 @@ class OrderController extends Controller {
     ctx.body.data = products;
   }
 
+  // 创建订单
+  async createOrder() {
+    const { ctx } = this;
+    const { items } = ctx.request.body;
+    const result = await ctx.service.shop.order.createOrder(ctx.user.id, items, ctx.ip);
+    ctx.body = result;
+  }
+
+  async get() {
+    const { ctx } = this;
+    const trade_no = ctx.params.tradeNo;
+    ctx.body = 'test';
+  }
+
 }
 
 module.exports = OrderController;

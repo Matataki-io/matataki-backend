@@ -199,6 +199,59 @@ class OrderService extends Service {
     return { count: amount[0].count, list: orders };
   }
 
+  // 以下是CNY支付相关处理 2019-11-13
+  async createOrder(userId, items, ip) {
+    // 查询文章价格
+    let total = 0;
+    const trade_no = this.ctx.helper.genCharacterNumber(31);
+    // 拆分订单到orders、exchange_orders
+    for (const item of items) {
+      if (item.type === 'buy_post') {
+        const prices = await this.ctx.service.post.getPrices(item.signId);
+        // 创建购买文章订单行
+        const result = await this.create(userId, item.signId, '', prices[0].symbol, prices[0].price, prices[0].platform, 1, 0);
+        if (result <= 0) {
+          return '-1';
+        }
+        total = total + prices[0].price;
+      } else if (item.type === 'buy_minetoken') {
+        // 计算需要多少CNY
+        const amount = await this.service.token.exchange.getCnyToTokenOutputPrice(item.tokenId, item.amount);
+        // 创建购买粉丝币订单行
+        const result = await this.service.exchange.createOrder(
+          {
+            uid: userId, // 用户id
+            token_id: item.tokenId, // 购买的token id
+            cny_amount: amount,
+            pay_cny_amount: amount,
+            token_amount: item.amount,
+            type: 'buy_token_output', // 类型：add，buy_token，sale_token
+            trade_no, // 订单号
+            openid: '',
+            status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成
+            min_liquidity: 0, // 资金池pool最小流动性，type = add
+            max_tokens: amount, // output为准，最多获得CNY，type = sale_token
+            min_tokens: 0, // input为准时，最少获得Token，type = buy_token
+            recipient: userId, // 接收者
+            ip, // ip
+          }
+        );
+        if (!result) {
+          return '-2';
+        }
+        total = total + amount;
+      }
+    }
+
+    const headerResult = await this.app.mysql.query('INSERT INTO order_headers(uid, trade_no, amount, create_time, status, ip) VALUES(?,?,?,?,?,?);',
+      [ userId, trade_no, total, moment().format('YYYY-MM-DD HH:mm:ss'), 3, ip ]);
+    if (headerResult.affectedRows <= 0) {
+      return '-3';
+    }
+
+    return trade_no;
+  }
+
 }
 
 module.exports = OrderService;

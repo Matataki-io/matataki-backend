@@ -1014,7 +1014,8 @@ class PostService extends Service {
     return true;
   }
 
-  async addPrices(signId, userId, symbol, price) {
+  // todo：拆分出来
+  async addPrices(userId, signId, price) {
     const post = await this.get(signId);
     if (!post) {
       return -1;
@@ -1027,7 +1028,7 @@ class PostService extends Service {
     const conn = await this.app.mysql.beginTransaction();
     try {
       await conn.query('DELETE FROM product_prices WHERE sign_id = ?;', [ signId ]);
-
+      // 默认CNY定价
       await conn.insert('product_prices', {
         sign_id: signId,
         title: post.title,

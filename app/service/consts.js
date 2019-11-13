@@ -71,6 +71,13 @@ module.exports = {
     cny: 'cny',
   },
 
+  // 货币符号
+  symbols: {
+    EOS: 'EOS',
+    ONT: 'ONT',
+    CNY: 'CNY',
+  },
+
   // 用户权限控制，二进制
   userStatus: {
     hasMineTokenPermission: 2, // 10

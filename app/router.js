@@ -341,5 +341,7 @@ module.exports = app => {
   router.post('/order/create', passport.authorize, controller.wxpay.createOrder);
   router.get('/order/get/:id', passport.authorize, controller.wxpay.getOrder);
   router.post('/order/pay', passport.authorize, controller.wxpay.wxpay);
+  router.put('/orders', passport.authorize, controller.order.createOrder);
+  router.get('/orders/:tradeNo', passport.authorize, controller.order.get);
 };
 
