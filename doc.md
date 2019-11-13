@@ -3066,7 +3066,7 @@ symbol-desc：字母倒序
 ```
 
 #### 设置用户网站和社交帐号信息
-* POST /user/links
+* PUT /user/links
 * 响应状态码： 200
 * 请求头：x-access-token
 * 参数：
