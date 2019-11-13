@@ -25,7 +25,7 @@ class PostController extends Controller {
   // 发布文章
   async publish() {
     const ctx = this.ctx;
-    const { author = '', title = '', content = '',
+    const { author = '', title = '', content = '', msgParams,
       publickey, sign, hash, fissionFactor = 2000,
       cover, is_original = 0, platform = 'eos', tags = '', commentPayPoint = 0, shortContent = null } = ctx.request.body;
 
@@ -53,14 +53,19 @@ class PostController extends Controller {
 
         const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
         await this.eos_signature_verify(author, sign_data, sign, publickey);
+      } else if (platform === 'metamask') {
+        if (!this.service.blockchain.eth.signatureService.verifyArticle(sign, msgParams, publickey)) {
+          throw Error('以太坊签名无效');
+        }
       } else if (platform === 'ont') {
         /*
                 const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
                 this.ont_signature_verify(msg, sign, publickey);
         */
 
-        // Github以及Email用户不验证签名
+
       }
+      // Github以及Email用户不验证签名
       // else if (platform === 'github') {
       //   this.logger.info('There is a GitHub user publishing...');
       // } else if (platform === 'email') {
@@ -72,6 +77,7 @@ class PostController extends Controller {
       //   return;
       // }
     } catch (err) {
+      ctx.logger.info('debug info', err);
       ctx.body = ctx.msg.postPublishSignVerifyError; // err.message;
       return;
     }
