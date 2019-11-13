@@ -28,14 +28,22 @@ class ExchangeService extends Service {
     }
     const setStatus = status;
     const whereStatus = statusOptions[index - 1];
-    const sql = 'UPDATE exchange_orders SET status = :setStatus WHERE status = :whereStatus AND trade_no = :trade_no;';
-    const result = await this.app.mysql.query(sql, {
-      setStatus,
-      whereStatus,
-      trade_no,
-    });
-    const updateSuccess = (result.affectedRows !== 0);
-    return updateSuccess;
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      const sql = 'UPDATE exchange_orders SET status = :setStatus WHERE status = :whereStatus AND trade_no = :trade_no;';
+      const result = await this.app.mysql.query(sql, {
+        setStatus,
+        whereStatus,
+        trade_no,
+      });
+      await conn.commit();
+      const updateSuccess = (result.affectedRows !== 0);
+      return updateSuccess;
+    } catch (err) {
+      this.ctx.logger.error(err);
+      await conn.rollback();
+      return false;
+    }
   }
   async setStatusPending(trade_no) {
     const result = await this.updateStatus(trade_no, 3);
