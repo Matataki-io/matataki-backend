@@ -190,6 +190,34 @@ class UserController extends Controller {
     ctx.body = ctx.msg.success;
   }
 
+  async setLinks() {
+    const ctx = this.ctx;
+    const { websites = [], socialAccounts = {} } = ctx.request.body;
+
+    const result = await this.service.user.saveLinks(ctx.user.id, websites, socialAccounts);
+    if (result === false) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+  }
+
+  async getLinks() {
+    const ctx = this.ctx;
+    const { id } = ctx.params;
+
+    const links = await this.service.user.getLinks(parseInt(id));
+
+    if (links === null) {
+      ctx.body = ctx.msg.userNotExist;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = links;
+  }
+
   async getUserDetails() {
     const ctx = this.ctx;
 

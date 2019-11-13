@@ -544,6 +544,91 @@ class UserService extends Service {
 
     return { count: queryResult[0][0].count, list: queryResult[1] };
   }
+
+  async saveLinks(userId, websites, socialAccounts) {
+    if (userId === null) {
+      return false;
+    }
+    if (!Array.isArray(websites)) {
+      return false;
+    }
+    if (!socialAccounts) {
+      return false;
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      websites = new Set(websites);
+
+      await conn.query('DELETE FROM user_websites WHERE uid = ? AND website_id >= ?', [userId, websites.size]);
+
+      let websiteId = 0;
+
+      for (const website of websites) {
+        await conn.query('INSERT INTO user_websites VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE url = VALUES(url)', [
+          userId,
+          websiteId,
+          website
+        ]);
+
+        websiteId++;
+      }
+
+      const { wechat = null, qq = null, telegram = null, twitter = null, facebook = null } = socialAccounts;
+
+      await conn.query(`INSERT INTO user_social_accounts VALUES(?, nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''))
+        ON DUPLICATE KEY UPDATE wechat = VALUES(wechat), qq = VALUES(qq), telegram = VALUES(telegram), twitter = VALUES(twitter), facebook = VALUES(facebook)`, [
+        userId,
+        wechat,
+        qq,
+        telegram,
+        twitter,
+        facebook,
+      ]);
+
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.ctx.logger.error(e);
+      return -1;
+    }
+  }
+
+  async getLinks(userId) {
+    if (userId === null) {
+      return null;
+    }
+
+    if (!await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE id = ?);', [userId])) {
+      return null;
+    }
+
+    const websites = [];
+
+    const websiteResults = await this.app.mysql.query('SELECT url FROM user_websites WHERE uid = ?;', [userId]);
+    for (const { url } of websiteResults) {
+      websites.push(url);
+    }
+
+    const socialAccounts = [];
+
+    const socialAccountResult = (await this.app.mysql.query('SELECT wechat, qq, telegram, twitter, facebook FROM user_social_accounts WHERE uid = ?;', [userId]))[0];
+    if (socialAccountResult) {
+      for (const [type, value] of Object.entries(socialAccountResult)) {
+        if (!value) {
+          continue;
+        }
+
+        socialAccounts.push({
+          type,
+          value,
+        });
+      }
+    }
+
+    return { websites, socialAccounts };
+  }
 }
 
 module.exports = UserService;
