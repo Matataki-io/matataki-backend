@@ -594,6 +594,41 @@ class UserService extends Service {
       return -1;
     }
   }
+
+  async getLinks(userId) {
+    if (userId === null) {
+      return null;
+    }
+
+    if (!await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE id = ?);', [userId])) {
+      return null;
+    }
+
+    const websites = [];
+
+    const websiteResults = await this.app.mysql.query('SELECT url FROM user_websites WHERE uid = ?;', [userId]);
+    for (const { url } of websiteResults) {
+      websites.push(url);
+    }
+
+    const socialAccounts = [];
+
+    const socialAccountResult = (await this.app.mysql.query('SELECT wechat, qq, telegram, twitter, facebook FROM user_social_accounts WHERE uid = ?;', [userId]))[0];
+    if (socialAccountResult) {
+      for (const [type, value] of Object.entries(socialAccountResult)) {
+        if (!value) {
+          continue;
+        }
+
+        socialAccounts.push({
+          type,
+          value,
+        });
+      }
+    }
+
+    return { websites, socialAccounts };
+  }
 }
 
 module.exports = UserService;

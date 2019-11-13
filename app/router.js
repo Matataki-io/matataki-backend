@@ -134,6 +134,8 @@ module.exports = app => {
 
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
+  // 获取用户的网站和社交帐号信息
+  router.get('/user/:id/links', passport.verify, controller.user.getLinks);
 
   // -------------------------------- 粉丝系统 --------------------------------
   // follow 关注和取关动作。关注数和粉丝数在userinfo里
