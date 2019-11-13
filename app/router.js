@@ -119,6 +119,8 @@ module.exports = app => {
   router.post('/user/uploadAvatar', passport.authorize, controller.user.uploadAvatar);
   // 设置用户的个人资料，包括email，昵称和自我介绍。
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
+  // 设置用户的网站和社交帐号信息
+  router.post('/user/links', passport.authorize, controller.user.setLinks);
   // 发起提现
   router.post('/user/withdraw', passport.authorize, controller.user.withdraw);
   // 推荐用户

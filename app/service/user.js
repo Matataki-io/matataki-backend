@@ -544,6 +544,56 @@ class UserService extends Service {
 
     return { count: queryResult[0][0].count, list: queryResult[1] };
   }
+
+  async saveLinks(userId, websites, socialAccounts) {
+    if (userId === null) {
+      return false;
+    }
+    if (!Array.isArray(websites)) {
+      return false;
+    }
+    if (!socialAccounts) {
+      return false;
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      websites = new Set(websites);
+
+      await conn.query('DELETE FROM user_websites WHERE uid = ? AND website_id >= ?', [userId, websites.size]);
+
+      let websiteId = 0;
+
+      for (const website of websites) {
+        await conn.query('INSERT INTO user_websites VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE url = VALUES(url)', [
+          userId,
+          websiteId,
+          website
+        ]);
+
+        websiteId++;
+      }
+
+      const { wechat = null, qq = null, telegram = null, twitter = null, facebook = null } = socialAccounts;
+
+      await conn.query(`INSERT INTO user_social_accounts VALUES(?, nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''))
+        ON DUPLICATE KEY UPDATE wechat = VALUES(wechat), qq = VALUES(qq), telegram = VALUES(telegram), twitter = VALUES(twitter), facebook = VALUES(facebook)`, [
+        userId,
+        wechat,
+        qq,
+        telegram,
+        twitter,
+        facebook,
+      ]);
+
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.ctx.logger.error(e);
+      return -1;
+    }
+  }
 }
 
 module.exports = UserService;
