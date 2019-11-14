@@ -574,13 +574,22 @@ class UserService extends Service {
         websiteId++;
       }
 
-      const { wechat = null, qq = null, telegram = null, twitter = null, facebook = null } = socialAccounts;
+      const { wechat = null, qq = null, weibo = null, github = null, telegram = null, twitter = null, facebook = null } = socialAccounts;
 
-      await conn.query(`INSERT INTO user_social_accounts VALUES(?, nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''))
-        ON DUPLICATE KEY UPDATE wechat = VALUES(wechat), qq = VALUES(qq), telegram = VALUES(telegram), twitter = VALUES(twitter), facebook = VALUES(facebook)`, [
+      await conn.query(`INSERT INTO user_social_accounts VALUES(?, nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''))
+        ON DUPLICATE KEY UPDATE
+          wechat = VALUES(wechat),
+          qq = VALUES(qq),
+          weibo = VALUES(weibo),
+          github = VALUES(github),
+          telegram = VALUES(telegram),
+          twitter = VALUES(twitter),
+          facebook = VALUES(facebook);`, [
         userId,
         wechat,
         qq,
+        weibo,
+        github,
         telegram,
         twitter,
         facebook,
@@ -613,7 +622,7 @@ class UserService extends Service {
 
     const socialAccounts = [];
 
-    const socialAccountResult = (await this.app.mysql.query('SELECT wechat, qq, telegram, twitter, facebook FROM user_social_accounts WHERE uid = ?;', [userId]))[0];
+    const socialAccountResult = (await this.app.mysql.query('SELECT wechat, qq, weibo, github, telegram, twitter, facebook FROM user_social_accounts WHERE uid = ?;', [userId]))[0];
     if (socialAccountResult) {
       for (const [type, value] of Object.entries(socialAccountResult)) {
         if (!value) {

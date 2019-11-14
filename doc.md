@@ -3080,7 +3080,9 @@ symbol-desc：字母倒序
 	"socialAccounts": {
 		// 以下属性可省略
 		"wechat": "xxx",
-		"qq": "12345678", // 字符串
+    "qq": "12345678", // 字符串
+    "weibo": "yyy",
+    "github": "zzz",
 		"telegram": "aaa",
 		"twitter": "bbb",
 		"facebook": "ccc"
@@ -3117,6 +3119,14 @@ symbol-desc：字母倒序
 		{
 			"type": "qq",
 			"value": "12345678"
+		},
+		{
+			"type": "weibo",
+			"value": "yyy"
+		},
+		{
+			"type": "github",
+			"value": "zzz"
 		},
 		{
 			"type": "telegram",
