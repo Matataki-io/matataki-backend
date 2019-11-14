@@ -29,12 +29,12 @@ class EthSignatureService extends Service {
   verifyAuth(sig, msgParams, publickey) {
     // 目前仅允许 {signatureValidityPeriod} 秒内的签名请求,这里是 3 分钟
     const signatureValidityPeriod = 3 * 60;
-    const { message } = JSON.parse(msgParams);
+    const { message } = msgParams;
     if (message.from !== publickey) return false; // 不能签别人钱包地址
     // 从msgParams.time 检测签署的时间，
     const timeDiff = new Date().getTime() - message.time;
     if (timeDiff > signatureValidityPeriod * 1000) return false;
-    const recovered = sigUtil.recoverTypedSignature({ data: JSON.parse(msgParams), sig });
+    const recovered = sigUtil.recoverTypedSignature({ data: msgParams, sig });
     return ethUtil.toChecksumAddress(recovered) === ethUtil.toChecksumAddress(publickey);
   }
 
