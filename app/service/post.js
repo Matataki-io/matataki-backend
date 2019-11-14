@@ -1043,11 +1043,11 @@ class PostService extends Service {
 
       await conn.update('posts',
         {
-          require_buy: require,
+          require_buy: 1,
         },
         {
           where: {
-            signId,
+            id: signId,
           },
         });
 

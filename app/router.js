@@ -321,6 +321,8 @@ module.exports = app => {
   router.get('/posts/:id/references', passport.verify, controller.post.getReferences);
   // 查看本文被引用的文章列表
   router.get('/posts/:id/posts', passport.verify, controller.post.refPosts);
+  // 文章价格
+  router.put('/posts/:id/prices', passport.authorize, controller.post.addPrices);
 
   router.put('/drafts/:id/references', passport.authorize, controller.post.addDraftReference);
   router.delete('/drafts/:id/references/:number', passport.authorize, controller.post.deleteDraftReference);

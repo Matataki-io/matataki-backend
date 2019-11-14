@@ -127,10 +127,18 @@ class OrderController extends Controller {
     ctx.body = result;
   }
 
+  // 根据订单号查看订单
   async get() {
     const { ctx } = this;
-    const trade_no = ctx.params.tradeNo;
-    ctx.body = 'test';
+    const tradeNo = ctx.params.tradeNo;
+    const orderHeader = await ctx.service.shop.order.get(ctx.user.id, tradeNo);
+    if (!orderHeader) {
+      ctx.body = ctx.msg.failure;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: orderHeader,
+    };
   }
 
 }

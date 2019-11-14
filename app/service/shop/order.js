@@ -30,7 +30,7 @@ class OrderService extends Service {
   // √ 陈浩 验证ont合约
 
   // 创建订单
-  async create(userId, signId, contract, symbol, amount, platform, num, referreruid) {
+  async create(userId, signId, contract, symbol, amount, platform, num, referreruid, trade_no = '', conn = null) {
     // 校验商品价格
     const prices = await this.service.post.getPrices(signId);
     const price = prices.find(p => p.platform === platform);
@@ -42,12 +42,20 @@ class OrderService extends Service {
       return -2; // message.postPriceError;
     }
 
+    // 有可能在其他事务中调用该方法，如果conn是传进来的，不要在此commit和rollback
+    let isOutConn = false;
+    if (conn) {
+      isOutConn = true;
+    } else {
+      conn = await this.app.mysql.beginTransaction();
+    }
+
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
     try {
-      const result = await this.app.mysql.query(
-        'INSERT INTO orders (uid, signid, contract, symbol, num, amount, price, decimals, referreruid, platform, status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?, ?)',
-        [ userId, signId, contract, symbol, num, amount, price.price, price.decimals, referreruid, platform, 0, now ]
+      const result = await conn.query(
+        'INSERT INTO orders (uid, signid, contract, symbol, num, amount, price, decimals, referreruid, platform, status, create_time, trade_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?, ?, ?)',
+        [ userId, signId, contract, symbol, num, amount, price.price, price.decimals, referreruid, platform, 0, now, trade_no ]
       );
 
       const updateSuccess = result.affectedRows === 1;
@@ -55,11 +63,21 @@ class OrderService extends Service {
       const orderId = result.insertId;
 
       if (updateSuccess) {
+        if (!isOutConn) {
+          await conn.commit();
+        }
         return orderId;
+      }
+
+      if (!isOutConn) {
+        await conn.rollback();
       }
       return -3; // message.failure;
 
     } catch (err) {
+      if (!isOutConn) {
+        await conn.rollback();
+      }
       this.ctx.logger.error('create order error', err, userId, signId, symbol, amount);
       return -99; // message.serverError;
     }
@@ -204,53 +222,76 @@ class OrderService extends Service {
     // 查询文章价格
     let total = 0;
     const trade_no = this.ctx.helper.genCharacterNumber(31);
-    // 拆分订单到orders、exchange_orders
-    for (const item of items) {
-      if (item.type === 'buy_post') {
-        const prices = await this.ctx.service.post.getPrices(item.signId);
-        // 创建购买文章订单行
-        const result = await this.create(userId, item.signId, '', prices[0].symbol, prices[0].price, prices[0].platform, 1, 0);
-        if (result <= 0) {
-          return '-1';
-        }
-        total = total + prices[0].price;
-      } else if (item.type === 'buy_minetoken') {
-        // 计算需要多少CNY
-        const amount = await this.service.token.exchange.getCnyToTokenOutputPrice(item.tokenId, item.amount);
-        // 创建购买粉丝币订单行
-        const result = await this.service.exchange.createOrder(
-          {
-            uid: userId, // 用户id
-            token_id: item.tokenId, // 购买的token id
-            cny_amount: amount,
-            pay_cny_amount: amount,
-            token_amount: item.amount,
-            type: 'buy_token_output', // 类型：add，buy_token，sale_token
-            trade_no, // 订单号
-            openid: '',
-            status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成
-            min_liquidity: 0, // 资金池pool最小流动性，type = add
-            max_tokens: amount, // output为准，最多获得CNY，type = sale_token
-            min_tokens: 0, // input为准时，最少获得Token，type = buy_token
-            recipient: userId, // 接收者
-            ip, // ip
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      // 拆分订单到orders、exchange_orders
+      for (const item of items) {
+        if (item.type === 'buy_post') {
+          const prices = await this.ctx.service.post.getPrices(item.signId);
+          // 创建购买文章订单行
+          // todo：先判断没有购买过文章
+          const result = await this.create(userId, item.signId, '', prices[0].symbol, prices[0].price, prices[0].platform, 1, 0, trade_no, conn);
+          if (result <= 0) {
+            await conn.rollback();
+            return '-1';
           }
-        );
-        if (!result) {
-          return '-2';
+          total = total + prices[0].price;
+        } else if (item.type === 'buy_minetoken') {
+          // 计算需要多少CNY
+          const amount = await this.service.token.exchange.getCnyToTokenOutputPrice(item.tokenId, item.amount);
+          // 创建购买粉丝币订单行
+          const result = await this.service.exchange.createOrder(
+            {
+              uid: userId, // 用户id
+              token_id: item.tokenId, // 购买的token id
+              cny_amount: amount,
+              pay_cny_amount: amount,
+              token_amount: item.amount,
+              type: 'buy_token_output', // 类型：add，buy_token，sale_token
+              trade_no, // 订单号
+              openid: '',
+              status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成
+              min_liquidity: 0, // 资金池pool最小流动性，type = add
+              max_tokens: amount, // output为准，最多获得CNY，type = sale_token
+              min_tokens: 0, // input为准时，最少获得Token，type = buy_token
+              recipient: userId, // 接收者
+              ip, // ip
+            }, conn
+          );
+          if (!result) {
+            await conn.rollback();
+            return '-2';
+          }
+          total = total + amount;
         }
-        total = total + amount;
       }
-    }
 
-    const headerResult = await this.app.mysql.query('INSERT INTO order_headers(uid, trade_no, amount, create_time, status, ip) VALUES(?,?,?,?,?,?);',
-      [ userId, trade_no, total, moment().format('YYYY-MM-DD HH:mm:ss'), 3, ip ]);
-    if (headerResult.affectedRows <= 0) {
-      return '-3';
+      const headerResult = await conn.query('INSERT INTO order_headers(uid, trade_no, amount, create_time, status, ip) VALUES(?,?,?,?,?,?);',
+        [ userId, trade_no, total, moment().format('YYYY-MM-DD HH:mm:ss'), 3, ip ]);
+      if (headerResult.affectedRows <= 0) {
+        await conn.rollback();
+        return '-3';
+      }
+      await conn.commit();
+      return trade_no;
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('OrderService.createOrder exception. %j', e);
+      return false;
     }
-
-    return trade_no;
   }
+
+  async get(uid, tradeNo) {
+    const orderHeader = await this.app.mysql.query('SELECT trade_no, amount, create_time FROM order_headers WHERE uid = ? AND trade_no; ', [ uid, tradeNo ]);
+    if (orderHeader && orderHeader.length > 0) { return orderHeader[0]; }
+    return null;
+  }
+
+  // todo:支付成功，更新:
+  // order_headers.status = 6
+  // orders.status = 1
+  // exchange_orders = 6，再调用cnyToTokenOutputOrder
 
 }
 

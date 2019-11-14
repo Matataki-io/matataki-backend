@@ -4,15 +4,39 @@ const moment = require('moment');
 const DEADLINE = 300; // 超时时间300秒
 
 class ExchangeService extends Service {
-  async createOrder(order) {
+  async createOrder(order, conn) {
+    // 有可能在其他事务中调用该方法，如果conn是传进来的，不要在此commit和rollback
+    let isOutConn = false;
+    if (conn) {
+      isOutConn = true;
+    } else {
+      conn = await this.app.mysql.beginTransaction();
+    }
+
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
     const deadline = parseInt(moment().format('X')) + DEADLINE; // 设置unix时间戳
-    const result = await this.app.mysql.query(
-      'INSERT INTO exchange_orders(uid, token_id, cny_amount, token_amount, type, trade_no, openid, status, create_time, deadline, min_liquidity, max_tokens, min_tokens, recipient, ip, pay_cny_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [ order.uid, order.token_id, order.cny_amount, order.token_amount, order.type, order.trade_no, order.openid, order.status, now, deadline, order.min_liquidity, order.max_tokens, order.min_tokens, order.recipient, order.ip, order.pay_cny_amount ]
-    );
-    const createSuccess = (result.affectedRows !== 0);
-    return createSuccess;
+    try {
+      const result = await conn.query(
+        'INSERT INTO exchange_orders(uid, token_id, cny_amount, token_amount, type, trade_no, openid, status, create_time, deadline, min_liquidity, max_tokens, min_tokens, recipient, ip, pay_cny_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [ order.uid, order.token_id, order.cny_amount, order.token_amount, order.type, order.trade_no, order.openid, order.status, now, deadline, order.min_liquidity, order.max_tokens, order.min_tokens, order.recipient, order.ip, order.pay_cny_amount ]
+      );
+      const createSuccess = (result.affectedRows !== 0);
+
+      if (!isOutConn) {
+        if (createSuccess) {
+          await conn.commit();
+        } else {
+          await conn.rollback();
+        }
+      }
+      return createSuccess;
+    } catch (e) {
+      if (!isOutConn) {
+        await conn.rollback();
+      }
+      this.logger.error('MineTokenService.transferFrom exception. %j', e);
+      return false;
+    }
   }
   // 根据订单号查询
   async getOrderBytradeNo(trade_no) {

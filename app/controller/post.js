@@ -944,8 +944,9 @@ class PostController extends Controller {
   // 设置订单价格
   async addPrices() {
     const ctx = this.ctx;
-    const { signId, price } = ctx.request.body;
-    const result = await ctx.app.post.addPrices(ctx.user.id, signId, price);
+    const signId = parseInt(ctx.params.id);
+    const { price } = ctx.request.body;
+    const result = await this.service.post.addPrices(ctx.user.id, signId, price);
     ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
   }
 
