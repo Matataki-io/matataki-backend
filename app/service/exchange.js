@@ -78,8 +78,13 @@ class ExchangeService extends Service {
   // 根据粉丝币获取持仓用户列表
   async getUserListByToken(id, page = 1, pagesize = 20) {
     id = parseInt(id);
-    const sql = 'SELECT a.*, b.username, b.nickname, b.avatar FROM assets_minetokens AS a LEFT JOIN users AS b ON a.uid = b.id WHERE a.token_id = :id AND a.amount > 0 LIMIT :offset, :limit;'
-      + 'SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id AND amount > 0;';
+    const sql = `SELECT a.*, b.total_supply, u.username, u.nickname, u.avatar
+    FROM assets_minetokens AS a
+    JOIN minetokens b ON b.id = a.token_id
+    JOIN users u ON u.id = a.uid
+    WHERE a.token_id = 16 AND a.amount > 0
+    LIMIT :offset, :limit;
+    SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id AND amount > 0;`;
     const result = await this.app.mysql.query(sql, {
       id,
       offset: (page - 1) * pagesize,
@@ -92,9 +97,9 @@ class ExchangeService extends Service {
   }
   async getTokenBySymbol(symbol) {
     const sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount
-                FROM mineTokens AS t1 
-                Left JOIN users AS t2 ON t1.uid = t2.id 
-                LEFT JOIN exchanges as t3 ON t1.id = t3.token_id 
+                FROM mineTokens AS t1
+                Left JOIN users AS t2 ON t1.uid = t2.id
+                LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
                 LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id
                 WHERE LOWER(t1.symbol) = LOWER(:symbol)`;
     const result = await this.app.mysql.query(sql, {
@@ -119,9 +124,9 @@ class ExchangeService extends Service {
 
     if (search === '') {
       const sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount
-          FROM mineTokens AS t1 
-          Left JOIN users AS t2 ON t1.uid = t2.id 
-          LEFT JOIN exchanges as t3 ON t1.id = t3.token_id 
+          FROM mineTokens AS t1
+          Left JOIN users AS t2 ON t1.uid = t2.id
+          LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
           LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id `
         + sqlOrder
         + ' LIMIT :offset, :limit;'
@@ -137,10 +142,10 @@ class ExchangeService extends Service {
     }
 
     const searchSql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount
-        FROM mineTokens AS t1 
-        Left JOIN users AS t2 ON t1.uid = t2.id 
-        LEFT JOIN exchanges as t3 ON t1.id = t3.token_id 
-        LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id 
+        FROM mineTokens AS t1
+        Left JOIN users AS t2 ON t1.uid = t2.id
+        LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
+        LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id
         WHERE Lower(t1.name) LIKE :search OR Lower(t1.symbol) LIKE :search `
       + sqlOrder
       + ' LIMIT :offset, :limit;'
