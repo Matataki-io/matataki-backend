@@ -190,8 +190,7 @@ class WxPayController extends Controller {
     const { result_code, return_code, out_trade_no } = ctx.request.weixin;
     ctx.logger.info('WxPayController payArticleNotify', out_trade_no, ctx.request.weixin);
     if (return_code === 'SUCCESS' && result_code === 'SUCCESS') {
-      await ctx.service.shop.orderHeader.setStatusPaySuccessful(out_trade_no);
-      await ctx.service.shop.orderHeader.processingOrder(out_trade_no);
+      await ctx.service.shop.orderHeader.paySuccessful(out_trade_no);
       ctx.set('Content-Type', 'text/xml');
       ctx.body = `<xml>
                     <return_code><![CDATA[SUCCESS]]></return_code>
