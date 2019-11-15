@@ -122,10 +122,11 @@ class OrderController extends Controller {
   // 创建订单
   async createOrder() {
     const { ctx } = this;
-    const { items } = ctx.request.body;
-    const result = await ctx.service.shop.order.createOrder(ctx.user.id, items, ctx.ip);
+    const { items, useBalance } = ctx.request.body;
+    const result = await ctx.service.shop.orderHeader.createOrder(ctx.user.id, items, useBalance, ctx.ip);
     if (result === '-1') {
       ctx.body = ctx.msg.failure;
+      return;
     }
     ctx.body = {
       ...ctx.msg.success,
@@ -137,9 +138,10 @@ class OrderController extends Controller {
   async get() {
     const { ctx } = this;
     const tradeNo = ctx.params.tradeNo;
-    const orderHeader = await ctx.service.shop.order.get(ctx.user.id, tradeNo);
+    const orderHeader = await ctx.service.shop.orderHeader.get(ctx.user.id, tradeNo);
     if (!orderHeader) {
       ctx.body = ctx.msg.failure;
+      return;
     }
     ctx.body = {
       ...ctx.msg.success,

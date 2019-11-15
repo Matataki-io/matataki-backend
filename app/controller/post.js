@@ -137,7 +137,7 @@ class PostController extends Controller {
   /* 目前没有判断ipfs hash是否是现在用户上传的文章，所以可能会伪造一个已有的hash */
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '',
+    const { signId, author = '', title = '', content = '', msgParams,
       publickey, sign, hash, fissionFactor = 2000, cover,
       is_original = 0, platform = 'eos', tags = '', shortContent = null } = ctx.request.body;
 
@@ -175,6 +175,10 @@ class PostController extends Controller {
         const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
 
         await this.eos_signature_verify(author, sign_data, sign, publickey);
+      } else if (platform === 'metamask') {
+        if (!this.service.blockchain.eth.signatureService.verifyArticle(sign, msgParams, publickey)) {
+          throw Error('以太坊签名无效');
+        }
       } else if (platform === 'ont') {
         /*
                 const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
@@ -734,9 +738,7 @@ class PostController extends Controller {
     const post = await this.service.post.getByHash(hash, false);
 
     if (post.uid !== ctx.user.id) {
-      // 增加判断是否有权限
-      const result = await this.service.post.isHoldMineTokens(post.id, ctx.user.id);
-      if (!result) {
+      if (!this.hasPermission(post, ctx.user.id)) {
         ctx.body = ctx.msg.postNoPermission;
         return;
       }
@@ -753,6 +755,21 @@ class PostController extends Controller {
     }
 
     ctx.body = ctx.msg.ipfsCatchFailed;
+  }
+
+  // 判断购买和持币情况
+  async hasPermission(post, userId) {
+    // 文章需要购买
+    if (post.require_buy) {
+      const isBuy = await this.service.shop.order.isBuy(post.id, userId);
+      if (isBuy) {
+        return true;
+      }
+      return false;
+    }
+
+    // 判断持币
+    return await this.service.post.isHoldMineTokens(post.id, userId);
   }
 
   // 查询统计数据

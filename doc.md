@@ -3176,9 +3176,10 @@ symbol-desc：字母倒序
 		{
 			"tokenId": 15,
 			"type": "buy_minetoken",
-      "amount":100000
+      "amount": 100000
 		}
-	]
+  ],
+  "useBalance": 1 //1使用余额，0不使用
 }
 ```
 * 返回值：

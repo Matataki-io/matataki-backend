@@ -123,12 +123,9 @@ class WxPayController extends Controller {
   }
   async wxpayArticle() {
     const { ctx } = this;
-    ctx.logger.info('wxpayArticle1', this.config.aritclePay.notify_url);
     const { tradeNo, trade_type = 'NATIVE', openid = null } = ctx.request.body;
     const out_trade_no = tradeNo;
-    ctx.logger.info('wxpayArticle2', tradeNo);
-    const shopOrder = await ctx.service.shop.order.get(ctx.user.id, tradeNo);
-    ctx.logger.info('wxpayArticle3', shopOrder, ctx.user.id);
+    const shopOrder = await ctx.service.shop.orderHeader.get(ctx.user.id, tradeNo);
     const { id, amount, status } = shopOrder;
     // 6 9都代表支付成功 7 8 失败
     if (status >= 6) {
@@ -178,7 +175,7 @@ class WxPayController extends Controller {
     ctx.logger.info('controller wxpay pay result', payargs);
     if (payargs.appId || payargs.appid) {
       // 更新订单状态为‘支付中’：3
-      await ctx.service.shop.order.setStatusPaying(order.out_trade_no);
+      await ctx.service.shop.orderHeader.setStatusPaying(order.out_trade_no);
       ctx.body = {
         timeStamp,
         ...payargs,
@@ -193,8 +190,8 @@ class WxPayController extends Controller {
     const { result_code, return_code, out_trade_no } = ctx.request.weixin;
     ctx.logger.info('WxPayController payArticleNotify', out_trade_no, ctx.request.weixin);
     if (return_code === 'SUCCESS' && result_code === 'SUCCESS') {
-      await ctx.service.shop.order.setStatusPaySuccessful(out_trade_no);
-      await ctx.service.shop.order.processingOrder(out_trade_no);
+      await ctx.service.shop.orderHeader.setStatusPaySuccessful(out_trade_no);
+      await ctx.service.shop.orderHeader.processingOrder(out_trade_no);
       ctx.set('Content-Type', 'text/xml');
       ctx.body = `<xml>
                     <return_code><![CDATA[SUCCESS]]></return_code>
