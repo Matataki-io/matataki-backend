@@ -609,7 +609,8 @@ class UserService extends Service {
       return null;
     }
 
-    if (!await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE id = ?);', [userId])) {
+    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE id = ?) existence;', [userId]))[0];
+    if (!existence) {
       return null;
     }
 
