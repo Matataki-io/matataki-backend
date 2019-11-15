@@ -124,7 +124,13 @@ class OrderController extends Controller {
     const { ctx } = this;
     const { items } = ctx.request.body;
     const result = await ctx.service.shop.order.createOrder(ctx.user.id, items, ctx.ip);
-    ctx.body = result;
+    if (result === '-1') {
+      ctx.body = ctx.msg.failure;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
   }
 
   // 根据订单号查看订单

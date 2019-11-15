@@ -263,7 +263,7 @@ class OrderService extends Service {
           );
           if (!result) {
             await conn.rollback();
-            return '-2';
+            return '-1';
           }
           total = total + amount;
         }
@@ -273,7 +273,7 @@ class OrderService extends Service {
         [ userId, trade_no, total, moment().format('YYYY-MM-DD HH:mm:ss'), 3, ip ]);
       if (headerResult.affectedRows <= 0) {
         await conn.rollback();
-        return '-3';
+        return '-1';
       }
       await conn.commit();
       return trade_no;
