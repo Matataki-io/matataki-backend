@@ -138,7 +138,7 @@ class OrderController extends Controller {
   async get() {
     const { ctx } = this;
     const tradeNo = ctx.params.tradeNo;
-    const orderHeader = await ctx.service.shop.order.get(ctx.user.id, tradeNo);
+    const orderHeader = await ctx.service.shop.orderHeader.get(ctx.user.id, tradeNo);
     if (!orderHeader) {
       ctx.body = ctx.msg.failure;
       return;

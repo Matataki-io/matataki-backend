@@ -87,7 +87,7 @@ class PostService extends Service {
   async getByHash(hash, requireProfile) {
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens FROM posts WHERE hash = ?;',
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy FROM posts WHERE hash = ?;',
       [ hash ]
     );
     let post = posts[0];
@@ -106,7 +106,7 @@ class PostService extends Service {
   async get(id) {
     const posts = await this.app.mysql.select('posts', {
       where: { id },
-      columns: [ 'id', 'hash', 'uid', 'title', 'short_content', 'status', 'create_time', 'comment_pay_point', 'channel_id' ], // todo：需要再增加
+      columns: [ 'id', 'hash', 'uid', 'title', 'short_content', 'status', 'create_time', 'comment_pay_point', 'channel_id', 'require_buy' ], // todo：需要再增加
     });
     if (posts && posts.length > 0) {
       return posts[0];
@@ -123,7 +123,7 @@ class PostService extends Service {
   async getById(id) {
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens FROM posts WHERE id = ?;',
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy FROM posts WHERE id = ?;',
       [ id ]
     );
 
@@ -201,6 +201,7 @@ class PostService extends Service {
     return post;
   }
 
+  // 登录用户查看与自己相关的属性
   async getPostProfileOf(id, userId) {
     if (!userId) {
       return null;
@@ -220,10 +221,19 @@ class PostService extends Service {
       post.is_support = true;
     }
 
-    // 如果是商品，当前用户是否已购买
+    // 如果是商品，判断当前用户是否已购买
     if (post.channel_id === consts.postChannels.product) {
       post.is_buy = false;
       const buy = await this.app.mysql.get('orders', { signid: post.id, uid: userId, status: 1 });
+      if (buy) {
+        post.is_buy = true;
+      }
+    }
+
+    // 如果是文章，并且需要购买，判断当前用户是否已购买
+    if (post.channel_id === consts.postChannels.article && post.require_buy === 1) {
+      post.is_buy = false;
+      const buy = await this.service.shop.order.isBuy(id, userId);
       if (buy) {
         post.is_buy = true;
       }

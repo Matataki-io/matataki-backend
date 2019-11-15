@@ -734,9 +734,7 @@ class PostController extends Controller {
     const post = await this.service.post.getByHash(hash, false);
 
     if (post.uid !== ctx.user.id) {
-      // 增加判断是否有权限
-      const result = await this.service.post.isHoldMineTokens(post.id, ctx.user.id);
-      if (!result) {
+      if (!this.hasPermission(post, ctx.user.id)) {
         ctx.body = ctx.msg.postNoPermission;
         return;
       }
@@ -753,6 +751,21 @@ class PostController extends Controller {
     }
 
     ctx.body = ctx.msg.ipfsCatchFailed;
+  }
+
+  // 判断购买和持币情况
+  async hasPermission(post, userId) {
+    // 文章需要购买
+    if (post.require_buy) {
+      const isBuy = await this.service.shop.order.isBuy(post.id, userId);
+      if (isBuy) {
+        return true;
+      }
+      return false;
+    }
+
+    // 判断持币
+    return await this.service.post.isHoldMineTokens(post.id, userId);
   }
 
   // 查询统计数据

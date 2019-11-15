@@ -97,10 +97,10 @@ class OrderService extends Service {
     return await this.app.mysql.get('orders', { uid: userId, signid: signId, status: 1 });
   }
 
-  async get(tradeNo) {
+  async get(userId, tradeNo) {
     const orders = await this.app.mysql.select('orders', {
-      where: { trade_no: tradeNo },
-      columns: [ 'id', 'uid', 'signid', 'symbol', 'amount', 'price', 'platform', 'status', 'create_time', 'trade_no' ], // todo：需要再增加
+      where: { uid: userId, trade_no: tradeNo },
+      columns: [ 'symbol', 'amount', 'price', 'status', 'create_time', 'trade_no' ], // todo：需要再增加
     });
     if (orders && orders.length > 0) {
       return orders[0];
@@ -253,6 +253,17 @@ class OrderService extends Service {
     }
 
     return 0;
+  }
+
+  // 查询用户是否已经购买
+  async isBuy(signId, userId) {
+    // 查询订单
+    const buy = await this.app.mysql.get('orders', { signid: signId, uid: userId, status: 9 });
+    if (buy) {
+      return true;
+    }
+
+    return false;
   }
 }
 

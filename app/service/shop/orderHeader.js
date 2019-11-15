@@ -22,9 +22,13 @@ class OrderHeaderService extends Service {
             await conn.rollback();
             return '-1';
           }
+
+          // 先判断有没有购买过文章
+          if (await this.service.shop.order.isBuy(userId, item.signId)) {
+            await conn.rollback();
+            return '-1';
+          }
           // 创建购买文章订单行
-          // todo：先判断没有购买过文章
-          // todo：查看文章详情显示购买成功的状态
           const result = await this.service.shop.order.create(userId, item.signId, '', prices[0].symbol, prices[0].price, prices[0].platform, 1, 0, trade_no, conn);
           if (result <= 0) {
             await conn.rollback();
@@ -73,22 +77,24 @@ class OrderHeaderService extends Service {
       // 处理到分，向上取整
       total = Math.ceil(total / 100) * 100;
       const headerResult = await conn.query('INSERT INTO order_headers(uid, trade_no, amount, create_time, status, ip) VALUES(?,?,?,?,?,?);',
-        [ userId, trade_no, total, moment().format('YYYY-MM-DD HH:mm:ss'), 3, ip ]);
+        [ userId, trade_no, total, moment().format('YYYY-MM-DD HH:mm:ss'), 0, ip ]);
       if (headerResult.affectedRows <= 0) {
         await conn.rollback();
         return '-1';
       }
 
+      await conn.commit();
+
       // 使用余额整单支付成功，直接处理后续的流程
       if (useBalance && total === 0) {
+        await this.setStatusPaying(trade_no);
         await this.paySuccessful(trade_no);
       }
 
-      await conn.commit();
       return trade_no;
     } catch (e) {
       await conn.rollback();
-      this.logger.error('OrderService.createOrder exception. %j', e);
+      this.logger.error('OrderHeaderService.createOrder exception. %j', e);
       return '-1';
     }
   }
@@ -156,7 +162,7 @@ class OrderHeaderService extends Service {
       // 交易失败
       await this.app.mysql.query('UPDATE order_headers SET status = 7 WHERE trade_no = ?;', [ tradeNo ]);
       // 退款
-      await this.refundreOrder(tradeNo);
+      await this.refundOrder(tradeNo);
       return -1;
     }
 
@@ -225,6 +231,12 @@ class OrderHeaderService extends Service {
       const order = result[0];
       // 微信订单实际支付的CNY金额
       const amount = order.amount;
+      // 付款金额为0，不需要退款，直接关闭
+      if (amount === 0) {
+        await conn.query('UPDATE order_headers SET status = 8 WHERE trade_no = ?;', [ tradeNo ]);
+        await conn.commit();
+        return -1;
+      }
 
       const res = await this.service.wxpay.refund(tradeNo, amount / 10000, amount / 10000);
       // 申请退款接收成功，todo：处理退款结果通知，写到数据库status=10；todo：如果退款接收失败，还需要再次调用，放到schedule里面调用退款比较好
@@ -232,6 +244,7 @@ class OrderHeaderService extends Service {
         await conn.query('UPDATE order_headers SET status = 8 WHERE trade_no = ?;', [ tradeNo ]);
       }
       await conn.commit();
+      return 0;
     } catch (e) {
       await conn.rollback();
       this.logger.error('OrderService.refundOrder exception. %j', e);
