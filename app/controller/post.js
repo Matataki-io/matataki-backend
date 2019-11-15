@@ -954,6 +954,49 @@ class PostController extends Controller {
     ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
   }
 
+  async addBookmark() {
+    const ctx = this.ctx;
+    const id = parseInt(ctx.params.id);
+
+    if (Number.isNaN(id)) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const result = await ctx.service.post.addBookmark(ctx.user.id, id);
+
+    if (result === null) {
+      ctx.status = 404;
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+
+    ctx.status = result ? 201 : 204;
+    if (result) {
+      ctx.body = ctx.msg.success;
+    }
+  }
+
+  async removeBookmark() {
+    const ctx = this.ctx;
+    const id = parseInt(ctx.params.id);
+
+    if (Number.isNaN(id)) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    const result = await ctx.service.post.removeBookmark(ctx.user.id, id);
+
+    if (result === null) {
+      ctx.status = 404;
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+
+    ctx.status = result ? 204 : 404;
+    ctx.body = result ? ctx.msg.success : ctx.msg.postNotBookmarked;
+  }
 }
 
 module.exports = PostController;
