@@ -125,8 +125,7 @@ class WxPayController extends Controller {
     const { ctx } = this;
     const { tradeNo, trade_type = 'NATIVE', openid = null } = ctx.request.body;
     const out_trade_no = tradeNo;
-    const shopOrder = await ctx.service.shop.orderHeader.get(ctx.user.id, tradeNo);
-    const { id, amount, status } = shopOrder;
+    const { amount, status } = await ctx.service.shop.orderHeader.get(ctx.user.id, tradeNo);
     // 6 9都代表支付成功 7 8 失败
     if (status >= 6) {
       ctx.body = ctx.msg.orderHandled;
@@ -167,7 +166,7 @@ class WxPayController extends Controller {
       order = {
         ...order,
         trade_type,
-        product_id: id,
+        product_id: 10000,
       };
       // 微信统一下单
       payargs = await this.app.tenpay.unifiedOrder(order);
