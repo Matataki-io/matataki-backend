@@ -121,6 +121,83 @@ class WxPayController extends Controller {
       ctx.body = ctx.msg.failure;
     }
   }
+  async wxpayArticle() {
+    const { ctx } = this;
+    const { tradeNo, trade_type = 'NATIVE', openid = null } = ctx.request.body;
+    const out_trade_no = tradeNo;
+    const { id, amount, status } = await ctx.service.shop.order.get(ctx.user.id, tradeNo);
+    // 6 9都代表支付成功 7 8 失败
+    if (status >= 6) {
+      ctx.body = ctx.msg.orderHandled;
+      return;
+    }
+    const pay_cny_amount = amount;
+    const notify_url = this.config.aritclePay.notify_url;
+    // eslint-disable-next-line no-bitwise
+    const timeStamp = '' + (Date.now() / 1000 | 0);
+    const ip = ctx.ips.length > 0 ? ctx.ips[0] !== '127.0.0.1' ? ctx.ips[0] : ctx.ips[1] : ctx.ip;
+    // 如果订单金额小于0元
+    if (pay_cny_amount <= 0) {
+      ctx.body = {
+        timeStamp,
+        trade_no: out_trade_no,
+      };
+      return;
+    }
+    // pay_cny_amount扣除余额后微信实际支付的金额
+    const total_fee = Math.floor(pay_cny_amount / 100);
+    let order = {
+      out_trade_no, // 订单号 唯一id商户系统内部订单号，要求32个字符内，只能是数字、大小写字母_-|* 且在同一个商户号下唯一。
+      body: '购买文章',
+      total_fee, // 微信最小单位是分
+      spbill_create_ip: ip, // 请求的ip地址
+      notify_url,
+    };
+    ctx.logger.info('controller wxpay pay params', order);
+    let payargs = {};
+    if (trade_type === 'JSAPI') {
+      order = {
+        ...order,
+        openid,
+      };
+      // 获取微信JSSDK支付参数
+      payargs = await this.app.tenpay.getPayParams(order);
+    } else {
+      order = {
+        ...order,
+        trade_type,
+        product_id: id,
+      };
+      // 微信统一下单
+      payargs = await this.app.tenpay.unifiedOrder(order);
+    }
+    ctx.logger.info('controller wxpay pay result', payargs);
+    if (payargs.appId || payargs.appid) {
+      // 更新订单状态为‘支付中’：3
+      await ctx.service.shop.order.setStatusPaying(order.out_trade_no);
+      ctx.body = {
+        timeStamp,
+        ...payargs,
+        trade_no: order.out_trade_no,
+      };
+    } else {
+      ctx.body = ctx.msg.failure;
+    }
+  }
+  async payArticleNotify() {
+    const { ctx } = this;
+    const { result_code, return_code, out_trade_no } = ctx.request.weixin;
+    ctx.logger.info('WxPayController payArticleNotify', out_trade_no, ctx.request.weixin);
+    if (return_code === 'SUCCESS' && result_code === 'SUCCESS') {
+      await ctx.service.shop.order.setStatusPaySuccessful(out_trade_no);
+      await ctx.service.shop.order.processingOrder(out_trade_no);
+      ctx.set('Content-Type', 'text/xml');
+      ctx.body = `<xml>
+                    <return_code><![CDATA[SUCCESS]]></return_code>
+                    <return_msg><![CDATA[OK]]></return_msg>
+                  </xml>`;
+    }
+  }
   async getOrder() {
     const { ctx } = this;
     const { id } = ctx.params;
