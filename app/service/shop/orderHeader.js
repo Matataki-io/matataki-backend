@@ -65,19 +65,20 @@ class OrderHeaderService extends Service {
         }
       }
 
+      let amount = 0;
       // 使用余额支付
       if (useBalance) {
         const balance = await this.service.assets.balanceOf(userId, 'CNY');
-        total = total - balance;
-        if (total < 0) {
-          total = 0;
+        amount = total - balance;
+        if (amount < 0) {
+          amount = 0;
         }
       }
 
       // 处理到分，向上取整
-      total = Math.ceil(total / 100) * 100;
-      const headerResult = await conn.query('INSERT INTO order_headers(uid, trade_no, amount, create_time, status, ip) VALUES(?,?,?,?,?,?);',
-        [ userId, trade_no, total, moment().format('YYYY-MM-DD HH:mm:ss'), 0, ip ]);
+      amount = Math.ceil(amount / 100) * 100;
+      const headerResult = await conn.query('INSERT INTO order_headers(uid, trade_no, total, amount, create_time, status, ip) VALUES(?,?,?,?,?,?,?);',
+        [ userId, trade_no, total, amount, moment().format('YYYY-MM-DD HH:mm:ss'), 0, ip ]);
       if (headerResult.affectedRows <= 0) {
         await conn.rollback();
         return '-1';
@@ -113,19 +114,18 @@ class OrderHeaderService extends Service {
         total = total + exorder.cny_amount;
       }
 
-      const amount = 0;
-
+      let amount = 0;
       // 使用余额支付
       if (useBalance) {
         const balance = await this.service.assets.balanceOf(userId, 'CNY');
-        total = total - balance;
-        if (total < 0) {
-          total = 0;
+        amount = total - balance;
+        if (amount < 0) {
+          amount = 0;
         }
       }
 
       // 处理到分，向上取整
-      total = Math.ceil(total / 100) * 100;
+      amount = Math.ceil(amount / 100) * 100;
       await conn.query('UPDATE order_headers SET amount = ? WHERE trade_no = ? AND status = 0;', [ total, tradeNo ]);
 
       await conn.commit();
