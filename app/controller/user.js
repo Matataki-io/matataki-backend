@@ -502,9 +502,9 @@ class UserController extends Controller {
 
   async getBookmarks() {
     const ctx = this.ctx;
-    const { pagesize = 20, page = 1 } = ctx.query;
+    const { pagesize = 20, page = 1, order = 1 } = ctx.query;
 
-    const result = await this.service.user.getBookmarks(ctx.user.id, page, pagesize);
+    const result = await this.service.user.getBookmarks(ctx.user.id, order, page, pagesize);
     if (result === false) {
       ctx.body = ctx.msg.failure;
       return;

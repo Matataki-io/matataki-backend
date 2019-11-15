@@ -638,18 +638,30 @@ class UserService extends Service {
     return { websites, socialAccounts };
   }
 
-  async getBookmarks(userId, page = 1, pagesize = 20) {
+  async getBookmarks(userId, order = 1, page = 1, pagesize = 20) {
     if (userId === null) {
       return false;
     }
 
-    const result = await this.app.mysql.query(`
-      SELECT pid FROM post_bookmarks
-      WHERE uid = :userId
-      ORDER BY create_time DESC
-      LIMIT :offset, :limit;
-      SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId;
-    `, {
+    let sql;
+    if (order === 1) {
+      sql = `SELECT pid
+        FROM post_bookmarks
+        WHERE uid = :userId
+        ORDER BY create_time DESC
+        LIMIT :offset, :limit;
+        SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId;`;
+    } else if (order === 2) {
+      sql = `SELECT pid
+        FROM post_bookmarks t1
+        JOIN posts t2 ON t2.id = t1.pid
+        WHERE t1.uid = :userId
+        ORDER BY t2.create_time
+        LIMIT :offset, :limit;
+        SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId;`;
+    }
+
+    const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,
       limit: pagesize,
       userId,
