@@ -86,10 +86,10 @@ class OrderHeaderService extends Service {
       await conn.commit();
 
       // 使用余额整单支付成功，直接处理后续的流程
-      if (useBalance && total === 0) {
-        await this.setStatusPaying(trade_no);
-        await this.paySuccessful(trade_no);
-      }
+      // if (useBalance && total === 0) {
+      //   await this.setStatusPaying(trade_no);
+      //   await this.paySuccessful(trade_no);
+      // }
 
       return trade_no;
     } catch (e) {
@@ -97,6 +97,53 @@ class OrderHeaderService extends Service {
       this.logger.error('OrderHeaderService.createOrder exception. %j', e);
       return '-1';
     }
+  }
+
+  // 修改还未支付的订单
+  async updateOrder(userId, tradeNo, useBalance) {
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      const result = await conn.query('SELECT * FROM order_headers WHERE trade_no = ? AND status = 0 FOR UPDATE;', [ tradeNo ]);
+      if (!result || result.length <= 0) {
+        await conn.rollback();
+        return -1;
+      }
+
+      const order = await this.service.shop.order.get(userId, tradeNo);
+      const exorder = await this.service.exchange.get(userId, tradeNo);
+
+      let total = 0;
+      if (order) {
+        total = total + order.amount;
+      }
+      if (exorder) {
+        total = total + exorder.cny_amount;
+      }
+
+      const amount = 0;
+
+      // 使用余额支付
+      if (useBalance) {
+        const balance = await this.service.assets.balanceOf(userId, 'CNY');
+        total = total - balance;
+        if (total < 0) {
+          total = 0;
+        }
+      }
+
+      // 处理到分，向上取整
+      total = Math.ceil(total / 100) * 100;
+      await conn.query('UPDATE order_headers SET amount = ? WHERE trade_no = ? AND status = 0;', [ total, tradeNo ]);
+
+      await conn.commit();
+
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('OrderHeaderService.paySuccess exception. %j', e);
+      return -2;
+    }
+
   }
 
   // 根据用户Id、订单号获取订单详细信息
@@ -212,7 +259,7 @@ class OrderHeaderService extends Service {
       return 0;
     } catch (e) {
       await conn.rollback();
-      this.logger.error('OrderService.paySuccess exception. %j', e);
+      this.logger.error('OrderHeaderService.handling exception. %j', e);
       return -5;
     }
   }

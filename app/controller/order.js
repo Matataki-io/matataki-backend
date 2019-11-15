@@ -119,6 +119,7 @@ class OrderController extends Controller {
     ctx.body.data = products;
   }
 
+
   // 创建订单
   async createOrder() {
     const { ctx } = this;
@@ -132,6 +133,19 @@ class OrderController extends Controller {
       ...ctx.msg.success,
       data: result,
     };
+  }
+
+  // 修改订单
+  async updateOrder() {
+    const { ctx } = this;
+    const tradeNo = ctx.params.tradeNo;
+    const { useBalance } = ctx.request.body;
+    const result = await ctx.service.shop.orderHeader.updateOrder(ctx.user.id, tradeNo, useBalance);
+    if (result < 0) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = ctx.msg.success;
   }
 
   // 根据订单号查看订单
