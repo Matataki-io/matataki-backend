@@ -287,6 +287,7 @@ class OrderService extends Service {
   // 根据用户Id、订单号获取订单详细信息
   async get(uid, tradeNo) {
     const orderHeader = await this.app.mysql.query('SELECT trade_no, amount, create_time,status FROM order_headers WHERE uid = ? AND trade_no = ?; ', [ uid, tradeNo ]);
+    this.ctx.logger.info('wxpayArticle444', orderHeader);
     if (orderHeader && orderHeader.length > 0) { return orderHeader[0]; }
     return null;
   }

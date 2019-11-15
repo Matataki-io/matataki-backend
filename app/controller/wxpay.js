@@ -128,7 +128,7 @@ class WxPayController extends Controller {
     const out_trade_no = tradeNo;
     ctx.logger.info('wxpayArticle2', tradeNo);
     const shopOrder = await ctx.service.shop.order.get(ctx.user.id, tradeNo);
-    ctx.logger.info('wxpayArticle3', shopOrder);
+    ctx.logger.info('wxpayArticle3', shopOrder, ctx.user.id);
     const { id, amount, status } = shopOrder;
     // 6 9都代表支付成功 7 8 失败
     if (status >= 6) {
