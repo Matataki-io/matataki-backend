@@ -217,6 +217,7 @@ class OrderService extends Service {
     return { count: amount[0].count, list: orders };
   }
 
+
   // 以下是CNY支付相关处理 2019-11-13
   async createOrder(userId, items, ip) {
     // 查询文章价格
@@ -231,6 +232,7 @@ class OrderService extends Service {
           const prices = await this.ctx.service.post.getPrices(item.signId);
           // 创建购买文章订单行
           // todo：先判断没有购买过文章
+          // todo：查看文章详情显示购买成功的状态
           const result = await this.create(userId, item.signId, '', prices[0].symbol, prices[0].price, prices[0].platform, 1, 0, trade_no, conn);
           if (result <= 0) {
             await conn.rollback();
@@ -282,16 +284,135 @@ class OrderService extends Service {
     }
   }
 
+  // 根据用户Id、订单号获取订单详细信息
   async get(uid, tradeNo) {
     const orderHeader = await this.app.mysql.query('SELECT trade_no, amount, create_time FROM order_headers WHERE uid = ? AND trade_no; ', [ uid, tradeNo ]);
     if (orderHeader && orderHeader.length > 0) { return orderHeader[0]; }
     return null;
   }
 
-  // todo:支付成功，更新:
-  // order_headers.status = 6
-  // orders.status = 1
-  // exchange_orders = 6，再调用cnyToTokenOutputOrder
+  // 更新订单状态，微信支付成功通知内调用该方法
+  async setStatusPaySuccessful(trade_no) {
+    // todo:支付成功，更新状态:
+    // order_headers.status = 6
+    // orders.status = 1
+    // exchange_orders = 6
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      const sql = `UPDATE order_headers SET status = 6 WHERE status = 3 AND trade_no = :trade_no;
+                   UPDATE orders SET status = 1 WHERE status = 0 AND trade_no = :trade_no;
+                   UPDATE exchange_orders SET status = 6 WHERE status = 3 AND trade_no = :trade_no;`;
+      const result = await this.app.mysql.query(sql, { trade_no });
+      await conn.commit();
+      const updateSuccess = (result.affectedRows !== 0);
+      return updateSuccess;
+    } catch (err) {
+      this.ctx.logger.error(err);
+      await conn.rollback();
+      return false;
+    }
+  }
+
+  // 处理订单，setStatusPaySuccessful之后调用
+  async processingOrder(tradeNo) {
+    const result = await this.handling(tradeNo);
+    if (result < 0) {
+      // 交易失败
+      await this.app.mysql.query('UPDATE order_headers SET status = 7 WHERE trade_no = ?;', [ tradeNo ]);
+      // 退款
+      await this.refundreOrder(tradeNo);
+      return -1;
+    }
+
+    return 0;
+  }
+
+  // 处理买文章、买币
+  async handling(tradeNo) {
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      const result = await conn.query('SELECT * FROM order_headers WHERE trade_no = ? AND status = 6 FOR UPDATE;', [ tradeNo ]);
+
+      // 订单付款成功，给用户充值
+      await this.service.assets.recharge(result.uid, 'CNY', result.amount, conn);
+
+      // 购买文章，支付给作者
+      const payArticleResult = await this.payArticle(tradeNo, conn);
+      if (payArticleResult < 0) {
+        return -1;
+      }
+
+      // 买币
+      const buyTokenResult = await this.service.exchange.cnyToTokenOutputOrder2(tradeNo, conn);
+      if (buyTokenResult < 0) {
+        return -2;
+      }
+
+      // 更改订单头状态
+      await conn.query('UPDATE order_headers SET status = 9 WHERE trade_no = ?;', [ tradeNo ]);
+
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('OrderService.paySuccess exception. %j', e);
+      return -3;
+    }
+  }
+
+  // 文章付费
+  async payArticle(tradeNo, conn) {
+    // 锁定订单，更新锁，悲观锁
+    const result = await conn.query('SELECT * FROM orders WHERE trade_no = ? AND status = 6 AND type=\'buy_token_output\' FOR UPDATE;', [ tradeNo ]);
+    if (!result || result.length <= 0) {
+      return -1;
+    }
+
+    const order = result[0];
+    const article = await this.service.post.get(order.signid);
+
+    // 转移cny
+    const cnyTransferResult = await this.service.assets.transferFrom('CNY', order.uid, article.uid, order.amount, conn);
+    // 转移资产失败
+    if (!cnyTransferResult) {
+      return -1;
+    }
+
+    // 更新文章付费订单
+    const updOrderResult = await conn.query('UPDATE orders SET status = 9 WHERE trade_no = ?;', [ tradeNo ]);
+    if (updOrderResult.affectedRows <= 0) {
+      return -1;
+    }
+
+    return 0;
+  }
+
+  // 订单退款
+  async refundOrder(tradeNo) {
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      // 锁定订单，更新锁，悲观锁
+      const result = await conn.query('SELECT * FROM order_headers WHERE trade_no = ? AND status = 7 FOR UPDATE;', [ tradeNo ]);
+      if (!result || result.length <= 0) {
+        await conn.rollback();
+        return -1;
+      }
+      const order = result[0];
+      // 微信订单实际支付的CNY金额
+      const amount = order.amount;
+
+      const res = await this.service.wxpay.refund(tradeNo, amount / 10000, amount / 10000);
+      // 申请退款接收成功，todo：处理退款结果通知，写到数据库status=10；todo：如果退款接收失败，还需要再次调用，放到schedule里面调用退款比较好
+      if (res.return_code === 'SUCCESS' && res.result_code === 'SUCCESS') {
+        await conn.query('UPDATE order_headers SET status = 8 WHERE trade_no = ?;', [ tradeNo ]);
+      }
+      await conn.commit();
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('OrderService.refundOrder exception. %j', e);
+      return -1;
+    }
+  }
 
 }
 

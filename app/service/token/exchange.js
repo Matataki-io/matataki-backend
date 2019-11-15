@@ -12,7 +12,6 @@ class ExchangeService extends Service {
   √ CNY账号不要插入ES
   √ 控制发行上限1亿
   √ Output为准计算
-  √ 验证tokenToTokenOutput、cnyToTokenOutputOrder
 
     失败直接退款
 
@@ -579,6 +578,34 @@ class ExchangeService extends Service {
       this.logger.error('Exchange.cnyToTokenOutputBalance exception. %j', e);
       return -1;
     }
+  }
+
+  // order_headers已经处理充值了
+  async cnyToTokenOutputOrder2(tradeNo, conn) {
+    const result = await conn.query('SELECT * FROM exchange_orders WHERE trade_no = ? AND status = 6 AND type=\'buy_token_output\' FOR UPDATE;', [ tradeNo ]);
+    if (!result || result.length <= 0) {
+      await conn.rollback();
+      return -1;
+    }
+    const order = result[0];
+    const userId = order.uid;
+    const tokenId = order.token_id;
+    // pay_cny_amount：微信订单实际支付的CNY金额
+    // const pay_cny_amount = order.pay_cny_amount;
+    // 根据公式计算的金额，todo：应该是用max？？？
+    const cny_sold = order.cny_amount;
+    // 页面上填写的购买数量
+    const tokens_bought = order.token_amount;
+
+    const res = await this.cnyToTokenOutput(userId, tokenId, tokens_bought, cny_sold, order.deadline, order.recipient, conn);
+    if (res < 0) {
+      return -1;
+    }
+
+    // 更新exchange_orders
+    await conn.query('UPDATE exchange_orders SET status = 9 WHERE trade_no = ?;', [ tradeNo ]);
+
+    return 0;
   }
 
   // 通过cny兑换token，以输出的token数量为准
