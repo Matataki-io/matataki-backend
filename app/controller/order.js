@@ -123,9 +123,10 @@ class OrderController extends Controller {
   async createOrder() {
     const { ctx } = this;
     const { items } = ctx.request.body;
-    const result = await ctx.service.shop.order.createOrder(ctx.user.id, items, ctx.ip);
+    const result = await ctx.service.shop.orderHeader.createOrder(ctx.user.id, items, ctx.ip);
     if (result === '-1') {
       ctx.body = ctx.msg.failure;
+      return;
     }
     ctx.body = {
       ...ctx.msg.success,
@@ -140,6 +141,7 @@ class OrderController extends Controller {
     const orderHeader = await ctx.service.shop.order.get(ctx.user.id, tradeNo);
     if (!orderHeader) {
       ctx.body = ctx.msg.failure;
+      return;
     }
     ctx.body = {
       ...ctx.msg.success,

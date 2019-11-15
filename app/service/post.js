@@ -157,9 +157,7 @@ class PostService extends Service {
   // 获取文章阅读数等属性
   async getPostProfile(post) {
     // 如果是商品，返回价格
-    if (post.channel_id === consts.postChannels.product) {
-      post.prices = await this.getPrices(post.id);
-    }
+    post.prices = await this.getPrices(post.id);
 
     // 阅读次数
     const count = await this.app.mysql.query(
