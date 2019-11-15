@@ -5,7 +5,7 @@ const Service = require('egg').Service;
 
 class OrderHeaderService extends Service {
   // 以下是CNY支付相关处理 2019-11-13
-  async createOrder(userId, items, ip) {
+  async createOrder(userId, items, useBalance, ip) {
     // 查询文章价格
     let total = 0;
     const trade_no = this.ctx.helper.genCharacterNumber(31);
@@ -40,7 +40,7 @@ class OrderHeaderService extends Service {
               uid: userId, // 用户id
               token_id: item.tokenId, // 购买的token id
               cny_amount: amount,
-              pay_cny_amount: amount,
+              pay_cny_amount: 0,
               token_amount: item.amount,
               type: 'buy_token_output', // 类型：add，buy_token，sale_token
               trade_no, // 订单号
@@ -61,12 +61,29 @@ class OrderHeaderService extends Service {
         }
       }
 
+      // 使用余额支付
+      if (useBalance) {
+        const balance = await this.service.assets.balanceOf(userId, 'CNY');
+        total = total - balance;
+        if (total < 0) {
+          total = 0;
+        }
+      }
+
+      // 处理到分，向上取整
+      total = Math.ceil(total / 100) * 100;
       const headerResult = await conn.query('INSERT INTO order_headers(uid, trade_no, amount, create_time, status, ip) VALUES(?,?,?,?,?,?);',
         [ userId, trade_no, total, moment().format('YYYY-MM-DD HH:mm:ss'), 3, ip ]);
       if (headerResult.affectedRows <= 0) {
         await conn.rollback();
         return '-1';
       }
+
+      // 使用余额整单支付成功，直接处理后续的流程
+      if (useBalance && total === 0) {
+        await this.paySuccessful(trade_no);
+      }
+
       await conn.commit();
       return trade_no;
     } catch (e) {
@@ -101,7 +118,7 @@ class OrderHeaderService extends Service {
     }
   }
 
-  // 更新订单状态为已支付，微信支付成功通知内调用该方法
+  // 更新订单状态为已支付
   async setStatusPaySuccessful(tradeNo) {
     // todo:支付成功，更新状态:
     // order_headers.status = 6
@@ -123,7 +140,16 @@ class OrderHeaderService extends Service {
     }
   }
 
-  // 处理订单，setStatusPaySuccessful之后调用
+  // 微信支付成功通知内调用该方法
+  async paySuccessful(tradeNo) {
+    const result = await this.setStatusPaySuccessful(tradeNo);
+    if (result) {
+      await this.processingOrder(tradeNo);
+    }
+    return true;
+  }
+
+  // 处理订单，paySuccessful之后调用
   async processingOrder(tradeNo) {
     const result = await this.handling(tradeNo);
     if (result < 0) {
@@ -184,6 +210,7 @@ class OrderHeaderService extends Service {
       return -5;
     }
   }
+
 
   // 订单退款
   async refundOrder(tradeNo) {
