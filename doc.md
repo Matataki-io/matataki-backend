@@ -3191,6 +3191,24 @@ symbol-desc：字母倒序
 }
 ```
 
+#### 修改订单
+* PUT /orders/:tradeNo
+* 响应状态码： 200
+* 请求头：x-access-token
+* 参数：
+```json
+{
+  "useBalance": 1 //1使用余额，0不使用
+}
+```
+* 返回值：
+```json
+{
+	"code": 0,
+  "message": "成功"
+}
+```
+
 #### 获取订单
 * GET /orders/:tradeNo
 * 响应状态码： 200
