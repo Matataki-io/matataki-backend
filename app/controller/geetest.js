@@ -1,7 +1,8 @@
 'use strict';
 
 const Controller = require('egg').Controller;
-const Geetest = require('../geetest/gt-sdk');
+// const Geetest = require('../geetest/gt-sdk');
+const Geetest = require('gt3-sdk');
 
 class GeetestController extends Controller {
   constructor(ctx) {
@@ -35,6 +36,7 @@ class GeetestController extends Controller {
   // 向极验申请每次验证所需的challenge
   async register() {
     const ctx = this.ctx;
+    ctx.logger.info('geetest register');
     let data;
     try {
       data = await this.captcha.register(null);
@@ -48,7 +50,6 @@ class GeetestController extends Controller {
       ctx.status = 500;
       ctx.body = data;
     }
-
   }
 }
 
