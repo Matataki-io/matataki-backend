@@ -79,7 +79,7 @@ module.exports = app => {
   // 转移文章拥有权
   router.post('/post/transferOwner', passport.authorize, controller.post.transferOwner);
   // 收藏文章
-  router.put('/post/:id/bookmark', passport.authorize, controller.post.addBookmark);
+  router.post('/post/:id/bookmark', passport.authorize, controller.post.addBookmark);
   // 取消收藏文章
   router.delete('/post/:id/bookmark', passport.authorize, controller.post.removeBookmark);
 
