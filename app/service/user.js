@@ -558,9 +558,7 @@ class UserService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      websites = new Set(websites);
-
-      await conn.query('DELETE FROM user_websites WHERE uid = ? AND website_id >= ?', [userId, websites.size]);
+      await conn.query('DELETE FROM user_websites WHERE uid = ? AND website_id >= ?', [userId, websites.length]);
 
       let websiteId = 0;
 
