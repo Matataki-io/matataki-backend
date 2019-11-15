@@ -286,23 +286,41 @@ class OrderService extends Service {
 
   // 根据用户Id、订单号获取订单详细信息
   async get(uid, tradeNo) {
-    const orderHeader = await this.app.mysql.query('SELECT trade_no, amount, create_time FROM order_headers WHERE uid = ? AND trade_no; ', [ uid, tradeNo ]);
+    const orderHeader = await this.app.mysql.query('SELECT trade_no, amount, create_time,status FROM order_headers WHERE uid = ? AND trade_no; ', [ uid, tradeNo ]);
     if (orderHeader && orderHeader.length > 0) { return orderHeader[0]; }
     return null;
   }
 
-  // 更新订单状态，微信支付成功通知内调用该方法
-  async setStatusPaySuccessful(trade_no) {
+  // 更新订单状态为支付中
+  async setStatusPaying(tradeNo) {
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      const sql = `UPDATE order_headers SET status = 3 WHERE status = 0 AND trade_no = :trade_no;
+                   UPDATE orders SET status = 3 WHERE status = 0 AND trade_no = :trade_no;
+                   UPDATE exchange_orders SET status = 3 WHERE status = 0 AND trade_no = :trade_no;`;
+      const result = await conn.query(sql, { trade_no: tradeNo });
+      await conn.commit();
+      const updateSuccess = (result.affectedRows !== 0);
+      return updateSuccess;
+    } catch (err) {
+      this.ctx.logger.error(err);
+      await conn.rollback();
+      return false;
+    }
+  }
+
+  // 更新订单状态为已支付，微信支付成功通知内调用该方法
+  async setStatusPaySuccessful(tradeNo) {
     // todo:支付成功，更新状态:
     // order_headers.status = 6
-    // orders.status = 1
+    // orders.status = 6
     // exchange_orders = 6
     const conn = await this.app.mysql.beginTransaction();
     try {
       const sql = `UPDATE order_headers SET status = 6 WHERE status = 3 AND trade_no = :trade_no;
-                   UPDATE orders SET status = 1 WHERE status = 0 AND trade_no = :trade_no;
+                   UPDATE orders SET status = 6 WHERE status = 3 AND trade_no = :trade_no;
                    UPDATE exchange_orders SET status = 6 WHERE status = 3 AND trade_no = :trade_no;`;
-      const result = await this.app.mysql.query(sql, { trade_no });
+      const result = await conn.query(sql, { trade_no: tradeNo });
       await conn.commit();
       const updateSuccess = (result.affectedRows !== 0);
       return updateSuccess;
@@ -339,12 +357,14 @@ class OrderService extends Service {
       // 购买文章，支付给作者
       const payArticleResult = await this.payArticle(tradeNo, conn);
       if (payArticleResult < 0) {
+        await conn.rollback();
         return -1;
       }
 
       // 买币
       const buyTokenResult = await this.service.exchange.cnyToTokenOutputSubOrder(tradeNo, conn);
       if (buyTokenResult < 0) {
+        await conn.rollback();
         return -2;
       }
 
