@@ -581,7 +581,7 @@ class ExchangeService extends Service {
   }
 
   // order_headers已经处理充值了
-  async cnyToTokenOutputOrder2(tradeNo, conn) {
+  async cnyToTokenOutputSubOrder(tradeNo, conn) {
     const result = await conn.query('SELECT * FROM exchange_orders WHERE trade_no = ? AND status = 6 AND type=\'buy_token_output\' FOR UPDATE;', [ tradeNo ]);
     if (!result || result.length <= 0) {
       await conn.rollback();

@@ -343,7 +343,7 @@ class OrderService extends Service {
       }
 
       // 买币
-      const buyTokenResult = await this.service.exchange.cnyToTokenOutputOrder2(tradeNo, conn);
+      const buyTokenResult = await this.service.exchange.cnyToTokenOutputSubOrder(tradeNo, conn);
       if (buyTokenResult < 0) {
         return -2;
       }
