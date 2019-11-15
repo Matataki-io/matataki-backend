@@ -163,6 +163,14 @@ class OrderController extends Controller {
     };
   }
 
+  // 处理0元订单
+  async handleAmount0() {
+    const { ctx } = this;
+    const { tradeNo } = ctx.request.body;
+    await this.service.shop.orderHeader.handleAmount0(ctx.user.id, tradeNo);
+    ctx.body = ctx.msg.success;
+  }
+
 }
 
 module.exports = OrderController;

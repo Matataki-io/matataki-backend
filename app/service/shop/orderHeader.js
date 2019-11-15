@@ -84,13 +84,6 @@ class OrderHeaderService extends Service {
       }
 
       await conn.commit();
-
-      // 使用余额整单支付成功，直接处理后续的流程
-      // if (useBalance && total === 0) {
-      //   await this.setStatusPaying(trade_no);
-      //   await this.paySuccessful(trade_no);
-      // }
-
       return trade_no;
     } catch (e) {
       await conn.rollback();
@@ -151,6 +144,17 @@ class OrderHeaderService extends Service {
     const orderHeader = await this.app.mysql.query('SELECT trade_no, amount, create_time,status FROM order_headers WHERE uid = ? AND trade_no = ?; ', [ uid, tradeNo ]);
     if (orderHeader && orderHeader.length > 0) { return orderHeader[0]; }
     return null;
+  }
+
+  // 处理不需要支付的订单
+  async handleAmount0(userId, tradeNo) {
+    const order = await this.get(userId, tradeNo);
+    if (order.status === 0 && order.amount === 0) {
+      await this.setStatusPaying(tradeNo);
+      await this.paySuccessful(tradeNo);
+    }
+
+    return true;
   }
 
   // 更新订单状态为支付中
@@ -294,7 +298,7 @@ class OrderHeaderService extends Service {
       return 0;
     } catch (e) {
       await conn.rollback();
-      this.logger.error('OrderService.refundOrder exception. %j', e);
+      this.logger.error('OrderHeaderService.refundOrder exception. %j', e);
       return -1;
     }
   }
