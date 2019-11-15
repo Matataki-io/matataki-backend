@@ -123,6 +123,7 @@ class WxPayController extends Controller {
   }
   async wxpayArticle() {
     const { ctx } = this;
+    ctx.logger.info('wxpayArticle1', this.config.aritclePay.notify_url);
     const { tradeNo, trade_type = 'NATIVE', openid = null } = ctx.request.body;
     const out_trade_no = tradeNo;
     const { id, amount, status } = await ctx.service.shop.order.get(ctx.user.id, tradeNo);
@@ -153,6 +154,7 @@ class WxPayController extends Controller {
       spbill_create_ip: ip, // 请求的ip地址
       notify_url,
     };
+    ctx.logger.info('wxpayArticle2', order);
     ctx.logger.info('controller wxpay pay params', order);
     let payargs = {};
     if (trade_type === 'JSAPI') {
