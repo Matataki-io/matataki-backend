@@ -971,10 +971,8 @@ class PostController extends Controller {
       return;
     }
 
-    ctx.status = result ? 201 : 204;
-    if (result) {
-      ctx.body = ctx.msg.success;
-    }
+    ctx.status = result ? 201 : 409;
+    ctx.body = result ? ctx.msg.success : ctx.msg.postBookmarked;
   }
 
   async removeBookmark() {
