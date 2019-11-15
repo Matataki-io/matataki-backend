@@ -136,6 +136,9 @@ module.exports = app => {
   // 获取我邀请的人的列表
   router.get('/user/invitees', passport.authorize, controller.user.invitees);
 
+  // 获取收藏文章
+  router.get('/user/bookmarks', passport.authorize, controller.user.getBookmarks);
+
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
   // 获取用户的网站和社交帐号信息

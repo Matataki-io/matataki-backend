@@ -639,6 +639,30 @@ class UserService extends Service {
 
     return { websites, socialAccounts };
   }
+
+  async getBookmarks(userId, page = 1, pagesize = 20) {
+    if (userId === null) {
+      return false;
+    }
+
+    const result = await this.app.mysql.query(`
+      SELECT pid FROM post_bookmarks
+      WHERE uid = :userId
+      ORDER BY create_time DESC
+      LIMIT :offset, :limit;
+      SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId;
+    `, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      userId,
+    });
+    const { count } = result[1][0];
+    const postIds = result[0].map(row => row.pid);
+
+    const posts = await this.service.post.getPostList(postIds);
+
+    return { count, list: posts };
+  }
 }
 
 module.exports = UserService;
