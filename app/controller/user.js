@@ -504,7 +504,7 @@ class UserController extends Controller {
     const ctx = this.ctx;
     const { pagesize = 20, page = 1, order = 1 } = ctx.query;
 
-    const result = await this.service.user.getBookmarks(ctx.user.id, order, page, pagesize);
+    const result = await this.service.user.getBookmarks(ctx.user.id, order, parseInt(page), parseInt(pagesize));
     if (result === false) {
       ctx.body = ctx.msg.failure;
       return;
