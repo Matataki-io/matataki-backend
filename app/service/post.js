@@ -239,6 +239,10 @@ class PostService extends Service {
       post.is_readnew = await this.service.mining.getReadNew(userId, post.id);
     }
 
+    // 是否收藏
+    const { isBookmarked } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM post_bookmarks WHERE uid = ? AND pid = ?) isBookmarked;', [userId, id]))[0];
+    post.is_bookmarked = isBookmarked;
+
     return post;
   }
 
