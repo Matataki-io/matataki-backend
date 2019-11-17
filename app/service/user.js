@@ -643,6 +643,10 @@ class UserService extends Service {
       return false;
     }
 
+    if (typeof order === "string") {
+      order = parseInt(order);
+    }
+
     let sql;
     if (order === 1) {
       sql = `SELECT pid
@@ -659,6 +663,8 @@ class UserService extends Service {
         ORDER BY t2.create_time
         LIMIT :offset, :limit;
         SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId;`;
+    } else {
+      return false;
     }
 
     const result = await this.app.mysql.query(sql, {
