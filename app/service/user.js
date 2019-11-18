@@ -647,25 +647,26 @@ class UserService extends Service {
       order = parseInt(order);
     }
 
-    let sql;
+    let sql = `SELECT pid, title, short_content, cover, p.create_time, p.status, p.uid, nickname, avatar, real_read_count AS \`read\`, likes
+      FROM post_bookmarks b
+      JOIN posts p ON p.id = pid
+      JOIN post_read_count r ON r.post_id = p.id
+      JOIN users u ON u.id = p.uid
+      WHERE b.uid = :userId`;
+
     if (order === 1) {
-      sql = `SELECT pid
-        FROM post_bookmarks
-        WHERE uid = :userId
-        ORDER BY create_time DESC
-        LIMIT :offset, :limit;
-        SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId;`;
+      sql += `
+        ORDER BY b.create_time DESC`
     } else if (order === 2) {
-      sql = `SELECT pid
-        FROM post_bookmarks t1
-        JOIN posts t2 ON t2.id = t1.pid
-        WHERE t1.uid = :userId
-        ORDER BY t2.create_time
-        LIMIT :offset, :limit;
-        SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId;`;
+      sql += `
+        ORDER BY p.create_time`;
     } else {
       return false;
     }
+
+    sql += `
+      LIMIT :offset, :limit;
+      SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId;`;
 
     const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,
@@ -673,9 +674,7 @@ class UserService extends Service {
       userId,
     });
     const { count } = result[1][0];
-    const postIds = result[0].map(row => row.pid);
-
-    const posts = await this.service.post.getPostList(postIds);
+    const posts = result[0];
 
     return { count, list: posts };
   }
