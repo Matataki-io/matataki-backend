@@ -500,6 +500,25 @@ class UserController extends Controller {
     ctx.body.data = result;
   }
 
+  async getBookmarks() {
+    const ctx = this.ctx;
+    const { pagesize = 20, page = 1, order = 1 } = ctx.query;
+
+    const result = await this.service.user.getBookmarks(ctx.user.id, order, parseInt(page), parseInt(pagesize));
+    if (result === false) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    if (result) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = result;
+      return;
+    }
+
+    ctx.body = ctx.msg.failure;
+  }
+
 }
 
 module.exports = UserController;

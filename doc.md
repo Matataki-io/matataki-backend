@@ -3246,3 +3246,66 @@ symbol-desc：字母倒序
   "message": "成功"
 }
 ```
+
+#### 收藏文章
+* POST /post/:id/bookmark
+* 响应状态码：
+	* 201：成功新建收藏
+	* 404：文章不存在
+	* 409：已经收藏了
+* 参数：无
+* 返回值：
+```json
+{
+	"code": 0,
+	"message": "成功"
+}
+```
+
+#### 取消收藏文章
+* DELETE /post/:id/bookmark
+* 响应状态码：
+	* 204：成功取消收藏
+	* 404：文章不存在 / 没有收藏过该文章
+* 参数：无
+* 返回值：（204 时无）
+
+#### 获取收藏文章
+* GET /user/bookmarks
+* 响应状态码：200
+* 请求头：x-access-token
+* 参数
+	* page: 页数，默认第一页
+	* pagesize: 每页的数量， 默认20
+	* order: 1 - 收藏时间倒序 / 2 - 发布时间顺序
+* 返回值：
+```json
+{
+	"code": 0,
+	"message": "成功",
+	"data": {
+		"count": 1,
+		"list": [
+			{
+					"id": 3,
+					"uid": 170,
+					"author": "test2",
+					"title": "test2",
+					"hash": "QmXDPpYHtDxef4byTKCspino4nYxKp9MHW9PTiL98fA1qv",
+					"create_time": "2019-03-15T07:23:03.000Z",
+					"cover": null,
+					"require_holdtokens": 0,
+					"nickname": "nicknameNo2",
+					"avatar": "",
+					"read": 0,
+					"eosvalue": 1,
+					"ups": 1,
+					"ontvalue": 0,
+					"tags": [],
+					"sale": 0,
+					"likes": 0
+			}
+		]
+	}
+}
+```

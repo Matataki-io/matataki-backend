@@ -249,6 +249,10 @@ class PostService extends Service {
       post.is_readnew = await this.service.mining.getReadNew(userId, post.id);
     }
 
+    // 是否收藏
+    const { isBookmarked } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM post_bookmarks WHERE uid = ? AND pid = ?) isBookmarked;', [userId, id]))[0];
+    post.is_bookmarked = isBookmarked;
+
     return post;
   }
 
@@ -922,8 +926,8 @@ class PostService extends Service {
   }
 
   async stats() {
-    const sql = `SELECT COUNT(1) as count FROM users; 
-                  SELECT COUNT(1) as count FROM posts; 
+    const sql = `SELECT COUNT(1) as count FROM users;
+                  SELECT COUNT(1) as count FROM posts;
                   SELECT SUM(amount) as amount FROM assets_points;`;
 
     const queryResult = await this.app.mysql.query(sql);
@@ -1066,6 +1070,31 @@ class PostService extends Service {
       this.ctx.logger.error(e);
       return -3;
     }
+  }
+
+  async addBookmark(userId, postId) {
+    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM posts WHERE id = ?) existence;', [postId]))[0];
+    if (!existence) {
+      return null;
+    }
+
+    const { affectedRows } = await this.app.mysql.query('INSERT IGNORE post_bookmarks VALUES(?, ?, NOW());', [userId, postId]);
+
+    return affectedRows === 1;
+  }
+
+  async removeBookmark(userId, postId) {
+    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM posts WHERE id = ?) existence;', [postId]))[0];
+    if (!existence) {
+      return null;
+    }
+
+    const { affectedRows } = await this.app.mysql.delete('post_bookmarks', {
+      uid: userId,
+      pid: postId
+    });
+
+    return affectedRows === 1;
   }
 
 }

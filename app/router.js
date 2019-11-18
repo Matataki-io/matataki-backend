@@ -66,7 +66,7 @@ module.exports = app => {
   // 查询统计数据
   router.get('/posts/stats', passport.verify, controller.post.stats);
 
-  // -------------------------------- 编辑,转移,评论 --------------------------------
+  // -------------------------------- 编辑,转移,评论,收藏 --------------------------------
   // 隐藏文章，统一返回格式示例
   router.delete('/post/:id', passport.authorize, controller.post.delete2);
   // 编辑时获取我的文章
@@ -78,6 +78,10 @@ module.exports = app => {
   router.post('/post/comment', passport.authorize, controller.post.comment);
   // 转移文章拥有权
   router.post('/post/transferOwner', passport.authorize, controller.post.transferOwner);
+  // 收藏文章
+  router.post('/post/:id/bookmark', passport.authorize, controller.post.addBookmark);
+  // 取消收藏文章
+  router.delete('/post/:id/bookmark', passport.authorize, controller.post.removeBookmark);
 
   // -------------------------------- 标签系统 --------------------------------
   // 标签列表
@@ -131,6 +135,9 @@ module.exports = app => {
   router.get('/user/pointStatus', passport.authorize, controller.user.getPointStatus);
   // 获取我邀请的人的列表
   router.get('/user/invitees', passport.authorize, controller.user.invitees);
+
+  // 获取收藏文章
+  router.get('/user/bookmarks', passport.authorize, controller.user.getBookmarks);
 
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);

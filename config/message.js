@@ -80,6 +80,8 @@ module.exports = {
   notYourPost: 10114,
   importPlatformNotSupported: 10115,
   postNoPermission: 10116,
+  postNotBookmarked: 10117,
+  postBookmarked: 10118,
 
   // draft 草稿箱相关
   // 找不到草稿
@@ -171,6 +173,8 @@ module.exports = {
       notYourPost: { code: this.notYourPost, message: 'not your post' },
       importPlatformNotSupported: { code: this.importPlatformNotSupported, message: 'Platform not supported' },
       postNoPermission: { code: this.postNoPermission, message: 'You do not have permission to access.' },
+      postNotBookmarked: { code: this.postNotBookmarked, message: 'You have not bookmarked this post.' },
+      postBookmarked: { code: this.postBookmarked, message: 'You have bookmarked this post.' },
 
       draftNotFound: { code: this.draftNotFound, message: 'Cannot find the draft' },
       notYourDraft: { code: this.notYourDraft, message: 'It is not your draft' },
@@ -247,6 +251,8 @@ module.exports = {
       notYourPost: { code: this.notYourPost, message: '不能操作别人的文章' },
       importPlatformNotSupported: { code: this.importPlatformNotSupported, message: '不支持导入这个平台的文章' },
       postNoPermission: { code: this.postNoPermission, message: '你没有权限' },
+      postNotBookmarked: { code: this.postNotBookmarked, message: '你没有收藏这篇文章' },
+      postBookmarked: { code: this.postBookmarked, message: '你已经收藏了这篇文章' },
 
       draftNotFound: { code: this.draftNotFound, message: '找不到这篇草稿' },
       notYourDraft: { code: this.notYourDraft, message: '无权操作别人的草稿' },
