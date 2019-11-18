@@ -3230,7 +3230,7 @@ symbol-desc：字母倒序
 ```
 
 #### 修改订单
-* PUT /orders/handleAmount0
+* POST /orders/handleAmount0
 * 响应状态码： 200
 * 请求头：x-access-token
 * 参数：

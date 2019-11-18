@@ -126,7 +126,7 @@ class OrderHeaderService extends Service {
 
       // 处理到分，向上取整
       amount = Math.ceil(amount / 100) * 100;
-      await conn.query('UPDATE order_headers SET amount = ?, use_balance = ? WHERE trade_no = ? AND status = 0;', [ total, useBalance, tradeNo ]);
+      await conn.query('UPDATE order_headers SET amount = ?, use_balance = ? WHERE trade_no = ? AND status = 0;', [ amount, useBalance, tradeNo ]);
 
       await conn.commit();
 
