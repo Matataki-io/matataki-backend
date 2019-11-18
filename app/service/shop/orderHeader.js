@@ -65,9 +65,9 @@ class OrderHeaderService extends Service {
         }
       }
 
-      let amount = 0;
+      let amount = total;
       // 使用余额支付
-      if (useBalance) {
+      if (useBalance === 1) {
         const balance = await this.service.assets.balanceOf(userId, 'CNY');
         amount = total - balance;
         if (amount < 0) {
@@ -114,9 +114,9 @@ class OrderHeaderService extends Service {
         total = total + exorder.cny_amount;
       }
 
-      let amount = 0;
+      let amount = total;
       // 使用余额支付
-      if (useBalance) {
+      if (useBalance === 1) {
         const balance = await this.service.assets.balanceOf(userId, 'CNY');
         amount = total - balance;
         if (amount < 0) {
