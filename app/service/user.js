@@ -647,7 +647,7 @@ class UserService extends Service {
       order = parseInt(order);
     }
 
-    let sql = `SELECT pid, title, short_content, cover, p.create_time, p.status,
+    let sql = `SELECT pid, title, short_content, cover, require_holdtokens, p.create_time, p.status,
         p.uid, nickname, avatar, real_read_count AS \`read\`, likes,
         t.id AS tagId, t.name AS tagName, t.type AS tagType
       FROM post_bookmarks b
@@ -683,13 +683,14 @@ class UserService extends Service {
 
     let latestRow = null;
 
-    for (const { pid, title, short_content, cover, create_time, status, uid, nickname, avatar, read, likes, tagId, tagName, tagType } of rows) {
+    for (const { pid, title, short_content, cover, require_holdtokens, create_time, status, uid, nickname, avatar, read, likes, tagId, tagName, tagType } of rows) {
       if (!latestRow || latestRow.pid !== pid) {
         latestRow = {
           pid,
           title,
           short_content,
           cover,
+          require_holdtokens,
           create_time,
           status,
           uid,
