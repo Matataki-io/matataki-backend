@@ -97,7 +97,7 @@ class OrderHeaderService extends Service {
   async updateOrder(userId, tradeNo, useBalance) {
     const conn = await this.app.mysql.beginTransaction();
     try {
-      const result = await conn.query('SELECT * FROM order_headers WHERE trade_no = ? AND status = 0 FOR UPDATE;', [ tradeNo ]);
+      const result = await conn.query('SELECT * FROM order_headers WHERE trade_no = ? AND (status = 0 OR status = 3) FOR UPDATE;', [ tradeNo ]);
       if (!result || result.length <= 0) {
         await conn.rollback();
         return -1;
@@ -126,7 +126,7 @@ class OrderHeaderService extends Service {
 
       // 处理到分，向上取整
       amount = Math.ceil(amount / 100) * 100;
-      await conn.query('UPDATE order_headers SET amount = ?, use_balance = ? WHERE trade_no = ? AND status = 0;', [ amount, useBalance, tradeNo ]);
+      await conn.query('UPDATE order_headers SET amount = ?, use_balance = ? WHERE trade_no = ? AND (status = 0 OR status = 3);', [ amount, useBalance, tradeNo ]);
 
       await conn.commit();
 
