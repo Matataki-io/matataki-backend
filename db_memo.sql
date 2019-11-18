@@ -9,7 +9,7 @@ CREATE TABLE stream_keys(
   keystr varchar(100),
   keyhash varchar(100),
   price  INT UNSIGNED  DEFAULT 0,
-  status INT UNSIGNED  DEFAULT 0, 
+  status INT UNSIGNED  DEFAULT 0,
   PRIMARY KEY (id),
   UNIQUE (keystr)
 );
@@ -97,19 +97,19 @@ eos_auths
  13 | A1      | qq         | Q-090807 | xxx-xxx-xxx        | 86400
  14 | A2      | qq         | Q-807060 | xxx-xxx-xxx        | 86400
 
-  
+
 -- 文章列表
 CREATE TABLE posts(
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  username varchar(100), 
-  author varchar(100), 
+  username varchar(100),
+  author varchar(100),
   title varchar(100),
-  short_content varchar(255), 
-  hash varchar(100), 
-  sign varchar(255), 
-  public_key varchar(100), 
-  status INT UNSIGNED  DEFAULT 0, 
-  onchain_status INT UNSIGNED  DEFAULT 0, 
+  short_content varchar(255),
+  hash varchar(100),
+  sign varchar(255),
+  public_key varchar(100),
+  status INT UNSIGNED  DEFAULT 0,
+  onchain_status INT UNSIGNED  DEFAULT 0,
   create_time timestamp,
   PRIMARY KEY (id),
   UNIQUE (hash)
@@ -152,10 +152,10 @@ insert into posts values(null, "minakokojima", "title test1111", "short_content1
 -- 支持（投票）
 CREATE TABLE votes(
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  username varchar(100), 
-  hash varchar(100), 
-  money INT UNSIGNED  DEFAULT 0, 
-  status INT UNSIGNED  DEFAULT 0, 
+  username varchar(100),
+  hash varchar(100),
+  money INT UNSIGNED  DEFAULT 0,
+  status INT UNSIGNED  DEFAULT 0,
   create_time timestamp,
   PRIMARY KEY (id),
   UNIQUE (username, hash)
@@ -166,9 +166,9 @@ drop table votes;
 -- 分享 (转发)
 CREATE TABLE shares(
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  username varchar(100), 
-  hash varchar(100), 
-  status INT UNSIGNED  DEFAULT 0, 
+  username varchar(100),
+  hash varchar(100),
+  status INT UNSIGNED  DEFAULT 0,
   create_time timestamp,
   PRIMARY KEY (id),
   UNIQUE (username, hash)
@@ -197,10 +197,10 @@ insert into follows values(null, "444444", "joetothemoon", 1 , now());
 
 select * from follows;
 
--- 获取某账号关注数 
+-- 获取某账号关注数
 select count(*) from follows where username = 'joetothemoon';
 
--- 获取某账号粉丝数 
+-- 获取某账号粉丝数
 select count(*) from follows where followed = 'joetothemoon';
 
 drop table follows;
@@ -230,7 +230,7 @@ CREATE TABLE actions (
   memo varchar(100),
   amount INT  DEFAULT 0,
   sign_id INT UNSIGNED DEFAULT 0,
-  
+
   type varchar(100),
   create_time timestamp,
   PRIMARY KEY (id)
@@ -242,9 +242,9 @@ drop table actions;
 -- comments
 CREATE TABLE comments (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  username varchar(100),  
+  username varchar(100),
   sign_id INT UNSIGNED DEFAULT 0,
-  comment varchar(500),  
+  comment varchar(500),
   create_time timestamp,
   PRIMARY KEY (id),
   UNIQUE (username, sign_id)
@@ -269,9 +269,9 @@ CREATE TABLE edit_history (
   sign_id INT UNSIGNED DEFAULT 0,
   hash varchar(100),
   title varchar(100),
-  sign varchar(255), 
+  sign varchar(255),
   cover varchar(255) DEFAULT null,
-  public_key varchar(100), 
+  public_key varchar(100),
   create_time timestamp,
   PRIMARY KEY (id)
 );
@@ -303,9 +303,9 @@ create table accounts (
 create table drafts (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   uid INT UNSIGNED NOT NULL ,
-  title varchar(255), 
+  title varchar(255),
   content text,
-  status INT UNSIGNED  DEFAULT 0, 
+  status INT UNSIGNED  DEFAULT 0,
   create_time timestamp,
   update_time timestamp,
   PRIMARY KEY (id)
@@ -324,8 +324,8 @@ create table assets (
   uid INT UNSIGNED NOT NULL,
   contract varchar(255) NOT NULL,
   symbol varchar(255) NOT NULL,
-  amount INT UNSIGNED DEFAULT 0, 
-  decimals INT UNSIGNED DEFAULT 0, 
+  amount INT UNSIGNED DEFAULT 0,
+  decimals INT UNSIGNED DEFAULT 0,
   platform varchar(255) NOT NULL,
   PRIMARY KEY (id),
   UNIQUE (uid, contract, symbol)
@@ -343,10 +343,10 @@ create table supports (
   signid INT UNSIGNED NOT NULL,
   contract varchar(255) NOT NULL,
   symbol varchar(255) NOT NULL,
-  amount INT UNSIGNED DEFAULT 0, 
+  amount INT UNSIGNED DEFAULT 0,
   platform varchar(255) NOT NULL,
-  referreruid INT UNSIGNED DEFAULT 0, 
-  status INT UNSIGNED DEFAULT 0, 
+  referreruid INT UNSIGNED DEFAULT 0,
+  status INT UNSIGNED DEFAULT 0,
   create_time timestamp,
   PRIMARY KEY (id),
   UNIQUE (uid, signid)
@@ -358,7 +358,7 @@ create table assets_change_log (
   uid INT UNSIGNED NOT NULL,
   contract varchar(255) NOT NULL,
   symbol varchar(255) NOT NULL,
-  amount INT DEFAULT 0, 
+  amount INT DEFAULT 0,
   signid INT UNSIGNED DEFAULT NULL,
   platform varchar(255) NOT NULL,
   type varchar(255) NOT NULL,
@@ -396,7 +396,7 @@ create table withdraws (
   uid INT UNSIGNED NOT NULL,
   contract varchar(255) NOT NULL,
   symbol varchar(255) NOT NULL,
-  amount INT DEFAULT 0, 
+  amount INT DEFAULT 0,
   platform varchar(255) NOT NULL,
   toaddress varchar(255) NOT NULL,    -- 提现地址
   memo varchar(255) DEFAULT "",       -- 提现备注
@@ -458,9 +458,9 @@ ALTER TABLE users ADD COLUMN accept tinyint(1)  DEFAULT 0; -- 是否接受转移
 ALTER TABLE drafts ADD COLUMN tags varchar(255) DEFAULT "";
 
 -- 修改字段的字符集
-ALTER TABLE comments CHANGE `comment` `comment` VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin; 
-ALTER TABLE posts CHANGE `title` `title` VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;  
-ALTER TABLE users CHANGE `introduction` `introduction` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;  
+ALTER TABLE comments CHANGE `comment` `comment` VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+ALTER TABLE posts CHANGE `title` `title` VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+ALTER TABLE users CHANGE `introduction` `introduction` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 
 -- 2019/06/14 sprint4-v2.2.0
 -- 改username单unique为 username+platform双unique
@@ -518,7 +518,7 @@ WHERE p.channel_id = 2;
 
 -- 同步文章赞赏数据到表, 主代码修正之后需要再次同步
 UPDATE post_read_count c
-SET c.support_count = (SELECT COUNT(*) AS counts FROM supports s 
+SET c.support_count = (SELECT COUNT(*) AS counts FROM supports s
 WHERE s.signid = c.post_id AND s.status = 1);
 
 -- 同步EOS和ONT赞赏金额到表, 主代码修正之后需要再次同步
@@ -530,7 +530,7 @@ UPDATE post_read_count c
 SET c.ont_value_count = IFNULL((SELECT SUM(amount) AS sum FROM supports s
 WHERE s.signid = c.post_id AND s.platform = 'ont' AND s.status = 1), 0);
 
--- 06.19 
+-- 06.19
 -- 订单表： 记录 "谁" 从 "哪篇文章" 中买了多少商品，付款多少币（合约、符号、数量、平台）。
 CREATE TABLE `orders`  (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -585,11 +585,11 @@ delete from supports where id in (select id from orders);
 
 -- 更新comments.ref_id
 -- 根据supports更新ref_id
-update comments c 
+update comments c
 INNER JOIN supports s on c.uid=s.uid and c.sign_id=s.signid
 set ref_id = s.id, type=1;
 -- 根据orders更新ref_id
-update comments c 
+update comments c
 INNER JOIN orders o on c.uid=o.uid and c.sign_id=o.signid
 set ref_id = o.id, type=2;
 
@@ -613,7 +613,7 @@ UPDATE posts SET category_id = 1 WHERE id IN (527);
 UPDATE posts SET category_id = 2 WHERE id IN (599, 600, 601, 611, 613, 622, 623, 624, 626);
 UPDATE posts SET category_id = 3 WHERE id IN (557, 558, 559, 615);
 
--------------------- 
+--------------------
 
 -- 2019.07.03 橙皮书 广告
 create table ads (
@@ -824,10 +824,10 @@ UPDATE posts SET comment_pay_point=5 WHERE comment_pay_point=0;
 create event test1
 on schedule every 1 day
 starts  '2019-09-12 0:10:00'
-on completion not preserve 
-do 
-insert into report_daily(date,create_time,num,type) 
-select DATE_FORMAT(date_sub(now(), interval 1 day),'%Y-%m-%d'), now(), count, 'login' 
+on completion not preserve
+do
+insert into report_daily(date,create_time,num,type)
+select DATE_FORMAT(date_sub(now(), interval 1 day),'%Y-%m-%d'), now(), count, 'login'
 from (select count(1) as count from users_login_log where login_time > DATE_FORMAT(date_sub(now(), interval 1 day),'%Y-%m-%d') and login_time<DATE_FORMAT(now(),'%Y-%m-%d')) t;
 
 
@@ -1078,7 +1078,7 @@ CREATE INDEX idx_uid ON posts (uid);
 
 
 
--- 2019-10-22 sprint13 
+-- 2019-10-22 sprint13
 修改字段：
 exchange_purchase_logs.buyer -> uid
 新增字段：
@@ -1106,3 +1106,36 @@ config.token
 --2019-10-5
 修改表：
 post_references
+
+-- 2019-11-18
+
+CREATE TABLE `user_websites` (
+	`uid` INT(11) NOT NULL,
+	`website_id` SMALLINT(6) NOT NULL,
+	`url` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_bin',
+	PRIMARY KEY (`uid`, `website_id`)
+) COLLATE='utf8mb4_bin' ENGINE=InnoDB;
+CREATE TABLE `user_social_accounts` (
+	`uid` INT(11) NOT NULL,
+	`wechat` VARCHAR(64) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	`qq` VARCHAR(20) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	`weibo` VARCHAR(64) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	`github` VARCHAR(40) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	`telegram` VARCHAR(64) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	`twitter` VARCHAR(16) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	`facebook` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	PRIMARY KEY (`uid`)
+) COLLATE='utf8mb4_bin' ENGINE=InnoDB;
+CREATE TABLE `post_bookmarks` (
+	`uid` INT(11) NOT NULL,
+	`pid` INT(11) NOT NULL,
+	`create_time` DATETIME NOT NULL,
+	PRIMARY KEY (`uid`, `pid`),
+	INDEX `uid` (`uid`, `create_time`)
+) COLLATE='utf8mb4_bin' ENGINE=InnoDB;
+
+CREATE INDEX `idx_token_id_amount` ON `assets_minetokens`(`token_id`, `amount`);
+CREATE UNIQUE INDEX `idx_tokenid_uid` USING BTREE ON exchange_balances(`token_id`,`uid`);
+CREATE INDEX `idx_token_id_create_time` ON `exchange_liquidity_logs`(`token_id`, `create_time`);
+CREATE INDEX `idx_id_create_time` ON `posts`(`id`, `create_time`);
+CREATE INDEX `idx_uid_create_time` ON `post_bookmarks`(`uid`, `create_time`);
