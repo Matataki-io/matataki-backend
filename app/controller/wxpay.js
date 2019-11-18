@@ -125,7 +125,7 @@ class WxPayController extends Controller {
     const { ctx } = this;
     const { tradeNo, trade_type = 'NATIVE', openid = null } = ctx.request.body;
     const out_trade_no = tradeNo;
-    const { id, amount, status } = await ctx.service.shop.order.get(ctx.user.id, tradeNo);
+    const { amount, status } = await ctx.service.shop.orderHeader.get(ctx.user.id, tradeNo);
     // 6 9都代表支付成功 7 8 失败
     if (status >= 6) {
       ctx.body = ctx.msg.orderHandled;
@@ -166,7 +166,7 @@ class WxPayController extends Controller {
       order = {
         ...order,
         trade_type,
-        product_id: id,
+        product_id: 10000,
       };
       // 微信统一下单
       payargs = await this.app.tenpay.unifiedOrder(order);
@@ -174,7 +174,7 @@ class WxPayController extends Controller {
     ctx.logger.info('controller wxpay pay result', payargs);
     if (payargs.appId || payargs.appid) {
       // 更新订单状态为‘支付中’：3
-      await ctx.service.shop.order.setStatusPaying(order.out_trade_no);
+      await ctx.service.shop.orderHeader.setStatusPaying(order.out_trade_no);
       ctx.body = {
         timeStamp,
         ...payargs,
@@ -189,8 +189,7 @@ class WxPayController extends Controller {
     const { result_code, return_code, out_trade_no } = ctx.request.weixin;
     ctx.logger.info('WxPayController payArticleNotify', out_trade_no, ctx.request.weixin);
     if (return_code === 'SUCCESS' && result_code === 'SUCCESS') {
-      await ctx.service.shop.order.setStatusPaySuccessful(out_trade_no);
-      await ctx.service.shop.order.processingOrder(out_trade_no);
+      await ctx.service.shop.orderHeader.paySuccessful(out_trade_no);
       ctx.set('Content-Type', 'text/xml');
       ctx.body = `<xml>
                     <return_code><![CDATA[SUCCESS]]></return_code>

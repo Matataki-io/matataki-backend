@@ -38,6 +38,13 @@ class ExchangeService extends Service {
       return false;
     }
   }
+
+  // 根据用户Id、订单号查询订单
+  async get(userId, tradeNo) {
+    const order = await this.app.mysql.get('exchange_orders', { uid: userId, trade_no: tradeNo });
+    return order;
+  }
+
   // 根据订单号查询
   async getOrderBytradeNo(trade_no) {
     const order = await this.app.mysql.get('exchange_orders', { trade_no });

@@ -119,10 +119,15 @@ class OrderController extends Controller {
     ctx.body.data = products;
   }
 
+
   // 创建订单
   async createOrder() {
     const { ctx } = this;
     const { items, useBalance } = ctx.request.body;
+    if (useBalance !== 1 && useBalance !== 0) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
     const result = await ctx.service.shop.orderHeader.createOrder(ctx.user.id, items, useBalance, ctx.ip);
     if (result === '-1') {
       ctx.body = ctx.msg.failure;
@@ -134,11 +139,28 @@ class OrderController extends Controller {
     };
   }
 
+  // 修改订单
+  async updateOrder() {
+    const { ctx } = this;
+    const tradeNo = ctx.params.tradeNo;
+    const { useBalance } = ctx.request.body;
+    if (useBalance !== 1 && useBalance !== 0) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    const result = await ctx.service.shop.orderHeader.updateOrder(ctx.user.id, tradeNo, useBalance);
+    if (result < 0) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = ctx.msg.success;
+  }
+
   // 根据订单号查看订单
   async get() {
     const { ctx } = this;
     const tradeNo = ctx.params.tradeNo;
-    const orderHeader = await ctx.service.shop.order.get(ctx.user.id, tradeNo);
+    const orderHeader = await ctx.service.shop.orderHeader.get(ctx.user.id, tradeNo);
     if (!orderHeader) {
       ctx.body = ctx.msg.failure;
       return;
@@ -147,6 +169,14 @@ class OrderController extends Controller {
       ...ctx.msg.success,
       data: orderHeader,
     };
+  }
+
+  // 处理0元订单
+  async handleAmount0() {
+    const { ctx } = this;
+    const { tradeNo } = ctx.request.body;
+    await this.service.shop.orderHeader.handleAmount0(ctx.user.id, tradeNo);
+    ctx.body = ctx.msg.success;
   }
 
 }

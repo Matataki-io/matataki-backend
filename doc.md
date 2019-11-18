@@ -3191,6 +3191,24 @@ symbol-desc：字母倒序
 }
 ```
 
+#### 修改订单
+* PUT /orders/:tradeNo
+* 响应状态码： 200
+* 请求头：x-access-token
+* 参数：
+```json
+{
+  "useBalance": 1 //1使用余额，0不使用
+}
+```
+* 返回值：
+```json
+{
+	"code": 0,
+  "message": "成功"
+}
+```
+
 #### 获取订单
 * GET /orders/:tradeNo
 * 响应状态码： 200
@@ -3202,9 +3220,30 @@ symbol-desc：字母倒序
 	"message": "成功",
 	"data": {
 		"trade_no": "423IJODm4wt6UX8OR7kT3YFotspTTph",
-		"amount": "10011",
-		"create_time": "2019-11-14T10:05:07.000Z"
+		"total": 10011, //订单总金额
+		"amount": 10011, //需要支付的金额
+		"create_time": "2019-11-14T10:05:07.000Z",
+		"status": 3,
+		"use_balance": 0 //是否使用余额
 	}
+}
+```
+
+#### 修改订单
+* POST /orders/handleAmount0
+* 响应状态码： 200
+* 请求头：x-access-token
+* 参数：
+```json
+{
+  "tradeNo": "gNB4I55jhN30B673xspeE07gEJLVPgv"
+}
+```
+* 返回值：
+```json
+{
+	"code": 0,
+  "message": "成功"
 }
 ```
 
