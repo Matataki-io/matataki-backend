@@ -77,8 +77,8 @@ class OrderHeaderService extends Service {
 
       // 处理到分，向上取整
       amount = Math.ceil(amount / 100) * 100;
-      const headerResult = await conn.query('INSERT INTO order_headers(uid, trade_no, total, amount, create_time, status, ip) VALUES(?,?,?,?,?,?,?);',
-        [ userId, trade_no, total, amount, moment().format('YYYY-MM-DD HH:mm:ss'), 0, ip ]);
+      const headerResult = await conn.query('INSERT INTO order_headers(uid, trade_no, total, amount, create_time, status, ip, use_balance) VALUES(?,?,?,?,?,?,?,?);',
+        [ userId, trade_no, total, amount, moment().format('YYYY-MM-DD HH:mm:ss'), 0, ip, useBalance ]);
       if (headerResult.affectedRows <= 0) {
         await conn.rollback();
         return '-1';
@@ -141,7 +141,7 @@ class OrderHeaderService extends Service {
 
   // 根据用户Id、订单号获取订单详细信息
   async get(uid, tradeNo) {
-    const orderHeader = await this.app.mysql.query('SELECT trade_no, amount, create_time,status FROM order_headers WHERE uid = ? AND trade_no = ?; ', [ uid, tradeNo ]);
+    const orderHeader = await this.app.mysql.query('SELECT trade_no, total, amount, create_time, status, use_balance FROM order_headers WHERE uid = ? AND trade_no = ?; ', [ uid, tradeNo ]);
     if (orderHeader && orderHeader.length > 0) { return orderHeader[0]; }
     return null;
   }

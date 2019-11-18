@@ -124,6 +124,10 @@ class OrderController extends Controller {
   async createOrder() {
     const { ctx } = this;
     const { items, useBalance } = ctx.request.body;
+    if (useBalance !== 1 && useBalance !== 0) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
     const result = await ctx.service.shop.orderHeader.createOrder(ctx.user.id, items, useBalance, ctx.ip);
     if (result === '-1') {
       ctx.body = ctx.msg.failure;
@@ -140,6 +144,10 @@ class OrderController extends Controller {
     const { ctx } = this;
     const tradeNo = ctx.params.tradeNo;
     const { useBalance } = ctx.request.body;
+    if (useBalance !== 1 && useBalance !== 0) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
     const result = await ctx.service.shop.orderHeader.updateOrder(ctx.user.id, tradeNo, useBalance);
     if (result < 0) {
       ctx.body = ctx.msg.failure;

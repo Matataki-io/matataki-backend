@@ -3220,8 +3220,11 @@ symbol-desc：字母倒序
 	"message": "成功",
 	"data": {
 		"trade_no": "423IJODm4wt6UX8OR7kT3YFotspTTph",
-		"amount": "10011",
-		"create_time": "2019-11-14T10:05:07.000Z"
+		"total": 10011, //订单总金额
+		"amount": 10011, //需要支付的金额
+		"create_time": "2019-11-14T10:05:07.000Z",
+		"status": 3,
+		"use_balance": 0 //是否使用余额
 	}
 }
 ```
