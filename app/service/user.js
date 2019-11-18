@@ -647,11 +647,15 @@ class UserService extends Service {
       order = parseInt(order);
     }
 
-    let sql = `SELECT pid, title, short_content, cover, p.create_time, p.status, p.uid, nickname, avatar, real_read_count AS \`read\`, likes
+    let sql = `SELECT pid, title, short_content, cover, p.create_time, p.status,
+        p.uid, nickname, avatar, real_read_count AS \`read\`, likes,
+        t.id AS tagId, t.name AS tagName, t.type AS tagType
       FROM post_bookmarks b
       JOIN posts p ON p.id = pid
       JOIN post_read_count r ON r.post_id = p.id
       JOIN users u ON u.id = p.uid
+      LEFT JOIN post_tag pt ON pt.sid = p.id
+      LEFT JOIN tags t ON t.id = pt.tid
       WHERE b.uid = :userId`;
 
     if (order === 1) {
@@ -674,7 +678,38 @@ class UserService extends Service {
       userId,
     });
     const { count } = result[1][0];
-    const posts = result[0];
+    const rows = result[0];
+    const posts = [];
+
+    let latestRow = null;
+
+    for (const { pid, title, short_content, cover, create_time, status, uid, nickname, avatar, read, likes, tagId, tagName, tagType } of rows) {
+      if (!latestRow || latestRow.pid !== pid) {
+        latestRow = {
+          pid,
+          title,
+          short_content,
+          cover,
+          create_time,
+          status,
+          uid,
+          nickname,
+          avatar,
+          read,
+          likes,
+          tags: []
+        };
+        posts.push(latestRow);
+      }
+
+      if (tagId !== null) {
+        latestRow.tags.push({
+          id: tagId,
+          name: tagName,
+          type: tagType
+        })
+      }
+    }
 
     return { count, list: posts };
   }
