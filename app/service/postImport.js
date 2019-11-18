@@ -32,10 +32,10 @@ class PostImportService extends Service {
       return null;
     }
     // 上传的文件的名字
-    const filename = '/image/' +
-      moment().format('YYYY/MM/DD/') +
-      md5(imageFile.filename).toString() +
-      '.' + filetype[filetype.length - 1];
+    const filename = '/image/'
+      + moment().format('YYYY/MM/DD/')
+      + md5(imageFile.filename).toString()
+      + '.' + filetype[filetype.length - 1];
     const uploadImageResult = await this.service.post.uploadImage(filename, imageFile.filename);
     if (uploadImageResult !== 0) {
       this.logger.info('PostImportService:: uploadArticleImage: Upload Image Failed...');
@@ -96,7 +96,14 @@ class PostImportService extends Service {
     const parsedTitleRaw = parsedPage.querySelector('h2.rich_media_title').childNodes[0].rawText;
     const parsedTitle = parsedTitleRaw.replace(/\s{2,}/g, '');
 
-    const parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz_jpg\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/)[0];
+    let parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz_jpg\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/);
+    if (parsedCoverRaw) {
+      // 最好的情况，匹配到 mmbiz_jpg 时 parsedCoverRaw 不为空
+      parsedCoverRaw = parsedCoverRaw[0];
+    } else {
+      // 文章可能较老，试图匹配 mmbiz 看看能不能找到图片
+      parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/)[0];
+    }
     const parsedCover = parsedCoverRaw.substring(15, parsedCoverRaw.length - 1);
     const parsedCoverUpload = './uploads/today_wx_' + Date.now() + '.jpg';
     const coverLocation = await this.uploadArticleImage(parsedCover, parsedCoverUpload);
@@ -226,9 +233,9 @@ class PostImportService extends Service {
       parsedCoverList[i].rawAttrs = parsedCoverList[i].rawAttrs.replace('data-original-src', 'src');
       let originalSrc = parsedCoverList[i].rawAttributes.src;
       if (originalSrc.indexOf('http') === -1) originalSrc = 'https:' + originalSrc;
-      let parsedCoverUpload = './uploads/today_jianshu_' + Date.now() + '.jpg';
-      let imgUpUrl = await this.uploadArticleImage(originalSrc, parsedCoverUpload);
-      if (i === 0) coverLocation = imgUpUrl
+      const parsedCoverUpload = './uploads/today_jianshu_' + Date.now() + '.jpg';
+      const imgUpUrl = await this.uploadArticleImage(originalSrc, parsedCoverUpload);
+      if (i === 0) coverLocation = imgUpUrl;
       if (imgUpUrl) {
         parsedCoverList[i].rawAttrs = parsedCoverList[i].rawAttrs.replace(
           /[https:]?\/\/upload-images\.jianshu\.io\/upload_images\/[a-z0-9_=&\.\-]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
