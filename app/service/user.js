@@ -684,9 +684,9 @@ class UserService extends Service {
     let latestRow = null;
 
     for (const { pid, title, short_content, cover, require_holdtokens, create_time, status, uid, nickname, avatar, read, likes, tagId, tagName, tagType } of rows) {
-      if (!latestRow || latestRow.pid !== pid) {
+      if (!latestRow || latestRow.id !== pid) {
         latestRow = {
-          pid,
+          id: pid,
           title,
           short_content,
           cover,
