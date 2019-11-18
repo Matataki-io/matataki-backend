@@ -668,7 +668,7 @@ class UserService extends Service {
       return false;
     }
 
-    sql += `
+    sql += `, t.id
       LIMIT :offset, :limit;
       SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId;`;
 
