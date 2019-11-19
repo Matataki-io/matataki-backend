@@ -179,6 +179,9 @@ class UserController extends Controller {
     if (setResult === 4) {
       ctx.body = ctx.msg.userIntroductionInvalid;
       return;
+    } else if (setResult === 6) {
+      ctx.body = ctx.msg.nicknameDuplicated;
+      return;
     } else if (setResult === 7) {
       ctx.body = ctx.msg.nicknameInvalid;
       return;
