@@ -1078,7 +1078,7 @@ class PostService extends Service {
       return null;
     }
 
-    const { affectedRows } = await this.app.mysql.query('INSERT IGNORE post_bookmarks VALUES(?, ?, NOW());', [userId, postId]);
+    const { affectedRows } = await this.app.mysql.query('INSERT IGNORE post_bookmarks VALUES(?, ?, ?);', [userId, postId, moment().format('YYYY-MM-DD HH:mm:ss')]);
 
     return affectedRows === 1;
   }
