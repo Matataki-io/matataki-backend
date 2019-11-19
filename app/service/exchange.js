@@ -44,7 +44,20 @@ class ExchangeService extends Service {
     const order = await this.app.mysql.get('exchange_orders', { uid: userId, trade_no: tradeNo });
     return order;
   }
-
+  async getOrderAndSymbol(userId, tradeNo) {
+    const sql = `  
+      SELECT t1.token_id, t1.pay_cny_amount, t1.cny_amount, t1.token_amount, t1.status,
+      t2.name, t2.symbol
+      FROM exchange_orders as t1
+      LEFT JOIN minetokens as t2
+      ON t1.token_id = t2.id
+      WHERE t1.trade_no=:tradeNo AND t1.uid=:userId;`;
+    const result = await this.app.mysql.query(sql, {
+      userId,
+      tradeNo,
+    });
+    return result[0];
+  }
   // 根据订单号查询
   async getOrderBytradeNo(trade_no) {
     const order = await this.app.mysql.get('exchange_orders', { trade_no });

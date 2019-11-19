@@ -161,13 +161,21 @@ class OrderController extends Controller {
     const { ctx } = this;
     const tradeNo = ctx.params.tradeNo;
     const orderHeader = await ctx.service.shop.orderHeader.get(ctx.user.id, tradeNo);
+    const orderPriceItem = await ctx.service.shop.order.get(ctx.user.id, tradeNo);
+    const orderTokenItem = await ctx.service.exchange.getOrderAndSymbol(ctx.user.id, tradeNo);
     if (!orderHeader) {
       ctx.body = ctx.msg.failure;
       return;
     }
     ctx.body = {
       ...ctx.msg.success,
-      data: orderHeader,
+      data: {
+        ...orderHeader,
+        items: {
+          orderPriceItem,
+          orderTokenItem,
+        },
+      },
     };
   }
 
