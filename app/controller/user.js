@@ -176,18 +176,26 @@ class UserController extends Controller {
     const { email = null, nickname = null, introduction = null, accept = null } = ctx.request.body;
 
     const setResult = await this.service.user.setProfile(ctx.user.id, email, nickname, introduction, accept);
-    if (setResult === 4) {
-      ctx.body = ctx.msg.userIntroductionInvalid;
-      return;
-    } else if (setResult === 7) {
-      ctx.body = ctx.msg.nicknameInvalid;
-      return;
-    } else if (setResult === false) {
-      ctx.body = ctx.msg.failure;
+    if (setResult === true) {
+      ctx.body = ctx.msg.success;
       return;
     }
 
-    ctx.body = ctx.msg.success;
+    if (setResult === 4) {
+      ctx.body = ctx.msg.userIntroductionInvalid;
+      ctx.status = 400;
+      return;
+    } else if (setResult === 6) {
+      ctx.body = ctx.msg.nicknameDuplicated;
+      ctx.status = 400;
+      return;
+    } else if (setResult === 7) {
+      ctx.body = ctx.msg.nicknameInvalid;
+      ctx.status = 400;
+      return;
+    }
+
+    ctx.body = ctx.msg.failure;
   }
 
   async setLinks() {

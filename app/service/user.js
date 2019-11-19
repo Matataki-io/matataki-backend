@@ -278,6 +278,11 @@ class UserService extends Service {
         return nicknameInvalid;
       }
 
+      const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE nickname = ?) existence;', [nickname]))[0];
+      if (existence) {
+        return nicknameDuplicated;
+      }
+
       row.nickname = nickname;
     }
 
