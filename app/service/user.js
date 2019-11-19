@@ -558,9 +558,7 @@ class UserService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      websites = new Set(websites);
-
-      await conn.query('DELETE FROM user_websites WHERE uid = ? AND website_id >= ?', [userId, websites.size]);
+      await conn.query('DELETE FROM user_websites WHERE uid = ? AND website_id >= ?', [userId, websites.length]);
 
       let websiteId = 0;
 
@@ -609,7 +607,8 @@ class UserService extends Service {
       return null;
     }
 
-    if (!await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE id = ?);', [userId])) {
+    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE id = ?) existence;', [userId]))[0];
+    if (!existence) {
       return null;
     }
 
@@ -637,6 +636,83 @@ class UserService extends Service {
     }
 
     return { websites, socialAccounts };
+  }
+
+  async getBookmarks(userId, order = 1, page = 1, pagesize = 20) {
+    if (userId === null) {
+      return false;
+    }
+
+    if (typeof order === "string") {
+      order = parseInt(order);
+    }
+
+    let sql = `SELECT pid, title, short_content, cover, require_holdtokens, p.create_time, p.status,
+        p.uid, nickname, avatar, real_read_count AS \`read\`, likes,
+        t.id AS tagId, t.name AS tagName, t.type AS tagType
+      FROM post_bookmarks b
+      JOIN posts p ON p.id = pid
+      JOIN post_read_count r ON r.post_id = p.id
+      JOIN users u ON u.id = p.uid
+      LEFT JOIN post_tag pt ON pt.sid = p.id
+      LEFT JOIN tags t ON t.id = pt.tid
+      WHERE b.uid = :userId`;
+
+    if (order === 1) {
+      sql += `
+        ORDER BY b.create_time DESC`
+    } else if (order === 2) {
+      sql += `
+        ORDER BY p.create_time`;
+    } else {
+      return false;
+    }
+
+    sql += `, t.id
+      LIMIT :offset, :limit;
+      SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId;`;
+
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      userId,
+    });
+    const { count } = result[1][0];
+    const rows = result[0];
+    const posts = [];
+
+    let latestRow = null;
+
+    for (const { pid, title, short_content, cover, require_holdtokens, create_time, status, uid, nickname, avatar, read, likes, tagId, tagName, tagType } of rows) {
+      if (!latestRow || latestRow.id !== pid) {
+        latestRow = {
+          id: pid,
+          title,
+          short_content,
+          cover,
+          require_holdtokens,
+          create_time,
+          status,
+          uid,
+          nickname,
+          avatar,
+          read,
+          likes,
+          tags: []
+        };
+        posts.push(latestRow);
+      }
+
+      if (tagId !== null) {
+        latestRow.tags.push({
+          id: tagId,
+          name: tagName,
+          type: tagType
+        })
+      }
+    }
+
+    return { count, list: posts };
   }
 }
 
