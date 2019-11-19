@@ -584,8 +584,7 @@ class ExchangeService extends Service {
   async cnyToTokenOutputSubOrder(tradeNo, conn) {
     const result = await conn.query('SELECT * FROM exchange_orders WHERE trade_no = ? AND status = 6 AND type=\'buy_token_output\' FOR UPDATE;', [ tradeNo ]);
     if (!result || result.length <= 0) {
-      await conn.rollback();
-      return -1;
+      return 0;
     }
     const order = result[0];
     const userId = order.uid;

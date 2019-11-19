@@ -38,6 +38,10 @@ class OrderHeaderService extends Service {
         } else if (item.type === 'buy_minetoken') {
           // 计算需要多少CNY
           const amount = await this.service.token.exchange.getCnyToTokenOutputPrice(item.tokenId, item.amount);
+          if (amount <= 0) {
+            await conn.rollback();
+            return '-1';
+          }
           // 创建购买粉丝币订单行
           const result = await this.service.exchange.createOrder(
             {
