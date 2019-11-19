@@ -153,7 +153,7 @@ class OrderHeaderService extends Service {
   // 处理不需要支付的订单
   async handleAmount0(userId, tradeNo) {
     const order = await this.get(userId, tradeNo);
-    if (order.status === 0 && order.amount === 0) {
+    if ((order.status === 0 || order.status === 3) && order.amount === 0) {
       await this.setStatusPaying(tradeNo);
       await this.paySuccessful(tradeNo);
     }
