@@ -42,6 +42,7 @@ class UserService extends Service {
       columns: [ 'id', 'username', 'nickname', 'platform', 'referral_uid', 'create_time', 'avatar', 'level', 'status', 'introduction', 'accept' ], // todo：需要再增加
     });
     if (users && users.length > 0) {
+      users[0].username = this.maskEmailAddress(users[0].username)
       return users[0];
     }
     return null;
