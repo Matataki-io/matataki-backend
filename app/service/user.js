@@ -15,6 +15,8 @@ const emailDuplicated = 5;
 const nicknameDuplicated = 6;
 const nicknameInvalid = 7;
 
+const maskedEmailCache = new Map();
+
 class UserService extends Service {
 
   constructor(ctx, app) {
@@ -724,8 +726,14 @@ class UserService extends Service {
     const regex = /^([a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+)(@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*)$/;
     const match = regex.exec(str);
 
-    if (!match)
+    if (!match) {
       return str;
+    }
+
+    let result = maskedEmailCache.get(str);
+    if (result) {
+      return result;
+    }
 
     let [_, username, rest] = match;
 
@@ -750,7 +758,11 @@ class UserService extends Service {
         break;
     }
 
-    return username + rest;
+    result = username + rest;
+
+    maskedEmailCache.set(str, result);
+
+    return result;
   }
 }
 
