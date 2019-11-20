@@ -71,7 +71,6 @@ class UserService extends Service {
       }
     }
 
-    let email = '';
     let nickname = '';
     let avatar = '';
     let introduction = '';
@@ -79,7 +78,6 @@ class UserService extends Service {
     const user = await this.app.mysql.get('users', { id });
     if (user) {
       avatar = user.avatar || '';
-      email = user.email || '';
       nickname = user.nickname || '';
       introduction = user.introduction || '';
     } else {
@@ -88,7 +86,6 @@ class UserService extends Service {
 
     const result = {
       username: user.username,
-      email,
       nickname,
       avatar,
       introduction,
