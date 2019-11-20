@@ -723,17 +723,18 @@ class UserService extends Service {
   }
 
   maskEmailAddress(str) {
+    let result = maskedEmailCache.get(str);
+    if (result) {
+      return result;
+    }
+
     // Source: https://html.spec.whatwg.org/multipage/input.html#e-mail-state-(type=email)
     const regex = /^([a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+)(@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*)$/;
     const match = regex.exec(str);
 
     if (!match) {
+      maskedEmailCache.set(str, str);
       return str;
-    }
-
-    let result = maskedEmailCache.get(str);
-    if (result) {
-      return result;
     }
 
     let [_, username, rest] = match;
