@@ -236,8 +236,9 @@ class OrderHeaderService extends Service {
       const orderHeader = result[0];
 
       // 订单付款成功，给用户充值
-      await this.service.assets.recharge(orderHeader.uid, 'CNY', orderHeader.amount, conn);
-
+      if (orderHeader.amount > 0) {
+        await this.service.assets.recharge(orderHeader.uid, 'CNY', orderHeader.amount, conn);
+      }
       // 购买文章，支付给作者
       const payArticleResult = await this.service.shop.order.payArticle(tradeNo, conn);
       if (payArticleResult < 0) {
@@ -255,9 +256,9 @@ class OrderHeaderService extends Service {
       // 更改订单头状态
       await conn.query('UPDATE order_headers SET status = 9 WHERE trade_no = ?;', [ tradeNo ]);
 
-      const order = await this.service.shop.order.get(tradeNo);
+      const order = await this.service.shop.order.get(orderHeader.uid, tradeNo);
       // 查询是否满足持币数量
-      const isHold = this.service.post.isHoldMineTokens(order.signid, orderHeader.uid);
+      const isHold = await this.service.post.isHoldMineTokens(order.signid, orderHeader.uid);
       if (!isHold) {
         await conn.rollback();
         return -4;

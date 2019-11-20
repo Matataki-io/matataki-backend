@@ -100,7 +100,7 @@ class OrderService extends Service {
   async get(userId, tradeNo) {
     const orders = await this.app.mysql.select('orders', {
       where: { uid: userId, trade_no: tradeNo },
-      columns: [ 'symbol', 'amount', 'price', 'status', 'create_time', 'trade_no' ], // todo：需要再增加
+      columns: [ 'signid', 'symbol', 'amount', 'price', 'status', 'create_time', 'trade_no' ], // todo：需要再增加
     });
     if (orders && orders.length > 0) {
       return orders[0];
