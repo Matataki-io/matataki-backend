@@ -1,4 +1,5 @@
 'use strict';
+const _ = require('lodash');
 const moment = require('moment');
 const Service = require('egg').Service;
 const consts = require('../consts');
@@ -288,6 +289,12 @@ class MineTokenService extends Service {
       limit: pagesize,
       tokenId,
     });
+
+    _.each(result[0], row => {
+      row.from_username = this.service.user.maskEmailAddress(row.from_username);
+      row.to_username = this.service.user.maskEmailAddress(row.to_username);
+    });
+
     return {
       count: result[1][0].count,
       list: result[0],
@@ -314,6 +321,12 @@ class MineTokenService extends Service {
       userId,
       tokenId,
     });
+
+    _.each(result[0], row => {
+      row.from_username = this.service.user.maskEmailAddress(row.from_username);
+      row.to_username = this.service.user.maskEmailAddress(row.to_username);
+    });
+
     return {
       count: result[1][0].count,
       list: result[0],
@@ -338,6 +351,11 @@ class MineTokenService extends Service {
       limit: pagesize,
       userId,
     });
+
+    _.each(result[0], row => {
+      row.username = this.service.user.maskEmailAddress(row.username);
+    });
+
     return {
       count: result[1][0].count,
       list: result[0],
@@ -381,6 +399,11 @@ class MineTokenService extends Service {
       limit: pagesize,
       ...params,
     });
+
+    _.each(result[0], row => {
+      row.username = this.service.user.maskEmailAddress(row.username);
+    });
+
     return {
       count: result[1][0].count,
       list: result[0],
@@ -445,6 +468,11 @@ class MineTokenService extends Service {
       limit: pagesize,
       tokenId,
     });
+
+    _.each(result[0], row => {
+      row.username = this.service.user.maskEmailAddress(row.username);
+    });
+
     return {
       count: result[1][0].count,
       list: result[0],
@@ -470,6 +498,12 @@ class MineTokenService extends Service {
       limit: pagesize,
       tokenId,
     });
+
+    _.each(result[0], row => {
+      row.from_username = this.service.user.maskEmailAddress(row.from_username);
+      row.to_username = this.service.user.maskEmailAddress(row.to_username);
+    });
+
     return {
       count: result[1][0].count,
       list: result[0],

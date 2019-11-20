@@ -216,6 +216,8 @@ class FollowService extends Service {
       row.is_follow = false;
       row.is_fan = false;
       users.push(row.uid);
+
+      row.username = this.service.user.maskEmailAddress(row.username);
     });
 
     if (users.length > 0) {

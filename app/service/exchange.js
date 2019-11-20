@@ -1,4 +1,5 @@
 'use strict';
+const _ = require('lodash');
 const Service = require('egg').Service;
 const moment = require('moment');
 const DEADLINE = 300; // 超时时间300秒
@@ -45,7 +46,7 @@ class ExchangeService extends Service {
     return order;
   }
   async getOrderAndSymbol(userId, tradeNo) {
-    const sql = `  
+    const sql = `
       SELECT t1.token_id, t1.pay_cny_amount, t1.cny_amount, t1.token_amount, t1.status,
       t2.name, t2.symbol
       FROM exchange_orders as t1
@@ -114,6 +115,11 @@ class ExchangeService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
+
+    _.each(result[0], row => {
+      row.username = this.service.user.maskEmailAddress(row.username);
+    });
+
     return {
       count: result[1][0].count,
       list: result[0],
@@ -134,6 +140,11 @@ class ExchangeService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
+
+    _.each(result[0], row => {
+      row.username = this.service.user.maskEmailAddress(row.username);
+    });
+
     return {
       count: result[1][0].count,
       list: result[0],
@@ -149,6 +160,9 @@ class ExchangeService extends Service {
     const result = await this.app.mysql.query(sql, {
       symbol,
     });
+
+    result[0].username = this.service.user.maskEmailAddress(result[0].username);
+
     return result[0] || null;
   }
   // 所有的token
@@ -179,6 +193,11 @@ class ExchangeService extends Service {
         offset: (page - 1) * pagesize,
         limit: pagesize,
       });
+
+      _.each(result[0], row => {
+        row.username = this.service.user.maskEmailAddress(row.username);
+      });
+
       return {
         count: result[1][0].count,
         list: result[0],
@@ -199,6 +218,11 @@ class ExchangeService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
+
+    _.each(result[0], row => {
+      row.username = this.service.user.maskEmailAddress(row.username);
+    });
+
     return {
       count: searchResult[1][0].count,
       list: searchResult[0],
