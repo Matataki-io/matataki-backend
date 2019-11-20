@@ -178,7 +178,7 @@ class DraftsController extends Controller {
       return;
     }
 
-    const result = await this.app.mysql.delete('drafts', { id });
+    const result = await this.app.mysql.update('drafts', { status: 1 }, { where: { id } });
 
     const updateSuccess = result.affectedRows === 1;
 
