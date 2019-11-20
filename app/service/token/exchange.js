@@ -582,11 +582,16 @@ class ExchangeService extends Service {
 
   // order_headers已经处理充值了
   async cnyToTokenOutputSubOrder(tradeNo, conn) {
-    const result = await conn.query('SELECT * FROM exchange_orders WHERE trade_no = ? AND status = 6 AND type=\'buy_token_output\' FOR UPDATE;', [ tradeNo ]);
+    const result = await conn.query('SELECT * FROM exchange_orders WHERE trade_no = ? AND type=\'buy_token_output\' FOR UPDATE;', [ tradeNo ]);
     if (!result || result.length <= 0) {
       return 0;
     }
+
     const order = result[0];
+    if (order.status !== 6) {
+      return -1;
+    }
+
     const userId = order.uid;
     const tokenId = order.token_id;
     // pay_cny_amount：微信订单实际支付的CNY金额

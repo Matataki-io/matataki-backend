@@ -231,12 +231,16 @@ class OrderService extends Service {
   // 文章付费
   async payArticle(tradeNo, conn) {
     // 锁定订单，更新锁，悲观锁
-    const result = await conn.query('SELECT * FROM orders WHERE trade_no = ? AND status = 6 FOR UPDATE;', [ tradeNo ]);
+    const result = await conn.query('SELECT * FROM orders WHERE trade_no = ? FOR UPDATE;', [ tradeNo ]);
     if (!result || result.length <= 0) {
-      return -1;
+      return 0;
     }
 
     const order = result[0];
+    if (order.status !== 6) {
+      return -1;
+    }
+
     const article = await this.service.post.get(order.signid);
 
     // 转移cny
