@@ -1103,11 +1103,18 @@ config.token
 修改tags表数据，智能签名->瞬Matataki
 
 
---2019-10-5
+--2019-11-5
 修改表：
 post_references
 
 -- 2019-11-18
+
+修改表：
+posts.require_buy
+orders.trade_no
+
+增加表
+order_headers
 
 CREATE TABLE `user_websites` (
 	`uid` INT(11) NOT NULL,
