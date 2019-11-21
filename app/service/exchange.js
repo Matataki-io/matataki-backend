@@ -132,7 +132,7 @@ class ExchangeService extends Service {
     FROM assets_minetokens AS a
     JOIN minetokens b ON b.id = a.token_id
     JOIN users u ON u.id = a.uid
-    WHERE a.token_id = 16 AND a.amount > 0
+    WHERE a.token_id = :id AND a.amount > 0
     LIMIT :offset, :limit;
     SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id AND amount > 0;`;
     const result = await this.app.mysql.query(sql, {
