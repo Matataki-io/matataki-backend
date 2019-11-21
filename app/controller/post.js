@@ -27,7 +27,7 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '', msgParams,
       publickey, sign, hash, fissionFactor = 2000,
-      cover, is_original = 0, platform = 'eos', tags = '', commentPayPoint = 0, shortContent = null } = ctx.request.body;
+      cover, is_original = 0, platform = 'eos', tags = '', commentPayPoint = 0, shortContent = null, cc_license = null } = ctx.request.body;
 
     ctx.logger.info('debug info', author, title, content, publickey, sign, hash, is_original);
 
@@ -114,6 +114,7 @@ class PostController extends Controller {
       category_id: 0,
       short_content,
       comment_pay_point,
+      cc_license,
     });
 
     // 添加文章到elastic search

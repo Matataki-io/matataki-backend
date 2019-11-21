@@ -123,7 +123,7 @@ class PostService extends Service {
   async getById(id) {
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy FROM posts WHERE id = ?;',
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy, cc_license FROM posts WHERE id = ?;',
       [ id ]
     );
 
@@ -250,7 +250,7 @@ class PostService extends Service {
     }
 
     // 是否收藏
-    const { isBookmarked } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM post_bookmarks WHERE uid = ? AND pid = ?) isBookmarked;', [userId, id]))[0];
+    const { isBookmarked } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM post_bookmarks WHERE uid = ? AND pid = ?) isBookmarked;', [ userId, id ]))[0];
     post.is_bookmarked = isBookmarked;
 
     return post;
@@ -1073,25 +1073,25 @@ class PostService extends Service {
   }
 
   async addBookmark(userId, postId) {
-    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM posts WHERE id = ?) existence;', [postId]))[0];
+    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM posts WHERE id = ?) existence;', [ postId ]))[0];
     if (!existence) {
       return null;
     }
 
-    const { affectedRows } = await this.app.mysql.query('INSERT IGNORE post_bookmarks VALUES(?, ?, ?);', [userId, postId, moment().format('YYYY-MM-DD HH:mm:ss')]);
+    const { affectedRows } = await this.app.mysql.query('INSERT IGNORE post_bookmarks VALUES(?, ?, ?);', [ userId, postId, moment().format('YYYY-MM-DD HH:mm:ss') ]);
 
     return affectedRows === 1;
   }
 
   async removeBookmark(userId, postId) {
-    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM posts WHERE id = ?) existence;', [postId]))[0];
+    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM posts WHERE id = ?) existence;', [ postId ]))[0];
     if (!existence) {
       return null;
     }
 
     const { affectedRows } = await this.app.mysql.delete('post_bookmarks', {
       uid: userId,
-      pid: postId
+      pid: postId,
     });
 
     return affectedRows === 1;
