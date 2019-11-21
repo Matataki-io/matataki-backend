@@ -93,7 +93,7 @@ class PostController extends Controller {
     const articleContent = await this.service.post.wash(articleJson.content);
     // 设置短摘要
     let short_content = shortContent;
-    if (short_content === null) {
+    if (!short_content) {
       short_content = articleContent.substring(0, 300);
     }
 
@@ -208,7 +208,7 @@ class PostController extends Controller {
     const articleContent = await this.service.post.wash(articleJson.content);
 
     let short_content = shortContent;
-    if (short_content === null) {
+    if (!short_content) {
       short_content = articleContent.substring(0, 300);
     }
 
