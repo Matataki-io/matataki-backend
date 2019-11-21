@@ -3309,3 +3309,38 @@ symbol-desc：字母倒序
 	}
 }
 ```
+
+#### 获取购买的文章列表
+* GET /order/products?pagesize=20&page=1&platform=cny
+* 响应状态码： 200
+* 参数：pagesize,page,platform
+* 请求头：x-access-token
+* 返回值：
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "count": 12,
+        "list": [
+            {
+                "buy_time": "2019-11-20T07:10:08.000Z",
+                "amount": 100,
+                "decimals": 4,
+                "platform": "cny",
+                "id": 100987,
+                "uid": 1046,
+                "author": "istianlei@qq.com",
+                "title": "金砖五国欲发行数字货币，能挑战 SWIFT 与美元霸权吗？",
+                "hash": "QmR4uvbYxV4xm8EzdbUpuEY5BZWtf37EgX1g9BAkT5UibZ",
+                "create_time": "2019-11-19T16:38:37.000Z",
+                "cover": "/image/2019/11/20/191bfec7877fdf706b644c7cf16a97b2.jpg",
+                "require_holdtokens": 1,
+                "require_buy": 1,
+                "nickname": "hi",
+                "avatar": "/avatar/2019/09/24/12a1bb40b7b336bac86003ebd01776b8.jpeg"
+            }
+        ]
+    }
+}
+```
