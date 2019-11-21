@@ -735,7 +735,7 @@ class UserService extends Service {
     }
 
     // Source: https://html.spec.whatwg.org/multipage/input.html#e-mail-state-(type=email)
-    const regex = /^([a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+)(@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*)$/;
+    const regex = /^([a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+)@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     const match = regex.exec(str);
 
     if (!match) {
@@ -743,7 +743,8 @@ class UserService extends Service {
       return str;
     }
 
-    let [_, username, rest] = match;
+    let username = match[1];
+    const rest = str.slice(username.length)
 
     switch (username.length) {
       case 1:
