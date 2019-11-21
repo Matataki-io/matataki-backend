@@ -99,6 +99,7 @@ class PostService extends Service {
       post = await this.getPostProfile(post);
     }
     post.tokens = await this.getMineTokens(post.id);
+    post.username = this.maskEmailAddress(post.username);
     return post;
   }
 
@@ -134,6 +135,7 @@ class PostService extends Service {
     let post = posts[0];
     post = await this.getPostProfile(post);
     post.tokens = await this.getMineTokens(id);
+    post.username = this.maskEmailAddress(post.username);
     return post;
   }
 
@@ -151,6 +153,7 @@ class PostService extends Service {
     let post = posts[0];
     post = await this.getPostProfile(post);
     post.tokens = await this.getMineTokens(id);
+    post.username = this.maskEmailAddress(post.username);
     return post;
   }
 

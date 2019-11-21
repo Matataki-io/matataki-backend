@@ -140,6 +140,8 @@ class AdsController extends Controller {
         ad = ads[0] || null;
       }
 
+      ad.username = this.service.user.maskEmailAddress(ad.username);
+
       this.ctx.body = this.ctx.msg.success;
       this.ctx.body.data = ad;
     } catch (err) {

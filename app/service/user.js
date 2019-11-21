@@ -15,6 +15,8 @@ const emailDuplicated = 5;
 const nicknameDuplicated = 6;
 const nicknameInvalid = 7;
 
+const maskedEmailCache = new Map();
+
 class UserService extends Service {
 
   constructor(ctx, app) {
@@ -37,9 +39,10 @@ class UserService extends Service {
   async get(id) {
     const users = await this.app.mysql.select('users', {
       where: { id },
-      columns: [ 'id', 'username', 'nickname', 'platform', 'referral_uid', 'create_time', 'avatar', 'level', 'status', 'email', 'introduction', 'accept' ], // todo：需要再增加
+      columns: [ 'id', 'username', 'nickname', 'platform', 'referral_uid', 'create_time', 'avatar', 'level', 'status', 'introduction', 'accept' ], // todo：需要再增加
     });
     if (users && users.length > 0) {
+      users[0].username = this.maskEmailAddress(users[0].username)
       return users[0];
     }
     return null;
@@ -71,7 +74,6 @@ class UserService extends Service {
       }
     }
 
-    let email = '';
     let nickname = '';
     let avatar = '';
     let introduction = '';
@@ -79,7 +81,6 @@ class UserService extends Service {
     const user = await this.app.mysql.get('users', { id });
     if (user) {
       avatar = user.avatar || '';
-      email = user.email || '';
       nickname = user.nickname || '';
       introduction = user.introduction || '';
     } else {
@@ -87,8 +88,7 @@ class UserService extends Service {
     }
 
     const result = {
-      username: user.username,
-      email,
+      username: this.maskEmailAddress(user.username),
       nickname,
       avatar,
       introduction,
@@ -181,6 +181,7 @@ class UserService extends Service {
 
     // 初始化数据
     _.each(userList, everyUser => {
+      everyUser.username = this.maskEmailAddress(everyUser.username);
       everyUser.fans = 0;
       everyUser.follows = 0;
       everyUser.is_follow = false;
@@ -226,6 +227,7 @@ class UserService extends Service {
     let myFollows = [];
 
     _.each(userList, everyUser => {
+      everyUser.username = this.maskEmailAddress(everyUser.username);
       userids.push(everyUser.id);
       everyUser.is_follow = false;
       everyUser.is_fan = false;
@@ -549,6 +551,10 @@ class UserService extends Service {
       { userId, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
+    _.each(queryResult[1], row => {
+      row.username = this.maskEmailAddress(row.username);
+    });
+
     return { count: queryResult[0][0].count, list: queryResult[1] };
   }
 
@@ -720,6 +726,52 @@ class UserService extends Service {
     }
 
     return { count, list: posts };
+  }
+
+  maskEmailAddress(str) {
+    let result = maskedEmailCache.get(str);
+    if (result) {
+      return result;
+    }
+
+    // Source: https://html.spec.whatwg.org/multipage/input.html#e-mail-state-(type=email)
+    const regex = /^([a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+)@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    const match = regex.exec(str);
+
+    if (!match) {
+      maskedEmailCache.set(str, str);
+      return str;
+    }
+
+    let username = match[1];
+    const rest = str.slice(username.length)
+
+    switch (username.length) {
+      case 1:
+        username = '*';
+        break;
+
+      case 2:
+        username = username[0] + '*';
+        break;
+
+      case 3:
+        username = username[0] + '*' + username[2];
+        break;
+
+      default:
+        const trunkSize = username.length / 4;
+        const firstSize = Math.max(Math.floor(trunkSize), 1);
+        const secondSize = Math.ceil(trunkSize * 2);
+        username = username.slice(0, firstSize) + '*'.repeat(secondSize) + username.slice(firstSize + secondSize);
+        break;
+    }
+
+    result = username + rest;
+
+    maskedEmailCache.set(str, result);
+
+    return result;
   }
 }
 

@@ -1150,3 +1150,6 @@ CREATE UNIQUE INDEX `idx_tokenid_uid` USING BTREE ON exchange_balances(`token_id
 CREATE INDEX `idx_token_id_create_time` ON `exchange_liquidity_logs`(`token_id`, `create_time`);
 CREATE INDEX `idx_id_create_time` ON `posts`(`id`, `create_time`);
 CREATE INDEX `idx_uid_create_time` ON `post_bookmarks`(`uid`, `create_time`);
+
+-- 2019-11-20
+CREATE INDEX `idx_uid_update_time` ON `drafts`(`uid`, `update_time`);

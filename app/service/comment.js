@@ -102,6 +102,8 @@ class CommentService extends Service {
       if (row.comment === null) {
         row.comment = '';
       }
+
+      row.username = this.service.user.maskEmailAddress(row.username);
     });
 
     return {
