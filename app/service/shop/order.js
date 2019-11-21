@@ -228,6 +228,37 @@ class OrderService extends Service {
     return { count: amount[0].count, list: orders };
   }
 
+  async getUserArticle(page = 1, pagesize = 20, userid = null) {
+    if (userid === null) {
+      return null;
+    }
+    const selectSql = `
+      SELECT o.create_time as buy_time, o.amount, o.decimals, o.platform,
+      p.id, p.uid, p.author, p.title, p.hash, p.create_time, p.cover, p.require_holdtokens, p.require_buy,
+      u.nickname, u.avatar
+      FROM orders AS o
+      LEFT JOIN posts as p ON o.signid = p.id
+      LEFT JOIN users as u ON p.uid = u.id `;
+    const whereSql = `
+      WHERE o.uid = :userid AND o.status = 9 AND o.platform = 'cny' `;
+    const countSql = `
+      SELECT COUNT(1) AS count  
+      FROM orders as o `;
+    const orderSql = `
+      ORDER BY o.create_time DESC LIMIT :offset, :limit; `;
+    const sql = selectSql + whereSql + orderSql + countSql + whereSql + ';';
+    this.ctx.logger.info('[service getUserArticle] sql', sql);
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: Number(pagesize),
+      userid,
+    });
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
+  }
+
   // 文章付费
   async payArticle(tradeNo, conn) {
     // 锁定订单，更新锁，悲观锁

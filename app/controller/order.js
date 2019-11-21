@@ -102,21 +102,27 @@ class OrderController extends Controller {
     const ctx = this.ctx;
     const userid = ctx.user.id;
 
-    const { page = 1, pagesize = 20 } = ctx.query;
+    const { page = 1, pagesize = 20, platform = '' } = ctx.query;
 
     if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
       ctx.body = ctx.msg.paramsError;
       return;
     }
-
-    const products = await this.service.shop.order.getUserProducts(page, pagesize, userid);
-
-    if (products === null) {
-      ctx.body = ctx.msg.failure;
+    let result = {};
+    if (platform === 'cny') {
+      result = await this.service.shop.order.getUserArticle(page, pagesize, userid);
+    } else {
+      result = await this.service.shop.order.getUserProducts(page, pagesize, userid);
     }
 
-    ctx.body = ctx.msg.success;
-    ctx.body.data = products;
+    if (result === null) {
+      ctx.body = ctx.msg.failure;
+    } else {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: result,
+      };
+    }
   }
 
 
