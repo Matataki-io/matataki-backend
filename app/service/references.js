@@ -48,11 +48,19 @@ class ReferencesService extends Service {
         },
       });
 
-      // const parsedPage = htmlparser.parse(rawPage.data);
-      const resultTitle = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/); // /<title.*?>([\S\s]*?)<\/title>/，/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/
-      if (resultTitle && resultTitle.length > 1) {
-        title = resultTitle[1];
+      // 微信公众号就是屑，网页版在客户端渲染title，直接抓取 html 时的 <title> 为空
+      // 但是多谢微信意识到 OpenGraph 规范的存在，我们可以试着读取 - Frank
+
+      const matchOgTitle = rawPage.data.match(/<meta.*?property="og:title". *?content=["|']*(.*?)["|'|\/]*>/);
+      const matchTitleTag = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/); // /<title.*?>([\S\s]*?)<\/title>/，/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/
+
+      if (matchOgTitle && matchOgTitle.length > 1 && matchOgTitle[1].length > 1) {
+        title = matchOgTitle[1];
+      } else if (matchTitleTag && matchTitleTag.length > 1) {
+        // 不支持 OneGraph 只能从 title 碰运气了
+        title = matchTitleTag[1];
       }
+
 
       const resultContent = rawPage.data.match(/<meta.*?name="description".*?content=["|']*(.*?)["|'|\/]*>/);
       if (resultContent && resultContent.length > 1) {
