@@ -181,6 +181,7 @@ class UserService extends Service {
 
     // 初始化数据
     _.each(userList, everyUser => {
+      everyUser.username = this.maskEmailAddress(everyUser.username);
       everyUser.fans = 0;
       everyUser.follows = 0;
       everyUser.is_follow = false;
@@ -226,6 +227,7 @@ class UserService extends Service {
     let myFollows = [];
 
     _.each(userList, everyUser => {
+      everyUser.username = this.maskEmailAddress(everyUser.username);
       userids.push(everyUser.id);
       everyUser.is_follow = false;
       everyUser.is_fan = false;
@@ -548,6 +550,10 @@ class UserService extends Service {
     const queryResult = await this.app.mysql.query(sql,
       { userId, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
+
+    _.each(queryResult[1], row => {
+      row.username = this.maskEmailAddress(row.username);
+    });
 
     return { count: queryResult[0][0].count, list: queryResult[1] };
   }
