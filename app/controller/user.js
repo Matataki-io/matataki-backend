@@ -527,6 +527,19 @@ class UserController extends Controller {
     ctx.body = ctx.msg.failure;
   }
 
+  async getBookmarkStats() {
+    const ctx = this.ctx;
+
+    const result = await this.service.user.getBookmarkStats(ctx.user.id);
+    if (result === false) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
+
 }
 
 module.exports = UserController;
