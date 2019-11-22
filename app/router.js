@@ -138,6 +138,8 @@ module.exports = app => {
 
   // 获取收藏文章
   router.get('/user/bookmarks', passport.authorize, controller.user.getBookmarks);
+  // 获取收藏文章状态
+  router.get('/user/bookmark/stats', passport.authorize, controller.user.getBookmarkStats);
 
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
