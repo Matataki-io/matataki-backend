@@ -450,7 +450,21 @@ class MineTokenService extends Service {
     return result;
   }
 
-  async getLiquidityBalances(tokenId, page = 1, pagesize = 10) {
+  async getLiquidityBalances(tokenId, page = 1, pagesize = 10, order = 1, direction = 0) {
+    let orderingColumn;
+    switch (order) {
+      case 1:
+        orderingColumn = 'liquidity_balance';
+        break;
+
+      case 2:
+        orderingColumn = 'coalesce(nickname, username)';
+        break;
+
+      default:
+        return false;
+    }
+
     const sql = `
       SELECT t1.uid, t1.token_id, t1.liquidity_balance, t1.create_time,
         t2.total_supply,
@@ -461,6 +475,7 @@ class MineTokenService extends Service {
       JOIN minetokens AS t3 ON t1.token_id = t3.id
       JOIN users as t4 ON t1.uid = t4.id
       WHERE token_id = :tokenId
+      ORDER BY ${orderingColumn} ${direction ? 'DESC' : 'ASC' }
       LIMIT :offset, :limit;
       SELECT count(1) AS count FROM exchange_balances WHERE token_id = :tokenId;`;
     const result = await this.app.mysql.query(sql, {

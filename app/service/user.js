@@ -727,6 +727,17 @@ class UserService extends Service {
 
     return { count, list: posts };
   }
+  async getBookmarkStats(userId) {
+    if (userId === null) {
+      return false;
+    }
+
+    const { articleCount } = (await this.app.mysql.query('SELECT count(1) AS articleCount FROM post_bookmarks WHERE uid = ?;', [userId]))[0];
+
+    return {
+      articleCount
+    };
+  }
 
   maskEmailAddress(str) {
     let result = maskedEmailCache.get(str);

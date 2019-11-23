@@ -126,13 +126,28 @@ class ExchangeService extends Service {
     };
   }
   // 根据粉丝币获取持仓用户列表
-  async getUserListByToken(id, page = 1, pagesize = 20) {
+  async getUserListByToken(id, page = 1, pagesize = 20, order = 1, direction = 0) {
+    let orderingColumn;
+    switch (order) {
+      case 1:
+        orderingColumn = 'amount';
+        break;
+
+      case 2:
+        orderingColumn = 'coalesce(nickname, username)';
+        break;
+
+      default:
+        return false;
+    }
+
     id = parseInt(id);
     const sql = `SELECT a.*, b.total_supply, u.username, u.nickname, u.avatar
     FROM assets_minetokens AS a
     JOIN minetokens b ON b.id = a.token_id
     JOIN users u ON u.id = a.uid
-    WHERE a.token_id = 16 AND a.amount > 0
+    WHERE a.token_id = :id AND a.amount > 0
+    ORDER BY ${orderingColumn} ${direction ? 'DESC' : 'ASC' }
     LIMIT :offset, :limit;
     SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id AND amount > 0;`;
     const result = await this.app.mysql.query(sql, {
