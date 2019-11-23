@@ -399,7 +399,7 @@ class UserController extends Controller {
       id: user.id,
       avatar: user.avatar || '',
       nickname: user.nickname,
-      username: this.app.service.user.maskEmailAddress(user.username),
+      username: this.ctx.service.user.maskEmailAddress(user.username),
     };
 
     this.ctx.body = this.ctx.msg.success;
