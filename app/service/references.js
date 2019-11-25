@@ -37,8 +37,7 @@ class ReferencesService extends Service {
       };
     }
 
-    let title = '';
-    let summary = '';
+    const title = '', summary = '';
     try {
       const rawPage = await axios.get(url, {
         method: 'get',
@@ -47,24 +46,20 @@ class ReferencesService extends Service {
           Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         },
       });
-
       // 微信公众号就是屑，网页版在客户端渲染title，直接抓取 html 时的 <title> 为空
       // 但是多谢微信意识到 OpenGraph 规范的存在，我们可以试着读取 - Frank
+      let { title, description: summary } = await this.service.metadata.GetFromRawPage(rawPage, url);
 
-      const matchOgTitle = rawPage.data.match(/<meta.*?property="og:title". *?content=["|']*(.*?)["|'|\/]*>/);
-      const matchTitleTag = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/); // /<title.*?>([\S\s]*?)<\/title>/，/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/
+      if (!title) {
+        const matchOgTitle = rawPage.data.match(/<meta.*?property="og:title". *?content=["|']*(.*?)["|'|\/]*>/);
+        const matchTitleTag = rawPage.data.match(/<title.*?>([\S\s]*?)<\/title>/); // /<title.*?>([\S\s]*?)<\/title>/，/(?<=<title[\S\s]*?>)[\S\s]*?(?=<\/title>)/
 
-      if (matchOgTitle && matchOgTitle.length > 1 && matchOgTitle[1].length > 1) {
-        title = matchOgTitle[1];
-      } else if (matchTitleTag && matchTitleTag.length > 1) {
-        // 不支持 OpenGraph 只能从 title 碰运气了
-        title = matchTitleTag[1];
-      }
-
-
-      const resultContent = rawPage.data.match(/<meta.*?name="description".*?content=["|']*(.*?)["|'|\/]*>/);
-      if (resultContent && resultContent.length > 1) {
-        summary = resultContent[1];
+        if (matchOgTitle && matchOgTitle.length > 1 && matchOgTitle[1].length > 1) {
+          title = matchOgTitle[1];
+        } else if (matchTitleTag && matchTitleTag.length > 1) {
+          // 不支持 OpenGraph 只能从 title 碰运气了
+          title = matchTitleTag[1];
+        }
       }
 
       return {
