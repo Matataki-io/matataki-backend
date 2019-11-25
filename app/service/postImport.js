@@ -9,6 +9,8 @@ const axios = require('axios');
 const htmlparser = require('node-html-parser');
 const pretty = require('pretty');
 const turndown = require('turndown');
+const { getMetadata } = require('page-metadata-parser');
+const domino = require('domino');
 const path = require('path');
 
 class PostImportService extends Service {
@@ -96,15 +98,24 @@ class PostImportService extends Service {
     const parsedTitleRaw = parsedPage.querySelector('h2.rich_media_title').childNodes[0].rawText;
     const parsedTitle = parsedTitleRaw.replace(/\s{2,}/g, '');
 
-    let parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz_jpg\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/);
-    if (parsedCoverRaw) {
-      // 最好的情况，匹配到 mmbiz_jpg 时 parsedCoverRaw 不为空
-      parsedCoverRaw = parsedCoverRaw[0];
+    // Init meta reader
+    const doc = domino.createWindow(rawPage.data).document;
+    const metadata = getMetadata(doc, url);
+    this.logger.info('metadata for url', url, metadata);
+
+    let parsedCoverRaw;
+    // 试图从 OpenGraph 读取 封面信息
+    if (metadata.image) {
+      parsedCoverRaw = metadata.image;
+    } else if (rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz_jpg\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/)) {
+      parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz_jpg\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/)[0];
     } else {
       // 文章可能较老，试图匹配 mmbiz 看看能不能找到图片
-      parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/)[0];
+      parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/);
+      if (parsedCoverRaw) parsedCoverRaw = parsedCoverRaw[0];
     }
-    const parsedCover = parsedCoverRaw.substring(15, parsedCoverRaw.length - 1);
+    // const parsedCover = parsedCoverRaw.substring(15, parsedCoverRaw.length - 1);
+    const parsedCover = parsedCoverRaw;
     const parsedCoverUpload = './uploads/today_wx_' + Date.now() + '.jpg';
     const coverLocation = await this.uploadArticleImage(parsedCover, parsedCoverUpload);
     // console.log(parsedTitle);
