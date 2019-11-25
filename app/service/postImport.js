@@ -9,10 +9,6 @@ const axios = require('axios');
 const htmlparser = require('node-html-parser');
 const pretty = require('pretty');
 const turndown = require('turndown');
-const { getMetadata } = require('page-metadata-parser');
-const domino = require('domino');
-const path = require('path');
-
 class PostImportService extends Service {
 
   // 搬运时候上传图片
@@ -94,18 +90,14 @@ class PostImportService extends Service {
     }
     parsedContent = pretty(parsedContent);
 
-    // 处理标题和封面
-    const parsedTitleRaw = parsedPage.querySelector('h2.rich_media_title').childNodes[0].rawText;
-    const parsedTitle = parsedTitleRaw.replace(/\s{2,}/g, '');
-
-    // Init meta reader
-    const doc = domino.createWindow(rawPage.data).document;
-    const metadata = getMetadata(doc, url);
-    this.logger.info('metadata for url', url, metadata);
+    // 处理元数据 —— 标题、封面
+    const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
+    const { title } = metadata;
 
     let parsedCoverRaw;
     // 试图从 OpenGraph 读取 封面信息
     if (metadata.image) {
+      // Yay! 再也不用regex匹配了
       parsedCoverRaw = metadata.image;
     } else if (rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz_jpg\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/)) {
       parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz_jpg\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/)[0];
@@ -123,7 +115,7 @@ class PostImportService extends Service {
     // console.log(parsedContent);
 
     const articleObj = {
-      title: parsedTitle,
+      title,
       cover: coverLocation,
       content: parsedContent,
     };
@@ -148,12 +140,11 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: handleOrange: error:', err);
       return null;
     }
+    const { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
+
     // console.log(rawPage);
     // Parser 处理， 转化为markdown， 因平台而异
     const parsedPage = htmlparser.parse(rawPage.data);
-    const parsedTitleNode = parsedPage.querySelector('div.article-title');
-    const parsedTitleRaw = parsedTitleNode.childNodes[0].rawText;
-    const parsedTitle = parsedTitleRaw.replace(/\s+/g, '');
     const parsedContent = parsedPage.querySelector('div.article-content');
     const parsedCover = parsedPage.querySelector('div.img-center-cropped.float-img').rawAttributes.style;
     const coverRe = new RegExp(/url\(\'.*\'\)/);
@@ -170,7 +161,7 @@ class PostImportService extends Service {
     const coverLocation = await this.uploadArticleImage(coverUrl.substring(5, coverUrl.length - 2), parsedCoverUpload);
 
     const articleObj = {
-      title: parsedTitle,
+      title,
       cover: coverLocation,
       content: articleContent,
     };
@@ -195,20 +186,22 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: handleChainnews: error:', err);
       return null;
     }
+    // 处理元数据 —— 标题、封面
+    const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
+    const { title, image } = metadata;
     // Parser 处理， 转化为markdown， 因平台而异
     const parsedPage = htmlparser.parse(rawPage.data);
     const parsedContent = parsedPage.querySelector('div.post-content.markdown');
-    const parsedTitle = parsedPage.querySelector('h1.post-title');
-    const parsedCover = parsedPage.querySelector('head').childNodes[11].rawAttributes.content;
     // const coverRe = new RegExp(//);
     const turndownService = new turndown();
     const articleContent = turndownService.turndown(parsedContent.toString());
 
     const parsedCoverUpload = './uploads/today_chainnews_' + Date.now() + '.jpg';
-    const coverLocation = await this.uploadArticleImage(parsedCover.substring(0, parsedCover.length - 6), parsedCoverUpload);
+    const coverLocation = await this.uploadArticleImage(image.substring(0, image.length - 6), parsedCoverUpload);
+
 
     const articleObj = {
-      title: parsedTitle.childNodes[0].rawText,
+      title,
       cover: coverLocation,
       content: articleContent,
     };
@@ -233,10 +226,10 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: handleJianShu: error:', err);
       return null;
     }
+    const { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
     // Parser 处理， 转化为markdown， 因平台而异
     const parsedPage = htmlparser.parse(rawPage.data);
     const parsedContent = parsedPage.querySelector('article');
-    const parsedTitle = parsedPage.querySelector('h1');
     const turndownService = new turndown();
     const parsedCoverList = parsedPage.querySelectorAll('article img');
     let coverLocation = null;
@@ -255,7 +248,7 @@ class PostImportService extends Service {
     const articleContent = turndownService.turndown(parsedContent.toString());
 
     const articleObj = {
-      title: parsedTitle.childNodes[0].rawText,
+      title,
       cover: coverLocation,
       content: articleContent,
     };
