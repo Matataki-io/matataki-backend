@@ -12,7 +12,7 @@ class GetPostMetadataService extends Service {
    * @param {string} url target url
    * @return {object} metadata
    */
-  async Get(url) {
+  async GetFromUrl(url) {
     // 获取内容
     let rawPage;
     try {
@@ -28,7 +28,17 @@ class GetPostMetadataService extends Service {
       this.logger.error('GetPostMetadataService::Get: error:', err);
       return null;
     }
+    // 得到了rawPage
+    return this.GetFromRawPage(rawPage, url);
+  }
 
+  /**
+   * 利用 OpenGraph 规范获取 url 的元数据
+   * @param {string} rawPage rawPage
+   * @param {string} url url for getMetadata func
+   * @return {object} metadata
+   */
+  async GetFromRawPage(rawPage, url) {
     // Init meta reader
     const doc = domino.createWindow(rawPage.data).document;
     const metadata = getMetadata(doc, url);
