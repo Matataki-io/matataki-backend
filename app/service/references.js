@@ -57,7 +57,7 @@ class ReferencesService extends Service {
       if (matchOgTitle && matchOgTitle.length > 1 && matchOgTitle[1].length > 1) {
         title = matchOgTitle[1];
       } else if (matchTitleTag && matchTitleTag.length > 1) {
-        // 不支持 OneGraph 只能从 title 碰运气了
+        // 不支持 OpenGraph 只能从 title 碰运气了
         title = matchTitleTag[1];
       }
 
