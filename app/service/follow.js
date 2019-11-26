@@ -283,6 +283,25 @@ class FollowService extends Service {
     return res;
   }
 
+  // 提供推送信息
+  async populateNotifications(userId, fromDate, page, pageSize) {
+    fromDate = moment.isMoment(fromDate) ? fromDate.format('YYYY-MM-DD HH:mm:ss') : undefined;
+    const fans = await this.ctx.app.mysql.query(`SELECT a.uid, UNIX_TIMESTAMP(a.create_time) AS time, a.username, b.nickname, b.avatar, EXISTS(SELECT id FROM follows WHERE uid = a.fuid AND fuid = a.uid) AS back FROM follows a LEFT JOIN users b on a.uid = b.id WHERE a.fuid = :userId AND a.status = 1${fromDate ? ' AND a.create_time > :fromDate' : ''} ORDER BY a.id DESC LIMIT :start, :end`, {
+      userId, fromDate, start: (page - 1) * pageSize, end: 1 * pageSize,
+    });
+    return _.map(fans, fan => {
+      return {
+        kind: 'follow',
+        source: fan.uid, // undefined if from system,
+        destination: userId,
+        timestamp: fan.time,
+        message: `${fan.username}关注了你`,
+        avatar: fan.avatar,
+        actions: [{ name: fan.back ? '已关注' : '关注', emit: fan.back ? undefined : { action: 'follow', uid: fan.uid } }],
+      };
+    });
+  }
+
 }
 
 module.exports = FollowService;
