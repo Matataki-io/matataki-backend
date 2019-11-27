@@ -1113,12 +1113,17 @@ post_references
 posts.require_buy
 orders.trade_no
 
+增加表
+order_headers
+
 -- 2019-11-21 Frank
 新增字段：
 posts.cc_license - 用于用户标记文章的版权对他人使用的授权选项
 
-增加表
-order_headers
+-- 2019-11-27 Frank
+增加表 `user_third_party`, `uid` and `platform` 是 UNIQUE 的Key （一个用户一个平台只能绑定一个第三方帐户）
+`challenge_text` 用于在第三方平台识别用户的代号（钱包签名或者单纯传输）
+
 
 CREATE TABLE `user_websites` (
 	`uid` INT(11) NOT NULL,
