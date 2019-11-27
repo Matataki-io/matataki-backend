@@ -42,9 +42,29 @@ class OrderHeaderService extends Service {
           }
           total = total + prices[0].price;
         } else if (typeOptions[item.type]) {
-          // 计算需要多少CNY
-          const amount = await this.service.token.exchange.getCnyToTokenOutputPrice(item.tokenId, item.amount);
-          if (amount <= 0) {
+          let cny_amount = 0;
+          let token_amount = 0;
+          let max_tokens = 0;
+          switch (item.type) {
+            case typeOptions.buy_token_output: {
+              token_amount = item.amount;
+              cny_amount = await this.service.token.exchange.getCnyToTokenOutputPrice(item.tokenId, token_amount);
+              max_tokens = cny_amount;
+              break;
+            }
+            case typeOptions.buy_token_input: {
+              cny_amount = item.cny_amount;
+              token_amount = await this.service.token.exchange.getCnyToTokenInputPrice(item.tokenId, cny_amount);
+              break;
+            }
+            case typeOptions.add: {
+              cny_amount = item.cny_amount;
+              token_amount = await this.service.token.exchange.getPoolCnyToTokenPrice(item.tokenId, cny_amount);
+              max_tokens = token_amount;
+              break;
+            }
+          }
+          if (cny_amount <= 0) {
             await conn.rollback();
             return '-1';
           }
@@ -53,15 +73,15 @@ class OrderHeaderService extends Service {
             {
               uid: userId, // 用户id
               token_id: item.tokenId, // 购买的token id
-              cny_amount: amount,
+              cny_amount,
               pay_cny_amount: 0,
-              token_amount: item.amount,
+              token_amount,
               type: typeOptions[item.type], // 类型：add，buy_token，sale_token
               trade_no, // 订单号
               openid: '',
               status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成
               min_liquidity: item.min_liquidity || 0, // 资金池pool最小流动性，type = add
-              max_tokens: 0, // output为准，最多获得CNY，type = sale_token
+              max_tokens, // output为准，最多获得CNY，type = sale_token
               min_tokens: item.min_tokens || 0, // input为准时，最少获得Token，type = buy_token
               recipient: userId, // 接收者
               ip, // ip
@@ -71,7 +91,7 @@ class OrderHeaderService extends Service {
             await conn.rollback();
             return '-1';
           }
-          total = total + amount;
+          total = total + cny_amount;
         }
       }
 
