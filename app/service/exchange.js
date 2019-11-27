@@ -126,15 +126,28 @@ class ExchangeService extends Service {
     };
   }
   // 根据粉丝币获取持仓用户列表
-  async getUserListByToken(id, page = 1, pagesize = 20, order = 1, direction = 0) {
-    let orderingColumn;
-    switch (order) {
-      case 1:
+  async getUserListByToken(id, page = 1, pagesize = 20, sort = 'amount-desc') {
+    let orderingColumn, direction;
+
+    switch (sort) {
+      case 'amount-desc':
         orderingColumn = 'amount';
+        direction = 'DESC';
         break;
 
-      case 2:
+      case 'amount-asc':
+        orderingColumn = 'amount';
+        direction = 'ASC';
+        break;
+
+      case 'name-asc':
         orderingColumn = 'coalesce(nickname, username)';
+        direction = 'ASC';
+        break;
+
+      case 'name-desc':
+        orderingColumn = 'coalesce(nickname, username)';
+        direction = 'DESC';
         break;
 
       default:
@@ -147,7 +160,7 @@ class ExchangeService extends Service {
     JOIN minetokens b ON b.id = a.token_id
     JOIN users u ON u.id = a.uid
     WHERE a.token_id = :id AND a.amount > 0
-    ORDER BY ${orderingColumn} ${direction ? 'DESC' : 'ASC' }
+    ORDER BY ${orderingColumn} ${direction}
     LIMIT :offset, :limit;
     SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id AND amount > 0;`;
     const result = await this.app.mysql.query(sql, {
