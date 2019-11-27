@@ -581,8 +581,8 @@ class ExchangeService extends Service {
   }
 
   // order_headers已经处理充值了
-  async cnyToTokenOutputSubOrder(tradeNo, conn) {
-    const result = await conn.query('SELECT * FROM exchange_orders WHERE trade_no = ? AND type=\'buy_token_output\' FOR UPDATE;', [ tradeNo ]);
+  async cnyToTokenSubOrder(tradeNo, conn) {
+    const result = await conn.query('SELECT * FROM exchange_orders WHERE trade_no = ? FOR UPDATE;', [ tradeNo ]);
     if (!result || result.length <= 0) {
       return 0;
     }
@@ -601,7 +601,21 @@ class ExchangeService extends Service {
     // 页面上填写的购买数量
     const tokens_bought = order.token_amount;
 
-    const res = await this.cnyToTokenOutput(userId, tokenId, tokens_bought, cny_sold, order.deadline, order.recipient, conn);
+    let res = 0;
+    switch (result.type) {
+      case 'buy_token_output': {
+        res = await this.cnyToTokenOutput(userId, tokenId, tokens_bought, cny_sold, order.deadline, order.recipient, conn);
+        break;
+      }
+      case 'buy_token_input': {
+        res = await this.cnyToTokenInput(userId, tokenId, cny_sold, order.min_tokens, order.deadline, order.recipient, conn);
+        break;
+      }
+      case 'add': {
+        res = await this.addLiquidity(userId, tokenId, order.cny_amount, order.token_amount, order.min_liquidity, order.max_tokens, order.deadline, conn);
+        break;
+      }
+    }
     if (res < 0) {
       return -1;
     }
