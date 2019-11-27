@@ -602,7 +602,7 @@ class ExchangeService extends Service {
     const tokens_bought = order.token_amount;
 
     let res = 0;
-    switch (result.type) {
+    switch (order.type) {
       case 'buy_token_output': {
         res = await this.cnyToTokenOutput(userId, tokenId, tokens_bought, cny_sold, order.deadline, order.recipient, conn);
         break;
