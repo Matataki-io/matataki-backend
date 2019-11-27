@@ -60,9 +60,9 @@ class OrderHeaderService extends Service {
               trade_no, // 订单号
               openid: '',
               status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成
-              min_liquidity: 0, // 资金池pool最小流动性，type = add
-              max_tokens: amount, // output为准，最多获得CNY，type = sale_token
-              min_tokens: 0, // input为准时，最少获得Token，type = buy_token
+              min_liquidity: item.min_liquidity || 0, // 资金池pool最小流动性，type = add
+              max_tokens: 0, // output为准，最多获得CNY，type = sale_token
+              min_tokens: item.min_tokens || 0, // input为准时，最少获得Token，type = buy_token
               recipient: userId, // 接收者
               ip, // ip
             }, conn
