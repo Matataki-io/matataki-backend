@@ -2,6 +2,12 @@
 const moment = require('moment');
 
 const Service = require('egg').Service;
+const typeOptions = {
+  add: 'add',
+  buy_token_input: 'buy_token_input',
+  buy_token_output: 'buy_token_output',
+  sale_token: 'sale_token',
+};
 
 class OrderHeaderService extends Service {
   // 以下是CNY支付相关处理 2019-11-13
@@ -35,7 +41,7 @@ class OrderHeaderService extends Service {
             return '-1';
           }
           total = total + prices[0].price;
-        } else if (item.type === 'buy_minetoken') {
+        } else if (typeOptions[item.type]) {
           // 计算需要多少CNY
           const amount = await this.service.token.exchange.getCnyToTokenOutputPrice(item.tokenId, item.amount);
           if (amount <= 0) {
@@ -50,7 +56,7 @@ class OrderHeaderService extends Service {
               cny_amount: amount,
               pay_cny_amount: 0,
               token_amount: item.amount,
-              type: 'buy_token_output', // 类型：add，buy_token，sale_token
+              type: typeOptions[item.type], // 类型：add，buy_token，sale_token
               trade_no, // 订单号
               openid: '',
               status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成
@@ -247,7 +253,7 @@ class OrderHeaderService extends Service {
       }
 
       // 买币
-      const buyTokenResult = await this.service.token.exchange.cnyToTokenOutputSubOrder(tradeNo, conn);
+      const buyTokenResult = await this.service.token.exchange.cnyToTokenSubOrder(tradeNo, conn);
       if (buyTokenResult < 0) {
         await conn.rollback();
         return -3;

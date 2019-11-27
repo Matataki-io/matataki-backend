@@ -47,7 +47,7 @@ class ExchangeService extends Service {
   }
   async getOrderAndSymbol(userId, tradeNo) {
     const sql = `
-      SELECT t1.token_id, t1.pay_cny_amount, t1.cny_amount, t1.token_amount, t1.status,
+      SELECT t1.token_id, t1.pay_cny_amount, t1.cny_amount, t1.token_amount, t1.status, t1.type,
       t2.name, t2.symbol
       FROM exchange_orders as t1
       LEFT JOIN minetokens as t2
