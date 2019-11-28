@@ -225,18 +225,6 @@ module.exports = app => {
   router.get('/gt/register-slide', controller.geetest.register);
   // 验证geetest
   router.post('/gt/validate-slide', controller.geetest.validate);
-  // -------------------------------- 微信支付相关API --------------------------------
-  // 微信支付回调
-  router.post('/wx/notify', app.middleware.tenpay('pay', app), controller.wxpay.notify);
-  // 微信退款结果通知
-  router.post('/wx/refundNotify', app.middleware.tenpay('pay', app), controller.wxpay.refundNotify);
-  // 微信支付接口
-  router.post('/wx/pay', passport.authorize, controller.wxpay.pay);
-  // 微信登录获取openid
-  router.post('/wx/login', passport.verify, controller.wxpay.login);
-
-  // 微信登录
-  router.post('/login/weixin', passport.verify, controller.auth.weixinLogin);
 
   // 创建token
   router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
@@ -319,7 +307,6 @@ module.exports = app => {
   router.post('/exchange/swap', passport.authorize, controller.exchange.swap);
   // 根据资金池通证获取输出
   router.get('/exchange/outputPoolSize', passport.verify, controller.exchange.getOutputPoolSize);
-  router.post('/wxpay/refund', passport.verify, controller.wxpay.refund);
 
   // 持币阅读
   router.post('/post/addMineTokens', passport.authorize, controller.post.addMineTokens);
@@ -355,16 +342,31 @@ module.exports = app => {
   router.get('/token/:id/liquidity/balances', passport.verify, controller.token.getLiquidityBalances);
   router.get('/token/:id/liquidity/transactions', passport.verify, controller.token.getLiquidityTransactions);
 
+  // -------------------------------- 微信支付相关API --------------------------------
+  // 微信支付回调
+  router.post('/wx/notify', app.middleware.tenpay('pay', app), controller.wxpay.notify);
+  // 微信退款结果通知
+  router.post('/wx/refundNotify', app.middleware.tenpay('pay', app), controller.wxpay.refundNotify);
+  // 微信支付接口
+  router.post('/wx/pay', passport.authorize, controller.wxpay.pay);
+  // 微信登录获取openid
+  router.post('/wx/login', passport.verify, controller.wxpay.login);
+
+  // 微信登录
+  router.post('/login/weixin', passport.verify, controller.auth.weixinLogin);
+
+  router.post('/wxpay/refund', passport.verify, controller.wxpay.refund);
+
   // 修改wxpay的微信支付
-  router.post('/order/create', passport.authorize, controller.wxpay.createOrder);
-  router.get('/order/get/:id', passport.authorize, controller.wxpay.getOrder);
-  router.post('/order/pay', passport.authorize, controller.wxpay.wxpay);
+  // router.post('/order/create', passport.authorize, controller.wxpay.createOrder);
+  // router.get('/order/get/:id', passport.authorize, controller.wxpay.getOrder);
+  // router.post('/order/pay', passport.authorize, controller.wxpay.wxpay);
   router.put('/orders', passport.authorize, controller.order.createOrder);
   router.get('/orders/:tradeNo', passport.authorize, controller.order.get);
   router.put('/orders/:tradeNo', passport.authorize, controller.order.updateOrder);
   router.post('/orders/handleAmount0', passport.authorize, controller.order.handleAmount0);
 
   router.post('/wx/payarticlenotify', app.middleware.tenpay('pay', app), controller.wxpay.payArticleNotify);
-  router.post('/order/articlepay', passport.authorize, controller.wxpay.wxpayArticle);
+  router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
 };
 
