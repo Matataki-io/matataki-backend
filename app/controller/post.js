@@ -315,7 +315,12 @@ class PostController extends Controller {
 
     const { page = 1, pagesize = 20, channel = null, author = null, extra = null } = this.ctx.query;
 
-    const postData = await this.service.post.scoreRank(page, pagesize, author, channel, extra);
+    let postData;
+    if (page === 1 && pagesize === 20 && channel === null && author === null && extra === null) {
+      postData = this.app.ctx.cache.post.hot;
+    } else {
+      postData = await this.service.post.scoreRank(page, pagesize, author, channel, extra);
+    }
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -419,7 +424,12 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { channel = null, amount = 5 } = ctx.query;
 
-    const postData = await this.service.post.recommendPosts(channel, amount);
+    let postData;
+    if (channel === null && amount === 5) {
+      postData = this.app.cache.post.recommend;
+    } else {
+      postData = await this.service.post.recommendPosts(channel, amount);
+    }
 
     if (postData === 3) {
       ctx.body = ctx.msg.paramsError;
@@ -787,10 +797,10 @@ class PostController extends Controller {
   }
 
   // 查询统计数据
-  async stats() {
+  stats() {
     const ctx = this.ctx;
     ctx.body = ctx.msg.success;
-    ctx.body.data = await this.service.post.stats();
+    ctx.body.data = this.ctx.app.cache.post.stats;
   }
 
   // 持币阅读
