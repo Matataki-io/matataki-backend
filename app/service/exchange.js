@@ -194,66 +194,104 @@ class ExchangeService extends Service {
     return result[0] || null;
   }
   // 所有的token
-  async getAllToken(page = 1, pagesize = 20, search = '', sort) {
-    let sortArray = null;
-    let sqlOrder = ' ORDER BY id DESC';
-    if (sort) {
-      sortArray = sort.split('-');
-      if (sortArray[0] === 'id' && sortArray[1] === 'asc') {
-        sqlOrder = ' ORDER BY id';
-      } else if (sortArray[0] === 'symbol' && sortArray[1] === 'asc') {
+  async getAllToken(page = 1, pagesize = 20, search = '', sort = 'general') {
+    let sqlOrder = null;
+    switch (sort) {
+      case 'general':
+        sqlOrder = ' ORDER BY t6.amount * 1 + t7.count * 1 + t7.amount * 1 DESC';
+        break;
+
+      case 'name-asc':
         sqlOrder = ' ORDER BY symbol';
-      } else if (sortArray[0] === 'symbol' && sortArray[1] === 'desc') {
+        break;
+      case 'name-desc':
         sqlOrder = ' ORDER BY symbol DESC';
-      }
+        break;
+
+      case 'unit-price-asc':
+        sqlOrder = ' ORDER BY t6.amount / t4.amount';
+        break;
+      case 'unit-price-desc':
+        sqlOrder = ' ORDER BY t6.amount / t4.amount DESC';
+        break;
+
+      case 'liquidity-asc':
+        sqlOrder = ' ORDER BY t6.amount';
+        break;
+      case 'liquidity-desc':
+        sqlOrder = ' ORDER BY t6.amount DESC';
+        break;
+
+      case 'exchange-asc':
+        sqlOrder = ' ORDER BY t7.amount';
+        break;
+
+      case 'exchange-desc':
+        sqlOrder = ' ORDER BY t7.amount DESC';
+        break;
+
+      default:
+        return false;
     }
 
+    let sql, parameters;
     if (search === '') {
-      const sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount
+      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount, t6.amount AS liquidity, t7.amount AS exchange_amount
           FROM mineTokens AS t1
-          Left JOIN users AS t2 ON t1.uid = t2.id
+          JOIN users AS t2 ON t1.uid = t2.id
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
-          LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id `
+          LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id
+          LEFT JOIN exchanges t5 ON t5.token_id = t1.id
+          LEFT JOIN assets t6 ON t6.uid = t5.exchange_uid AND t6.symbol = 'CNY'
+          LEFT JOIN (
+            SELECT token_id, COUNT(amount) AS COUNT, SUM(amount) AS amount
+            FROM exchanges e
+            JOIN assets_change_log acl ON acl.uid = e.exchange_uid
+            WHERE acl.create_time > DATE_SUB(NOW(), INTERVAL 1 DAY)
+            GROUP BY token_id
+          ) t7 ON t7.token_id = t1.id `
         + sqlOrder
         + ' LIMIT :offset, :limit;'
         + 'SELECT count(1) as count FROM mineTokens;';
-      const result = await this.app.mysql.query(sql, {
+      parameters = {
         offset: (page - 1) * pagesize,
         limit: pagesize,
-      });
-
-      _.each(result[0], row => {
-        row.username = this.service.user.maskEmailAddress(row.username);
-      });
-
-      return {
-        count: result[1][0].count,
-        list: result[0],
+      };
+    } else {
+      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount, t6.amount AS liquidity, t7.amount AS exchange_amount
+          FROM mineTokens AS t1
+          JOIN users AS t2 ON t1.uid = t2.id
+          LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
+          LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id
+          LEFT JOIN exchanges t5 ON t5.token_id = t1.id
+          LEFT JOIN assets t6 ON t6.uid = t5.exchange_uid AND t6.symbol = 'CNY'
+          LEFT JOIN (
+            SELECT token_id, COUNT(amount) AS COUNT, SUM(amount) AS amount
+            FROM exchanges e
+            JOIN assets_change_log acl ON acl.uid = e.exchange_uid
+            WHERE acl.create_time > DATE_SUB(NOW(), INTERVAL 1 DAY)
+            GROUP BY token_id
+          ) t7 ON t7.token_id = t1.id
+          WHERE Lower(t1.name) LIKE :search OR Lower(t1.symbol) LIKE :search `
+        + sqlOrder
+        + ' LIMIT :offset, :limit;'
+        + 'SELECT count(1) as count FROM mineTokens WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search;';
+      parameters = {
+        search: '%' + search.toLowerCase() + '%',
+        offset: (page - 1) * pagesize,
+        limit: pagesize,
       };
     }
 
-    const searchSql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount
-        FROM mineTokens AS t1
-        Left JOIN users AS t2 ON t1.uid = t2.id
-        LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
-        LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id
-        WHERE Lower(t1.name) LIKE :search OR Lower(t1.symbol) LIKE :search `
-      + sqlOrder
-      + ' LIMIT :offset, :limit;'
-      + 'SELECT count(1) as count FROM mineTokens WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search;';
-    const searchResult = await this.app.mysql.query(searchSql, {
-      search: '%' + search.toLowerCase() + '%',
-      offset: (page - 1) * pagesize,
-      limit: pagesize,
-    });
+    const result = await this.app.mysql.query(sql, parameters);
 
     _.each(result[0], row => {
       row.username = this.service.user.maskEmailAddress(row.username);
     });
 
     return {
-      count: searchResult[1][0].count,
-      list: searchResult[0],
+      count: result[1][0].count,
+      list: result[0],
     };
   }
   async getFlowDetail(tokenId, page = 1, pagesize = 20) {
