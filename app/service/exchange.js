@@ -223,11 +223,11 @@ class ExchangeService extends Service {
         break;
 
       case 'exchange-asc':
-        sqlOrder = ' ORDER BY t7.amount DESC';
+        sqlOrder = ' ORDER BY t7.amount';
         break;
 
       case 'exchange-desc':
-          sqlOrder = ' ORDER BY t7.amount DESC';
+        sqlOrder = ' ORDER BY t7.amount DESC';
         break;
 
       default:
