@@ -1,6 +1,6 @@
 const { Subscription } = require('egg');
 
-class PostStatsCache extends Subscription {
+class PostCache extends Subscription {
   static get schedule() {
       return {
           interval: '1h',
@@ -13,14 +13,24 @@ class PostStatsCache extends Subscription {
     if (!this.ctx.app.cache)
       this.ctx.app.cache = {}
 
+    this.ctx.app.cache.post = {
+      stats: await this.loadPostStats()
+    };
+  }
+
+  async loadPostStats() {
     const sql = `SELECT COUNT(1) as count FROM users;
       SELECT COUNT(1) as count FROM posts;
       SELECT SUM(amount) as amount FROM assets_points;`;
 
     const queryResult = await this.app.mysql.query(sql);
 
-    this.ctx.app.cache.postStats = { users: queryResult[0][0].count, articles: queryResult[1][0].count, points: queryResult[2][0].amount };
+    return {
+      users: queryResult[0][0].count,
+      articles: queryResult[1][0].count,
+      points: queryResult[2][0].amount
+    };
   }
 }
 
-module.exports = PostStatsCache;
+module.exports = PostCache;
