@@ -928,10 +928,6 @@ class PostService extends Service {
     return data;
   }
 
-  async stats() {
-    return this.ctx.app.cache.postStats;
-  }
-
   // 持币阅读
   async addMineTokens(current_uid, id, tokens) {
     const post = await this.get(id);

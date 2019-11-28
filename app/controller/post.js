@@ -787,10 +787,10 @@ class PostController extends Controller {
   }
 
   // 查询统计数据
-  async stats() {
+  stats() {
     const ctx = this.ctx;
     ctx.body = ctx.msg.success;
-    ctx.body.data = await this.service.post.stats();
+    ctx.body.data = this.ctx.app.cache.post.stats;
   }
 
   // 持币阅读
