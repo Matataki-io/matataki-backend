@@ -1158,3 +1158,6 @@ CREATE INDEX `idx_uid_create_time` ON `post_bookmarks`(`uid`, `create_time`);
 
 -- 2019-11-20
 CREATE INDEX `idx_uid_update_time` ON `drafts`(`uid`, `update_time`);
+
+-- 2019-11-28
+CREATE INDEX `idx_uid_create_time` ON `assets_change_log`(`uid`, `create_time`);

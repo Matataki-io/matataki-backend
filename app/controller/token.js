@@ -103,8 +103,13 @@ class TokenController extends Controller {
   // 粉丝币分页列表
   async allToken() {
     const ctx = this.ctx;
-    const { pagesize = 10, page = 1, search = '', sort } = this.ctx.query;
+    const { pagesize = 10, page = 1, search = '', sort = 'general' } = this.ctx.query;
     const result = await ctx.service.exchange.getAllToken(parseInt(page), parseInt(pagesize), search, sort);
+    if (result === false) {
+      ctx.status = 400;
+      ctx.body = ctx.msg.paramsError;
+    }
+
     ctx.body = {
       ...ctx.msg.success,
       data: result,
