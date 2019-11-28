@@ -929,13 +929,7 @@ class PostService extends Service {
   }
 
   async stats() {
-    const sql = `SELECT COUNT(1) as count FROM users;
-                  SELECT COUNT(1) as count FROM posts;
-                  SELECT SUM(amount) as amount FROM assets_points;`;
-
-    const queryResult = await this.app.mysql.query(sql);
-
-    return { users: queryResult[0][0].count, articles: queryResult[1][0].count, points: queryResult[2][0].amount };
+    return this.ctx.app.cache.postStats;
   }
 
   // 持币阅读
