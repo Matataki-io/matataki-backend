@@ -1156,7 +1156,8 @@ class ExchangeService extends Service {
                 SELECT * FROM exchange_purchase_logs WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId) AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY) ORDER BY id DESC LIMIT 0, 1;
                 SELECT * FROM exchange_purchase_logs WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId) ORDER BY id DESC LIMIT 0, 1;
                 SELECT IFNULL(SUM(sold_amount), 0) AS total FROM exchange_purchase_logs WHERE sold_token_id = :tokenId AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY);
-                SELECT IFNULL(SUM(bought_amount), 0) AS total FROM exchange_purchase_logs WHERE bought_token_id = :tokenId AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY);`;
+                SELECT IFNULL(SUM(bought_amount), 0) AS total FROM exchange_purchase_logs WHERE bought_token_id = :tokenId AND create_time > DATE_SUB(NOW(),INTERVAL 1 DAY);
+                SELECT IFNULL(SUM(amount), 0) AS amount FROM exchanges e JOIN assets_change_log acl ON acl.uid = e.exchange_uid WHERE token_id = :tokenId AND acl.create_time > DATE_SUB(NOW(), INTERVAL 1 DAY);`;
     const result = await this.app.mysql.query(sql, { tokenId });
 
     let first_price = 0;
@@ -1175,6 +1176,7 @@ class ExchangeService extends Service {
     return {
       change_24h,
       volume_24h,
+      amount_24h: result[5][0].amount
     };
   }
 
