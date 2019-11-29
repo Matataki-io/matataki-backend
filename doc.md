@@ -3175,7 +3175,7 @@ symbol-desc：字母倒序
 		},
 		{
 			"tokenId": 15,
-			"type": "buy_minetoken",
+			"type": "buy_token_output",
       "amount": 100000
 		}
   ],

@@ -2,6 +2,12 @@
 const moment = require('moment');
 
 const Service = require('egg').Service;
+const typeOptions = {
+  add: 'add',
+  buy_token_input: 'buy_token_input',
+  buy_token_output: 'buy_token_output',
+  sale_token: 'sale_token',
+};
 
 class OrderHeaderService extends Service {
   // 以下是CNY支付相关处理 2019-11-13
@@ -35,10 +41,35 @@ class OrderHeaderService extends Service {
             return '-1';
           }
           total = total + prices[0].price;
-        } else if (item.type === 'buy_minetoken') {
-          // 计算需要多少CNY
-          const amount = await this.service.token.exchange.getCnyToTokenOutputPrice(item.tokenId, item.amount);
-          if (amount <= 0) {
+        } else if (typeOptions[item.type]) {
+          let cny_amount = 0;
+          let token_amount = 0;
+          let max_tokens = 0;
+          let min_tokens = 0;
+          let min_liquidity = 0;
+          switch (item.type) {
+            case typeOptions.buy_token_output: {
+              token_amount = item.amount;
+              cny_amount = await this.service.token.exchange.getCnyToTokenOutputPrice(item.tokenId, token_amount);
+              max_tokens = cny_amount;
+              min_tokens = this.calMinTokenByOutput(token_amount);
+              break;
+            }
+            case typeOptions.buy_token_input: {
+              cny_amount = item.cny_amount;
+              token_amount = await this.service.token.exchange.getCnyToTokenInputPrice(item.tokenId, cny_amount);
+              min_tokens = this.calMinTokenByInput(cny_amount);
+              break;
+            }
+            case typeOptions.add: {
+              cny_amount = item.cny_amount;
+              token_amount = await this.service.token.exchange.getPoolCnyToTokenPrice(item.tokenId, cny_amount);
+              max_tokens = this.calMaxToken(token_amount);
+              min_liquidity = await this.service.token.exchange.getYourMintToken(cny_amount, item.tokenId);
+              break;
+            }
+          }
+          if (cny_amount <= 0) {
             await conn.rollback();
             return '-1';
           }
@@ -47,16 +78,16 @@ class OrderHeaderService extends Service {
             {
               uid: userId, // 用户id
               token_id: item.tokenId, // 购买的token id
-              cny_amount: amount,
+              cny_amount,
               pay_cny_amount: 0,
-              token_amount: item.amount,
-              type: 'buy_token_output', // 类型：add，buy_token，sale_token
+              token_amount,
+              type: typeOptions[item.type], // 类型：add，buy_token，sale_token
               trade_no, // 订单号
               openid: '',
               status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成
-              min_liquidity: 0, // 资金池pool最小流动性，type = add
-              max_tokens: amount, // output为准，最多获得CNY，type = sale_token
-              min_tokens: 0, // input为准时，最少获得Token，type = buy_token
+              min_liquidity, // 资金池pool最小流动性，type = add
+              max_tokens, // output为准，最多获得CNY，type = sale_token
+              min_tokens, // input为准时，最少获得Token，type = buy_token
               recipient: userId, // 接收者
               ip, // ip
             }, conn
@@ -65,7 +96,7 @@ class OrderHeaderService extends Service {
             await conn.rollback();
             return '-1';
           }
-          total = total + amount;
+          total = total + cny_amount;
         }
       }
 
@@ -95,6 +126,16 @@ class OrderHeaderService extends Service {
       this.logger.error('OrderHeaderService.createOrder exception. %j', e);
       return '-1';
     }
+  }
+
+  calMinTokenByInput(amount) {
+    return parseFloat((parseFloat(amount) * (1 - 0.01)).toFixed(4));
+  }
+  calMinTokenByOutput(amount) {
+    return parseFloat((parseFloat(amount) / (1 - 0.01)).toFixed(4));
+  }
+  calMaxToken(amount) {
+    return parseFloat((parseFloat(amount) / (1 - 0.02)).toFixed(4));
   }
 
   // 修改还未支付的订单
@@ -155,10 +196,11 @@ class OrderHeaderService extends Service {
     const order = await this.get(userId, tradeNo);
     if ((order.status === 0 || order.status === 3) && order.amount === 0) {
       await this.setStatusPaying(tradeNo);
-      await this.paySuccessful(tradeNo);
+      const payResult = await this.paySuccessful(tradeNo);
+      return payResult;
+    } else {
+      return false;
     }
-
-    return true;
   }
 
   // 更新订单状态为支付中
@@ -203,11 +245,12 @@ class OrderHeaderService extends Service {
 
   // 微信支付成功通知内调用该方法
   async paySuccessful(tradeNo) {
-    const result = await this.setStatusPaySuccessful(tradeNo);
-    if (result) {
-      await this.processingOrder(tradeNo);
+    const statusResult = await this.setStatusPaySuccessful(tradeNo);
+    if (statusResult) {
+      const processResult = await this.processingOrder(tradeNo);
+      return processResult >= 0;
     }
-    return true;
+    return false;
   }
 
   // 处理订单，paySuccessful之后调用
@@ -247,7 +290,7 @@ class OrderHeaderService extends Service {
       }
 
       // 买币
-      const buyTokenResult = await this.service.token.exchange.cnyToTokenOutputSubOrder(tradeNo, conn);
+      const buyTokenResult = await this.service.token.exchange.cnyToTokenSubOrder(tradeNo, conn);
       if (buyTokenResult < 0) {
         await conn.rollback();
         return -3;

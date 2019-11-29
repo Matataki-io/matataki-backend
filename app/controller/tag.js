@@ -6,6 +6,13 @@ class TagController extends Controller {
 
   async tags() {
     const { type } = this.ctx.query;
+    if (type === 'post') {
+      this.ctx.body = this.ctx.msg.success;
+      this.ctx.body.data = this.ctx.app.cache.post.tags;
+      this.ctx.logger.debug('tag cache');
+      return;
+    }
+
     let sqlcode = '';
     if (type) {
       sqlcode = 'SELECT id, name, type FROM tags WHERE type = ?;';

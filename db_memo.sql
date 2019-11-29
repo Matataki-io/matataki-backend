@@ -1113,34 +1113,16 @@ post_references
 posts.require_buy
 orders.trade_no
 
+增加表
+order_headers
+
 -- 2019-11-21 Frank
 新增字段：
 posts.cc_license - 用于用户标记文章的版权对他人使用的授权选项
 
--- 增加表
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
-
--- ----------------------------
--- Table structure for order_headers
--- ----------------------------
-CREATE TABLE `order_headers`  (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `uid` int(11) NOT NULL,
-  `trade_no` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '订单号',
-  `amount` bigint(20) NOT NULL COMMENT '实际支付的金额',
-  `total` bigint(20) NOT NULL COMMENT '总的金额',
-  `pay_time` timestamp(0) NULL DEFAULT NULL,
-  `create_time` timestamp(0) NOT NULL,
-  `status` int(11) NOT NULL,
-  `ip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL,
-  `use_balance` int(11) NOT NULL COMMENT '是否使用余额支付',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `idx_trade_no`(`trade_no`) USING BTREE,
-  INDEX `idx_uid`(`uid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 206 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
-
-SET FOREIGN_KEY_CHECKS = 1;
+-- 2019-11-27 Frank
+增加表 `user_third_party`, `uid` and `platform` 是 UNIQUE 的Key （一个用户一个平台只能绑定一个第三方帐户）
+`challenge_text` 用于在第三方平台识别用户的代号（钱包签名或者单纯传输）
 
 
 CREATE TABLE `user_websites` (
@@ -1175,3 +1157,6 @@ CREATE INDEX `idx_uid_create_time` ON `post_bookmarks`(`uid`, `create_time`);
 
 -- 2019-11-20
 CREATE INDEX `idx_uid_update_time` ON `drafts`(`uid`, `update_time`);
+
+-- 2019-11-28
+CREATE INDEX `idx_uid_create_time` ON `assets_change_log`(`uid`, `create_time`);

@@ -123,7 +123,7 @@ class WxPayController extends Controller {
   }
   async wxpayArticle() {
     const { ctx } = this;
-    const { tradeNo, trade_type = 'NATIVE', openid = null } = ctx.request.body;
+    const { tradeNo, title = '购买文章', trade_type = 'NATIVE', openid = null } = ctx.request.body;
     const out_trade_no = tradeNo;
     const { amount, status } = await ctx.service.shop.orderHeader.get(ctx.user.id, tradeNo);
     // 6 9都代表支付成功 7 8 失败
@@ -148,7 +148,7 @@ class WxPayController extends Controller {
     const total_fee = Math.floor(pay_cny_amount / 100);
     let order = {
       out_trade_no, // 订单号 唯一id商户系统内部订单号，要求32个字符内，只能是数字、大小写字母_-|* 且在同一个商户号下唯一。
-      body: '购买文章',
+      body: title,
       total_fee, // 微信最小单位是分
       spbill_create_ip: ip, // 请求的ip地址
       notify_url,
