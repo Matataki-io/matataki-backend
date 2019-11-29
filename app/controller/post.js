@@ -991,6 +991,13 @@ class PostController extends Controller {
     ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
   }
 
+  async delPrices() {
+    const ctx = this.ctx;
+    const signId = parseInt(ctx.params.id);
+    const result = await this.service.post.delPrices(ctx.user.id, signId);
+    ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
+  }
+
   async addBookmark() {
     const ctx = this.ctx;
     const id = parseInt(ctx.params.id);

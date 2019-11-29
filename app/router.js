@@ -328,6 +328,7 @@ module.exports = app => {
   router.get('/posts/:id/posts', passport.verify, controller.post.refPosts);
   // 文章价格
   router.put('/posts/:id/prices', passport.authorize, controller.post.addPrices);
+  router.delete('/posts/:id/prices', passport.authorize, controller.post.delPrices);
 
   router.put('/drafts/:id/references', passport.authorize, controller.post.addDraftReference);
   router.delete('/drafts/:id/references/:number', passport.authorize, controller.post.deleteDraftReference);
