@@ -189,8 +189,12 @@ class OrderController extends Controller {
   async handleAmount0() {
     const { ctx } = this;
     const { tradeNo } = ctx.request.body;
-    await this.service.shop.orderHeader.handleAmount0(ctx.user.id, tradeNo);
-    ctx.body = ctx.msg.success;
+    const succeed = await this.service.shop.orderHeader.handleAmount0(ctx.user.id, tradeNo);
+    if (succeed) {
+      ctx.body = ctx.msg.success;
+    } else {
+      ctx.body = ctx.msg.failure;
+    }
   }
 
 }
