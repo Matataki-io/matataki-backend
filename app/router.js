@@ -264,6 +264,8 @@ module.exports = app => {
 
   // 查询当前用户的资产余额
   router.get('/asset/balance', passport.verify, controller.asset.getBalance);
+  // 资产转移
+  router.post('/asset/transfer', passport.authorize, controller.asset.transfer);
 
   // 创建交易对
   router.post('/exchange/create', passport.authorize, controller.exchange.create);
