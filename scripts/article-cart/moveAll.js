@@ -24,9 +24,9 @@ async function catcher() {
     user: config.mysql_user,
     password: config.mysql_password,
     database: config.mysql_db,
-    ssl: {}
+    ssl: {},
   });
-    // 创建Elastic连接
+  // 创建Elastic连接
   const elaClient = new elastic.Client({ node: 'http://localhost:9200' });
 
   const articleCountQuery = await mysqlConnection.execute(
@@ -53,7 +53,7 @@ async function catcher() {
     // 取内容失败， 多数是无效的ipfs哈希引起， 会掠过， 不会退出
     try {
       articleRawContent = await axios({
-        url: `https://apitest.smartsignature.io/ipfs/catJSON/${currentHash}`,
+        url: `https://api.smartsignature.io/ipfs/catJSON/${currentHash}`,
         method: 'get',
         timeout: 4000,
       });
@@ -81,7 +81,7 @@ async function catcher() {
     // 文章是否已经添加入Elastic数据库， 已经添加则会跳过
     elaQuery = await elaClient.search({
       index: 'posts',
-      q: `inner_id:${currentId}`
+      q: `inner_id:${currentId}`,
     });
     if (elaQuery.body.hits.hits.length !== 0) {
       console.log(`Current article id ${currentId} already added...`);
@@ -102,7 +102,7 @@ async function catcher() {
         title: articleDetailQuery[0][0].title,
         content: parsedContent,
         create_time: parsedTime,
-      }
+      },
     });
   }
 }
