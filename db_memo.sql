@@ -1117,8 +1117,31 @@ orders.trade_no
 新增字段：
 posts.cc_license - 用于用户标记文章的版权对他人使用的授权选项
 
-增加表
-order_headers
+-- 增加表
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for order_headers
+-- ----------------------------
+CREATE TABLE `order_headers`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL,
+  `trade_no` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '订单号',
+  `amount` bigint(20) NOT NULL COMMENT '实际支付的金额',
+  `total` bigint(20) NOT NULL COMMENT '总的金额',
+  `pay_time` timestamp(0) NULL DEFAULT NULL,
+  `create_time` timestamp(0) NOT NULL,
+  `status` int(11) NOT NULL,
+  `ip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL,
+  `use_balance` int(11) NOT NULL COMMENT '是否使用余额支付',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `idx_trade_no`(`trade_no`) USING BTREE,
+  INDEX `idx_uid`(`uid`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 206 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
 
 CREATE TABLE `user_websites` (
 	`uid` INT(11) NOT NULL,
@@ -1146,9 +1169,8 @@ CREATE TABLE `post_bookmarks` (
 ) COLLATE='utf8mb4_bin' ENGINE=InnoDB;
 
 CREATE INDEX `idx_token_id_amount` ON `assets_minetokens`(`token_id`, `amount`);
-CREATE UNIQUE INDEX `idx_tokenid_uid` USING BTREE ON exchange_balances(`token_id`,`uid`);
 CREATE INDEX `idx_token_id_create_time` ON `exchange_liquidity_logs`(`token_id`, `create_time`);
-CREATE INDEX `idx_id_create_time` ON `posts`(`id`, `create_time`);
+CREATE INDEX `idx_create_time` ON `posts`(`create_time`);
 CREATE INDEX `idx_uid_create_time` ON `post_bookmarks`(`uid`, `create_time`);
 
 -- 2019-11-20
