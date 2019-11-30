@@ -7,10 +7,10 @@ class TokenController extends Controller {
   // 持仓详情
   async balances() {
     const ctx = this.ctx;
-    const { pagesize = 10, page = 1, order = 1, direction = 0 } = this.ctx.query;
+    const { pagesize = 10, page = 1, sort = 'amount-desc' } = this.ctx.query;
     const tokenId = parseInt(ctx.params.id);
     // token list
-    const result = await ctx.service.exchange.getUserListByToken(tokenId, parseInt(page), parseInt(pagesize), parseInt(order), parseInt(direction));
+    const result = await ctx.service.exchange.getUserListByToken(tokenId, parseInt(page), parseInt(pagesize), sort);
     if (result === false) {
       ctx.status = 400;
       ctx.body = ctx.msg.paramsError;
@@ -103,8 +103,13 @@ class TokenController extends Controller {
   // 粉丝币分页列表
   async allToken() {
     const ctx = this.ctx;
-    const { pagesize = 10, page = 1, search = '', sort } = this.ctx.query;
+    const { pagesize = 10, page = 1, search = '', sort = 'general' } = this.ctx.query;
     const result = await ctx.service.exchange.getAllToken(parseInt(page), parseInt(pagesize), search, sort);
+    if (result === false) {
+      ctx.status = 400;
+      ctx.body = ctx.msg.paramsError;
+    }
+
     ctx.body = {
       ...ctx.msg.success,
       data: result,
@@ -265,9 +270,9 @@ class TokenController extends Controller {
   // 流动金持仓用户列表
   async getLiquidityBalances() {
     const { ctx } = this;
-    const { pagesize = 10, page = 1, order = 1, direction = 0 } = ctx.query;
+    const { pagesize = 10, page = 1, sort = 'amount-desc' } = ctx.query;
     const tokenId = parseInt(ctx.params.id);
-    const result = await ctx.service.token.mineToken.getLiquidityBalances(tokenId, parseInt(page), parseInt(pagesize), parseInt(order), parseInt(direction));
+    const result = await ctx.service.token.mineToken.getLiquidityBalances(tokenId, parseInt(page), parseInt(pagesize), sort);
     if (result === false) {
       ctx.status = 400;
       ctx.body = ctx.msg.paramsError;

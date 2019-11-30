@@ -1075,6 +1075,39 @@ class PostService extends Service {
     }
   }
 
+  async delPrices(userId, signId) {
+    const post = await this.get(signId);
+    if (!post) {
+      return -1;
+    }
+
+    if (post.uid !== userId) {
+      return -2;
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      await conn.query('DELETE FROM product_prices WHERE sign_id = ?;', [ signId ]);
+
+      await conn.update('posts',
+        {
+          require_buy: 0,
+        },
+        {
+          where: {
+            id: signId,
+          },
+        });
+
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.ctx.logger.error(e);
+      return -3;
+    }
+  }
+
   async addBookmark(userId, postId) {
     const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM posts WHERE id = ?) existence;', [ postId ]))[0];
     if (!existence) {

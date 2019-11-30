@@ -21,7 +21,7 @@ async function catcher() {
     user: config.mysql_user,
     password: config.mysql_password,
     database: config.mysql_db,
-    ssl: {}
+    ssl: {},
   });
 
   const articleCountQuery = await mysqlConnection.execute(
@@ -48,7 +48,7 @@ async function catcher() {
     // 取内容失败， 多数是无效的ipfs哈希引起， 会掠过， 不会退出
     try {
       articleRawContent = await axios({
-        url: `https://apitest.smartsignature.io/ipfs/catJSON/${currentHash}`,
+        url: `https://api.smartsignature.io/ipfs/catJSON/${currentHash}`,
         method: 'get',
         timeout: 2000,
       });
