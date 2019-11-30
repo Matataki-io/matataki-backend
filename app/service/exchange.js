@@ -236,9 +236,9 @@ class ExchangeService extends Service {
         sqlOrder = ' ORDER BY t1.id';
         break;
 
-      case 'id-asc':
-          sqlOrder = ' ORDER BY t1.id DESC';
-          break;
+      case 'id-desc':
+        sqlOrder = ' ORDER BY t1.id DESC';
+        break;
 
       default:
         return false;
