@@ -1159,9 +1159,9 @@ CREATE INDEX `idx_uid_update_time` ON `drafts`(`uid`, `update_time`);
 CREATE TABLE `notifications` (
   `uid` INT UNSIGNED NOT NULL,
   `provider` VARCHAR(32) NOT NULL,
-  `check_time` TIMESTAMP NOT NULL,
-  `read_time` TIMESTAMP NULL,
-  PRIMARY KEY (`uid`, `provider`));
+  `check_time` TIMESTAMP NULL DEFAULT NULL COMMENT '不显示该时间之前的通知',
+  `read_time` TIMESTAMP NULL DEFAULT NULL COMMENT '最近已读通知的时间',
+  PRIMARY KEY (`uid`, `provider`)) ENGINE=InnoDB;
 
   CREATE INDEX `idx_follows_uid_status`  ON `follows` (uid, status);
   CREATE INDEX `idx_follows_fuid_status`  ON `follows` (fuid, status);

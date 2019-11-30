@@ -33,14 +33,49 @@ class NotificationService extends Service {
     };
   }
 
+  userCounterKey(userId) {
+    return `notification:counter:uid:${userId}`;
+  }
+
+  async overview() {
+    const user = this.ctx.user;
+    if (!user) return 2; // 不是有效用户
+    const cacheKey = this.userCounterKey(user.id);
+    if (await this.app.redis.exists(cacheKey)) {
+      return this.app.redis.hgetall(cacheKey);
+    }
+    const providers = await this.app.mysql.select(TABLE, {
+      where: { uid: user.id },
+      columns: [ 'provider', 'read_time' ],
+    });
+    const counters = {};
+    for (const p in this.providers) {
+      if (this.providers.hasOwnProperty(p)) {
+        const provider = this.providers[p];
+        if (provider && typeof provider.populateNotifications === 'function') {
+          const memorized = providers.find(i => i.provider === p);
+          try {
+            counters[p] = ((await provider.populateNotifications(user.id, memorized && memorized.read_time ? moment(memorized.read_time) : undefined, 1, 100)) || []).length;
+          } catch (err) {
+            this.ctx.logger.error(err);
+          }
+        }
+      }
+    }
+    await this.app.redis.hmset(cacheKey, counters);
+    await this.app.redis.expire(cacheKey, 60);
+    return counters;
+  }
+
   async fetch(providerName, timeType, page = 1, pageSize = DEFAULT_PAGE_SIZE) {
     if (!isValidTimeType(timeType)) return 1; // 时间类型
+    if (providerName && !(providerName in this.providers)) return 1;
     if (Number.isNaN(page) || page < 1) page = 1;
     if (Number.isNaN(pageSize) || pageSize < 1 || pageSize > DEFAULT_PAGE_SIZE) pageSize = DEFAULT_PAGE_SIZE;
     const user = this.ctx.user;
     if (!user) return 2; // 不是有效用户
     const providers = await this.app.mysql.select(TABLE, {
-      where: { uid: user.id, provider: providerName && providerName in this.providers ? providerName : undefined },
+      where: { uid: user.id, provider: providerName || undefined },
       columns: [ 'provider', timeType ],
     });
     const result = {};
@@ -60,7 +95,7 @@ class NotificationService extends Service {
         }
       }
     }
-    return result;
+    return providerName ? result[providerName] : result;
   }
 
   async mark(providerName, timeType) {
@@ -74,7 +109,7 @@ class NotificationService extends Service {
       this.ctx.logger.error(err);
       return 3;
     }
-    return this.app.mysql.update({ uid: user.id, provider: providerName, [timeType]: this.app.mysql.literals.now });
+    return this.app.mysql.query(`INSERT INTO ${TABLE} (uid, provider, ${timeType}) VALUES (:userId, :providerName, NOW()) ON DUPLICATE KEY UPDATE ${timeType} = NOW()`, { userId: user.id, providerName });
   }
 
   async checkAfter(providerName) {

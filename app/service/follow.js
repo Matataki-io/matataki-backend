@@ -295,9 +295,9 @@ class FollowService extends Service {
         source: fan.uid, // undefined if from system,
         destination: userId,
         timestamp: fan.time,
-        message: `${fan.username}关注了你`,
+        message: fan.username,
         avatar: fan.avatar,
-        actions: [{ name: fan.back ? '已关注' : '关注', emit: fan.back ? undefined : { action: 'follow', uid: fan.uid } }],
+        actions: [{ name: 'follow', emit: fan.back ? undefined : fan.uid }],
       };
     });
   }
