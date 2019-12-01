@@ -730,17 +730,17 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { data } = ctx.request.body;
 
-    data.content = data.content
-      .split('\n') // 分开段落来 sanitize 避免有问题的tag把文章吞掉
-      .map(paragraph => sanitize(paragraph, {
-        allowedTags: [ 'b', 'i', 'em', 'strong', 'a', 'iframe' ],
-        allowedAttributes: {
-          a: [ 'href' ],
-          iframe: [ 'src' ],
-        },
-        // allowedIframeHostnames: [ 'www.youtube.com', 'player.bilibili.com' ],
-      }))
-      .join('\n'); // 再拼接回去
+    // data.content = data.content
+    //   .split('\n') // 分开段落来 sanitize 避免有问题的tag把文章吞掉
+    //   .map(paragraph => sanitize(paragraph, {
+    //     allowedTags: [ 'b', 'i', 'em', 'strong', 'a', 'iframe' ],
+    //     allowedAttributes: {
+    //       a: [ 'href' ],
+    //       iframe: [ 'src' ],
+    //     },
+    //     // allowedIframeHostnames: [ 'www.youtube.com', 'player.bilibili.com' ],
+    //   }))
+    //   .join('\n'); // 再拼接回去
 
     this.logger.info('upload ipfs data', data);
     // 上传的data是json对象， 需要字符串化
