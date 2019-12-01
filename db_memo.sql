@@ -1113,12 +1113,17 @@ post_references
 posts.require_buy
 orders.trade_no
 
+增加表
+order_headers
+
 -- 2019-11-21 Frank
 新增字段：
 posts.cc_license - 用于用户标记文章的版权对他人使用的授权选项
 
-增加表
-order_headers
+-- 2019-11-27 Frank
+增加表 `user_third_party`, `uid` and `platform` 是 UNIQUE 的Key （一个用户一个平台只能绑定一个第三方帐户）
+`challenge_text` 用于在第三方平台识别用户的代号（钱包签名或者单纯传输）
+
 
 CREATE TABLE `user_websites` (
 	`uid` INT(11) NOT NULL,
@@ -1146,14 +1151,12 @@ CREATE TABLE `post_bookmarks` (
 ) COLLATE='utf8mb4_bin' ENGINE=InnoDB;
 
 CREATE INDEX `idx_token_id_amount` ON `assets_minetokens`(`token_id`, `amount`);
-CREATE UNIQUE INDEX `idx_tokenid_uid` USING BTREE ON exchange_balances(`token_id`,`uid`);
 CREATE INDEX `idx_token_id_create_time` ON `exchange_liquidity_logs`(`token_id`, `create_time`);
-CREATE INDEX `idx_id_create_time` ON `posts`(`id`, `create_time`);
+CREATE INDEX `idx_create_time` ON `posts`(`create_time`);
 CREATE INDEX `idx_uid_create_time` ON `post_bookmarks`(`uid`, `create_time`);
 
 -- 2019-11-20
 CREATE INDEX `idx_uid_update_time` ON `drafts`(`uid`, `update_time`);
-
 -- 2019-11-24 acgrid
 -- 新增表：通知来源记录
 CREATE TABLE `notifications` (
@@ -1167,4 +1170,5 @@ CREATE TABLE `notifications` (
   CREATE INDEX `idx_follows_fuid_status`  ON `follows` (fuid, status);
   CREATE INDEX `idx_follows_fuid_status_create_time`  ON `follows` (fuid, status, create_time);
 
-
+-- 2019-11-28
+CREATE INDEX `idx_uid_create_time` ON `assets_change_log`(`uid`, `create_time`);

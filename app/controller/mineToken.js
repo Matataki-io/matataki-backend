@@ -50,6 +50,7 @@ class MineTokenController extends Controller {
       exchange.volume_24h = parseFloat(trans_24hour.volume_24h.toFixed(4));
       exchange.change_24h = trans_24hour.change_24h;
       exchange.price = parseFloat((exchange.cny_reserve / exchange.token_reserve).toFixed(4));
+      exchange.amount_24h = trans_24hour.amount_24h;
     }
     ctx.body = {
       ...ctx.msg.success,

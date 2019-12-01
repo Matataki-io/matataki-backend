@@ -13,6 +13,13 @@ class AssetController extends Controller {
     const balance = await this.ctx.service.assets.balanceOf(ctx.user.id, symbol);
     ctx.body = balance;
   }
+  async transfer() {
+    const ctx = this.ctx;
+    const { symbol = 'cny', to, amount } = this.ctx.request.body;
+    // amount 客户端*精度，10^decimals
+    const result = await ctx.service.assets.transferFrom(symbol, ctx.user.id, to, amount);
+    ctx.body = result ? ctx.msg.success : ctx.msg.failure;
+  }
 }
 
 module.exports = AssetController;
