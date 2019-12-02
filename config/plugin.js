@@ -21,10 +21,10 @@ module.exports = {
   },
 
   // 增加限流控制
-  ratelimiter: {
-    enable: true,
-    package: 'egg-ratelimiter',
-  },
+  // ratelimiter: {
+  //   enable: true,
+  //   package: 'egg-ratelimiter',
+  // },
 
   redis: {
     enable: true,

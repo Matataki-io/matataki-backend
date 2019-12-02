@@ -371,5 +371,10 @@ module.exports = app => {
 
   router.post('/wx/payarticlenotify', app.middleware.tenpay('pay', app), controller.wxpay.payArticleNotify);
   router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
+  // 通知
+  router.get('/notification', passport.authorize, controller.notification.overview);
+  router.get('/notification/fetch', passport.authorize, controller.notification.fetch);
+  router.post('/notification/read', passport.authorize, controller.notification.read);
+  router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
 };
 
