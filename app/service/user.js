@@ -77,12 +77,14 @@ class UserService extends Service {
     let nickname = '';
     let avatar = '';
     let introduction = '';
+    let banner = '';
 
     const user = await this.app.mysql.get('users', { id });
     if (user) {
       avatar = user.avatar || '';
       nickname = user.nickname || '';
       introduction = user.introduction || '';
+      banner = user.banner || '';
     } else {
       return null;
     }
@@ -92,6 +94,7 @@ class UserService extends Service {
       nickname,
       avatar,
       introduction,
+      banner,
       follows: follows[0].follows,
       fans: fans[0].fans,
       is_follow,
