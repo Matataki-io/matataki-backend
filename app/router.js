@@ -148,9 +148,9 @@ module.exports = app => {
 
   // 获取目前用户的绑定第三方帐户状态
   router.get('/user/:id/bind', passport.authorize, controller.account.bind.getMyBindStatus);
-  // 用户获取 platform 的绑定验证码（用于识别、签名等）
+  // 用户获取 platform 的绑定状态，如果没绑定则验证码（用于API对用户识别、钱包的签名请求等）
   router.get('/user/:id/bind/:platform', passport.authorize, controller.account.bind.getMyBindcode);
-  // 设置 platform 相关数据（第三方平台的id等，对应 user_ third_party 表）
+  // 设置 platform 相关数据（第三方平台的id等，对应 user_third_party 表）
   router.post('/user/:id/bind/:platform', passport.verify, controller.account.bind.setBindData);
 
   // -------------------------------- 粉丝系统 --------------------------------

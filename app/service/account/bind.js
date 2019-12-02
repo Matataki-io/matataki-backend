@@ -9,12 +9,14 @@ class AccountBindingService extends Service {
    * generateBindingRequest, 生成绑定的请求,每次调用都会重新生成 challengeText
    * @param {object} currentUser 当前用户对象
    * @param {string} platform 第三方帐户平台
-   * @returns {object} { uid, platform, challengeText }
+   * @return {object} { uid, platform, challengeText }
    */
   async generateBindingRequest(currentUser, platform) {
     const { id } = currentUser;
+    // 检测该用户有没有绑定这个 platform 的记录
     let request = await this.app.mysql.get('user_third_party', { uid: id, platform });
-    if (!request) {
+    if (request && request.platform_id) throw Error('You have bind this platform already');
+    else {
       const challengeText = crypto.randomBytes(23).toString('hex');
       request = {
         uid: id,
@@ -24,12 +26,6 @@ class AccountBindingService extends Service {
       await this.app.mysql.insert('user_third_party', request);
       return request;
     }
-    if (request.platform_id) throw Error('You have bind already');
-    else {
-    // @todo 都是坑
-
-    }
-
   }
 
   async bindByEth(sig, msgParams, publickey) {
