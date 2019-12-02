@@ -57,19 +57,28 @@ class AccountBindController extends Controller {
   }
 
   /**
-   * 這是給 bot 收到後，轉交給後端用的？
-   * 是的，我计划是作为 callback 使用，比如 Telegram 机器人收到 Bindcode 应该调用
-   * setBindData 来提交相关信息，感觉钱包签名绑定帐户也可以这样做
-   * @todo 都是坑
+   * 咚： 這是給 bot 收到後，轉交給後端用的？
+   * Frank：我计划是留给作为 callback 使用，比如 OAuth 的callback应该调用
+   * bot 方面，bot 直接连接网站数据库操作数据了
    */
   async setBindData() {
     const { ctx } = this;
     const { id, platform } = ctx.params;
-    // @todo
-    const currentPlatform = await this.app.mysql.get('user_third_party', { uid: id, platform });
-    if (!currentPlatform) { // 没有 Bindcode 记录
+    const { msgParams, publickey, sig } = ctx.params;
+    const currentPlatformBinding = await this.app.mysql.get('user_third_party', { uid: id, platform });
+    if (!currentPlatformBinding) { // 没有 Bindcode 记录
       ctx.body = ctx.msg.failure;
       return;
+    }
+    if (platform === 'telegram') {
+      // 机器人自己会handle这个绑定关系，tg绑定后端只需要从后端拿授权码让用户操作就好
+      ctx.body = ctx.msg.failure;
+    } else if (platform === 'ethereum') {
+      // @todo：验证以太坊签名信息即可
+      this.service.account.bind.bindByEth(sig, msgParams, publickey);
+    } else {
+      // 未知平台
+      ctx.body = ctx.msg.failure;
     }
   }
 }
