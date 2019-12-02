@@ -375,5 +375,6 @@ module.exports = app => {
   router.get('/notification', passport.authorize, controller.notification.overview);
   router.get('/notification/fetch', passport.authorize, controller.notification.fetch);
   router.post('/notification/read', passport.authorize, controller.notification.read);
+  router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
 };
 
