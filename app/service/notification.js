@@ -109,7 +109,8 @@ class NotificationService extends Service {
       this.ctx.logger.error(err);
       return 3;
     }
-    return this.app.mysql.query(`INSERT INTO ${TABLE} (uid, provider, ${timeType}) VALUES (:userId, :providerName, NOW()) ON DUPLICATE KEY UPDATE ${timeType} = NOW()`, { userId: user.id, providerName });
+    await this.app.mysql.query(`INSERT INTO ${TABLE} (uid, provider, ${timeType}) VALUES (:userId, :providerName, NOW()) ON DUPLICATE KEY UPDATE ${timeType} = NOW()`, { userId: user.id, providerName });
+    if (timeType === TIME_READ_TILL) await this.app.redis.hdel(this.userCounterKey(user.id), providerName);
   }
 
   async checkAfter(providerName) {

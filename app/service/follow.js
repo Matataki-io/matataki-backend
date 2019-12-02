@@ -46,6 +46,11 @@ class FollowService extends Service {
       const updateSuccess = result.affectedRows >= 1;
 
       if (updateSuccess) {
+        try {
+          await this.app.redis.hincrby(this.service.notification.userCounterKey(user.id), 'follow', 1);
+        } catch (e) {
+          console.error(e);
+        }
         return 0;
       }
       return 1;
