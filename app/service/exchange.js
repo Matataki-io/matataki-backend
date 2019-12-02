@@ -244,7 +244,7 @@ class ExchangeService extends Service {
           LEFT JOIN exchanges t5 ON t5.token_id = t1.id
           LEFT JOIN assets t6 ON t6.uid = t5.exchange_uid AND t6.symbol = 'CNY'
           LEFT JOIN (
-            SELECT token_id, COUNT(amount) AS COUNT, SUM(amount) AS amount
+            SELECT token_id, COUNT(amount) AS COUNT, SUM(ABS(amount)) AS amount
             FROM exchanges e
             JOIN assets_change_log acl ON acl.uid = e.exchange_uid
             WHERE acl.create_time > DATE_SUB(NOW(), INTERVAL 1 DAY)
