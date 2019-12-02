@@ -1172,3 +1172,6 @@ CREATE TABLE `notifications` (
 
 -- 2019-11-28
 CREATE INDEX `idx_uid_create_time` ON `assets_change_log`(`uid`, `create_time`);
+
+-- 2019-12-02
+ALTER TABLE `users` ADD COLUMN `banner` VARCHAR(255);

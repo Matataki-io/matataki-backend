@@ -121,6 +121,8 @@ module.exports = app => {
   router.post('/user/setAvatar', passport.authorize, controller.user.setAvatar);
   // 上传用户头像, 并自动设置
   router.post('/user/uploadAvatar', passport.authorize, controller.user.uploadAvatar);
+  // 上传 banner 图像, 并自动设置
+  router.post('/user/uploadBanner', passport.authorize, controller.user.uploadBanner);
   // 设置用户的个人资料，包括email，昵称和自我介绍。
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
   // 设置用户的网站和社交帐号信息
