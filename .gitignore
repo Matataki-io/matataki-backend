@@ -14,7 +14,7 @@ typings/
 .nyc_output/
 config/config.default.js
 config/config.local.js
-config/config.prod.js
+config/config.prod*.js
 push.sh
 dist/
 TTD.md

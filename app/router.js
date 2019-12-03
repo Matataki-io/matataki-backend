@@ -123,6 +123,8 @@ module.exports = app => {
   router.post('/user/setAvatar', passport.authorize, controller.user.setAvatar);
   // 上传用户头像, 并自动设置
   router.post('/user/uploadAvatar', passport.authorize, controller.user.uploadAvatar);
+  // 上传 banner 图像, 并自动设置
+  router.post('/user/uploadBanner', passport.authorize, controller.user.uploadBanner);
   // 设置用户的个人资料，包括email，昵称和自我介绍。
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
   // 设置用户的网站和社交帐号信息
@@ -372,6 +374,11 @@ module.exports = app => {
   router.post('/orders/handleAmount0', passport.authorize, controller.order.handleAmount0);
 
   router.post('/wx/payarticlenotify', app.middleware.tenpay('pay', app), controller.wxpay.payArticleNotify);
+  router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
+  // 通知
+  router.get('/notification', passport.authorize, controller.notification.overview);
+  router.get('/notification/fetch', passport.authorize, controller.notification.fetch);
+  router.post('/notification/read', passport.authorize, controller.notification.read);
   router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
 };
 

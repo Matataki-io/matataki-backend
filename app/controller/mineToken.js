@@ -6,22 +6,26 @@ class MineTokenController extends Controller {
   // 创建
   async create() {
     const ctx = this.ctx;
-
     const { name, symbol, decimals, logo, brief, introduction } = this.ctx.request.body;
-    const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, 4, logo, brief, introduction); // decimals默认4位
-    if (result === -1) {
-      ctx.body = ctx.msg.tokenAlreadyCreated;
-    } else if (result === -2) {
-      ctx.body = ctx.msg.tokenSymbolDuplicated;
-    } else if (result === -3) {
-      ctx.body = ctx.msg.tokenNoCreatePermission;
-    } else if (result === 0) {
+    // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
+    if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
-    } else {
-      ctx.body = {
-        ...ctx.msg.success,
-        data: result,
-      };
+    } else { // 好耶 字数没有超限
+      const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, 4, logo, brief, introduction); // decimals默认4位
+      if (result === -1) {
+        ctx.body = ctx.msg.tokenAlreadyCreated;
+      } else if (result === -2) {
+        ctx.body = ctx.msg.tokenSymbolDuplicated;
+      } else if (result === -3) {
+        ctx.body = ctx.msg.tokenNoCreatePermission;
+      } else if (result === 0) {
+        ctx.body = ctx.msg.failure;
+      } else {
+        ctx.body = {
+          ...ctx.msg.success,
+          data: result,
+        };
+      }
     }
   }
 
@@ -29,11 +33,17 @@ class MineTokenController extends Controller {
     const ctx = this.ctx;
     const tokenId = parseInt(ctx.params.id);
     const { name, logo, brief, introduction } = ctx.request.body;
-    const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction);
-    if (result) {
-      ctx.body = ctx.msg.success;
-    } else {
+
+    // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
+    if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
+    } else { // 好耶 字数没有超限
+      const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction);
+      if (result) {
+        ctx.body = ctx.msg.success;
+      } else {
+        ctx.body = ctx.msg.failure;
+      }
     }
   }
 
@@ -50,6 +60,7 @@ class MineTokenController extends Controller {
       exchange.volume_24h = parseFloat(trans_24hour.volume_24h.toFixed(4));
       exchange.change_24h = trans_24hour.change_24h;
       exchange.price = parseFloat((exchange.cny_reserve / exchange.token_reserve).toFixed(4));
+      exchange.amount_24h = trans_24hour.amount_24h;
     }
     ctx.body = {
       ...ctx.msg.success,

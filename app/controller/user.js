@@ -170,6 +170,29 @@ class UserController extends Controller {
     ctx.body = ctx.msg.success;
   }
 
+  // 上传 banner 图像文件并返回地址
+  async uploadBanner() {
+    const ctx = this.ctx;
+    const file = ctx.request.files[0];
+    const filetype = file.filename.split('.');
+
+    // 文件上OSS的路径
+    const filename = '/banner/'
+      + moment().format('YYYY/MM/DD/')
+      + md5(file.filepath).toString()
+      + '.' + filetype[filetype.length - 1];
+
+    // filepath需要再改
+    const uploadStatus = await this.service.user.uploadBannerImage(filename, file.filepath);
+
+    if (uploadStatus !== 0) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+  }
+
   // 将设置用户邮箱、昵称、个性签名合而为一
   async setProfile() {
     const ctx = this.ctx;

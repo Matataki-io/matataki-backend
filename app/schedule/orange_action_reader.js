@@ -33,6 +33,8 @@ class ActionReader extends Subscription {
   }
 
   async subscribe() {
+    // 去掉橙皮书广告牌数据同步
+    return;
     if (this.ctx.app.config.isDebug) return;
 
     let start = this.app.cache || this.config.startAt;

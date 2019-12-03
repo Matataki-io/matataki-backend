@@ -11,11 +11,11 @@ module.exports = appInfo => {
 
   // use for cookie sign key, should change to your own and keep security
   config.keys = appInfo.name + '_1552273931927_1142';
-  config.jwtTokenSecret = "smart signature auth secret";
+  config.jwtTokenSecret = 'smart signature auth secret';
 
-  config.env = 'test'
+  config.env = 'test';
   // add your middleware config here
-  config.middleware = ['errorHandler'];
+  config.middleware = [ 'errorHandler' ];
 
   config.errorHandler = {
     match: '/',
@@ -50,9 +50,9 @@ module.exports = appInfo => {
     httpEndpoint: 'http://eos.greymass.com',
     chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
     keyProvider: 'a private key',
-    contract: "signature.bp",
-    actor: "kuriharachie",
-    startAt: 1500
+    contract: 'signature.bp',
+    actor: 'kuriharachie',
+    startAt: 1500,
   };
 
   config.mail = {
@@ -67,7 +67,7 @@ module.exports = appInfo => {
 
   config.security = {
     // TODO: reset in production
-    domainWhiteList: ['localhost:8080', 'ss-web.starling.team', '.ngrok.io', '192.168.0.102:8080', 'sign-dev.dravatar.xyz', '192.168.31.67:8080'],
+    domainWhiteList: [ 'localhost:8080', 'ss-web.starling.team', '.ngrok.io', '192.168.0.102:8080', 'sign-dev.dravatar.xyz', '192.168.31.67:8080' ],
     csrf: {
       enable: false,
     },

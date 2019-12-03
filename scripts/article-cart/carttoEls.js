@@ -47,7 +47,7 @@ async function catcherPost(start = 0, end = null) {
     database: config.mysql_db,
     ssl: {},
   });
-    // 创建Elastic连接
+  // 创建Elastic连接
   const elaClient = new elastic.Client({ node: config.elastic_address });
 
   // 还是只拉取有效， 没有被删除的文章好了
@@ -64,7 +64,7 @@ async function catcherPost(start = 0, end = null) {
     // 在某篇文章处卡断推出， 请重启脚本
     articleDetailQuery = await mysqlConnection.execute(
       'SELECT id, create_time, title, channel_id, hash '
-            + 'FROM posts WHERE status = 0 ORDER BY id DESC LIMIT ?, 1;',
+      + 'FROM posts WHERE status = 0 ORDER BY id DESC LIMIT ?, 1;',
       [ index ]
     );
     currentId = articleDetailQuery[0][0].id;
@@ -90,7 +90,7 @@ async function catcherPost(start = 0, end = null) {
     // 取内容失败， 多数是无效的ipfs哈希引起， 会掠过， 不会退出
     try {
       articleRawContent = await axios({
-        url: `https://apitest.smartsignature.io/post/ipfs/${currentHash}`,
+        url: `https://api.smartsignature.io/post/ipfs/${currentHash}`,
         method: 'get',
         timeout: 3000,
       });
@@ -140,7 +140,7 @@ async function catcherUser(start = 0, end = null) {
     database: config.mysql_db,
     ssl: {},
   });
-    // 创建Elastic连接
+  // 创建Elastic连接
   const elaClient = new elastic.Client({ node: config.elastic_address });
 
   // 用户数量！

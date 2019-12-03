@@ -67,8 +67,11 @@ class VerifyOrder extends Subscription {
 
         let verifyPass = false;
 
-        const reffer = await this.app.mysql.get('users', { id: order.referreruid });
-        const reffer_name = reffer ? reffer.username : '';
+        let reffer_name = '';
+        if (order.referreruid > 0) {
+          const reffer = await this.app.mysql.get('users', { id: order.referreruid });
+          reffer_name = reffer ? reffer.username : '';
+        }
 
         let contract_ref = row.ref;
         if (contract_ref === 'null') {
@@ -90,8 +93,8 @@ class VerifyOrder extends Subscription {
 
         this.logger.info('user,', user);
         console.log('user,', user);
-        this.logger.info('reffer,', reffer);
-        console.log('reffer,', reffer);
+        // this.logger.info('reffer,', reffer);
+        // console.log('reffer,', reffer);
         this.logger.info('contract,', row);
         console.log('contract,', row);
         this.logger.info('mysql', order);
