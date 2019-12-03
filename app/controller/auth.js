@@ -279,6 +279,42 @@ class AuthController extends Controller {
     // ctx.body = ctx.msg.failure;
   }
 
+  // 重置密码
+  async resetPassword() {
+    const ctx = this.ctx;
+    const { email = null, captcha = null, password = null } = ctx.request.body;
+    if (!email || !captcha || !password) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    // 验证用户需要不存在
+    const userExistence = await this.service.auth.verifyUser(email);
+    if (userExistence) {
+      ctx.body = ctx.msg.alreadyRegisted;
+      return;
+    }
+    const regResult = await this.service.auth.resetPassword(email, captcha, password);
+    switch (regResult) {
+      case 1:
+        ctx.body = ctx.msg.captchaWrong;
+        break;
+      case 2:
+        ctx.body = ctx.msg.captchaWrong;
+        break;
+      case 3:
+        ctx.body = ctx.msg.captchaWrong;
+        break;
+      case 5:
+        ctx.body = ctx.msg.failure;
+        break;
+      case 0:
+        ctx.body = ctx.msg.success;
+        break;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
+  }
+
   // 邮箱注册
   async regUser() {
     const ctx = this.ctx;
