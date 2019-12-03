@@ -238,7 +238,6 @@ class AuthController extends Controller {
     }
   }
 
-  // todo：增加geetest，防刷，改为post
   // 邮箱注册时发送验证码
   async sendCaptcha() {
     const ctx = this.ctx;
@@ -249,11 +248,11 @@ class AuthController extends Controller {
     }
 
     // 验证用户存在
-    const userExistence = await this.service.auth.verifyUser(email);
+    /* const userExistence = await this.service.auth.verifyUser(email);
     if (userExistence) {
       ctx.body = ctx.msg.alreadyRegisted;
       return;
-    }
+    } */
     const emailCheck = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
     if (!emailCheck.test(email)) {
       ctx.body = ctx.msg.paramsError;
