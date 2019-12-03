@@ -54,7 +54,7 @@ class PostController extends Controller {
         const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
         await this.eos_signature_verify(author, sign_data, sign, publickey);
       } else if (platform === 'metamask') {
-        if (!this.service.blockchain.eth.signatureService.verifyArticle(sign, msgParams, publickey)) {
+        if (!this.service.ethereum.signatureService.verifyArticle(sign, msgParams, publickey)) {
           throw Error('以太坊签名无效');
         }
       } else if (platform === 'ont') {
@@ -177,7 +177,7 @@ class PostController extends Controller {
 
         await this.eos_signature_verify(author, sign_data, sign, publickey);
       } else if (platform === 'metamask') {
-        if (!this.service.blockchain.eth.signatureService.verifyArticle(sign, msgParams, publickey)) {
+        if (!this.service.ethereum.signatureService.verifyArticle(sign, msgParams, publickey)) {
           throw Error('以太坊签名无效');
         }
       } else if (platform === 'ont') {

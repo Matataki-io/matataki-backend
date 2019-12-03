@@ -46,7 +46,7 @@ class AccountBindingService extends Service {
   bindByEth(sig, msgParams, publickey) {
     // @todo: 仅仅做了设计，需要验证这个函数是不是正常工作
     const { uid, challenge_text } = msgParams.message;
-    const isLegit = this.service.blockchain.eth.signatureService.verifyAuth(sig, msgParams, publickey);
+    const isLegit = this.service.ethereum.signatureService.verifyAuth(sig, msgParams, publickey);
     if (!isLegit) throw Error('Invalid ETH Signature');
     else {
       return this._updateBind(uid, 'ethereum', publickey, challenge_text);

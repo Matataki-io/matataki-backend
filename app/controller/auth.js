@@ -33,7 +33,7 @@ class AuthController extends Controller {
       flag = await this.vnt_auth(sign, username, publickey);
     } else if (platform === 'eth') {
       // 以太坊没用户名, 使用 msgParams 及其签名来判断是否真实
-      flag = this.service.blockchain.eth.signatureService.verifyAuth(sign, msgParams, publickey);
+      flag = this.service.ethereum.signatureService.verifyAuth(sign, msgParams, publickey);
       username = publickey.substr(-12); // 后十二位作为新用户暂时的用户名
     } else {
       ctx.body = ctx.msg.unsupportedPlatform;
