@@ -43,10 +43,35 @@ class AccountBindingService extends Service {
     }
   }
 
-  async bindByEth(sig, msgParams, publickey) {
-    // @todo
-    this.service.blockchain.eth.signatureService.verifyAuth(sig, msgParams, publickey);
+  bindByEth(sig, msgParams, publickey) {
+    // @todo: 仅仅做了设计，需要验证这个函数是不是正常工作
+    const { uid, challenge_text } = msgParams.message;
+    const isLegit = this.service.blockchain.eth.signatureService.verifyAuth(sig, msgParams, publickey);
+    if (!isLegit) throw Error('Invalid ETH Signature');
+    else {
+      return this._updateBind(uid, 'ethereum', publickey, challenge_text);
+    }
   }
+
+  /**
+   * _updateBind 函数
+   * 这个 _updateBind 应该不能被公开调用，调用前应该校验好数据
+   * @param {number} uid 用户本站ID
+   * @param {string} platform 第三方平台，应该为全小写
+   * @param {string} platform_id 平台用户的ID
+   * @param {string} challenge_text 验证码
+   */
+  async _updateBind(uid, platform, platform_id, challenge_text) {
+    try {
+      await this.app.mysql.update('user_third_party', { platform_id, challenge_text: null }, {
+        where: { uid, platform, challenge_text },
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
 }
 
 module.exports = AccountBindingService;
