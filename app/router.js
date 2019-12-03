@@ -371,5 +371,10 @@ module.exports = app => {
 
   router.post('/wx/payarticlenotify', app.middleware.tenpay('pay', app), controller.wxpay.payArticleNotify);
   router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
+
+  // for ethereum related routes
+  router.get('/_dev/eth/create', passport.verify, controller.ethereum.createWallet.create);
+  router.post('/_dev/eth/issueToken', passport.verify, controller.ethereum.createWallet.issue);
+  router.get('/_dev/eth/getAccounts', passport.verify, controller.ethereum.createWallet.getAccounts);
 };
 
