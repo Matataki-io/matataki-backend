@@ -39,7 +39,7 @@ class UserService extends Service {
   async get(id) {
     const users = await this.app.mysql.select('users', {
       where: { id },
-      columns: [ 'id', 'username', 'nickname', 'platform', 'referral_uid', 'create_time', 'avatar', 'level', 'status', 'introduction', 'accept' ], // todo：需要再增加
+      columns: [ 'id', 'username', 'nickname', 'platform', 'referral_uid', 'create_time', 'avatar', 'level', 'status', 'introduction', 'accept', 'banner' ], // todo：需要再增加
     });
     if (users && users.length > 0) {
       users[0].username = this.maskEmailAddress(users[0].username)
