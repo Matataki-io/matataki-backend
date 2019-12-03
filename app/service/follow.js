@@ -300,7 +300,7 @@ class FollowService extends Service {
         source: fan.uid, // undefined if from system,
         destination: userId,
         timestamp: fan.time,
-        message: fan.username,
+        message: fan.nickname,
         avatar: fan.avatar,
         actions: [{ name: 'follow', emit: fan.back ? undefined : fan.uid }],
       };
