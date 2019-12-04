@@ -63,7 +63,10 @@ class OrderHeaderService extends Service {
             }
             case typeOptions.add: {
               cny_amount = item.cny_amount;
-              token_amount = await this.service.token.exchange.getPoolCnyToTokenPrice(item.tokenId, cny_amount);
+              // 判断是否有交易对
+              const tokenResult = await this.service.token.exchange.getPoolCnyToTokenPrice(item.tokenId, cny_amount);
+              if (tokenResult < 0) token_amount = item.amount;
+              else token_amount = tokenResult;
               max_tokens = this.calMaxToken(token_amount);
               min_liquidity = await this.service.token.exchange.getYourMintToken(cny_amount, item.tokenId);
               break;
@@ -198,9 +201,8 @@ class OrderHeaderService extends Service {
       await this.setStatusPaying(tradeNo);
       const payResult = await this.paySuccessful(tradeNo);
       return payResult;
-    } else {
-      return false;
     }
+    return false;
   }
 
   // 更新订单状态为支付中
