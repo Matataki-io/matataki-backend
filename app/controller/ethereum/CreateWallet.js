@@ -22,7 +22,7 @@ class TestWeb3Controller extends Controller {
       this.logger.debug('debug fanpiao restResult: ', restResult);
     } catch (error) {
       this.logger.error('issue fanpiao error: ', error);
-      ctx.body = ctx.msg.failed;
+      ctx.body = ctx.msg.failure;
       ctx.body.data = error;
     }
   }
