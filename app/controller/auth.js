@@ -248,18 +248,18 @@ class AuthController extends Controller {
     }
 
     // 验证用户存在
-    /* const userExistence = await this.service.auth.verifyUser(email);
+    const userExistence = await this.service.auth.verifyUser(email);
     if (userExistence) {
       ctx.body = ctx.msg.alreadyRegisted;
       return;
-    } */
+    }
     const emailCheck = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
     if (!emailCheck.test(email)) {
       ctx.body = ctx.msg.paramsError;
       return;
     }
     // const isBanned = this.service.auth.
-    const mail = await this.service.auth.sendCaptchaMail(email);
+    const mail = await this.service.auth.sendRegisteredCaptchaMail(email);
     // ctx.body = ctx.msg.success;
     switch (mail) {
       case 1:
@@ -276,6 +276,30 @@ class AuthController extends Controller {
     //   return;
     // }
     // ctx.body = ctx.msg.failure;
+  }
+  async sendResetCaptcha() {
+    const ctx = this.ctx;
+    const { email = null } = ctx.request.query;
+    if (!email) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    const emailCheck = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
+    if (!emailCheck.test(email)) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    const mail = await this.service.auth.sendResetpasswordCaptchaMail(email);
+    switch (mail) {
+      case 1:
+        ctx.body = ctx.msg.captchaRatelimit;
+        break;
+      case 0:
+        ctx.body = ctx.msg.success;
+        break;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
   }
 
   // 重置密码

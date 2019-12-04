@@ -150,11 +150,18 @@ class AuthService extends Service {
 
   // }
 
+  async sendRegisteredCaptchaMail(email) {
+    return this.sendCaptchaMail(email);
+  }
+
+  async sendResetpasswordCaptchaMail(email) {
+    return this.sendCaptchaMail(email, consts.mailTemplate.resetPassword);
+  }
 
   // 发送邮箱验证码
-  async sendCaptchaMail(email) {
+  async sendCaptchaMail(email, type = consts.mailTemplate.registered) {
 
-    const mailhash = 'captcha:' + md5(email).toString();
+    const mailhash = `captcha:${type}:${md5(email).toString()}`;
     const timestamp = Date.now();
     // 是否在1分钟之内获取过验证码， 无论是否消耗
     const lastSentQuery = await this.app.redis.get(mailhash);
@@ -189,12 +196,12 @@ class AuthService extends Service {
     // const captchaStatus = await this.app.redis.get(mailhash);
     // console.log(captchaStatus);
 
-    const sendCloudResult = await this.service.sendCloud.sendCaptcha(email, captcha);
+    const sendCloudResult = await this.service.sendCloud.sendCaptcha(email, captcha, type);
     this.ctx.logger.info('sendCloudResult', sendCloudResult);
     if (sendCloudResult) {
       return 0;
     }
-    const sendResult = await this.service.mail.sendCaptcha(email, captcha);
+    const sendResult = await this.service.mail.sendCaptcha(email, captcha, type);
     if (sendResult) {
       return 0;
     }
@@ -203,7 +210,7 @@ class AuthService extends Service {
 
   // 重置密码
   async resetPassword(email, captcha, password) {
-    const mailhash = 'captcha:' + md5(email).toString();
+    const mailhash = `captcha:${consts.mailTemplate.resetPassword}:${md5(email).toString()}`;
     const captchaQuery = await this.app.redis.get(mailhash);
     // 从未获取过验证码
     if (!captchaQuery) {
@@ -239,7 +246,7 @@ class AuthService extends Service {
 
   // 邮箱注册
   async doReg(email, captcha, password, ipaddress, referral) {
-    const mailhash = 'captcha:' + md5(email).toString();
+    const mailhash = `captcha:${consts.mailTemplate.registered}:${md5(email).toString()}`;
     const captchaQuery = await this.app.redis.get(mailhash);
     // 从未获取过验证码
     if (!captchaQuery) {
