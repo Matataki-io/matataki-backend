@@ -1157,6 +1157,21 @@ CREATE INDEX `idx_uid_create_time` ON `post_bookmarks`(`uid`, `create_time`);
 
 -- 2019-11-20
 CREATE INDEX `idx_uid_update_time` ON `drafts`(`uid`, `update_time`);
+-- 2019-11-24 acgrid
+-- 新增表：通知来源记录
+CREATE TABLE `notifications` (
+  `uid` INT UNSIGNED NOT NULL,
+  `provider` VARCHAR(32) NOT NULL,
+  `check_time` TIMESTAMP NULL DEFAULT NULL COMMENT '不显示该时间之前的通知',
+  `read_time` TIMESTAMP NULL DEFAULT NULL COMMENT '最近已读通知的时间',
+  PRIMARY KEY (`uid`, `provider`)) ENGINE=InnoDB;
+
+  CREATE INDEX `idx_follows_uid_status`  ON `follows` (uid, status);
+  CREATE INDEX `idx_follows_fuid_status`  ON `follows` (fuid, status);
+  CREATE INDEX `idx_follows_fuid_status_create_time`  ON `follows` (fuid, status, create_time);
 
 -- 2019-11-28
 CREATE INDEX `idx_uid_create_time` ON `assets_change_log`(`uid`, `create_time`);
+
+-- 2019-12-02
+ALTER TABLE `users` ADD COLUMN `banner` VARCHAR(255);

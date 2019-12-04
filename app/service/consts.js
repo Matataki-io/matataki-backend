@@ -112,5 +112,8 @@ module.exports = {
     'Github',
   ],
 
-
+  mailTemplate: {
+    registered: 'registered',
+    resetPassword: 'resetPassword',
+  },
 };

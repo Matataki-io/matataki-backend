@@ -291,9 +291,9 @@ class PostController extends Controller {
       return;
     }
 
-    const { page = 1, pagesize = 20, channel = null, extra = null } = this.ctx.query;
+    const { page = 1, pagesize = 20, channel = null, extra = null, filter = 0 } = this.ctx.query;
 
-    const postData = await this.service.post.followedPosts(page, pagesize, userid, channel, extra);
+    const postData = await this.service.post.followedPosts(page, pagesize, userid, channel, extra, filter);
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -313,13 +313,13 @@ class PostController extends Controller {
   async getScoreRanking() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20, channel = null, author = null, extra = null } = this.ctx.query;
+    const { page = 1, pagesize = 20, channel = null, author = null, extra = null, filter = 0 } = this.ctx.query;
 
     let postData;
-    if (page === 1 && pagesize === 20 && channel === null && author === null && extra === null) {
+    if (page === 1 && pagesize === 20 && channel === null && author === null && extra === null && filter === 0) {
       postData = this.app.ctx.cache.post.hot;
     } else {
-      postData = await this.service.post.scoreRank(page, pagesize, author, channel, extra);
+      postData = await this.service.post.scoreRank(page, pagesize, author, channel, extra, filter);
     }
 
     if (postData === 2) {
@@ -340,9 +340,9 @@ class PostController extends Controller {
   async getTimeRanking() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20, channel = null, author = null, extra = null } = this.ctx.query;
+    const { page = 1, pagesize = 20, channel = null, author = null, extra = null, filter = 0 } = this.ctx.query;
 
-    const postData = await this.service.post.timeRank(page, pagesize, author, channel, extra);
+    const postData = await this.service.post.timeRank(page, pagesize, author, channel, extra, filter);
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;

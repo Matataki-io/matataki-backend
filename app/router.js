@@ -21,6 +21,10 @@ module.exports = app => {
   router.get('/login/verify', passport.verify, controller.auth.verifyReg);
   // 发送注册码邮件
   router.post('/login/captcha', passport.verify, geetestVerify, controller.auth.sendCaptcha);
+  // 发送重置密码邮件
+  router.post('/login/resetPassword/captcha', passport.verify, geetestVerify, controller.auth.sendResetCaptcha);
+  // 重置密码
+  router.post('/login/resetPassword', passport.verify, controller.auth.resetPassword);
   // 注册用户
   router.post('/login/regist', passport.verify, controller.auth.regUser);
   // 进行账密登录
@@ -121,6 +125,8 @@ module.exports = app => {
   router.post('/user/setAvatar', passport.authorize, controller.user.setAvatar);
   // 上传用户头像, 并自动设置
   router.post('/user/uploadAvatar', passport.authorize, controller.user.uploadAvatar);
+  // 上传 banner 图像, 并自动设置
+  router.post('/user/uploadBanner', passport.authorize, controller.user.uploadBanner);
   // 设置用户的个人资料，包括email，昵称和自我介绍。
   router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
   // 设置用户的网站和社交帐号信息
@@ -376,5 +382,10 @@ module.exports = app => {
   router.get('/_dev/eth/create', passport.verify, controller.ethereum.createWallet.create);
   router.post('/_dev/eth/issueToken', passport.verify, controller.ethereum.createWallet.issue);
   router.get('/_dev/eth/getAccounts', passport.verify, controller.ethereum.createWallet.getAccounts);
+
+  // 通知
+  router.get('/notification', passport.authorize, controller.notification.overview);
+  router.get('/notification/fetch', passport.authosrize, controller.notification.fetch);
+  router.post('/notification/read', passport.authorize, controller.notification.read);
 };
 

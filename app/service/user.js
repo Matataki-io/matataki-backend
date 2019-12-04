@@ -39,7 +39,7 @@ class UserService extends Service {
   async get(id) {
     const users = await this.app.mysql.select('users', {
       where: { id },
-      columns: [ 'id', 'username', 'nickname', 'platform', 'referral_uid', 'create_time', 'avatar', 'level', 'status', 'introduction', 'accept' ], // todo：需要再增加
+      columns: [ 'id', 'username', 'nickname', 'platform', 'referral_uid', 'create_time', 'avatar', 'level', 'status', 'introduction', 'accept', 'banner' ], // todo：需要再增加
     });
     if (users && users.length > 0) {
       users[0].username = this.maskEmailAddress(users[0].username)
@@ -77,12 +77,14 @@ class UserService extends Service {
     let nickname = '';
     let avatar = '';
     let introduction = '';
+    let banner = '';
 
     const user = await this.app.mysql.get('users', { id });
     if (user) {
       avatar = user.avatar || '';
       nickname = user.nickname || '';
       introduction = user.introduction || '';
+      banner = user.banner || '';
     } else {
       return null;
     }
@@ -92,6 +94,7 @@ class UserService extends Service {
       nickname,
       avatar,
       introduction,
+      banner,
       follows: follows[0].follows,
       fans: fans[0].fans,
       is_follow,
@@ -465,6 +468,49 @@ class UserService extends Service {
     }
 
     return 3;
+  }
+
+  async uploadBannerImage(filename, filelocation) {
+    const ctx = this.ctx;
+
+    let result = null;
+    try {
+      // 上传至OSS
+      result = await ctx.oss.put(filename, filelocation);
+      // 删除本地文件
+      fs.unlinkSync(filelocation);
+    } catch (err) {
+      this.logger.error('UserService:: uploadBannerImage error: %j', err);
+      return 2;
+    }
+
+    if (!result) {
+      return 3;
+    }
+
+    const setStatus = await this.setBannerImage(filename, ctx.user.id);
+
+    if (setStatus !== 0) {
+      return 4;
+    }
+
+    return 0;
+  }
+
+  async setBannerImage(filelocation, userid) {
+    try {
+      const result = await this.app.mysql.update('users', { banner: filelocation }, { where: { id: userid } });
+
+      if (result.affectedRows >= 1) {
+        return 0;
+      } else {
+        return 3;
+      }
+
+    } catch (err) {
+      this.logger.error('UserService:: setBannerImage error: %j', err);
+      return 2;
+    }
   }
 
   // 待删除 2019-10-30 chenhao

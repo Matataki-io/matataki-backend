@@ -270,7 +270,7 @@ class PostService extends Service {
   }
 
   // 获取我关注的作者的文章
-  async followedPosts(page = 1, pagesize = 20, userid = null, channel = null, extra = null) {
+  async followedPosts(page = 1, pagesize = 20, userid = null, channel = null, extra = null, filter = 0) {
 
     if (userid === null) {
       return 2;
@@ -288,6 +288,30 @@ class PostService extends Service {
       }
       wheresql += 'AND p.channel_id = ' + channelid + ' ';
     }
+
+    if (typeof filter === 'string') filter = parseInt(filter);
+
+    if (filter > 0) {
+      const conditions = [];
+
+      // 免费
+      if ((filter & 1) > 0) {
+        conditions.push('(require_holdtokens = 0 AND require_buy = 0)');
+      }
+
+      // 持币阅读
+      if ((filter & 2) > 0) {
+        conditions.push('require_holdtokens = 1');
+      }
+
+      // 需要购买
+      if ((filter & 4) > 0) {
+        conditions.push('require_buy = 1');
+      }
+
+      wheresql += 'AND (' + conditions.join(' OR ') + ') ';
+    }
+
     const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
     const queryResult = await this.app.mysql.query(
       sqlcode,
@@ -325,7 +349,7 @@ class PostService extends Service {
   }
 
   // 推荐分数排序(默认方法)(new format)(count-list格式)
-  async scoreRank(page = 1, pagesize = 20, author = null, channel = null, extra = null) {
+  async scoreRank(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
@@ -343,6 +367,29 @@ class PostService extends Service {
         return 2;
       }
       wheresql += 'AND channel_id = ' + channelid + ' ';
+    }
+
+    if (typeof filter === 'string') filter = parseInt(filter);
+
+    if (filter > 0) {
+      const conditions = [];
+
+      // 免费
+      if ((filter & 1) > 0) {
+        conditions.push('(require_holdtokens = 0 AND require_buy = 0)');
+      }
+
+      // 持币阅读
+      if ((filter & 2) > 0) {
+        conditions.push('require_holdtokens = 1');
+      }
+
+      // 需要购买
+      if ((filter & 4) > 0) {
+        conditions.push('require_buy = 1');
+      }
+
+      wheresql += 'AND (' + conditions.join(' OR ') + ') ';
     }
 
     const ordersql = 'ORDER BY hot_score DESC, id DESC LIMIT :start, :end';
@@ -396,7 +443,7 @@ class PostService extends Service {
   }
 
   // 发布时间排序()(new format)(count-list格式)
-  async timeRank(page = 1, pagesize = 20, author = null, channel = null, extra = null) {
+  async timeRank(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
@@ -414,6 +461,29 @@ class PostService extends Service {
         return 2;
       }
       wheresql += 'AND channel_id = ' + channelid + ' ';
+    }
+
+    if (typeof filter === 'string') filter = parseInt(filter);
+
+    if (filter > 0) {
+      const conditions = [];
+
+      // 免费
+      if ((filter & 1) > 0) {
+        conditions.push('(require_holdtokens = 0 AND require_buy = 0)');
+      }
+
+      // 持币阅读
+      if ((filter & 2) > 0) {
+        conditions.push('require_holdtokens = 1');
+      }
+
+      // 需要购买
+      if ((filter & 4) > 0) {
+        conditions.push('require_buy = 1');
+      }
+
+      wheresql += 'AND (' + conditions.join(' OR ') + ') ';
     }
 
     const ordersql = 'ORDER BY time_down ASC, id DESC LIMIT :start, :end';
