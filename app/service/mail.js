@@ -1,6 +1,7 @@
 'use strict';
 const Service = require('egg').Service;
 const nodemailer = require('nodemailer');
+const consts = require('./consts');
 
 class MailService extends Service {
 
@@ -89,26 +90,33 @@ class MailService extends Service {
   }
 
   // 发送验证码邮件
-  async sendCaptcha(email, captcha) {
+  async sendCaptcha(email, captcha, type = consts.mailTemplate.registered) {
     if (!email || !captcha) {
       return null;
     }
 
     let result = null;
     try {
+      let action = '';
+      if (type === consts.mailTemplate.registered) {
+        action = '注册';
+      } else if (type === consts.mailTemplate.resetPassword) {
+        action = '重置密码';
+      }
       const mailData = {
+        action,
         captcha,
       };
 
-      const mailContent = await this.ctx.renderView('regist.html', mailData, { viewEngine: 'nunjucks' });
+      const mailContent = await this.ctx.renderView('mail.html', mailData, { viewEngine: 'nunjucks' });
       // 不发送邮件, 只返回预览
       // if (this.ctx.app.config.mailPreview === true) {
       //   return mailContent;
       // }
       const mailOptions = {
-        from: `Smart Signature<${this.config.mail.auth.user}>`,
+        from: `Matataki<${this.config.mail.auth.user}>`,
         to: email,
-        subject: '瞬Matataki:用户注册',
+        subject: `瞬Matataki:用户${action}`,
         html: mailContent,
       };
       const transpoter = await nodemailer.createTransport(this.config.mail);

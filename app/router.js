@@ -21,6 +21,8 @@ module.exports = app => {
   router.get('/login/verify', passport.verify, controller.auth.verifyReg);
   // 发送注册码邮件
   router.post('/login/captcha', passport.verify, geetestVerify, controller.auth.sendCaptcha);
+  // 发送重置密码邮件
+  router.post('/login/resetPassword/captcha', passport.verify, geetestVerify, controller.auth.sendResetCaptcha);
   // 重置密码
   router.post('/login/resetPassword', passport.verify, controller.auth.resetPassword);
   // 注册用户
