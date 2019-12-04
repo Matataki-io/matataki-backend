@@ -385,7 +385,7 @@ module.exports = app => {
 
   // 通知
   router.get('/notification', passport.authorize, controller.notification.overview);
-  router.get('/notification/fetch', passport.authosrize, controller.notification.fetch);
+  router.get('/notification/fetch', passport.authorize, controller.notification.fetch);
   router.post('/notification/read', passport.authorize, controller.notification.read);
 };
 
