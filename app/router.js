@@ -380,7 +380,7 @@ module.exports = app => {
 
   // for ethereum related routes
   router.get('/_dev/eth/create', passport.verify, controller.ethereum.createWallet.create);
-  router.post('/_dev/eth/issueToken', passport.verify, controller.ethereum.createWallet.issue);
+  router.post('/_dev/eth/fanPiao/issue', passport.verify, controller.ethereum.fanPiao.issue);
   router.get('/_dev/eth/getAccounts', passport.verify, controller.ethereum.createWallet.getAccounts);
 
   // 通知

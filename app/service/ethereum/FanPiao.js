@@ -1,20 +1,9 @@
 
 'use strict';
-const Service = require('egg').Service;
-const Web3 = require('web3');
+const Web3Service = require('./web3');
 const contract_data = require('./CommonFanPiao.json');
 
-class Web3Service extends Service {
-  constructor(ctx) {
-    super(ctx);
-    const { infura, privateKey, runningNetwork } = this.config.ethereum;
-    const ApiEndpoint = `https://${runningNetwork}.infura.io/v3/${infura.id}`;
-    const provider = new Web3.providers.HttpProvider(ApiEndpoint);
-    this.web3 = new Web3(provider);
-    // privateKey 还没决定好怎么用怎么放，我先定义在config用于开发工作
-    this.web3.eth.accounts.wallet.add(privateKey);
-  }
-
+class FanPiaoService extends Web3Service {
   /**
    * getFanPiaoContract, 通过生成web3的合约对象来进行各种操作（部署、测算gas费等...）
    * @param {string} name ERC20 Token Name
@@ -30,34 +19,6 @@ class Web3Service extends Service {
       arguments: [ name, symbol, decimals, cap, initialSupply ],
     });
   }
-
-  /**
-   * estimateGasForDeploy, 预算部署的 gas 费用
-   * @param {string} name ERC20 Token Name
-   * @param {string} symbol ERC20 Token Symbol
-   * @param {number} decimals the decimal precision of your token. If you don't know what to insert, use 18.
-   * @param {number} cap The maximum number of tokens available
-   * @return {number} 预计耗费的 gas
-   */
-  estimateGasForDeploy(name, symbol, decimals, cap) {
-    return this
-      .getFanPiaoContract(name, symbol, decimals, cap)
-      .estimateGas();
-  }
-
-  /**
-   * create function
-   * @return {object} object The account object with the following structure
-   * https://web3js.readthedocs.io/en/v1.2.4/web3-eth-accounts.html#create
-   */
-  create() {
-    return this.web3.eth.accounts.create();
-  }
-
-  getAccounts() {
-    return this.web3.eth.getAccounts();
-  }
-
 
   /**
    * issue ERC20 FanPiao
@@ -88,4 +49,4 @@ class Web3Service extends Service {
 
 }
 
-module.exports = Web3Service;
+module.exports = FanPiaoService;
