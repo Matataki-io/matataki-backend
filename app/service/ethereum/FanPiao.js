@@ -38,7 +38,7 @@ class FanPiaoService extends Web3Service {
         .send({
           from: '0x2F129a52aAbDcb9Fa025BFfF3D4C731c2D914932',
           gas: 10000000,
-          gasPrice: '10400000000',
+          gasPrice: '3400000000',
         })
         // 我也很无奈，promise 要等待部署成功或者部署失败（反正都要等到天荒地老）
         // 要拿 transactionHash 还得用这样的形式
@@ -47,6 +47,12 @@ class FanPiaoService extends Web3Service {
     });
   }
 
+  estimateGas(name, symbol, decimals, cap) {
+    return this.getFanPiaoContract(name, symbol, decimals, cap).estimateGas({
+      from: '0x2F129a52aAbDcb9Fa025BFfF3D4C731c2D914932',
+      gas: 10000000,
+    });
+  }
 }
 
 module.exports = FanPiaoService;
