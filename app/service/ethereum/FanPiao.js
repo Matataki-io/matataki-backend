@@ -59,7 +59,8 @@ class FanPiaoService extends Web3Service {
   }
 
   /**
-   * operatorSend, 代替 sender 发送 token 给 recipient 的函数，需要我们是777合约的默认operator才能执行
+   * ⚠️ 这个 _operatorSend 函数没有设置权限控制，请在 controller 调用时小心设置好权限控制
+   * _operatorSend, 代替 sender 发送 token 给 recipient 的函数，需要我们是777合约的默认operator才能执行
    * @param {string} contractAddress token 合约地址
    * @param {string} sender token 发送者，发送的token余额从 sender 扣除
    * @param {string} recipient 收token的地址，如果是一个合约地址，则必须实现 IERC777Recipient 接口
@@ -67,7 +68,7 @@ class FanPiaoService extends Web3Service {
    * @param {string} data bytes extra information provided by the token holder (if any)
    * @param {string} operatorData bytes extra information provided by the operator (if any)
    */
-  operatorSend(contractAddress, sender, recipient, amount, data = '', operatorData = '') {
+  _operatorSend(contractAddress, sender, recipient, amount, data = '', operatorData = '') {
     // 开发ing，先硬编码
     const contract = this.initContract(contractAddress);
     const toBytes32 = string => this.web3.utils.stringToHex(string);
@@ -89,6 +90,7 @@ class FanPiaoService extends Web3Service {
   }
 
   /**
+   * ⚠️ 这个 _mint 函数没有设置权限控制，请在 controller 调用时小心设置好权限控制
    * _mint, 我们作为合约 Minter 给 to 印钱
    * @param {string} contractAddress token 合约地址
    * @param {string} to 收新铸币的地址，如果是一个合约地址，则必须实现 IERC777Recipient 接口

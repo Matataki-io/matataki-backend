@@ -44,7 +44,7 @@ class FanPiaoController extends Controller {
       // _token_contract_dev 应该到时候替换成实际的token合约地址
       const _token_contract_dev = '0xf4F6f5878662dcB4ac404D69da0eEaEe5092bC8E';
       // from 应该限制为用户当前帐户的以太坊钱包（不能代替别人）
-      const txHash = await this.service.ethereum.fanPiao.operatorSend(_token_contract_dev, from, to, amount);
+      const txHash = await this.service.ethereum.fanPiao._operatorSend(_token_contract_dev, from, to, amount);
       ctx.body = ctx.msg.success;
       ctx.body.data = { status: 'pending', txHash };
     } catch (error) {
