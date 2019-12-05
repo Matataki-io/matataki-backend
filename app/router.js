@@ -380,10 +380,13 @@ module.exports = app => {
   router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
 
   // for ethereum related routes
-  router.get('/_dev/eth/create', passport.verify, controller.ethereum.createWallet.create);
+  router.get('/eth/getTransaction/:txHash', passport.verify, controller.ethereum.api.getTransaction);
+  router.get('/eth/getTxReceipt/:txHash', passport.verify, controller.ethereum.api.getTransactionReceipt);
   router.post('/_dev/eth/fanPiao/issue', passport.verify, controller.ethereum.fanPiao.issue);
+  // @todo: remove this when production!!!
+  router.post('/_only_4_dev/_rem0ve_when_pr0d/eth/fanPia0/_send', passport.verify, controller.ethereum.fanPiao._send);
+  // @todo: remove this when production!!!
   router.post('/_dev/eth/fanPiao/estimateGas', passport.verify, controller.ethereum.fanPiao.estimateGas);
-  router.get('/_dev/eth/getAccounts', passport.verify, controller.ethereum.createWallet.getAccounts);
 
   // 通知
   router.get('/notification', passport.authorize, controller.notification.overview);

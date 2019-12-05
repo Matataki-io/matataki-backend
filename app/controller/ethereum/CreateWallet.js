@@ -8,15 +8,6 @@ class TestWeb3Controller extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = wallet;
   }
-
-
-  async getAccounts() {
-    const ctx = this.ctx;
-    const accounts = await this.service.ethereum.web3.getAccounts();
-    ctx.body = ctx.msg.success;
-    ctx.body.data = accounts;
-  }
-
 }
 
 module.exports = TestWeb3Controller;
