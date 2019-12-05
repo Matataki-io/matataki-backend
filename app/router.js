@@ -385,7 +385,6 @@ module.exports = app => {
   router.post('/_dev/eth/fanPiao/issue', passport.verify, controller.ethereum.fanPiao.issue);
   router.post('/_dev/eth/fanPiao/send', passport.verify, controller.ethereum.fanPiao._send);
   router.post('/_dev/eth/fanPiao/estimateGas', passport.verify, controller.ethereum.fanPiao.estimateGas);
-  router.get('/_dev/eth/getAccounts', passport.verify, controller.ethereum.createWallet.getAccounts);
 
   // 通知
   router.get('/notification', passport.authorize, controller.notification.overview);
