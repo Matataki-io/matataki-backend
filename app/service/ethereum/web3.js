@@ -31,6 +31,9 @@ class Web3Service extends Service {
     return this.web3.eth.getTransaction(txHash);
   }
 
+  getTransactionReceipt(txHash) {
+    return this.web3.eth.getTransactionReceipt(txHash);
+  }
 }
 
 module.exports = Web3Service;
