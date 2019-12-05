@@ -10,6 +10,7 @@ class Web3Service extends Service {
     const ApiEndpoint = `https://${runningNetwork}.infura.io/v3/${infura.id}`;
     const provider = new Web3.providers.HttpProvider(ApiEndpoint);
     this.web3 = new Web3(provider);
+    this.publicKey = this.web3.eth.accounts.privateKeyToAccount(privateKey).address;
     // privateKey 还没决定好怎么用怎么放，我先定义在config用于开发工作
     this.web3.eth.accounts.wallet.add(privateKey);
   }
