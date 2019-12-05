@@ -88,7 +88,30 @@ class FanPiaoService extends Web3Service {
     });
   }
 
-
+  /**
+   * _mint, 我们作为合约 Minter 给 to 印钱
+   * @param {string} contractAddress token 合约地址
+   * @param {string} to 收新铸币的地址，如果是一个合约地址，则必须实现 IERC777Recipient 接口
+   * @param {string} amount 铸币数量，单位是wei（最小单位）
+   */
+  _mint(contractAddress, to, amount) {
+    // 开发ing，先硬编码
+    const contract = this.initContract(contractAddress);
+    return new Promise((resolve, reject) => {
+      contract.methods.mint(to, amount).send({
+        from: this.publicKey,
+        gas: 10000000,
+        gasPrice: '3400000000',
+      })
+        .on('transactionHash', hash => {
+          resolve(hash);
+        })
+        .on('error', (error, receipt) => {
+          if (receipt) reject(receipt);
+          else reject(error);
+        });
+    });
+  }
 }
 
 module.exports = FanPiaoService;
