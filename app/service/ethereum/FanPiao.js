@@ -2,7 +2,7 @@
 'use strict';
 const Web3Service = require('./web3');
 const contract_data = require('./CommonFanPiao.json');
-const contract777_data = require('./FanPiao777v1.json');
+const contract777_data = require('./FanPiao777v2.json');
 
 class FanPiaoService extends Web3Service {
   /**
