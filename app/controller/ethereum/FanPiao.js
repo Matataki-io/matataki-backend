@@ -14,7 +14,7 @@ class FanPiaoController extends Controller {
     } catch (error) {
       this.logger.error('issue fanpiao error: ', error);
       ctx.body = ctx.msg.failure;
-      ctx.body.data = error;
+      ctx.body.data = { error };
     }
   }
 
@@ -31,6 +31,25 @@ class FanPiaoController extends Controller {
       this.logger.error('estimateGas error: ', error);
       ctx.body = ctx.msg.failure;
       ctx.body.data = error;
+    }
+  }
+
+  async _send() {
+    /**
+     * 这个函数可以从别人帐户转账出去，很危险，仅供开发测试
+     * 请实际开发使用时，设置限制措施！
+     */
+    const ctx = this.ctx;
+    // 取出发币参数
+    const { from, to, amount } = ctx.request.body;
+    try {
+      const txHash = await this.service.ethereum.fanPiao.operatorSend(from, to, amount);
+      ctx.body = ctx.msg.success;
+      ctx.body.data = { status: 'pending', txHash };
+    } catch (error) {
+      this.logger.error('_send error: ', error);
+      ctx.body = ctx.msg.failure;
+      ctx.body.data = { error };
     }
   }
 
