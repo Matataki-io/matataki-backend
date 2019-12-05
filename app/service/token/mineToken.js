@@ -537,6 +537,54 @@ class MineTokenService extends Service {
       list: result[0],
     };
   }
+
+  async getRelated(tokenId, filter = 0, page = 1) {
+    if (tokenId === null) {
+      return false;
+    }
+
+    const pagesize = 10;
+
+    if (typeof filter === 'string') filter = parseInt(filter)
+    if (typeof page === 'string') page = parseInt(page)
+
+    let sql = 'SELECT sign_id AS id FROM (';
+
+    const selections = [];
+    if (filter === 0 || (filter & 1) > 0) {
+      selections.push('SELECT sign_id FROM post_minetokens WHERE token_id = :tokenId');
+    }
+    if (filter === 0 || (filter & 2) > 0) {
+      selections.push('SELECT sign_id FROM product_prices WHERE symbol = (SELECT symbol FROM minetokens WHERE id = :tokenId)');
+    }
+    sql += selections.join(' UNION ALL ');
+
+    sql += `
+      ) t
+      JOIN posts p ON p.id = sign_id
+      ORDER BY p.create_time DESC
+      LIMIT :start, :end;`;
+
+    const counting = [];
+    if (filter === 0 || (filter & 1) > 0) {
+      counting.push('(SELECT COUNT(1) FROM post_minetokens WHERE token_id = :tokenId)');
+    }
+    if (filter === 0 || (filter & 2) > 0) {
+      counting.push('(SELECT COUNT(1) FROM product_prices WHERE symbol = (SELECT symbol FROM minetokens WHERE id = :tokenId))');
+    }
+    sql += `SELECT ${counting.join(' + ')} AS count;`;
+
+    const results = await this.app.mysql.query(sql, {
+      tokenId,
+      start: (page - 1) * pagesize,
+      end: 1 * pagesize
+    });
+
+    return {
+      count: results[1][0].count,
+      list: await this.service.post.getPostList(results[0].map(row => row.id))
+    };
+  }
 }
 
 module.exports = MineTokenService;

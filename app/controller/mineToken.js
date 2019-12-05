@@ -133,6 +133,23 @@ class MineTokenController extends Controller {
     };
   }
 
+  async getRelated() {
+    const { ctx } = this;
+    const tokenId = parseInt(ctx.params.id);
+    const { channel, filter, page } = ctx.query;
+
+    const result = await ctx.service.token.mineToken.getRelated(tokenId, filter, page);
+    if (result === false) {
+      ctx.status = 400;
+      ctx.body = ctx.msg.failure;
+    }
+
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result
+    }
+  }
+
 }
 
 module.exports = MineTokenController;

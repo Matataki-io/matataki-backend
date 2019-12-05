@@ -244,6 +244,7 @@ module.exports = app => {
   router.put('/minetoken/:id', passport.authorize, controller.mineToken.update);
   router.get('/minetoken/:id/resources', passport.verify, controller.mineToken.getResources);
   router.put('/minetoken/:id/resources', passport.authorize, controller.mineToken.saveResources);
+  router.get('/minetoken/:id/related', passport.verify, controller.mineToken.getRelated);
 
   // -------------------------------- token display API --------------------------------
   // 查询用户发行的token持仓用户list
