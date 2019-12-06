@@ -198,7 +198,7 @@ class ExchangeService extends Service {
     let sqlOrder = null;
     switch (sort) {
       case 'general':
-        sqlOrder = ' ORDER BY t6.amount * 1 + t7.count * 1 + t7.amount * 1 DESC';
+        sqlOrder = ' ORDER BY ifnull(t6.amount, 0) * 1 + ifnull(t7.count, 0) * 1 + ifnull(t7.amount, 0) * 1 DESC';
         break;
 
       case 'name-asc':
@@ -236,7 +236,7 @@ class ExchangeService extends Service {
 
     let sql, parameters;
     if (search === '') {
-      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount, t6.amount AS liquidity, t7.amount AS exchange_amount
+      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount, ifnull(t6.amount, 0) AS liquidity, ifnull(t7.amount, 0) AS exchange_amount
           FROM mineTokens AS t1
           JOIN users AS t2 ON t1.uid = t2.id
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
