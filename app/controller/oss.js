@@ -41,7 +41,10 @@ class AliOssController extends Controller {
       return;
     }
 
-    ctx.body = ctx.msg.success;
+    ctx.body = {
+      ...ctx.msg.success,
+      data: filename,
+    };
   }
 
 }

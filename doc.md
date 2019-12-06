@@ -3344,3 +3344,27 @@ symbol-desc：字母倒序
     }
 }
 ```
+
+#### 图片上传
+* POST /oss/uploadImage?folder=folderOption
+```
+const folderOption = {
+  avatar: 'avatar', // 头像
+  userBanner: 'userBanner', // 用户封面
+  articleCover: 'articleCover', // 文章封面
+  article: 'article', // 编辑器上传
+  temp: 'temp', // 临时文件
+  coin: 'coin', // fan票
+};
+```
+* 响应状态码： 200
+* 参数：pagesize,page,platform
+* 请求头：x-access-token
+* 返回值：
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": filepath
+}
+```
