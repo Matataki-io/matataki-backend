@@ -150,11 +150,18 @@ class AuthService extends Service {
 
   // }
 
+  async sendRegisteredCaptchaMail(email) {
+    return this.sendCaptchaMail(email);
+  }
+
+  async sendResetpasswordCaptchaMail(email) {
+    return this.sendCaptchaMail(email, consts.mailTemplate.resetPassword);
+  }
 
   // 发送邮箱验证码
-  async sendCaptchaMail(email) {
+  async sendCaptchaMail(email, type = consts.mailTemplate.registered) {
 
-    const mailhash = 'captcha:' + md5(email).toString();
+    const mailhash = `captcha:${type}:${md5(email).toString()}`;
     const timestamp = Date.now();
     // 是否在1分钟之内获取过验证码， 无论是否消耗
     const lastSentQuery = await this.app.redis.get(mailhash);
@@ -189,21 +196,57 @@ class AuthService extends Service {
     // const captchaStatus = await this.app.redis.get(mailhash);
     // console.log(captchaStatus);
 
-    const sendCloudResult = await this.service.sendCloud.sendCaptcha(email, captcha);
+    const sendCloudResult = await this.service.sendCloud.sendCaptcha(email, captcha, type);
     this.ctx.logger.info('sendCloudResult', sendCloudResult);
     if (sendCloudResult) {
       return 0;
     }
-    const sendResult = await this.service.mail.sendCaptcha(email, captcha);
+    const sendResult = await this.service.mail.sendCaptcha(email, captcha, type);
     if (sendResult) {
       return 0;
     }
     return 2;
   }
 
+  // 重置密码
+  async resetPassword(email, captcha, password) {
+    const mailhash = `captcha:${consts.mailTemplate.resetPassword}:${md5(email).toString()}`;
+    const captchaQuery = await this.app.redis.get(mailhash);
+    // 从未获取过验证码
+    if (!captchaQuery) {
+      this.logger.info('AuthService:: resetPassword: Captcha haven\'t been generated for email ', email);
+      return 1;
+    }
+    const captchaInfo = JSON.parse(captchaQuery);
+    // 验证码不对， 减少有效次数
+    if (captchaInfo.captcha !== captcha) {
+      captchaInfo.status -= 1;
+      this.logger.info('AuthService:: resetPassword: Captcha is wrong for email ', email);
+      // 已经错误3次， 验证码失效
+      if (captchaInfo.status === 0) {
+        this.logger.info('AuthService:: resetPassword: Captcha expired');
+        await this.app.redis.del(mailhash);
+        return 2;
+      }
+      const storeString = JSON.stringify(captchaInfo);
+      // 获取剩余TTL
+      const remainTime = await this.app.redis.call('TTL', mailhash);
+      // 更新剩余次数， 并维持TTL
+      await this.app.redis.set(mailhash, storeString, 'EX', remainTime);
+      return 3;
+    }
+    const passwordHash = sha256(password).toString();
+    const result = await this.updatePassword(passwordHash, email);
+    if (!result) {
+      return 5;
+    }
+    this.logger.info('AuthService:: resetPassword: email ', email);
+    return 0;
+  }
+
   // 邮箱注册
   async doReg(email, captcha, password, ipaddress, referral) {
-    const mailhash = 'captcha:' + md5(email).toString();
+    const mailhash = `captcha:${consts.mailTemplate.registered}:${md5(email).toString()}`;
     const captchaQuery = await this.app.redis.get(mailhash);
     // 从未获取过验证码
     if (!captchaQuery) {
@@ -347,6 +390,20 @@ class AuthService extends Service {
       return true;
     }
     return false;
+  }
+
+  async updatePassword(passwordHash, email) {
+    try {
+      await this.app.mysql.query(
+        'UPDATE users SET password_hash = :passwordHash WHERE username = :email AND platform = \'email\'', {
+          passwordHash,
+          email,
+        });
+      return true;
+    } catch (err) {
+      this.logger.error('AuthService:: updatePassword: Error ', err);
+      return false;
+    }
   }
 
   // 插入登录日志

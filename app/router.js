@@ -21,6 +21,10 @@ module.exports = app => {
   router.get('/login/verify', passport.verify, controller.auth.verifyReg);
   // 发送注册码邮件
   router.post('/login/captcha', passport.verify, geetestVerify, controller.auth.sendCaptcha);
+  // 发送重置密码邮件
+  router.post('/login/resetPassword/captcha', passport.verify, geetestVerify, controller.auth.sendResetCaptcha);
+  // 重置密码
+  router.post('/login/resetPassword', passport.verify, controller.auth.resetPassword);
   // 注册用户
   router.post('/login/regist', passport.verify, controller.auth.regUser);
   // 进行账密登录
@@ -149,10 +153,10 @@ module.exports = app => {
   router.get('/user/:id/links', passport.verify, controller.user.getLinks);
 
   // 获取目前用户的绑定第三方帐户状态
-  router.get('/user/:id/bind', passport.authorize, controller.account.bind.getMyBindStatus);
-  // 用户获取 platform 的绑定验证码（用于识别、签名等）
-  router.get('/user/:id/bind/:platform', passport.authorize, controller.account.bind.getMyBindcode);
-  // 设置 platform 相关数据（第三方平台的id等，对应 user_ third_party 表）
+  router.get('/user/:id/bind', passport.verify, controller.account.bind.getBindStatus);
+  // 用户获取 platform 的绑定状态，如果没绑定则验证码（用于API对用户识别、钱包的签名请求等）
+  router.get('/user/:id/bind/:platform', passport.authorize, controller.account.bind.GetMyPlatform);
+  // 设置 platform 相关数据（第三方平台的id等，对应 user_third_party 表）
   router.post('/user/:id/bind/:platform', passport.verify, controller.account.bind.setBindData);
 
   // -------------------------------- 粉丝系统 --------------------------------
@@ -240,6 +244,7 @@ module.exports = app => {
   router.put('/minetoken/:id', passport.authorize, controller.mineToken.update);
   router.get('/minetoken/:id/resources', passport.verify, controller.mineToken.getResources);
   router.put('/minetoken/:id/resources', passport.authorize, controller.mineToken.saveResources);
+  router.get('/minetoken/:id/related', passport.verify, controller.mineToken.getRelated);
 
   // -------------------------------- token display API --------------------------------
   // 查询用户发行的token持仓用户list
@@ -373,10 +378,22 @@ module.exports = app => {
 
   router.post('/wx/payarticlenotify', app.middleware.tenpay('pay', app), controller.wxpay.payArticleNotify);
   router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
+
+  // for ethereum related routes
+  router.get('/eth/getTransaction/:txHash', passport.verify, controller.ethereum.api.getTransaction);
+  router.get('/eth/getTxReceipt/:txHash', passport.verify, controller.ethereum.api.getTransactionReceipt);
+  router.post('/_dev/eth/fanPiao/issue', passport.verify, controller.ethereum.fanPiao.issue);
+  // @todo: remove this when production!!!
+  router.post('/_only_4_dev/_rem0ve_when_pr0d/eth/fanPia0/_send', passport.verify, controller.ethereum.fanPiao._send);
+  // @todo: remove this when production!!!
+  router.post('/_dev/eth/fanPiao/estimateGas', passport.verify, controller.ethereum.fanPiao.estimateGas);
+
   // 通知
   router.get('/notification', passport.authorize, controller.notification.overview);
   router.get('/notification/fetch', passport.authorize, controller.notification.fetch);
   router.post('/notification/read', passport.authorize, controller.notification.read);
-  router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
+
+  // 上传图片
+  router.post('/oss/uploadImage', passport.authorize, controller.oss.uploadImage);
 };
 

@@ -35,6 +35,8 @@ ipfs端口：
 安装目录：/usr/local/elasticsearch-7.2.0/，启动命令：
 ```
 # cd /usr/local/elasticsearch-7.2.0/
+// 切换账号（不能使用root启动）
+# sudo su es
 # ./bin/elasticsearch -d -p pid
 ```
 端口：9200，es的api接口为RESTful风格，没有账号权限控制，需要关闭端口的外网访问权限，服务器配置内网IP访问。公司内调试可以开IP白名单。

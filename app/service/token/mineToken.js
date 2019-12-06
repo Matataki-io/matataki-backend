@@ -537,6 +537,54 @@ class MineTokenService extends Service {
       list: result[0],
     };
   }
+
+  async getRelated(tokenId, filter = 0, sort = 'popular-desc', page = 1) {
+    if (tokenId === null) {
+      return false;
+    }
+
+    const pagesize = 10;
+
+    if (typeof filter === 'string') filter = parseInt(filter)
+    if (typeof page === 'string') page = parseInt(page)
+
+    let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
+    let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
+
+    if (filter === 1) {
+      sql += 'AND require_buy = 0 ';
+      countSql += 'AND require_buy = 0;';
+    } else if (filter === 2) {
+      sql += 'AND require_buy = 1 ';
+      countSql += 'AND require_buy = 1;';
+    }
+
+    switch (sort) {
+      case 'popular-desc':
+        sql += 'ORDER BY p.hot_score DESC, p.id DESC ';
+        break;
+
+      case 'time-desc':
+        sql += 'ORDER BY p.create_time DESC ';
+        break;
+
+      default:
+        return false;
+    }
+
+    sql += 'LIMIT :start, :end;';
+
+    const results = await this.app.mysql.query(sql + countSql, {
+      tokenId,
+      start: (page - 1) * pagesize,
+      end: 1 * pagesize
+    });
+
+    return {
+      count: results[1][0].count,
+      list: await this.service.post.getPostList(results[0].map(row => row.id))
+    };
+  }
 }
 
 module.exports = MineTokenService;

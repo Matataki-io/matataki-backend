@@ -33,7 +33,7 @@ class AuthController extends Controller {
       flag = await this.vnt_auth(sign, username, publickey);
     } else if (platform === 'eth') {
       // 以太坊没用户名, 使用 msgParams 及其签名来判断是否真实
-      flag = this.service.blockchain.eth.signatureService.verifyAuth(sign, msgParams, publickey);
+      flag = this.service.ethereum.signatureService.verifyAuth(sign, msgParams, publickey);
       username = publickey.substr(-12); // 后十二位作为新用户暂时的用户名
     } else {
       ctx.body = ctx.msg.unsupportedPlatform;
@@ -238,7 +238,6 @@ class AuthController extends Controller {
     }
   }
 
-  // todo：增加geetest，防刷，改为post
   // 邮箱注册时发送验证码
   async sendCaptcha() {
     const ctx = this.ctx;
@@ -260,7 +259,7 @@ class AuthController extends Controller {
       return;
     }
     // const isBanned = this.service.auth.
-    const mail = await this.service.auth.sendCaptchaMail(email);
+    const mail = await this.service.auth.sendRegisteredCaptchaMail(email);
     // ctx.body = ctx.msg.success;
     switch (mail) {
       case 1:
@@ -277,6 +276,66 @@ class AuthController extends Controller {
     //   return;
     // }
     // ctx.body = ctx.msg.failure;
+  }
+  async sendResetCaptcha() {
+    const ctx = this.ctx;
+    const { email = null } = ctx.request.query;
+    if (!email) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    const emailCheck = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
+    if (!emailCheck.test(email)) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    const mail = await this.service.auth.sendResetpasswordCaptchaMail(email);
+    switch (mail) {
+      case 1:
+        ctx.body = ctx.msg.captchaRatelimit;
+        break;
+      case 0:
+        ctx.body = ctx.msg.success;
+        break;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
+  }
+
+  // 重置密码
+  async resetPassword() {
+    const ctx = this.ctx;
+    const { email = null, captcha = null, password = null } = ctx.request.body;
+    if (!email || !captcha || !password) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    // 验证用户是否存在
+    const userExistence = await this.service.auth.verifyUser(email);
+    if (!userExistence) {
+      ctx.body = ctx.msg.userNotExist;
+      return;
+    }
+    const regResult = await this.service.auth.resetPassword(email, captcha, password);
+    switch (regResult) {
+      case 1:
+        ctx.body = ctx.msg.captchaWrong;
+        break;
+      case 2:
+        ctx.body = ctx.msg.captchaWrong;
+        break;
+      case 3:
+        ctx.body = ctx.msg.captchaWrong;
+        break;
+      case 5:
+        ctx.body = ctx.msg.failure;
+        break;
+      case 0:
+        ctx.body = ctx.msg.success;
+        break;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
   }
 
   // 邮箱注册
