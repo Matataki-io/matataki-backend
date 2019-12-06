@@ -538,7 +538,7 @@ class MineTokenService extends Service {
     };
   }
 
-  async getRelated(tokenId, filter = 0, page = 1) {
+  async getRelated(tokenId, filter = 0, sort = 'popular-desc', page = 1) {
     if (tokenId === null) {
       return false;
     }
@@ -548,33 +548,33 @@ class MineTokenService extends Service {
     if (typeof filter === 'string') filter = parseInt(filter)
     if (typeof page === 'string') page = parseInt(page)
 
-    let sql = 'SELECT sign_id AS id FROM (';
+    let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
+    let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
 
-    const selections = [];
-    if (filter === 0 || (filter & 1) > 0) {
-      selections.push('SELECT sign_id FROM post_minetokens WHERE token_id = :tokenId');
+    if (filter === 1) {
+      sql += 'AND require_buy = 0 ';
+      countSql += 'AND require_buy = 0;';
+    } else if (filter === 2) {
+      sql += 'AND require_buy = 1 ';
+      countSql += 'AND require_buy = 1;';
     }
-    if (filter === 0 || (filter & 2) > 0) {
-      selections.push('SELECT sign_id FROM product_prices WHERE symbol = (SELECT symbol FROM minetokens WHERE id = :tokenId)');
-    }
-    sql += selections.join(' UNION ALL ');
 
-    sql += `
-      ) t
-      JOIN posts p ON p.id = sign_id
-      ORDER BY p.create_time DESC
-      LIMIT :start, :end;`;
+    switch (sort) {
+      case 'popular-desc':
+        sql += 'ORDER BY p.hot_score DESC, p.id DESC ';
+        break;
 
-    const counting = [];
-    if (filter === 0 || (filter & 1) > 0) {
-      counting.push('(SELECT COUNT(1) FROM post_minetokens WHERE token_id = :tokenId)');
-    }
-    if (filter === 0 || (filter & 2) > 0) {
-      counting.push('(SELECT COUNT(1) FROM product_prices WHERE symbol = (SELECT symbol FROM minetokens WHERE id = :tokenId))');
-    }
-    sql += `SELECT ${counting.join(' + ')} AS count;`;
+      case 'time-desc':
+        sql += 'ORDER BY p.create_time DESC ';
+        break;
 
-    const results = await this.app.mysql.query(sql, {
+      default:
+        return false;
+    }
+
+    sql += 'LIMIT :start, :end;';
+
+    const results = await this.app.mysql.query(sql + countSql, {
       tokenId,
       start: (page - 1) * pagesize,
       end: 1 * pagesize
