@@ -684,6 +684,15 @@ class PostController extends Controller {
         result = await this.service.postImport.handleJianShu(jianshuMatch[0]);
       }
     }
+    // https://igaojin.me
+    // 高金blog导入
+    if (matchStatus === 0) {
+      const gaojinMatch = url.match(/https:\/\/(www\.)?igaojin\.me/);
+      if (gaojinMatch && matchStatus !== 1) {
+        matchStatus = 1;
+        result = await this.service.postImport.handleGaojin(url);
+      }
+    }
 
     if (matchStatus === 0) {
       ctx.body = ctx.msg.importPlatformNotSupported;
