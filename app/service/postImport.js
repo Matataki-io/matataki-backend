@@ -9,6 +9,7 @@ const axios = require('axios');
 const htmlparser = require('node-html-parser');
 const pretty = require('pretty');
 const turndown = require('turndown');
+const cheerio = require('cheerio'); // 如果是客户端渲染之类的 可以考虑用 puppeteer
 class PostImportService extends Service {
 
   // 搬运时候上传图片
@@ -254,6 +255,105 @@ class PostImportService extends Service {
     };
 
     return articleObj;
+  }
+
+  // 处理Gaojin Blog
+  async handleGaojin(url) {
+    // 拉取文章内容
+    let rawPage;
+    try {
+      rawPage = await axios({
+        url,
+        method: 'get',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        },
+      });
+    } catch (err) {
+      this.logger.error('PostImportService:: handleJianShu: error:', err);
+      return {
+        title: '',
+        cover: '',
+        content: '导入失败,请联系管理员!',
+      };
+    }
+
+    try {
+      const { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
+      const $ = cheerio.load(rawPage.data);
+      const parsedContent = $('#main .article-inner');
+      $('#main .article-footer').remove();
+      const turndownService = new turndown();
+      // 简单的规则 后期考虑复用等
+      const rule = [
+        {
+          key: 'h1',
+          replace: '# ',
+        },
+        {
+          key: 'h2',
+          replace: '## ',
+        },
+        {
+          key: 'h3',
+          replace: '### ',
+        },
+        {
+          key: 'h4',
+          replace: '#### ',
+        },
+        {
+          key: 'h5',
+          replace: '##### ',
+        },
+        {
+          key: 'h6',
+          replace: '###### ',
+        },
+      ];
+      for (const key of rule) {
+        turndownService.addRule('title', {
+          filter: key.key,
+          replacement: content => key.replace + content,
+        });
+      }
+      turndownService.keep([ 'figure' ]);
+      const parsedCoverList = $('#main .article-inner img');
+      let coverLocation = null;
+      for (let i = 0; i < parsedCoverList.length; i++) {
+        let originalSrc = $(parsedCoverList[i]).attr('src');
+
+        if (!(originalSrc.includes('http'))) originalSrc = 'https://igaojin.me/' + originalSrc;
+        let filename = originalSrc.split('.');
+        if (typeof filename !== 'string') {
+          filename = filename[filename.length - 1];
+        } else filename = 'png';
+
+        const parsedCoverUpload = './uploads/today_gaojin_' + Date.now() + `.${filename}`;
+        const imgUpUrl = await this.uploadArticleImage(encodeURI(originalSrc), parsedCoverUpload);
+        if (i === 0) coverLocation = imgUpUrl;
+        if (imgUpUrl) {
+          $(parsedCoverList[i]).attr('src', 'https://ssimg.frontenduse.top' + imgUpUrl);
+        }
+      }
+      const articleContent = turndownService.turndown(parsedContent.toString());
+
+      const articleObj = {
+        title,
+        cover: coverLocation,
+        content: articleContent,
+      };
+
+      return articleObj;
+    } catch (error) {
+      console.log('error', error);
+      return {
+        title: '',
+        cover: '',
+        content: '导入失败,请联系管理员!',
+      };
+    }
   }
 }
 
