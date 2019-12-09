@@ -219,48 +219,28 @@ class UserService extends Service {
   }
 
   async recommendUser(amount, current_user = null) {
-    // 随机选取数个
-    const userList = await this.app.mysql.query(
-      'SELECT id, username, nickname, avatar FROM users WHERE is_recommend = 1 ORDER BY RAND() LIMIT :amount;',
-      { amount }
-    );
+    const userIds = await this.app.redis.srandmember('user:recommend', amount);
 
-    const userids = [];
-    let myFans = [];
-    let myFollows = [];
+    const followKey = `user:${current_user}:follow_set`;
+    const followerKey = `user:${current_user}:follower_set`;
 
-    _.each(userList, everyUser => {
-      everyUser.username = this.maskEmailAddress(everyUser.username);
-      userids.push(everyUser.id);
-      everyUser.is_follow = false;
-      everyUser.is_fan = false;
-    });
+    const result = [];
 
-    if (current_user) {
-      const followStatus = await this.app.mysql.query(
-        'SELECT uid FROM follows WHERE uid IN (:userids) AND fuid = :me AND status = 1;'
-        + 'SELECT fuid FROM follows WHERE fuid IN (:userids) AND uid = :me AND status = 1;',
-        { userids, me: current_user }
-      );
+    for (const id of userIds) {
+      const info = await this.app.redis.hgetall(`user:${id}:info`);
 
-      myFans = followStatus[0];
-      myFollows = followStatus[1];
+      if (current_user != null) {
+        info.is_follow = await this.app.redis.sismember(followKey, id);
+        info.is_fan = await this.app.redis.sismember(followerKey, id);
+      } else {
+        info.is_follow = false;
+        info.is_fan = false;
+      }
+
+      result.push(info);
     }
 
-    _.each(userList, everyUser => {
-      _.each(myFans, everyFan => {
-        if (everyUser.id === everyFan.uid) {
-          everyUser.is_fan = true;
-        }
-      });
-      _.each(myFollows, everyFollow => {
-        if (everyUser.id === everyFollow.fuid) {
-          everyUser.is_follow = true;
-        }
-      });
-    });
-
-    return userList;
+    return result;
   }
 
   async setProfile(userid, email, nickname, introduction, accept) {
