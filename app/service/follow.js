@@ -47,6 +47,8 @@ class FollowService extends Service {
 
       if (updateSuccess) {
         try {
+          await this.app.redis.sadd(`user:${user.id}:follow`, uid);
+          await this.app.redis.sadd(`user:${uid}:follower`, user.id);
           await this.app.redis.hincrby(this.service.notification.userCounterKey(user.id), 'follow', 1);
         } catch (e) {
           console.error(e);
@@ -89,6 +91,9 @@ class FollowService extends Service {
       const updateSuccess = result.affectedRows >= 1;
 
       if (updateSuccess) {
+        await this.app.redis.srem(`user:${user.id}:follow`, uid);
+        await this.app.redis.srem(`user:${uid}:follower`, user.id);
+
         return 0;
       }
       return 1;
