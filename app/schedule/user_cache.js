@@ -13,7 +13,10 @@ class UserCache extends Subscription {
   async subscribe() {
     const { mysql, redis } = this.app;
 
+    const keys = await redis.keys('user:*');
     const pipeline = redis.multi();
+
+    pipeline.del(keys);
 
     const users = await mysql.query('SELECT id, username, nickname, avatar FROM users WHERE is_recommend = 1;');
     for (const { id, username, nickname, avatar } of users) {
