@@ -18,14 +18,15 @@ class UserCache extends Subscription {
 
     pipeline.del(keys);
 
-    const users = await mysql.query('SELECT id, username, nickname, avatar FROM users WHERE is_recommend = 1;');
-    for (const { id, username, nickname, avatar } of users) {
+    const users = await mysql.query('SELECT id, username, nickname, avatar, is_recommend FROM users;');
+    for (const { id, username, nickname, avatar, is_recommend } of users) {
       const key = `user:${id}:info`;
 
-      pipeline.sadd('user:recommend', id);
       pipeline.hset(key, 'username', this.service.user.maskEmailAddress(username));
       pipeline.hset(key, 'nickname', nickname);
       pipeline.hset(key, 'avatar', avatar);
+
+      if (is_recommend) pipeline.sadd('user:recommend', id);
     }
 
     const relationships = await mysql.query('SELECT uid, fuid FROM follows WHERE status = 1;');
