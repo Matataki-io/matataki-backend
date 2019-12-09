@@ -47,9 +47,11 @@ class FollowService extends Service {
 
       if (updateSuccess) {
         try {
-          await this.app.redis.multi
-            .rpush(`user:${user.id}:follow`, uid)
-            .rpush(`user:${uid}:follower`, user.id)
+          await this.app.redis.multi()
+            .rpush(`user:${user.id}:follow_list`, uid)
+            .rpush(`user:${uid}:follower_list`, user.id)
+            .sadd(`user:${user.id}:follow_set`, uid)
+            .sadd(`user:${uid}:follower_set`, user.id)
             .hincrby(this.service.notification.userCounterKey(user.id), 'follow', 1)
             .exec();
         } catch (e) {
@@ -93,7 +95,12 @@ class FollowService extends Service {
       const updateSuccess = result.affectedRows >= 1;
 
       if (updateSuccess) {
-        await this.app.redis.multi().lrem(`user:${user.id}:follow`, uid).lrem(`user:${uid}:follower`, user.id).exec();
+        await this.app.redis.multi()
+          .lrem(`user:${user.id}:follow_list`, uid)
+          .lrem(`user:${uid}:follower_list`, user.id)
+          .srem(`user:${user.id}:follow_set`, uid)
+          .srem(`user:${uid}:follower_set`, user.id)
+          .exec();
 
         return 0;
       }
