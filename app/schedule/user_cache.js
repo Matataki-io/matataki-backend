@@ -23,7 +23,7 @@ class UserCache extends Subscription {
       await redis.hset(key, 'avatar', avatar);
     }
 
-    const relationships = await mysql.query('SELECT uid, fuid FROM follows;');
+    const relationships = await mysql.query('SELECT uid, fuid FROM follows WHERE status = 1;');
     for (const { uid, fuid } of relationships) {
       await redis.sadd(`user:${uid}:follow`, fuid);
       await redis.sadd(`user:${fuid}:follower`, uid);
