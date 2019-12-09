@@ -221,8 +221,8 @@ class UserService extends Service {
   async recommendUser(amount, current_user = null) {
     const userIds = await this.app.redis.srandmember('user:recommend', amount);
 
-    const followKey = `user:${current_user}:follow`;
-    const followerKey = `user:${current_user}:follower`;
+    const followKey = `user:${current_user}:follow_set`;
+    const followerKey = `user:${current_user}:follower_set`;
 
     const result = [];
 
