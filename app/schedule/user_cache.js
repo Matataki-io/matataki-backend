@@ -27,8 +27,8 @@ class UserCache extends Subscription {
 
     const relationships = await mysql.query('SELECT uid, fuid FROM follows WHERE status = 1;');
     for (const { uid, fuid } of relationships) {
-      pipeline.sadd(`user:${uid}:follow`, fuid);
-      pipeline.sadd(`user:${fuid}:follower`, uid);
+      pipeline.rpush(`user:${uid}:follow`, fuid);
+      pipeline.rpush(`user:${fuid}:follower`, uid);
     }
 
     await pipeline.exec();
