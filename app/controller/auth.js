@@ -60,16 +60,18 @@ class AuthController extends Controller {
       let user = await this.app.mysql.get('users', { username, platform });
 
       if (!user) {
-        const old = await this.fetchOldEthAccount(username);
+        const oldEthAcc = await this.fetchOldEthAccount(username);
         // 处理以太坊登录的历史问题
-        if (old) return this.handleEthereumHistoricError(old, username);
+        if (oldEthAcc) return this.handleEthereumHistoricError(oldEthAcc, username);
+        // 以下为还没用以太坊过
         await this.service.auth.insertUser(username, '', platform, source, this.clientIP, '', referral);
         user = await this.app.mysql.get('users', { username, platform });
         // await this.service.search.importUser(user.id);
       }
       // 插入登录日志
       await this.service.auth.insertLoginLog(user.id, this.clientIP);
-
+      // 检测用户有没有托管的以太坊私钥，没有就生成
+      await this.generateEthHostingWallet(user);
       return user;
     } catch (err) {
       return null;
@@ -83,6 +85,14 @@ class AuthController extends Controller {
   handleEthereumHistoricError(old, publicKey) {
     this.logger.info('handleEthereumHistoricError pk: ', publicKey);
     return this.app.mysql.update('users', { username: publicKey }, { where: { id: old.id, platform: 'eth' } });
+  }
+
+  async generateEthHostingWallet(user) {
+    const isHostedEthWallet = await this.service.account.hosting.isHosting(user.id, 'ETH');
+    if (!isHostedEthWallet) {
+      await this.service.account.hosting.create(user.id);
+      return true;
+    } return false;
   }
 
   async eos_auth(sign, username, publickey) {
