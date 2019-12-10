@@ -8,8 +8,11 @@ class TagController extends Controller {
     const { type } = this.ctx.query;
     if (type === 'post') {
       this.ctx.body = this.ctx.msg.success;
-      this.ctx.body.data = this.ctx.app.cache.post.tags;
-      this.ctx.logger.debug('tag cache');
+      this.ctx.body.data = Object.entries(await this.app.redis.hgetall('post:tag')).map(([key, value]) => ({
+        id: Number(key),
+        name: value,
+        type: 'post'
+      }));
       return;
     }
 

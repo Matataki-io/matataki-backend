@@ -45,6 +45,11 @@ class Bootstrapper {
     pipeline.hset('user:stat', 'point', (await mysql.query('SELECT SUM(amount) as amount FROM assets_points;'))[0].amount);
     pipeline.hset('post:stat', 'count', (await mysql.query('SELECT COUNT(1) as count FROM posts;'))[0].count);
 
+    const tags = await this.app.mysql.query(`SELECT id, name FROM tags WHERE type = 'post';`);
+    for (const { id, name } of tags) {
+      pipeline.hset('post:tag', id, name);
+    }
+
     await pipeline.exec();
   }
 
