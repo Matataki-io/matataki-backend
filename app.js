@@ -50,6 +50,26 @@ class Bootstrapper {
       pipeline.hset('post:tag', id, name);
     }
 
+    const posts = await mysql.query('SELECT id, hot_score, time_down, require_holdtokens, require_buy FROM posts;')
+    for (const { id, require_holdtokens, time_down, hot_score, require_buy } of posts) {
+      pipeline.sadd('post', id);
+
+      if (require_holdtokens === 0 && require_buy === 0) {
+        pipeline.zadd('post:time:filter1', time_down, id);
+        pipeline.zadd('post:hot:filter1', hot_score, id);
+      }
+      else {
+        if (require_holdtokens) {
+          pipeline.zadd('post:time:filter2', time_down, id);
+          pipeline.zadd('post:hot:filter2', hot_score, id);
+        }
+        if (require_buy) {
+          pipeline.zadd('post:time:filter4', time_down, id);
+          pipeline.zadd('post:hot:filter4', hot_score, id);
+        }
+      }
+    }
+
     await pipeline.exec();
   }
 
