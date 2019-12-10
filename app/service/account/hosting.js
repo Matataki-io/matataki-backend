@@ -22,7 +22,7 @@ class AccountHostingService extends Service {
         blockchain: 'ETH',
         created_at: now,
       });
-      this.logger.error('AccountHosting:: create success: %j', result);
+      this.logger.info('AccountHosting:: create success: %j', result);
       return true;
     } catch (err) {
       this.logger.error('AccountHosting:: create error: %j', err);
