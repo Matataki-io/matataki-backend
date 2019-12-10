@@ -29,6 +29,8 @@ module.exports = app => {
   router.post('/login/regist', passport.verify, controller.auth.regUser);
   // 进行账密登录
   router.post('/login/account', passport.verify, controller.auth.accountLogin);
+  // 微信登录
+  router.post('/login/weixin', passport.verify, controller.auth.weixinLogin);
 
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
@@ -359,13 +361,11 @@ module.exports = app => {
   router.post('/wx/refundNotify', app.middleware.tenpay('pay', app), controller.wxpay.refundNotify);
   // 微信支付接口
   router.post('/wx/pay', passport.authorize, controller.wxpay.pay);
-  // 微信登录获取openid
-  router.post('/wx/login', passport.verify, controller.wxpay.login);
-
-  // 微信登录
-  router.post('/login/weixin', passport.verify, controller.auth.weixinLogin);
 
   router.post('/wxpay/refund', passport.verify, controller.wxpay.refund);
+
+  // 微信登录获取openid
+  router.post('/wx/login', passport.verify, controller.wxpay.login);
 
   // 修改wxpay的微信支付
   // router.post('/order/create', passport.authorize, controller.wxpay.createOrder);

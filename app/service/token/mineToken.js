@@ -545,8 +545,8 @@ class MineTokenService extends Service {
 
     const pagesize = 10;
 
-    if (typeof filter === 'string') filter = parseInt(filter)
-    if (typeof page === 'string') page = parseInt(page)
+    if (typeof filter === 'string') filter = parseInt(filter);
+    if (typeof page === 'string') page = parseInt(page);
 
     let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
     let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
@@ -577,12 +577,12 @@ class MineTokenService extends Service {
     const results = await this.app.mysql.query(sql + countSql, {
       tokenId,
       start: (page - 1) * pagesize,
-      end: 1 * pagesize
+      end: 1 * pagesize,
     });
 
     return {
       count: results[1][0].count,
-      list: await this.service.post.getPostList(results[0].map(row => row.id))
+      list: await this.service.post.getPostList(results[0].map(row => row.id)),
     };
   }
 }
