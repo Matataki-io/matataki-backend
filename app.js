@@ -1,17 +1,16 @@
-const { Subscription } = require('egg');
+class Bootstrapper {
 
-class UserCache extends Subscription {
-
-  static get schedule() {
-      return {
-          interval: '1h',
-          type: 'all',
-          immediate: true
-      };
+  constructor(app) {
+    this.app = app;
   }
 
-  async subscribe() {
+  async didReady() {
+    await this.loadUserCache();
+  }
+
+  async loadUserCache() {
     const { mysql, redis } = this.app;
+    const ctx = await this.app.createAnonymousContext();
 
     const keys = await redis.keys('user:*');
     const pipeline = redis.multi();
@@ -22,7 +21,7 @@ class UserCache extends Subscription {
     for (const { id, username, nickname, avatar, is_recommend } of users) {
       const key = `user:${id}:info`;
 
-      pipeline.hset(key, 'username', this.service.user.maskEmailAddress(username));
+      pipeline.hset(key, 'username', ctx.service.user.maskEmailAddress(username));
       pipeline.hset(key, 'nickname', nickname);
       pipeline.hset(key, 'avatar', avatar);
 
@@ -42,4 +41,4 @@ class UserCache extends Subscription {
 
 }
 
-module.exports = UserCache;
+module.exports = Bootstrapper;
