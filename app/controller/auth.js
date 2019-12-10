@@ -34,7 +34,8 @@ class AuthController extends Controller {
     } else if (platform === 'eth') {
       // 以太坊没用户名, 使用 msgParams 及其签名来判断是否真实
       flag = this.service.ethereum.signatureService.verifyAuth(sign, msgParams, publickey);
-      username = publickey.substr(-12); // 后十二位作为新用户暂时的用户名
+      //
+      username = publickey;
     } else {
       ctx.body = ctx.msg.unsupportedPlatform;
       return;
@@ -55,9 +56,13 @@ class AuthController extends Controller {
   // eos、ont、eth登录，首次登录自动注册
   async get_or_create_user(username, platform, source, referral) {
     try {
+      this.logger.info('get_or_create_user', { username, platform });
       let user = await this.app.mysql.get('users', { username, platform });
 
       if (!user) {
+        const old = await this.fetchOldEthAccount(username);
+        // 处理以太坊登录的历史问题
+        if (old) return this.handleEthereumHistoricError(old, username);
         await this.service.auth.insertUser(username, '', platform, source, this.clientIP, '', referral);
         user = await this.app.mysql.get('users', { username, platform });
         // await this.service.search.importUser(user.id);
@@ -69,6 +74,15 @@ class AuthController extends Controller {
     } catch (err) {
       return null;
     }
+  }
+
+  fetchOldEthAccount(username) {
+    return this.app.mysql.get('users', { username: username.slice(-12), platform: 'eth' });
+  }
+
+  handleEthereumHistoricError(old, publicKey) {
+    this.logger.info('handleEthereumHistoricError pk: ', publicKey);
+    return this.app.mysql.update('users', { username: publicKey }, { where: { id: old.id, platform: 'eth' } });
   }
 
   async eos_auth(sign, username, publickey) {
