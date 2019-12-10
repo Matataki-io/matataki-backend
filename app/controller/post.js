@@ -809,7 +809,7 @@ class PostController extends Controller {
   stats() {
     const ctx = this.ctx;
     ctx.body = ctx.msg.success;
-    ctx.body.data = this.ctx.app.cache.post.stats;
+    ctx.body.data = this.ctx.service.post.stats();
   }
 
   // 持币阅读

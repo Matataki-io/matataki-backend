@@ -4,11 +4,11 @@ class Bootstrapper {
     this.app = app;
   }
 
-  async didReady() {
-    await this.loadUserCache();
+  didReady() {
+    this.loadCache();
   }
 
-  async loadUserCache() {
+  async loadCache() {
     const { mysql, redis } = this.app;
     const ctx = await this.app.createAnonymousContext();
 
@@ -18,6 +18,9 @@ class Bootstrapper {
     if (keys.length > 0) pipeline.del(keys);
 
     const users = await mysql.query('SELECT id, username, nickname, avatar, is_recommend FROM users;');
+
+    pipeline.hset('user:stat', 'count', users.length);
+
     for (const { id, username, nickname, avatar, is_recommend } of users) {
       const key = `user:${id}:info`;
 
@@ -35,6 +38,9 @@ class Bootstrapper {
       pipeline.sadd(`user:${uid}:follow_set`, fuid);
       pipeline.sadd(`user:${fuid}:follower_set`, uid);
     }
+
+    pipeline.hset('user:stat', 'point', (await mysql.query('SELECT SUM(amount) as amount FROM assets_points;'))[0].amount);
+    pipeline.hset('post:stat', 'count', (await mysql.query('SELECT COUNT(1) as count FROM posts;'))[0].count);
 
     await pipeline.exec();
   }
