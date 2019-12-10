@@ -3,11 +3,11 @@ const { Subscription } = require('egg');
 class UserCache extends Subscription {
 
   static get schedule() {
-      return {
-          interval: '1h',
-          type: 'all',
-          immediate: true
-      };
+    return {
+      interval: '1h',
+      type: 'all',
+      immediate: true,
+    };
   }
 
   async subscribe() {

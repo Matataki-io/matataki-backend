@@ -42,7 +42,7 @@ class UserService extends Service {
       columns: [ 'id', 'username', 'nickname', 'platform', 'referral_uid', 'create_time', 'avatar', 'level', 'status', 'introduction', 'accept', 'banner' ], // todo：需要再增加
     });
     if (users && users.length > 0) {
-      users[0].username = this.maskEmailAddress(users[0].username)
+      users[0].username = this.maskEmailAddress(users[0].username);
       return users[0];
     }
     return null;
@@ -130,7 +130,7 @@ class UserService extends Service {
       + 'SELECT amount FROM assets_points WHERE uid = :uid;' // 查询 assets_points 的 amount 积分
       + 'SELECT COUNT(*) AS referral_amount FROM users WHERE referral_uid = :uid;' // 统计 users 的 referral_uid 数量'=
       + 'SELECT count(1) AS count FROM post_bookmarks WHERE uid = :uid;'
-      ,{ uid: basicInfo.id }
+      , { uid: basicInfo.id }
     );
     basicInfo.follows = counts[0][0].follows;
     basicInfo.fans = counts[1][0].fans;
@@ -265,7 +265,7 @@ class UserService extends Service {
         return nicknameInvalid;
       }
 
-      const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE nickname = ?) existence;', [nickname]))[0];
+      const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE nickname = ?) existence;', [ nickname ]))[0];
       if (existence) {
         return nicknameDuplicated;
       }
@@ -483,9 +483,9 @@ class UserService extends Service {
 
       if (result.affectedRows >= 1) {
         return 0;
-      } else {
-        return 3;
       }
+      return 3;
+
 
     } catch (err) {
       this.logger.error('UserService:: setBannerImage error: %j', err);
@@ -597,7 +597,7 @@ class UserService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM user_websites WHERE uid = ? AND website_id >= ?', [userId, websites.length]);
+      await conn.query('DELETE FROM user_websites WHERE uid = ? AND website_id >= ?', [ userId, websites.length ]);
 
       let websiteId = 0;
 
@@ -605,7 +605,7 @@ class UserService extends Service {
         await conn.query('INSERT INTO user_websites VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE url = VALUES(url)', [
           userId,
           websiteId,
-          website
+          website,
         ]);
 
         websiteId++;
@@ -646,23 +646,23 @@ class UserService extends Service {
       return null;
     }
 
-    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE id = ?) existence;', [userId]))[0];
+    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE id = ?) existence;', [ userId ]))[0];
     if (!existence) {
       return null;
     }
 
     const websites = [];
 
-    const websiteResults = await this.app.mysql.query('SELECT url FROM user_websites WHERE uid = ?;', [userId]);
+    const websiteResults = await this.app.mysql.query('SELECT url FROM user_websites WHERE uid = ?;', [ userId ]);
     for (const { url } of websiteResults) {
       websites.push(url);
     }
 
     const socialAccounts = [];
 
-    const socialAccountResult = (await this.app.mysql.query('SELECT wechat, qq, weibo, github, telegram, twitter, facebook FROM user_social_accounts WHERE uid = ?;', [userId]))[0];
+    const socialAccountResult = (await this.app.mysql.query('SELECT wechat, qq, weibo, github, telegram, twitter, facebook FROM user_social_accounts WHERE uid = ?;', [ userId ]))[0];
     if (socialAccountResult) {
-      for (const [type, value] of Object.entries(socialAccountResult)) {
+      for (const [ type, value ] of Object.entries(socialAccountResult)) {
         if (!value) {
           continue;
         }
@@ -682,7 +682,7 @@ class UserService extends Service {
       return false;
     }
 
-    if (typeof order === "string") {
+    if (typeof order === 'string') {
       order = parseInt(order);
     }
 
@@ -699,7 +699,7 @@ class UserService extends Service {
 
     if (order === 1) {
       sql += `
-        ORDER BY b.create_time DESC`
+        ORDER BY b.create_time DESC`;
     } else if (order === 2) {
       sql += `
         ORDER BY p.create_time`;
@@ -737,7 +737,7 @@ class UserService extends Service {
           avatar,
           read,
           likes,
-          tags: []
+          tags: [],
         };
         posts.push(latestRow);
       }
@@ -746,8 +746,8 @@ class UserService extends Service {
         latestRow.tags.push({
           id: tagId,
           name: tagName,
-          type: tagType
-        })
+          type: tagType,
+        });
       }
     }
 
@@ -758,10 +758,10 @@ class UserService extends Service {
       return false;
     }
 
-    const { articleCount } = (await this.app.mysql.query('SELECT count(1) AS articleCount FROM post_bookmarks WHERE uid = ?;', [userId]))[0];
+    const { articleCount } = (await this.app.mysql.query('SELECT count(1) AS articleCount FROM post_bookmarks WHERE uid = ?;', [ userId ]))[0];
 
     return {
-      articleCount
+      articleCount,
     };
   }
 
@@ -781,7 +781,7 @@ class UserService extends Service {
     }
 
     let username = match[1];
-    const rest = str.slice(username.length)
+    const rest = str.slice(username.length);
 
     switch (username.length) {
       case 1:

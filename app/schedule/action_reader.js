@@ -1,6 +1,6 @@
 const Subscription = require('egg').Subscription;
 const EOS = require('eosjs');
-let _ = require('lodash');
+const _ = require('lodash');
 
 const moment = require('moment');
 
@@ -39,10 +39,10 @@ class ActionReader extends Subscription {
 
     try {
       var sql = 'select MAX(id) as id from actions';
-      let re = await this.app.mysql.query(sql);
+      const re = await this.app.mysql.query(sql);
 
       if (re && re[0]) {
-        let id = re[0].id;
+        const id = re[0].id;
         if (id > start) {
           start = id;
         } else {
@@ -62,7 +62,7 @@ class ActionReader extends Subscription {
     this.logger.info('to id', (this.app.cache + this.config.step));
     console.log('sync actions.. start from id', start, 'to id', (this.app.cache + this.config.step));
 
-    let sqls = [];
+    const sqls = [];
 
     try {
 
@@ -74,10 +74,10 @@ class ActionReader extends Subscription {
 
       for (let i = 0; i < res.actions.length; i++) {
         const x = res.actions[i];
-        let seq = x.account_action_seq;
-        let act_account = x.action_trace.act.account;
-        let act_receiver = x.action_trace.receipt.receiver;
-        let act_name = x.action_trace.act.name;
+        const seq = x.account_action_seq;
+        const act_account = x.action_trace.act.account;
+        const act_receiver = x.action_trace.receipt.receiver;
+        const act_name = x.action_trace.act.name;
         let act_data = '';
 
         let author = '';
@@ -112,8 +112,8 @@ class ActionReader extends Subscription {
 
           memo = act_data.memo;
 
-          let from = act_data.from;
-          let to = act_data.to;
+          const from = act_data.from;
+          const to = act_data.to;
           amount = (act_data.quantity.split(' ')[0] - 0) * 10000;
 
           act_data = JSON.stringify(x.action_trace.act.data);
