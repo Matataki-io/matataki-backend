@@ -384,7 +384,8 @@ module.exports = app => {
   router.get('/eth/getTxReceipt/:txHash', passport.verify, controller.ethereum.api.getTransactionReceipt);
   router.post('/_dev/eth/fanPiao/issue', passport.verify, controller.ethereum.fanPiao.issue);
   // @todo: remove this when production!!!
-  router.post('/_only_4_dev/_rem0ve_when_pr0d/eth/fanPia0/_send', passport.verify, controller.ethereum.fanPiao._send);
+  router.post('/_only_4_dev/_rem0ve_when_pr0d/eth/fanPia0/csdkjfnsokfm/_send', passport.verify, controller.ethereum.fanPiao._send);
+  router.post('/_only_4_dev/_rem0ve_when_pr0d/w9u8fvhj50r9gjeitu9hverhgu9efgijvtruborpijbn/eth/batchCreate', passport.verify, controller.ethereum.createWallet.BatchCreateWallet);
   // @todo: remove this when production!!!
   router.post('/_dev/eth/fanPiao/estimateGas', passport.verify, controller.ethereum.fanPiao.estimateGas);
 
