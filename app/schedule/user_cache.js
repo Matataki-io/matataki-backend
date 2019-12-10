@@ -16,7 +16,7 @@ class UserCache extends Subscription {
     const keys = await redis.keys('user:*');
     const pipeline = redis.multi();
 
-    pipeline.del(keys);
+    if (keys.length > 0) pipeline.del(keys);
 
     const users = await mysql.query('SELECT id, username, nickname, avatar, is_recommend FROM users;');
     for (const { id, username, nickname, avatar, is_recommend } of users) {
