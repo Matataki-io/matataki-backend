@@ -12,9 +12,12 @@ class Bootstrapper {
     const { mysql, redis } = this.app;
     const ctx = await this.app.createAnonymousContext();
 
-    const keys = await redis.keys('user:*');
     const pipeline = redis.multi();
 
+    let keys = await redis.keys('user:*');
+    if (keys.length > 0) pipeline.del(keys);
+
+    keys = await redis.keys('post:*');
     if (keys.length > 0) pipeline.del(keys);
 
     const users = await mysql.query('SELECT id, username, nickname, avatar, is_recommend FROM users;');
