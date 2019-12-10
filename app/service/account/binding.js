@@ -6,11 +6,11 @@ class AccountBindingService extends Service {
 
   /**
    * 添加账号绑定
-   * @param {*} { uid, account, platform }
+   * @param {*} { uid, account, platform, password_hash = null, is_main = 0 }
    * @return {Boolean} 是否创建成功
    * @memberof AccountBindingService
    */
-  async create({ uid, account, platform }) {
+  async create({ uid, account, platform, password_hash = null, is_main = 0 }) {
     // is Account Existence
     const isAccountExistence = await this.get(uid, platform);
     if (isAccountExistence) {
@@ -20,8 +20,9 @@ class AccountBindingService extends Service {
     const result = await this.app.mysql.insert('user_accounts', {
       uid,
       account,
+      password_hash,
       platform,
-      is_main: 0,
+      is_main,
       created_at: now,
       status: 1,
     });
@@ -39,12 +40,34 @@ class AccountBindingService extends Service {
   async get(uid, platform) {
     const accounts = await this.app.mysql.select('user_accounts', {
       where: { uid, platform },
-      columns: [ 'id', 'uid', 'account', 'platform', 'is_main', 'create_time', 'created_at', 'status' ],
+      columns: [ 'id', 'uid', 'account', 'platform', 'is_main', 'created_at', 'status' ],
     });
     if (accounts && accounts.length > 0 && accounts[0].status === 1) {
       return accounts[0];
     }
     return null;
+  }
+
+  /**
+   * 删除绑定
+   * @param {*} { uid, account, platform }
+   * @return {boolean} 删除是否成功
+   * @memberof AccountBindingService
+   */
+  async del({ uid, platform }) {
+    const userAccount = await this.get(uid, platform);
+    if (!userAccount) {
+      return false;
+    }
+    // 主账号不能删除
+    if (userAccount.is_main === 1) {
+      return false;
+    }
+    const result = await this.app.mysql.delete('user_accounts', {
+      id: userAccount.id,
+    });
+    this.logger.info('Service: AccountBinding:: del success: %j', result);
+    return true;
   }
 
   /**
