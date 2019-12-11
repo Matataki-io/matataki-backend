@@ -20,6 +20,9 @@ class Bootstrapper {
     keys = await redis.keys('post:*');
     if (keys.length > 0) pipeline.del(keys);
 
+    keys = await redis.keys('tag:*');
+    if (keys.length > 0) pipeline.del(keys);
+
     const users = await mysql.query('SELECT id, username, nickname, avatar, is_recommend FROM users;');
 
     pipeline.hset('user:stat', 'count', users.length);
@@ -41,9 +44,10 @@ class Bootstrapper {
     pipeline.hset('user:stat', 'point', (await mysql.query('SELECT SUM(amount) as amount FROM assets_points;'))[0].amount);
     pipeline.hset('post:stat', 'count', (await mysql.query('SELECT COUNT(1) as count FROM posts;'))[0].count);
 
-    const tags = await this.app.mysql.query(`SELECT id, name FROM tags WHERE type = 'post';`);
-    for (const { id, name } of tags) {
-      pipeline.hset('post:tag', id, name);
+    const tags = await this.app.mysql.query(`SELECT id, name, type FROM tags;`);
+    for (const { id, name, type } of tags) {
+      pipeline.sadd(type === 'post' ? 'tag:post' : 'tag:product', id);
+      pipeline.hmset(`tag:${id}`, 'name', name, 'type', type);
     }
 
     const posts = await mysql.query('SELECT id, status, hot_score, time_down, require_holdtokens, require_buy FROM posts;')
