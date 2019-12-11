@@ -10,6 +10,17 @@ class Bootstrapper {
 
   async loadCache() {
     const { mysql, redis } = this.app;
+
+    const schemaVersionKey = 'schema_version';
+    const cacheSchemaVersion = 1;
+
+    let currentVersion = await redis.get(schemaVersionKey);
+    if (currentVersion !== null && Number(currentVersion) <= cacheSchemaVersion) {
+      return;
+    }
+
+    await redis.set(schemaVersionKey, cacheSchemaVersion);
+
     const ctx = await this.app.createAnonymousContext();
 
     const pipeline = redis.multi();
@@ -19,6 +30,8 @@ class Bootstrapper {
 
     keys = await redis.keys('post:*');
     if (keys.length > 0) pipeline.del(keys);
+
+    pipeline.del('post');
 
     keys = await redis.keys('tag:*');
     if (keys.length > 0) pipeline.del(keys);
