@@ -19,6 +19,8 @@ class Bootstrapper {
       return;
     }
 
+    this.app.logger.info("Current cache is outdated. Preloading new version...");
+
     await redis.set(schemaVersionKey, cacheSchemaVersion);
 
     const ctx = await this.app.createAnonymousContext();
