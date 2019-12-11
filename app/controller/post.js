@@ -425,10 +425,10 @@ class PostController extends Controller {
     const { channel = null, amount = 5 } = ctx.query;
 
     let postData;
-    if (channel === null && amount === 5) {
-      postData = this.app.cache.post.recommend;
+    if (channel === null) {
+      postData = await this.service.post.recommendPosts(amount);
     } else {
-      postData = await this.service.post.recommendPosts(channel, amount);
+      postData = await this.service.post.recommendPostsSlow(channel, amount);
     }
 
     if (postData === 3) {

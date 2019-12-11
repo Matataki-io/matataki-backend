@@ -21,8 +21,6 @@ class Bootstrapper {
 
     this.app.logger.info("Current cache is outdated. Preloading new version...");
 
-    await redis.set(schemaVersionKey, cacheSchemaVersion);
-
     const ctx = await this.app.createAnonymousContext();
 
     const pipeline = redis.multi();
@@ -65,28 +63,34 @@ class Bootstrapper {
       pipeline.hmset(`tag:${id}`, 'name', name, 'type', type);
     }
 
-    const posts = await mysql.query('SELECT id, status, hot_score, time_down, require_holdtokens, require_buy FROM posts;')
-    for (const { id, require_holdtokens, time_down, hot_score, require_buy, status } of posts) {
+    const posts = await mysql.query('SELECT id, status, channel_id, is_recommend, hot_score, time_down, require_holdtokens, require_buy FROM posts;')
+    for (const { id, status, channel_id, is_recommend, require_holdtokens, time_down, hot_score, require_buy } of posts) {
       pipeline.sadd('post', id);
 
       if (status !== 0) {
         continue;
       }
 
-      if (require_holdtokens === 0 && require_buy === 0) {
-        pipeline.zadd('post:time:filter1', time_down, id);
-        pipeline.zadd('post:hot:filter1', hot_score, id);
-      } else {
-        if (require_holdtokens) {
-          pipeline.zadd('post:time:filter2', time_down, id);
-          pipeline.zadd('post:hot:filter2', hot_score, id);
-        }
-        if (require_buy) {
-          pipeline.zadd('post:time:filter4', time_down, id);
-          pipeline.zadd('post:hot:filter4', hot_score, id);
+      if (channel_id === 1) {
+        if (is_recommend) pipeline.zadd('post:recommend', id, id);
+
+        if (require_holdtokens === 0 && require_buy === 0) {
+          pipeline.zadd('post:time:filter1', time_down, id);
+          pipeline.zadd('post:hot:filter1', hot_score, id);
+        } else {
+          if (require_holdtokens) {
+            pipeline.zadd('post:time:filter2', time_down, id);
+            pipeline.zadd('post:hot:filter2', hot_score, id);
+          }
+          if (require_buy) {
+            pipeline.zadd('post:time:filter4', time_down, id);
+            pipeline.zadd('post:hot:filter4', hot_score, id);
+          }
         }
       }
     }
+
+    pipeline.set(schemaVersionKey, cacheSchemaVersion);
 
     await pipeline.exec();
   }

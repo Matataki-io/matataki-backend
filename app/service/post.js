@@ -752,7 +752,14 @@ class PostService extends Service {
     return { count: amount[0].count, list: postList };
   }
 
-  async recommendPosts(channel = null, amount = 5) {
+  async recommendPosts(amount = 5) {
+    this.app.logger.info("Recommend");
+
+    const ids = await this.app.redis.zrevrange('post:recommend', 0, amount);
+
+    return await this.getPostList(ids);
+  }
+  async recommendPostsSlow(channel = null, amount = 5) {
 
     let sqlcode = '';
     sqlcode = 'SELECT id FROM posts '
