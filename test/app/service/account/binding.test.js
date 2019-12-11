@@ -10,7 +10,7 @@ describe('create()', () => {
       platform: 'test3',
     });
     assert(result);
-  }); */
+  });
   it('should get account binding', async () => {
     const ctx = app.mockContext();
     const result = await ctx.service.account.binding.get(1042, 'test');
@@ -20,5 +20,5 @@ describe('create()', () => {
     const ctx = app.mockContext();
     const result = await ctx.service.account.binding.updateMain(1042, 'test');
     assert(result);
-  });
+  }); */
 });

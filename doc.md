@@ -3368,3 +3368,59 @@ const folderOption = {
     "data": filepath
 }
 ```
+
+#### 账号绑定
+* GET /account/binding
+* 参数：
+```
+{
+	"account": "xxxx",
+  "platform": "平台",
+  "password_hash": "xxx" //如果平台是email，则需要这个字段
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+#### 账号解绑
+* GET /account/unbinding
+* 参数：
+```
+{
+	"account": "xxxx",
+  "platform": "平台",
+  "password_hash": "xxx" //如果平台是email，则需要这个字段
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+#### 更换主账号
+* GET /account/changeMainAccount
+* 参数：
+```
+{
+	"account": "xxxx",
+  "platform": "平台",
+  "password_hash": "xxx" //如果平台是email，则需要这个字段
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+

@@ -54,7 +54,7 @@ class AccountBindingController extends Controller {
       };
       return;
     }
-    const result = await ctx.service.account.binding.del(uid, platform);
+    const result = await ctx.service.account.binding.del({ uid, platform });
     if (result) {
       ctx.body = {
         ...ctx.msg.success,
@@ -77,6 +77,7 @@ class AccountBindingController extends Controller {
     const userAccount = await ctx.service.account.binding.get(uid, platform);
     // 验证账号 todo
     if (userAccount.account !== account) {
+      this.logger.error('controller.account.binding.changeMainAccount failed1', account);
       ctx.body = {
         ...ctx.msg.failure,
       };
@@ -84,17 +85,19 @@ class AccountBindingController extends Controller {
     }
     // 邮箱账号验证密码
     if (platform === 'email' && userAccount.password_hash !== password_hash) {
+      this.logger.error('controller.account.binding.changeMainAccount failed2', account);
       ctx.body = {
         ...ctx.msg.failure,
       };
       return;
     }
-    const result = await ctx.service.account.binding.updateMain(uid, platform);
+    const result = await ctx.service.account.binding.updateMain({ uid, platform });
     if (result) {
       ctx.body = {
         ...ctx.msg.success,
       };
     } else {
+      this.logger.error('controller.account.binding.changeMainAccount failed3', account);
       ctx.body = {
         ...ctx.msg.failure,
       };
