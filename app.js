@@ -55,7 +55,7 @@ class Bootstrapper {
     }
 
     pipeline.hset('user:stat', 'point', (await mysql.query('SELECT SUM(amount) as amount FROM assets_points;'))[0].amount);
-    pipeline.hset('post:stat', 'count', (await mysql.query('SELECT COUNT(1) as count FROM posts;'))[0].count);
+    pipeline.hset('post:stat', 'count', (await mysql.query('SELECT COUNT(1) as count FROM posts WHERE status = 0;'))[0].count);
 
     const tags = await this.app.mysql.query(`SELECT id, name, type FROM tags;`);
     for (const { id, name, type } of tags) {
@@ -75,16 +75,16 @@ class Bootstrapper {
         if (is_recommend) pipeline.zadd('post:recommend', id, id);
 
         if (require_holdtokens === 0 && require_buy === 0) {
-          pipeline.zadd('post:time:filter1', time_down, id);
-          pipeline.zadd('post:hot:filter1', hot_score, id);
+          pipeline.zadd('post:time:filter:1', time_down, id);
+          pipeline.zadd('post:hot:filter:1', hot_score, id);
         } else {
           if (require_holdtokens) {
-            pipeline.zadd('post:time:filter2', time_down, id);
-            pipeline.zadd('post:hot:filter2', hot_score, id);
+            pipeline.zadd('post:time:filter:2', time_down, id);
+            pipeline.zadd('post:hot:filter:2', hot_score, id);
           }
           if (require_buy) {
-            pipeline.zadd('post:time:filter4', time_down, id);
-            pipeline.zadd('post:hot:filter4', hot_score, id);
+            pipeline.zadd('post:time:filter:4', time_down, id);
+            pipeline.zadd('post:hot:filter:4', hot_score, id);
           }
         }
       }
