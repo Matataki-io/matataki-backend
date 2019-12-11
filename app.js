@@ -25,11 +25,7 @@ class Bootstrapper {
     pipeline.hset('user:stat', 'count', users.length);
 
     for (const { id, username, nickname, avatar, is_recommend } of users) {
-      const key = `user:${id}:info`;
-
-      pipeline.hset(key, 'username', ctx.service.user.maskEmailAddress(username));
-      pipeline.hset(key, 'nickname', nickname);
-      pipeline.hset(key, 'avatar', avatar);
+      pipeline.hmset(`user:${id}:info`, 'username', ctx.service.user.maskEmailAddress(username), 'nickname', nickname, 'avatar', avatar);
 
       if (is_recommend) pipeline.sadd('user:recommend', id);
     }
@@ -51,7 +47,7 @@ class Bootstrapper {
     }
 
     const posts = await mysql.query('SELECT id, status, hot_score, time_down, require_holdtokens, require_buy FROM posts;')
-    for (const { id, require_holdtokens, time_down, hot_score, require_buy } of posts) {
+    for (const { id, require_holdtokens, time_down, hot_score, require_buy, status } of posts) {
       pipeline.sadd('post', id);
 
       if (status !== 0) {
