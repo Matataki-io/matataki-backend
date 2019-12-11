@@ -6,17 +6,19 @@ class AccountBindingService extends Service {
 
   /**
    * 添加账号绑定
-   * @param {*} { uid, account, platform, password_hash = null, is_main = 0 }
+   * @param {*} { uid, account, platform, password_hash = null }
    * @return {Boolean} 是否创建成功
    * @memberof AccountBindingService
    */
-  async create({ uid, account, platform, password_hash = null, is_main = 0 }) {
+  async create({ uid, account, platform, password_hash = null }) {
     // is Account Existence
     const isAccountExistence = await this.get(uid, platform);
     if (isAccountExistence) {
       return false;
     }
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    const accountList = await this.getListByUid(uid);
+    const is_main = accountList.length > 0 ? 0 : 1;
     const result = await this.app.mysql.insert('user_accounts', {
       uid,
       account,
@@ -39,10 +41,21 @@ class AccountBindingService extends Service {
    */
   async get(uid, platform) {
     const accounts = await this.app.mysql.select('user_accounts', {
-      where: { uid, platform },
+      where: { uid, platform, status: 1 },
       columns: [ 'id', 'uid', 'account', 'platform', 'is_main', 'created_at', 'status' ],
     });
-    if (accounts && accounts.length > 0 && accounts[0].status === 1) {
+    if (accounts && accounts.length > 0) {
+      return accounts[0];
+    }
+    return null;
+  }
+
+  async getListByUid(uid) {
+    const accounts = await this.app.mysql.select('user_accounts', {
+      where: { uid, status: 1 },
+      columns: [ 'id', 'uid', 'account', 'platform', 'is_main', 'created_at', 'status' ],
+    });
+    if (accounts && accounts.length > 0) {
       return accounts[0];
     }
     return null;

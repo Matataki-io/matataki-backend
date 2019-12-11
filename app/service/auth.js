@@ -79,38 +79,51 @@ class AuthService extends Service {
   async saveUser(username, nickname, avatarUrl, ip = '', referral = 0, platform = 'github') {
     try {
       let currentUser = await this.app.mysql.get('users', { username, platform });
-
+      const userBinding = await this.app.mysql.get('user_accounts', { account: username, platform });
       // 用户是第一次登录, 先创建
       if (currentUser === null) {
-        // await this.app.mysql.insert('users', {
-        //   username,
-        //   platform,
-        //   create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-        // });
+        if (!userBinding) {
+          // await this.app.mysql.insert('users', {
+          //   username,
+          //   platform,
+          //   create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+          // });
 
-        await this.insertUser(username, '', platform, 'ss', ip, '', referral);
+          await this.insertUser(username, '', platform, 'ss', ip, '', referral);
 
-        // 若没有昵称, 先把username给nickname
-        if (nickname === null) {
-          nickname = username;
+          // 若没有昵称, 先把username给nickname
+          if (nickname === null) {
+            nickname = username;
+          }
+
+          // 判断昵称是否重复, 重复就加前缀
+          const duplicatedNickname = await this.app.mysql.get('users', { nickname });
+
+          if (duplicatedNickname !== null) {
+            nickname = `${platform}_${nickname}`;
+          }
+
+          const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);
+
+          // 更新昵称
+          await this.app.mysql.update('users',
+            { nickname, avatar },
+            { where: { username, platform } }
+          );
+
+          currentUser = await this.app.mysql.get('users', { username, platform });
+          await this.service.account.binding.create({ uid: currentUser.id, account: username, platform });
+        } else { // 绑定表存在，直接使用user_account表数据
+          currentUser = {
+            id: userBinding.uid,
+            username: userBinding.account,
+            platform: userBinding.platform,
+          };
         }
-
-        // 判断昵称是否重复, 重复就加前缀
-        const duplicatedNickname = await this.app.mysql.get('users', { nickname });
-
-        if (duplicatedNickname !== null) {
-          nickname = `${platform}_${nickname}`;
+      } else {
+        if (!userBinding) {
+          await this.service.account.binding.create({ uid: currentUser.id, account: username, platform });
         }
-
-        const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);
-
-        // 更新昵称
-        await this.app.mysql.update('users',
-          { nickname, avatar },
-          { where: { username, platform } }
-        );
-
-        currentUser = await this.app.mysql.get('users', { username, platform });
       }
 
       // await this.service.search.importUser(currentUser.id);
@@ -143,12 +156,9 @@ class AuthService extends Service {
       'SELECT id FROM users WHERE username = :username;',
       { username }
     );
-    return user.length;
+    const userBinding = await this.app.mysql.get('user_accounts', { account: username, platform: 'email' });
+    return user.length > 0 || userBinding !== null;
   }
-
-  // async regStatus(email) {
-
-  // }
 
   async sendRegisteredCaptchaMail(email) {
     return this.sendCaptchaMail(email);
@@ -292,6 +302,7 @@ class AuthService extends Service {
     if (!result) {
       return 5;
     }
+    this.service.account.binding.create({ uid: result.id, account: email, platform: 'email', password_hash: passwordHash });
 
     // const currentUser = await this.app.mysql.get('users', { username: email, platform: 'email' });
     // await this.service.search.importUser(currentUser.id);
@@ -304,18 +315,29 @@ class AuthService extends Service {
   async verifyLogin(username, password, ipaddress) {
     // 提取用户信息
     let userPw;
+    const platform = 'email';
     try {
       userPw = await this.app.mysql.query(
-        'SELECT id, username, password_hash,platform FROM users WHERE username = :username AND platform = \'email\';',
-        { username }
+        'SELECT id, username, password_hash,platform FROM users WHERE username = :username AND platform = :platform;',
+        { username, platform }
       );
     } catch (err) {
       this.logger.error('AuthService:: verifyLogin: Error ', err);
       return 3;
     }
+
     if (userPw.length === 0) {
-      this.logger.info('AuthService:: verifyLogin: User doesn\'t exist ', username);
-      return 1;
+      const userBinding = await this.app.mysql.get('user_accounts', { account: username, platform });
+      if (!userBinding) {
+        this.logger.info('AuthService:: verifyLogin: User doesn\'t exist ', username);
+        return 1;
+      }
+      userPw = [{
+        id: userBinding.uid,
+        username: userBinding.account,
+        platform: userBinding.platform,
+        password_hash: userBinding.password_hash,
+      }];
     }
     // 密码对不上
     const passwordHash = sha256(password).toString();

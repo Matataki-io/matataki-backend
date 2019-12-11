@@ -58,15 +58,28 @@ class AuthController extends Controller {
     try {
       this.logger.info('get_or_create_user', { username, platform });
       let user = await this.app.mysql.get('users', { username, platform });
-
+      const userBinding = await this.app.mysql.get('user_accounts', { account: username, platform });
+      // 处理以太坊登录的历史问题
+      if (!user) user = await this.handleEthereumHistoricError(username);
+      // users数据不存在，去检查user_account表
       if (!user) {
-        const oldEthAcc = await this.fetchOldEthAccount(username);
-        // 处理以太坊登录的历史问题
-        if (oldEthAcc) return this.handleEthereumHistoricError(oldEthAcc, username);
-        // 以下为还没用以太坊过
-        await this.service.auth.insertUser(username, '', platform, source, this.clientIP, '', referral);
-        user = await this.app.mysql.get('users', { username, platform });
+        // user_account表不存在，插入数据到users表和user_account表
+        if (!userBinding) {
+          await this.service.auth.insertUser(username, '', platform, source, this.clientIP, '', referral);
+          user = await this.app.mysql.get('users', { username, platform });
+          await this.service.account.binding.create({ uid: user.id, account: username, platform });
+        } else { // 绑定表存在，直接使用user_account表数据
+          user = {
+            id: userBinding.uid,
+            username: userBinding.account,
+            platform: userBinding.platform,
+          };
+        }
         // await this.service.search.importUser(user.id);
+      } else { // users数据存在
+        if (!userBinding) {
+          await this.service.account.binding.create({ uid: user.id, account: username, platform });
+        }
       }
       // 插入登录日志
       await this.service.auth.insertLoginLog(user.id, this.clientIP);
@@ -78,13 +91,13 @@ class AuthController extends Controller {
     }
   }
 
-  fetchOldEthAccount(username) {
-    return this.app.mysql.get('users', { username: username.slice(-12), platform: 'eth' });
-  }
-
-  handleEthereumHistoricError(old, publicKey) {
-    this.logger.info('handleEthereumHistoricError pk: ', publicKey);
-    return this.app.mysql.update('users', { username: publicKey }, { where: { id: old.id, platform: 'eth' } });
+  // 处理以太坊登录的历史问题
+  async handleEthereumHistoricError(username) {
+    const old = this.app.mysql.get('users', { username: username.slice(-12), platform: 'eth' });
+    if (old) {
+      this.logger.info('handleEthereumHistoricError pk: ', username);
+      return this.app.mysql.update('users', { username }, { where: { id: old.id, platform: 'eth' } });
+    }
   }
 
   async generateEthHostingWallet(user) {
@@ -252,8 +265,8 @@ class AuthController extends Controller {
     //   ctx.body = ctx.msg.paramsError;
     //   return;
     // }
-    const result = await this.service.auth.verifyUser(email);
-    if (result > 0) {
+    const userExistence = await this.service.auth.verifyUser(email);
+    if (userExistence) {
       ctx.body = ctx.msg.success;
       ctx.body.data = true;
     } else {

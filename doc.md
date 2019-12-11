@@ -3370,7 +3370,7 @@ const folderOption = {
 ```
 
 #### 账号绑定
-* GET /account/binding
+* POST /account/binding
 * 参数：
 ```
 {
@@ -3388,7 +3388,7 @@ const folderOption = {
 }
 ```
 #### 账号解绑
-* GET /account/unbinding
+* POST /account/unbinding
 * 参数：
 ```
 {
@@ -3406,7 +3406,7 @@ const folderOption = {
 }
 ```
 #### 更换主账号
-* GET /account/changeMainAccount
+* POST /account/changeMainAccount
 * 参数：
 ```
 {
