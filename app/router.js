@@ -396,5 +396,10 @@ module.exports = app => {
 
   // 上传图片
   router.post('/oss/uploadImage', passport.authorize, controller.oss.uploadImage);
+
+  // 账号绑定
+  router.post('/account/binding', passport.authorize, controller.account.binding.binding);
+  router.post('/account/unbinding', passport.authorize, controller.account.binding.unbinding);
+  router.post('/account/changeMainAccount', passport.authorize, controller.account.binding.changeMainAccount);
 };
 
