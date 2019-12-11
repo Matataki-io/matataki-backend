@@ -10,15 +10,14 @@ class AccountBindingService extends Service {
    * @return {Boolean} 是否创建成功
    * @memberof AccountBindingService
    */
-  async create({ uid, account, platform, password_hash = null }) {
+  async create({ uid, account, platform, password_hash = null, is_main = 0 }) {
+    this.logger.info('Service: AccountBinding:: create start: %j', { uid, account, platform, password_hash });
     // is Account Existence
     const isAccountExistence = await this.get(uid, platform);
     if (isAccountExistence) {
       return false;
     }
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    const accountList = await this.getListByUid(uid);
-    const is_main = accountList.length > 0 ? 0 : 1;
     const result = await this.app.mysql.insert('user_accounts', {
       uid,
       account,

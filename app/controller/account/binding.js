@@ -10,9 +10,57 @@ class AccountBindingController extends Controller {
   async binding() {
     const { ctx } = this;
     const uid = ctx.user.id;
-    const { account, platform, password_hash = null } = ctx.request.body;
+    let { code, platform, password_hash = null, sign, username, publickey, msgParams } = ctx.request.body;
+    // username = account;
+
+    let flag = false;
+    switch (platform) {
+      case 'eos': {
+        flag = await this.service.auth.eos_auth(sign, username, publickey);
+        break;
+      }
+      case 'ont': {
+        flag = await this.service.auth.eos_auth(sign, username, publickey);
+        break;
+      }
+      case 'vnt': {
+        flag = true;
+        break;
+      }
+      case 'eth': {
+        flag = this.service.ethereum.signatureService.verifyAuth(sign, msgParams, publickey);
+        username = publickey;
+        break;
+      }
+      case 'github': {
+        const usertoken = await this.service.auth.verifyCode(code);
+        if (usertoken === null) {
+          flag = false;
+        }
+        // const userinfo = await this.service.auth.getGithubUser(usertoken.access_token);
+        break;
+      }
+      case 'weixin': {
+        flag = true;
+        break;
+      }
+      case 'email': {
+        flag = true;
+        break;
+      }
+      default: {
+        ctx.body = ctx.msg.unsupportedPlatform;
+        return;
+      }
+    }
+
+    if (!flag) {
+      this.ctx.body = ctx.msg.failure;
+      return;
+    }
+
     let createParams = {
-      uid, account, platform,
+      uid, account: username, platform,
     };
     if (platform === 'email') {
       createParams = {

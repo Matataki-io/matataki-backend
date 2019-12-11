@@ -7,6 +7,9 @@ const axios = require('axios');
 const moment = require('moment');
 const jwt = require('jwt-simple');
 const consts = require('./consts');
+const ecc = require('eosjs-ecc');
+const ONT = require('ontology-ts-sdk');
+const EOS = require('eosjs');
 
 class AuthService extends Service {
 
@@ -21,6 +24,62 @@ class AuthService extends Service {
         return txt;
       }.bind(this));
     };
+    this.eosClient = EOS({
+      chainId: ctx.app.config.eos.chainId,
+      httpEndpoint: ctx.app.config.eos.httpEndpoint,
+    });
+  }
+
+  async eos_auth(sign, username, publickey) {
+    // 2. 验证签名
+    try {
+      const recover = ecc.recover(sign, username);
+      if (recover !== publickey) {
+        return false;
+      }
+    } catch (err) {
+      return false;
+    }
+
+    // 由于EOS的帐号系统是 username 和 公钥绑定的关系，所有要多加一个验证，username是否绑定了签名的EOS公钥
+    try {
+      const eosacc = await this.eosClient.getAccount(username);
+      let pass_permission_verify = false;
+
+      for (let i = 0; i < eosacc.permissions.length; i++) {
+        const permit = eosacc.permissions[i];
+        const keys = permit.required_auth.keys;
+        for (let j = 0; j < keys.length; j++) {
+          const pub = keys[j].key;
+          if (publickey === pub) {
+            pass_permission_verify = true;
+          }
+        }
+      }
+
+      if (!pass_permission_verify) {
+        return false;
+      }
+    } catch (err) {
+      // this.logger.error('AuthController.eos_auth error: %j', err);
+      return false;
+    }
+
+    return true;
+  }
+
+  async ont_auth(sign, username, publickey) {
+
+    const pub = new ONT.Crypto.PublicKey(publickey);
+
+    const msg = ONT.utils.str2hexstr(username);
+
+    const signature = ONT.Crypto.Signature.deserializeHex(sign);
+
+    const pass = pub.verify(msg, signature);
+
+    return pass;
+
   }
 
 
