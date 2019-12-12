@@ -18,7 +18,8 @@ class AccountBindingService extends Service {
     this.logger.info('Service: AccountBinding:: create start: %j', { uid, account, platform, password_hash });
     // is Account Existence
     const isAccountExistence = await this.get(uid, platform);
-    if (isAccountExistence) {
+    const isPlatformExistence = await this.getSyncFieldWithUser(account, platform);
+    if (isAccountExistence || isPlatformExistence) {
       this.logger.info('Service: AccountBinding:: Account Existence');
       return false;
     }
