@@ -52,6 +52,17 @@ class PostService extends Service {
           [ result.insertId ]
         );
 
+        await this.app.redis.multi()
+          .sadd('post', result.insertId)
+          .hincrby('post:stat', 'count', 1)
+          .zadd('post:time:filter:1', 0, result.insertId)
+          .zadd('post:hot:filter:1', 0, iresult.insertId)
+          .zadd('post:time:filter:2', 0, result.insertId)
+          .zadd('post:hot:filter:2', 0, iresult.insertId)
+          .zadd('post:time:filter:4', 0, result.insertId)
+          .zadd('post:hot:filter:4', 0, iresult.insertId)
+          .exec();
+
         // 加积分
         await this.service.mining.publish(data.uid, result.insertId, ''); // todo；posts表增加ip，这里传进来ip
 
