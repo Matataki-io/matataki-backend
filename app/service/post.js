@@ -55,9 +55,7 @@ class PostService extends Service {
         await this.app.redis.multi()
           .sadd('post', result.insertId)
           .hincrby('post:stat', 'count', 1)
-          .zadd('post:hot:filter:1', 0, iresult.insertId)
-          .zadd('post:hot:filter:2', 0, iresult.insertId)
-          .zadd('post:hot:filter:4', 0, iresult.insertId)
+          .zadd('post:hot:filter:1', 0, result.insertId)
           .exec();
 
         // 加积分
@@ -508,11 +506,11 @@ class PostService extends Service {
 
   // 发布时间排序()(new format)(count-list格式)
   async timeRank(page = 1, pagesize = 20, filter = 7) {
-    const key = `post:time:filter:${filter}:${(page - 1) * pagesize}-${page * pagesize}`;
+    const key = `post:time:filter:${filter}:${(page - 1) * pagesize}-${page * pagesize - 1}`;
 
     const count = await this.app.redis.zcard(`post:hot:filter:${filter}`);
 
-    let ids = await this.app.redis.lrange(key, 0, pagesize);
+    let ids = await this.app.redis.lrange(key, 0, pagesize - 1);
     if (ids.length === 0) {
 
       const conditions = [];

@@ -348,12 +348,7 @@ class PostController extends Controller {
     if (typeof channel === 'string') channel = parseInt(channel);
     if (typeof filter === 'string') filter = parseInt(filter);
 
-    let postData;
-    if (channel === 1 && author === null) {
-      postData = await this.service.post.timeRank(page, pagesize, filter);
-    } else {
-      postData = await this.service.post.timeRankSlow(page, pagesize, author, channel, extra, filter);
-    }
+    const postData = await this.service.post.timeRankSlow(page, pagesize, author, channel, extra, filter);
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
