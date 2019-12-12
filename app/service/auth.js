@@ -468,14 +468,18 @@ class AuthService extends Service {
   }
 
   async updatePassword(passwordHash, email) {
+    const tran = await this.app.mysql.beginTransaction();
     try {
-      await this.app.mysql.query(
-        'UPDATE users SET password_hash = :passwordHash WHERE username = :email AND platform = \'email\'', {
+      await tran.query(
+        'UPDATE users SET password_hash = :passwordHash WHERE username = :email AND platform = \'email\';'
+        + 'UPDATE user_accounts SET password_hash = :passwordHash WHERE account = :email AND platform = \'email\'', {
           passwordHash,
           email,
         });
+      tran.commit();
       return true;
     } catch (err) {
+      tran.rollback();
       this.logger.error('AuthService:: updatePassword: Error ', err);
       return false;
     }
