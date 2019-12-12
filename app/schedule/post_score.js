@@ -37,6 +37,10 @@ class PostScore extends Subscription {
       // + 'SET p.hot_score = (c.real_read_count * 0.2 + c.likes*0.4 - c.dislikes*0.2 + c.support_count * 0.8); '
       // + 'UPDATE posts SET hot_score = hot_score * 1.5 WHERE create_time > DATE_SUB(NOW(), INTERVAL 3 DAY);'
 
+      const pipeline = await this.app.redis.multi();
+
+      pipeline.del('post:hot:filter:1', 'post:hot:filter:2', 'post:hot:filter:4');
+
       const posts = await conn.query('SELECT id, hot_score, require_holdtokens, require_buy FROM posts WHERE status = 0 AND channel_id = 1;')
       for (const { id, hot_score, require_holdtokens, require_buy } of posts) {
         if (require_holdtokens === 0 && require_buy === 0) {

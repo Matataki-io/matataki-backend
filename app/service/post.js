@@ -1141,6 +1141,19 @@ class PostService extends Service {
         });
 
       await conn.commit();
+
+      if (require) {
+        await this.app.redis.multi()
+          .zrem('post:hot:filter:1', id)
+          .zadd('post:hot:filter:2', post.hot_score, id)
+          .exec();
+      } else {
+        await this.app.redis.multi()
+          .zrem('post:hot:filter:2', id)
+          .zadd('post:hot:filter:1', post.hot_score, id)
+          .exec();
+      }
+
       return 0;
     } catch (e) {
       await conn.rollback();
@@ -1232,6 +1245,12 @@ class PostService extends Service {
         });
 
       await conn.commit();
+
+      await this.app.redis.multi()
+        .zrem('post:hot:filter:1', id)
+        .zadd('post:hot:filter:4', post.hot_score, id)
+        .exec();
+
       return 0;
     } catch (e) {
       await conn.rollback();
@@ -1265,6 +1284,12 @@ class PostService extends Service {
         });
 
       await conn.commit();
+
+      await this.app.redis.multi()
+        .zrem('post:hot:filter:4', id)
+        .zadd('post:hot:filter:1', post.hot_score, id)
+        .exec();
+
       return 0;
     } catch (e) {
       await conn.rollback();
