@@ -15,6 +15,7 @@ typings/
 config/config.default.js
 config/config.local.js
 config/config.prod*.js
+config/config.unittest.js
 push.sh
 dist/
 TTD.md

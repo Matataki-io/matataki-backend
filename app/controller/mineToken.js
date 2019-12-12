@@ -147,8 +147,8 @@ class MineTokenController extends Controller {
 
     ctx.body = {
       ...ctx.msg.success,
-      data: result
-    }
+      data: result,
+    };
   }
 
 }

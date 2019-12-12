@@ -1176,7 +1176,7 @@ class ExchangeService extends Service {
     return {
       change_24h,
       volume_24h,
-      amount_24h: result[5][0].amount
+      amount_24h: result[5][0].amount,
     };
   }
 

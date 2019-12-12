@@ -10,9 +10,10 @@ class AccountHostingService extends Service {
    * @memberof AccountHostingService
    */
   async create(uid) {
-    const { ctx } = this;
     try {
-      const wallet = await ctx.service.ethereum.web3Service.create();
+      const wallet = this.service.ethereum.web3.create();
+      this.logger.info('AccountHosting:: create ', wallet);
+
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
       const result = await this.app.mysql.insert('account_hosting', {
@@ -22,8 +23,18 @@ class AccountHostingService extends Service {
         blockchain: 'ETH',
         created_at: now,
       });
-      this.logger.error('AccountHosting:: create success: %j', result);
+      this.logger.info('AccountHosting:: create success: %j', result);
       return true;
+    } catch (err) {
+      this.logger.error('AccountHosting:: create error: %j', err);
+      return false;
+    }
+  }
+
+  async isHosting(uid, blockchain) {
+    try {
+      const result = await this.app.mysql.get('account_hosting', { uid, blockchain });
+      return result;
     } catch (err) {
       this.logger.error('AccountHosting:: create error: %j', err);
       return false;
