@@ -10,26 +10,41 @@ class AccountBindingService extends Service {
   /**
    * 添加账号绑定
    * @param {*} { uid, account, platform, password_hash = null }
+   * @param {*} tran - 事务
    * @return {Boolean} 是否创建成功
    * @memberof AccountBindingService
    */
-  async create({ uid, account, platform, password_hash = null, is_main = 0 }) {
+  async create({ uid, account, platform, password_hash = null, is_main = 0 }, tran) {
     this.logger.info('Service: AccountBinding:: create start: %j', { uid, account, platform, password_hash });
     // is Account Existence
     const isAccountExistence = await this.get(uid, platform);
     if (isAccountExistence) {
+      this.logger.info('Service: AccountBinding:: Account Existence');
       return false;
     }
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    const result = await this.app.mysql.insert('user_accounts', {
-      uid,
-      account,
-      password_hash,
-      platform,
-      is_main,
-      created_at: now,
-      status: 1,
-    });
+    let result = null;
+    if (tran) {
+      result = await tran.insert('user_accounts', {
+        uid,
+        account,
+        password_hash,
+        platform,
+        is_main,
+        created_at: now,
+        status: 1,
+      });
+    } else {
+      result = await this.app.mysql.insert('user_accounts', {
+        uid,
+        account,
+        password_hash,
+        platform,
+        is_main,
+        created_at: now,
+        status: 1,
+      });
+    }
     this.logger.info('Service: AccountBinding:: create success: %j', result);
     return true;
   }
@@ -52,15 +67,19 @@ class AccountBindingService extends Service {
     return null;
   }
 
+
+  /**
+   * 根据uid获取绑定的账号
+   * @param {*} uid 用户id
+   * @return {Array} account list
+   * @memberof AccountBindingService
+   */
   async getListByUid(uid) {
     const accounts = await this.app.mysql.select('user_accounts', {
       where: { uid, status: 1 },
-      columns: [ 'id', 'uid', 'account', 'platform', 'is_main', 'created_at', 'status' ],
+      columns: [ 'account', 'platform', 'is_main', 'created_at', 'status' ],
     });
-    if (accounts && accounts.length > 0) {
-      return accounts[0];
-    }
-    return null;
+    return accounts;
   }
 
   /**
@@ -121,6 +140,7 @@ class AccountBindingService extends Service {
     }
   }
   async createEmailAccount({ uid, email, captcha, password }) {
+    this.logger.info('bindingService:: createEmailAccount: start ', { uid, email, captcha, password });
     const mailhash = `captcha:${consts.mailTemplate.registered}:${md5(email).toString()}`;
     const captchaQuery = await this.app.redis.get(mailhash);
     // 从未获取过验证码
@@ -147,10 +167,34 @@ class AccountBindingService extends Service {
       return 3;
     }
     const passwordHash = sha256(password).toString();
-    this.create({ uid, account: email, platform: 'email', password_hash: passwordHash });
+    const createAccount = this.create({ uid, account: email, platform: 'email', password_hash: passwordHash });
+    if (!createAccount) {
+      return 5;
+    }
 
     this.logger.info('bindingService:: createEmailAccount: New user Added for email ', email);
     return 0;
+  }
+
+  /**
+   * 根据account, platform获取用户数据，字段名和users表同步
+   * @param {*} account -
+   * @param {*} platform -
+   * @return {*} 返回对应用户或者null
+   * @memberof AccountBindingService
+   */
+  async getSyncFieldWithUser(account, platform) {
+    const sql = `
+      SELECT uid as id, account as username, password_hash, platform, is_main, created_at
+      FROM user_accounts
+      WHERE account=:account AND platform=:platform;`;
+    const accounts = await this.app.mysql.query(sql, {
+      account, platform,
+    });
+    if (accounts && accounts.length > 0) {
+      return accounts[0];
+    }
+    return null;
   }
 }
 

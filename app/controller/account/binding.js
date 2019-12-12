@@ -232,6 +232,20 @@ class AccountBindingController extends Controller {
       };
     }
   }
+
+  /**
+   * 账号列表
+   * @memberof AccountBindingController
+   */
+  async list() {
+    const { ctx } = this;
+    const uid = ctx.user.id;
+    const result = await this.service.account.binding.getListByUid(uid);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
 }
 
 module.exports = AccountBindingController;
