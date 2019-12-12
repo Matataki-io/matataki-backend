@@ -20,7 +20,7 @@ class AccountBindingController extends Controller {
         break;
       }
       case 'ont': {
-        flag = await this.service.auth.eos_auth(sign, username, publickey);
+        flag = await this.service.auth.ont_auth(sign, username, publickey);
         break;
       }
       case 'vnt': {

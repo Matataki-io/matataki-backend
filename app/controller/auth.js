@@ -16,7 +16,7 @@ class AuthController extends Controller {
     if (platform === 'eos') {
       flag = await this.service.auth.eos_auth(sign, username, publickey);
     } else if (platform === 'ont') {
-      flag = await this.service.auth.eos_auth(sign, username, publickey);
+      flag = await this.service.auth.ont_auth(sign, username, publickey);
     } else if (platform === 'vnt') {
       flag = true;
     } else if (platform === 'eth') {
