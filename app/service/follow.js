@@ -135,6 +135,11 @@ class FollowService extends Service {
       info.fuid = id;
       info.fans = await redis.llen(`user:${id}:follower_list`);
 
+      if (info.nickname === '') info.nickname = null;
+      if (info.avatar === '') info.avatar = null;
+      info.followed = info.username;
+      delete info.username;
+
       if (myId) {
         info.is_follow = await redis.sismember(`user:${myId}:follow_set`, id);
         info.is_fan = await redis.sismember(`user:${myId}:follower_set`, id);
@@ -174,6 +179,9 @@ class FollowService extends Service {
 
       info.uid = id;
       info.fans = await redis.llen(`user:${id}:follower_list`);
+
+      if (info.nickname === '') info.nickname = null;
+      if (info.avatar === '') info.avatar = null;
 
       if (myId) {
         info.is_follow = await redis.sismember(`user:${myId}:follow_set`, id);

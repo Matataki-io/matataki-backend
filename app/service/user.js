@@ -219,15 +219,29 @@ class UserService extends Service {
   }
 
   async recommendUser(amount, current_user = null) {
-    const userIds = await this.app.redis.srandmember('user:recommend', amount);
+    let ids = await this.app.redis.srandmember('user:recommend', amount);
+    if (ids.length === 0) {
+      ids = (await this.app.mysql.query('SELECT id FROM users WHERE is_recommend = 1;')).map(row => row.id);
+
+      const pipeline = this.app.redis.multi();
+      for (const id of ids) {
+        pipeline.sadd('user:recommend', id);
+      }
+      await pipeline.expire('user:recommend', 300).exec();
+
+      ids = await this.app.redis.srandmember('user:recommend', amount);
+    }
 
     const followKey = `user:${current_user}:follow_set`;
     const followerKey = `user:${current_user}:follower_set`;
 
     const result = [];
 
-    for (const id of userIds) {
+    for (const id of ids) {
       const info = await this.app.redis.hgetall(`user:${id}:info`);
+
+      if (info.nickname === '') info.nickname = null;
+      if (info.avatar === '') info.avatar = null;
 
       if (current_user != null) {
         info.is_follow = await this.app.redis.sismember(followKey, id);

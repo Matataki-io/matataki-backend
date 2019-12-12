@@ -12,10 +12,10 @@ class Bootstrapper {
     const { mysql, redis } = this.app;
 
     const schemaVersionKey = 'schema_version';
-    const cacheSchemaVersion = 1;
+    const cacheSchemaVersion = 2;
 
     let currentVersion = await redis.get(schemaVersionKey);
-    if (currentVersion !== null && Number(currentVersion) <= cacheSchemaVersion) {
+    if (currentVersion !== null && Number(currentVersion) >= cacheSchemaVersion) {
       return;
     }
 
@@ -82,6 +82,9 @@ class Bootstrapper {
         }
       }
     }
+
+    pipeline.expire('user:recommend', 300);
+    pipeline.expire('post:recommend', 300);
 
     pipeline.set(schemaVersionKey, cacheSchemaVersion);
 

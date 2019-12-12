@@ -843,9 +843,18 @@ class PostService extends Service {
   }
 
   async recommendPosts(amount = 5) {
-    this.app.logger.info("Recommend");
+    let ids = await this.app.redis.zrevrange('post:recommend', 0, amount);
+    if (ids.length === 0) {
+      ids = (await this.app.mysql.query('SELECT id FROM posts WHERE is_recommend = 1 AND status = 0 AND channel_id = 1;')).map(row => row.id);
 
-    const ids = await this.app.redis.zrevrange('post:recommend', 0, amount);
+      const pipeline = this.app.redis.multi();
+      for (const id of ids) {
+        pipeline.zadd('post:recommend', id, id);
+      }
+      await pipeline.expire('post:recommend', 300).exec();
+
+      ids = await this.app.redis.zrevrange('post:recommend', 0, amount);
+    }
 
     return await this.getPostList(ids);
   }
