@@ -240,6 +240,8 @@ class UserService extends Service {
     for (const id of ids) {
       const info = await this.app.redis.hgetall(`user:${id}:info`);
 
+      info.id = id;
+
       if (info.nickname === '') info.nickname = null;
       if (info.avatar === '') info.avatar = null;
 
