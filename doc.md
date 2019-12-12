@@ -3448,4 +3448,16 @@ const folderOption = {
   "message": "成功"
 }
 ```
+#### 获取绑定账号列表
+* GET /account/list
+* 参数： 无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  code: 0,
+  message: ”成功“,
+  data: []
+}
+```
 
