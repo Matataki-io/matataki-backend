@@ -348,8 +348,64 @@ class PostService extends Service {
 
   }
 
+  async scoreRank(page = 1, pagesize = 20, filter = 7) {
+    let count, ids;
+
+    if ((filter & 6) === 6 && !await this.app.redis.exists('post:hot:filter:6')) {
+      await this.app.redis.pipeline()
+        .zinterstore('post:hot:filter:6_common', 2, 'post:hot:filter:2', 'post:hot:filter:4', 'WEIGHTS', 1, 0)
+        .expire('post:hot:filter:6_common', 10)
+        .zunionstore('post:hot:filter:6', 3, 'post:hot:filter:2', 'post:hot:filter:4', 'post:hot:filter:6_common', 'WEIGHTS', 1, 1, -1)
+        .expire('post:hot:filter:6_common', 300)
+        .exec();
+    }
+
+    if (filter === 6) {
+      ids = await this.app.redis.zrevrange('post:hot:filter:6', (page - 1) * pagesize, page * pagesize - 1);
+      count = Number(await this.app.redis.zcard('post:hot:filter:6'));
+    } else {
+      const keys = new Set();
+      // 免费
+      if ((filter & 1) > 0) keys.add('post:hot:filter:1');
+
+      if ((filter & 6) === 6) {
+        keys.add('post:hot:filter:6');
+      } else {
+        // 持币阅读
+        if ((filter & 2) > 0) keys.add('post:hot:filter:2');
+        // 需要购买
+        if ((filter & 4) > 0) keys.add('post:hot:filter:4');
+      }
+
+      if (keys.size === 1) {
+        const key = Array.from(keys)[0];
+
+        ids = await this.app.redis.zrevrange(key, (page - 1) * pagesize, page * pagesize - 1);
+        count = Number(await this.app.redis.zcard(key));
+      } else {
+        const key = 'post:hot:filter:' + filter;
+
+        if (await this.app.redis.exists(key)) {
+          ids = await this.app.redis.zrevrange(key, (page - 1) * pagesize, page * pagesize - 1);
+        } else {
+          const pipeline = this.app.redis.multi();
+          pipeline.zunionstore(key, keys.size, Array.from(keys)).zrevrange(key, (page - 1) * pagesize, page * pagesize - 1);
+          pipeline.expire(key, 300);
+
+          const resultSet = await pipeline.exec();
+          ids = resultSet[1][1];
+        }
+
+        count = Number(await this.app.redis.zcard(key));
+      }
+    }
+
+    ids = ids.map(id => Number(id));
+
+    return { count, list: await this.getPostList(ids) };
+  }
   // 推荐分数排序(默认方法)(new format)(count-list格式)
-  async scoreRank(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
+  async scoreRankSlow(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
