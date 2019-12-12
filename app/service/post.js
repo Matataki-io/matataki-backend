@@ -55,11 +55,8 @@ class PostService extends Service {
         await this.app.redis.multi()
           .sadd('post', result.insertId)
           .hincrby('post:stat', 'count', 1)
-          .zadd('post:time:filter:1', 0, result.insertId)
           .zadd('post:hot:filter:1', 0, iresult.insertId)
-          .zadd('post:time:filter:2', 0, result.insertId)
           .zadd('post:hot:filter:2', 0, iresult.insertId)
-          .zadd('post:time:filter:4', 0, result.insertId)
           .zadd('post:hot:filter:4', 0, iresult.insertId)
           .exec();
 
