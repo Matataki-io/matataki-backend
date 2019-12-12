@@ -167,7 +167,8 @@ class AccountBindingService extends Service {
       return 3;
     }
     const passwordHash = sha256(password).toString();
-    const createAccount = this.create({ uid, account: email, platform: 'email', password_hash: passwordHash });
+    const createAccount = await this.create({ uid, account: email, platform: 'email', password_hash: passwordHash });
+    this.logger.info('bindingService:: createAccount result', createAccount);
     if (!createAccount) {
       return 5;
     }
