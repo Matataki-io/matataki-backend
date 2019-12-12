@@ -507,7 +507,35 @@ class PostService extends Service {
   }
 
   // 发布时间排序()(new format)(count-list格式)
-  async timeRank(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
+  async timeRank(page = 1, pagesize = 20, filter = 7) {
+    const key = `post:time:filter:${filter}:${(page - 1) * pagesize}-${page * pagesize}`;
+
+    const count = await this.app.redis.zcard(`post:hot:filter:${filter}`);
+
+    let ids = await this.app.redis.lrange(key, 0, pagesize);
+    if (ids.length === 0) {
+
+      const conditions = [];
+      // 免费
+      if ((filter & 1) > 0) conditions.push('(require_holdtokens = 0 AND require_buy = 0)');
+      // 持币阅读
+      if ((filter & 2) > 0) conditions.push('require_holdtokens = 1');
+      // 需要购买
+      if ((filter & 4) > 0) conditions.push('require_buy = 1');
+
+      const sql = `SELECT id FROM posts WHERE status = 0 AND channel_id = 1 AND (${conditions.join(' OR ')}) ORDER BY time_down ASC, id DESC LIMIT :start, :end;`
+
+      ids = (await this.app.mysql.query(sql, { start: (page - 1) * pagesize, end: 1 * pagesize })).map(row => row.id);
+
+      await this.app.redis.multi()
+        .rpush(key, ids)
+        .expire(key, 300)
+        .exec();
+    }
+
+    return { count, list: await this.getPostList(ids) };
+  }
+  async timeRankSlow(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
