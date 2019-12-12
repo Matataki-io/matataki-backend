@@ -59,7 +59,7 @@ class AccountBindingService extends Service {
   async get(uid, platform) {
     const accounts = await this.app.mysql.select('user_accounts', {
       where: { uid, platform, status: 1 },
-      columns: [ 'id', 'uid', 'account', 'platform', 'is_main', 'created_at', 'status' ],
+      columns: [ 'id', 'uid', 'account', 'platform', 'is_main', 'created_at', 'status', 'password_hash' ],
     });
     if (accounts && accounts.length > 0) {
       return accounts[0];
@@ -118,11 +118,12 @@ class AccountBindingService extends Service {
     const tran = await this.app.mysql.beginTransaction();
     try {
       // for update 锁定table row
-      const mainAccount = await tran.query('SELECT * FROM user_accounts WHERE uid=? AND platform=? AND is_main=1 limit 1 FOR UPDATE;', [ uid, platform ]);
+      const mainAccount = await tran.query('SELECT * FROM user_accounts WHERE uid=? AND is_main=1 limit 1 FOR UPDATE;', [ uid ]);
+      this.logger.error('Service.Account.binding.updateMain mainAccount. %j', mainAccount);
       if (mainAccount) {
         // 解绑
         await tran.update('user_accounts', {
-          id: mainAccount.id,
+          id: mainAccount[0].id,
           is_main: 0,
         });
       }
