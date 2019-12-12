@@ -32,9 +32,9 @@ class TagController extends Controller {
 
     for (let i = 0; i < resultLines.length / 3; i++) {
       result.push({
-        id: Number(resultLines[i]),
-        name: resultLines[i + 1],
-        type: resultLines[i + 2]
+        id: Number(resultLines[i * 3]),
+        name: resultLines[(i * 3) + 1],
+        type: resultLines[(i * 3) + 2]
       });
     }
 

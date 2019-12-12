@@ -1097,9 +1097,9 @@ class PostService extends Service {
 
   async stats() {
     return {
-      users: await this.app.redis.hget('user:stat', 'count'),
-      articles: await this.app.redis.hget('post:stat', 'count'),
-      points: await this.app.redis.hget('user:stat', 'point')
+      users: Number(await this.app.redis.hget('user:stat', 'count')),
+      articles: Number(await this.app.redis.hget('post:stat', 'count')),
+      points: Number(await this.app.redis.hget('user:stat', 'point'))
     }
   }
 
