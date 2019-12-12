@@ -6,33 +6,43 @@ class TagController extends Controller {
 
   async tags() {
     const { type } = this.ctx.query;
-    if (type === 'post') {
-      this.ctx.body = this.ctx.msg.success;
-      this.ctx.body.data = this.ctx.app.cache.post.tags;
-      this.ctx.logger.debug('tag cache');
-      return;
+
+    const pipeline = this.app.redis.multi();
+
+    let idKey;
+
+    switch (type) {
+      case 'post':
+        idKey = 'tag:post';
+        break;
+
+      case 'product':
+        idKey = 'tag:product';
+        break;
+
+      default:
+        pipeline.sunionstore('result', 'tag:post', 'tag:product').expire('result', 1);
+        idKey = 'result';
+        break;
     }
 
-    let sqlcode = '';
-    if (type) {
-      sqlcode = 'SELECT id, name, type FROM tags WHERE type = ?;';
-    } else {
-      sqlcode = 'SELECT id, name, type FROM tags;';
-    }
-    try {
-      const tags = await this.app.mysql.query(
-        sqlcode,
-        [ type ]
-      );
+    const result = []
+    const resultSet = (await pipeline.sort(idKey, 'GET', '#', 'GET', 'tag:*->name', 'GET', 'tag:*->type').exec())
+    const [, resultLines] = resultSet[resultSet.length - 1];
 
-      this.ctx.body = this.ctx.msg.success;
-      this.ctx.body.data = tags;
-    } catch (err) {
-      this.ctx.logger.error('TagController:: get tags error', err);
-      this.ctx.body = this.ctx.msg.failure;
+    for (let i = 0; i < resultLines.length / 3; i++) {
+      result.push({
+        id: Number(resultLines[i * 3]),
+        name: resultLines[(i * 3) + 1],
+        type: resultLines[(i * 3) + 2]
+      });
     }
+
+    this.ctx.body = {
+      ...this.ctx.msg.success,
+      data: result
+    };
   }
-
 }
 
 module.exports = TagController;
