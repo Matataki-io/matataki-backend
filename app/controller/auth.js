@@ -53,6 +53,7 @@ class AuthController extends Controller {
         await this.service.auth.insertUser(username, '', platform, source, this.clientIP, '', referral);
         user = await this.app.mysql.get('users', { username, platform });
       }
+      this.logger.info('get_or_create_user:: user:', user);
       // 插入登录日志
       await this.service.auth.insertLoginLog(user.id, this.clientIP);
       // 检测用户有没有托管的以太坊私钥，没有就生成
@@ -65,7 +66,7 @@ class AuthController extends Controller {
 
   // 处理以太坊登录的历史问题
   async handleEthereumHistoricError(username) {
-    const old = this.app.mysql.get('users', { username: username.slice(-12), platform: 'eth' });
+    const old = await this.app.mysql.get('users', { username: username.slice(-12), platform: 'eth' });
     // const old = this.app.mysql.get('user_accounts', { account: username.slice(-12), platform: 'eth' });
     if (old) {
       this.logger.info('handleEthereumHistoricError pk: ', username);
