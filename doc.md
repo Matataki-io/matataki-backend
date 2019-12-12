@@ -3398,10 +3398,12 @@ const folderOption = {
 // platform: email
 {
 	"platform": "email",
+  "email": "",
 	"captcha": "",
 	"password": ""
 }
 ```
+
 * 请求头：x-access-token
 * 返回值：
 ```

@@ -10,7 +10,7 @@ class AccountBindingController extends Controller {
   async binding() {
     const { ctx } = this;
     const uid = ctx.user.id;
-    let { code, platform, password_hash = null, sign, username, publickey, msgParams } = ctx.request.body;
+    let { code, platform, email, captcha = null, password, sign, username, publickey, msgParams } = ctx.request.body;
     // username = account;
 
     let flag = false;
@@ -33,15 +33,15 @@ class AccountBindingController extends Controller {
         break;
       }
       case 'github': {
-        const usertoken = await this.service.auth.verifyCode(code);
-        if (usertoken === null) {
-          flag = false;
-        }
-        // const userinfo = await this.service.auth.getGithubUser(usertoken.access_token);
+        const githubResult = this.handleGithub(code);
+        if (!githubResult) return;
+        username = githubResult;
         break;
       }
       case 'weixin': {
-        flag = true;
+        const weixinResult = this.handleWeixin(code);
+        if (!weixinResult) return;
+        username = weixinResult;
         break;
       }
       case 'email': {
@@ -53,22 +53,17 @@ class AccountBindingController extends Controller {
         return;
       }
     }
-
     if (!flag) {
       this.ctx.body = ctx.msg.failure;
       return;
     }
 
-    let createParams = {
-      uid, account: username, platform,
-    };
     if (platform === 'email') {
-      createParams = {
-        ...createParams,
-        password_hash,
-      };
+      return this.handleEmail(email, captcha, password, uid);
     }
-    const result = await ctx.service.account.binding.create(createParams);
+    const result = await ctx.service.account.binding.create({
+      uid, account: username, platform,
+    });
     if (result) {
       ctx.body = {
         ...ctx.msg.success,
@@ -79,8 +74,94 @@ class AccountBindingController extends Controller {
       };
     }
   }
+
   /**
-   * 接触账号绑定
+   * 处理github绑定
+   * @param {*} code 。。
+   * @return {*} [username][false]
+   * @memberof AccountBindingController
+   */
+  async handleGithub(code) {
+    const { ctx } = this;
+    const usertoken = await this.service.auth.verifyCode(code);
+    if (usertoken === null) {
+      ctx.body = ctx.msg.authCodeInvalid;
+      return false;
+    }
+    // 由access token再取用户信息
+    const userinfo = await this.service.auth.getGithubUser(usertoken.access_token);
+    if (userinfo === null) {
+      ctx.body = ctx.msg.generateTokenError;
+      return false;
+    }
+    return userinfo.login;
+  }
+
+  /**
+   * 处理微信绑定
+   * @param {*} code 。。
+   * @return {*} [openid][false]
+   * @memberof AccountBindingController
+   */
+  async handleWeixin(code) {
+    const { ctx } = this;
+    const accessTokenResult = await ctx.service.wechat.getAccessToken(code);
+    if (accessTokenResult.data.errcode) {
+      ctx.body = {
+        ...ctx.msg.generateTokenError,
+        data: accessTokenResult.data,
+      };
+      return false;
+    }
+    return accessTokenResult.data.openid;
+  }
+
+  /**
+   * 处理邮箱绑定
+   * @param {*} [email=null] .
+   * @param {*} [captcha=null] .
+   * @param {*} [password=null] .
+   * @param {*} uid .
+   * @memberof AccountBindingController
+   */
+  async handleEmail(email = null, captcha = null, password = null, uid) {
+    const { ctx } = this;
+    if (!email || !captcha || !password) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    // 验证用户需要不存在
+    const userExistence = await this.service.auth.verifyUser(email);
+    if (userExistence) {
+      ctx.body = ctx.msg.alreadyRegisted;
+      return;
+    }
+    const emailResult = await this.service.account.binding.createEmailAccount({
+      email, captcha, password, uid,
+    });
+    switch (emailResult) {
+      case 1:
+        ctx.body = ctx.msg.captchaWrong;
+        break;
+      case 2:
+        ctx.body = ctx.msg.captchaWrong;
+        break;
+      case 3:
+        ctx.body = ctx.msg.captchaWrong;
+        break;
+      case 5:
+        ctx.body = ctx.msg.failure;
+        break;
+      case 0:
+        ctx.body = ctx.msg.success;
+        break;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
+    return;
+  }
+  /**
+   * 解除账号绑定
    * @memberof AccountBindingController
    */
   async unbinding() {

@@ -1,6 +1,9 @@
 'use strict';
 const Service = require('egg').Service;
 const moment = require('moment');
+const md5 = require('crypto-js/md5');
+const sha256 = require('crypto-js/sha256');
+const consts = require('../consts');
 
 class AccountBindingService extends Service {
 
@@ -116,6 +119,38 @@ class AccountBindingService extends Service {
       this.logger.error('Service.Account.binding.updateMain exception. %j', err);
       return false;
     }
+  }
+  async createEmailAccount({ uid, email, captcha, password }) {
+    const mailhash = `captcha:${consts.mailTemplate.registered}:${md5(email).toString()}`;
+    const captchaQuery = await this.app.redis.get(mailhash);
+    // 从未获取过验证码
+    if (!captchaQuery) {
+      this.logger.info('bindingService:: createEmailAccount: Captcha haven\'t been generated for email ', email);
+      return 1;
+    }
+    const captchaInfo = JSON.parse(captchaQuery);
+    // 验证码不对， 减少有效次数
+    if (captchaInfo.captcha !== captcha) {
+      captchaInfo.status -= 1;
+      this.logger.info('bindingService:: createEmailAccount: Captcha is wrong for email ', email);
+      // 已经错误3次， 验证码失效
+      if (captchaInfo.status === 0) {
+        this.logger.info('bindingService:: createEmailAccount: Captcha expired');
+        await this.app.redis.del(mailhash);
+        return 2;
+      }
+      const storeString = JSON.stringify(captchaInfo);
+      // 获取剩余TTL
+      const remainTime = await this.app.redis.call('TTL', mailhash);
+      // 更新剩余次数， 并维持TTL
+      await this.app.redis.set(mailhash, storeString, 'EX', remainTime);
+      return 3;
+    }
+    const passwordHash = sha256(password).toString();
+    this.create({ uid, account: email, platform: 'email', password_hash: passwordHash });
+
+    this.logger.info('bindingService:: createEmailAccount: New user Added for email ', email);
+    return 0;
   }
 }
 
