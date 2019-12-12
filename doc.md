@@ -3373,10 +3373,33 @@ const folderOption = {
 * POST /account/binding
 * 参数：
 ```
+// platform：eos、ont
 {
-	"account": "xxxx",
-  "platform": "平台",
-  "password_hash": "xxx" //如果平台是email，则需要这个字段
+	"platform": "eos",
+	"username": "",
+	"publickey": "",
+	"sign": ""
+}
+
+// platform: eth
+{
+	"platform": "eth",
+	"publickey": "",
+	"sign": "",
+	"msgParams": {}
+}
+
+// platform: github, weixin
+{
+	"platform": "github",
+	"code": ""
+}
+
+// platform: email
+{
+	"platform": "email",
+	"captcha": "",
+	"password": ""
 }
 ```
 * 请求头：x-access-token
