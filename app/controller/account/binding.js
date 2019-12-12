@@ -169,6 +169,10 @@ class AccountBindingController extends Controller {
     const { ctx } = this;
     const uid = ctx.user.id;
     const { account, platform, password_hash = null } = ctx.request.body;
+    if (!account || !platform) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
     const userAccount = await ctx.service.account.binding.get(uid, platform);
     // 验证账号 todo
     if (userAccount.account !== account) {
@@ -204,6 +208,10 @@ class AccountBindingController extends Controller {
     const { ctx } = this;
     const uid = ctx.user.id;
     const { account, platform, password = null } = ctx.request.body;
+    if (!account || !platform) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
     const userAccount = await ctx.service.account.binding.get(uid, platform);
     // 验证账号 todo
     if (userAccount.account !== account) {
