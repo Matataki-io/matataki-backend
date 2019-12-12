@@ -1,6 +1,7 @@
 'use strict';
 
 const Controller = require('../../core/base_controller');
+const sha256 = require('crypto-js/sha256');
 
 class AccountBindingController extends Controller {
   /**
@@ -202,7 +203,7 @@ class AccountBindingController extends Controller {
   async changeMainAccount() {
     const { ctx } = this;
     const uid = ctx.user.id;
-    const { account, platform, password_hash = null } = ctx.request.body;
+    const { account, platform, password = null } = ctx.request.body;
     const userAccount = await ctx.service.account.binding.get(uid, platform);
     // 验证账号 todo
     if (userAccount.account !== account) {
@@ -213,8 +214,9 @@ class AccountBindingController extends Controller {
       return;
     }
     // 邮箱账号验证密码
-    if (platform === 'email' && userAccount.password_hash !== password_hash) {
-      this.logger.error('controller.account.binding.changeMainAccount failed2', account);
+    const passwordHash = sha256(password).toString();
+    if (platform === 'email' && userAccount.password_hash !== passwordHash) {
+      this.logger.error('controller.account.binding.changeMainAccount failed2', { password_hash: userAccount.password_hash, account, passwordHash, });
       ctx.body = {
         ...ctx.msg.failure,
       };
