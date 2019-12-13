@@ -7,6 +7,9 @@ const axios = require('axios');
 const moment = require('moment');
 const jwt = require('jwt-simple');
 const consts = require('./consts');
+const ecc = require('eosjs-ecc');
+const ONT = require('ontology-ts-sdk');
+const EOS = require('eosjs');
 
 class AuthService extends Service {
 
@@ -21,6 +24,62 @@ class AuthService extends Service {
         return txt;
       }.bind(this));
     };
+    this.eosClient = EOS({
+      chainId: ctx.app.config.eos.chainId,
+      httpEndpoint: ctx.app.config.eos.httpEndpoint,
+    });
+  }
+
+  async eos_auth(sign, username, publickey) {
+    // 2. 验证签名
+    try {
+      const recover = ecc.recover(sign, username);
+      if (recover !== publickey) {
+        return false;
+      }
+    } catch (err) {
+      return false;
+    }
+
+    // 由于EOS的帐号系统是 username 和 公钥绑定的关系，所有要多加一个验证，username是否绑定了签名的EOS公钥
+    try {
+      const eosacc = await this.eosClient.getAccount(username);
+      let pass_permission_verify = false;
+
+      for (let i = 0; i < eosacc.permissions.length; i++) {
+        const permit = eosacc.permissions[i];
+        const keys = permit.required_auth.keys;
+        for (let j = 0; j < keys.length; j++) {
+          const pub = keys[j].key;
+          if (publickey === pub) {
+            pass_permission_verify = true;
+          }
+        }
+      }
+
+      if (!pass_permission_verify) {
+        return false;
+      }
+    } catch (err) {
+      // this.logger.error('AuthController.eos_auth error: %j', err);
+      return false;
+    }
+
+    return true;
+  }
+
+  async ont_auth(sign, username, publickey) {
+
+    const pub = new ONT.Crypto.PublicKey(publickey);
+
+    const msg = ONT.utils.str2hexstr(username);
+
+    const signature = ONT.Crypto.Signature.deserializeHex(sign);
+
+    const pass = pub.verify(msg, signature);
+
+    return pass;
+
   }
 
 
@@ -78,8 +137,8 @@ class AuthService extends Service {
   // todo：2019-8-27 缺少登录日志
   async saveUser(username, nickname, avatarUrl, ip = '', referral = 0, platform = 'github') {
     try {
-      let currentUser = await this.app.mysql.get('users', { username, platform });
-
+      // let currentUser = await this.app.mysql.get('users', { username, platform });
+      let currentUser = await this.service.account.binding.getSyncFieldWithUser(username, platform);
       // 用户是第一次登录, 先创建
       if (currentUser === null) {
         // await this.app.mysql.insert('users', {
@@ -139,16 +198,15 @@ class AuthService extends Service {
 
   // 验证用户账号是否存在， todo，添加platform信息
   async verifyUser(username) {
-    const user = await this.app.mysql.query(
+    /* const user = await this.app.mysql.query(
       'SELECT id FROM users WHERE username = :username;',
       { username }
-    );
-    return user.length;
+    ); */
+    const user = await this.service.account.binding.getSyncFieldWithUser(username, 'email');
+    return !!user;
+    /* const userBinding = await this.app.mysql.get('user_accounts', { account: username, platform: 'email' });
+    return user.length > 0 || userBinding !== null; */
   }
-
-  // async regStatus(email) {
-
-  // }
 
   async sendRegisteredCaptchaMail(email) {
     return this.sendCaptchaMail(email);
@@ -303,29 +361,35 @@ class AuthService extends Service {
   // 邮箱账号密码登录
   async verifyLogin(username, password, ipaddress) {
     // 提取用户信息
-    let userPw;
-    try {
+    // let userPw;
+    const platform = 'email';
+    /* try {
       userPw = await this.app.mysql.query(
-        'SELECT id, username, password_hash,platform FROM users WHERE username = :username AND platform = \'email\';',
-        { username }
+        'SELECT id, username, password_hash,platform FROM users WHERE username = :username AND platform = :platform;',
+        { username, platform }
       );
     } catch (err) {
       this.logger.error('AuthService:: verifyLogin: Error ', err);
       return 3;
-    }
-    if (userPw.length === 0) {
+    } */
+
+    // if (userPw.length === 0) {
+    const userPw = await this.service.account.binding.getSyncFieldWithUser(username, platform);
+    this.logger.info('AuthService:: verifyLogin: userPw ', userPw);
+
+    if (!userPw) {
       this.logger.info('AuthService:: verifyLogin: User doesn\'t exist ', username);
       return 1;
     }
     // 密码对不上
     const passwordHash = sha256(password).toString();
-    if (userPw[0].password_hash !== passwordHash) {
+    if (userPw.password_hash !== passwordHash) {
       this.logger.info('AuthService:: verifyLogin: Wrong password ', username);
       return 2;
     }
 
     // 增加登录日志
-    await this.insertLoginLog(userPw[0].id, ipaddress);
+    await this.insertLoginLog(userPw.id, ipaddress);
     // const now = moment().format('YYYY-MM-DD HH:mm:ss');
     // let addLoginLog;
     // try {
@@ -352,7 +416,7 @@ class AuthService extends Service {
     // }, this.app.config.jwtTokenSecret);
     // this.logger.info('AuthService:: verifyLogin: User Login... ', username);
 
-    return this.jwtSign(userPw[0]);
+    return this.jwtSign(userPw);
   }
 
   // 插入用户
@@ -365,13 +429,24 @@ class AuthService extends Service {
         referral_uid = 0;
       }
     }
-
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    const createAccount = await this.app.mysql.query(
-      'INSERT INTO users (username, email, create_time, platform, source, reg_ip, password_hash,referral_uid) '
-      + 'VALUES (:username, :email, :now, :platform, :source, :ip, :password, :referral);',
-      { username, email, ip, platform, source, password: pwd, now, referral: referral_uid }
-    );
+
+    const tran = await this.app.mysql.beginTransaction();
+    let createAccount = null;
+    try {
+      createAccount = await tran.query(
+        'INSERT INTO users (username, email, create_time, platform, source, reg_ip, password_hash,referral_uid) '
+        + 'VALUES (:username, :email, :now, :platform, :source, :ip, :password, :referral);',
+        { username, email, ip, platform, source, password: pwd, now, referral: referral_uid }
+      );
+      const account = await this.service.account.binding.create({ uid: createAccount.insertId, account: username, password_hash: pwd, platform }, tran);
+      if (!account) tran.rollback();
+      else tran.commit();
+    } catch (err) {
+      await tran.rollback();
+      this.logger.error('AuthService:: insertUser: Error. %j', err);
+      return false;
+    }
 
     if (createAccount.affectedRows === 1) {
       // 处理注册推荐积分
@@ -393,14 +468,18 @@ class AuthService extends Service {
   }
 
   async updatePassword(passwordHash, email) {
+    const tran = await this.app.mysql.beginTransaction();
     try {
-      await this.app.mysql.query(
-        'UPDATE users SET password_hash = :passwordHash WHERE username = :email AND platform = \'email\'', {
+      await tran.query(
+        'UPDATE users SET password_hash = :passwordHash WHERE username = :email AND platform = \'email\';'
+        + 'UPDATE user_accounts SET password_hash = :passwordHash WHERE account = :email AND platform = \'email\'', {
           passwordHash,
           email,
         });
+      tran.commit();
       return true;
     } catch (err) {
+      tran.rollback();
       this.logger.error('AuthService:: updatePassword: Error ', err);
       return false;
     }

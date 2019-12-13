@@ -2,19 +2,7 @@
 
 const Controller = require('../core/base_controller');
 
-const ecc = require('eosjs-ecc');
-const ONT = require('ontology-ts-sdk');
-const EOS = require('eosjs');
-
 class AuthController extends Controller {
-
-  constructor(ctx) {
-    super(ctx);
-    this.eosClient = EOS({
-      chainId: ctx.app.config.eos.chainId,
-      httpEndpoint: ctx.app.config.eos.httpEndpoint,
-    });
-  }
 
   // eos、ont、eth登录，首次登录自动注册
   async auth() {
@@ -26,11 +14,11 @@ class AuthController extends Controller {
 
     let flag = false;
     if (platform === 'eos') {
-      flag = await this.eos_auth(sign, username, publickey);
+      flag = await this.service.auth.eos_auth(sign, username, publickey);
     } else if (platform === 'ont') {
-      flag = await this.ont_auth(sign, username, publickey);
+      flag = await this.service.auth.ont_auth(sign, username, publickey);
     } else if (platform === 'vnt') {
-      flag = await this.vnt_auth(sign, username, publickey);
+      flag = true;
     } else if (platform === 'eth') {
       // 以太坊没用户名, 使用 msgParams 及其签名来判断是否真实
       flag = this.service.ethereum.signatureService.verifyAuth(sign, msgParams, publickey);
@@ -57,17 +45,15 @@ class AuthController extends Controller {
   async get_or_create_user(username, platform, source, referral) {
     try {
       this.logger.info('get_or_create_user', { username, platform });
-      let user = await this.app.mysql.get('users', { username, platform });
-
+      // let user = await this.app.mysql.get('users', { username, platform });
+      let user = await this.service.account.binding.getSyncFieldWithUser(username, platform);
+      // 处理以太坊登录的历史问题
+      if (!user) user = await this.handleEthereumHistoricError(username);
       if (!user) {
-        const oldEthAcc = await this.fetchOldEthAccount(username);
-        // 处理以太坊登录的历史问题
-        if (oldEthAcc) return this.handleEthereumHistoricError(oldEthAcc, username);
-        // 以下为还没用以太坊过
         await this.service.auth.insertUser(username, '', platform, source, this.clientIP, '', referral);
         user = await this.app.mysql.get('users', { username, platform });
-        // await this.service.search.importUser(user.id);
       }
+      this.logger.info('get_or_create_user:: user:', user);
       // 插入登录日志
       await this.service.auth.insertLoginLog(user.id, this.clientIP);
       // 检测用户有没有托管的以太坊私钥，没有就生成
@@ -78,13 +64,24 @@ class AuthController extends Controller {
     }
   }
 
-  fetchOldEthAccount(username) {
-    return this.app.mysql.get('users', { username: username.slice(-12), platform: 'eth' });
-  }
-
-  handleEthereumHistoricError(old, publicKey) {
-    this.logger.info('handleEthereumHistoricError pk: ', publicKey);
-    return this.app.mysql.update('users', { username: publicKey }, { where: { id: old.id, platform: 'eth' } });
+  // 处理以太坊登录的历史问题
+  async handleEthereumHistoricError(username) {
+    const old = await this.app.mysql.get('users', { username: username.slice(-12), platform: 'eth' });
+    // const old = this.app.mysql.get('user_accounts', { account: username.slice(-12), platform: 'eth' });
+    if (old) {
+      this.logger.info('handleEthereumHistoricError pk: ', username);
+      const tran = await this.app.mysql.beginTransaction();
+      try {
+        const userBinding = await tran.update('user_accounts', { account: username }, { where: { uid: old.id, platform: 'eth' } });
+        await tran.update('users', { username }, { where: { id: old.id, platform: 'eth' } });
+        await tran.commit();
+        return userBinding;
+      } catch (err) {
+        await tran.rollback();
+        this.logger.error('handleEthereumHistoricError Error %j', err);
+        return false;
+      }
+    }
   }
 
   async generateEthHostingWallet(user) {
@@ -93,62 +90,6 @@ class AuthController extends Controller {
       await this.service.account.hosting.create(user.id);
       return true;
     } return false;
-  }
-
-  async eos_auth(sign, username, publickey) {
-    // 2. 验证签名
-    try {
-      const recover = ecc.recover(sign, username);
-      if (recover !== publickey) {
-        return false;
-      }
-    } catch (err) {
-      return false;
-    }
-
-    // 由于EOS的帐号系统是 username 和 公钥绑定的关系，所有要多加一个验证，username是否绑定了签名的EOS公钥
-    try {
-      const eosacc = await this.eosClient.getAccount(username);
-      let pass_permission_verify = false;
-
-      for (let i = 0; i < eosacc.permissions.length; i++) {
-        const permit = eosacc.permissions[i];
-        const keys = permit.required_auth.keys;
-        for (let j = 0; j < keys.length; j++) {
-          const pub = keys[j].key;
-          if (publickey === pub) {
-            pass_permission_verify = true;
-          }
-        }
-      }
-
-      if (!pass_permission_verify) {
-        return false;
-      }
-    } catch (err) {
-      // this.logger.error('AuthController.eos_auth error: %j', err);
-      return false;
-    }
-
-    return true;
-  }
-
-  async ont_auth(sign, username, publickey) {
-
-    const pub = new ONT.Crypto.PublicKey(publickey);
-
-    const msg = ONT.utils.str2hexstr(username);
-
-    const signature = ONT.Crypto.Signature.deserializeHex(sign);
-
-    const pass = pub.verify(msg, signature);
-
-    return pass;
-
-  }
-
-  async vnt_auth(sign, username, publickey) {
-    return true;
   }
 
   // github账号登录，第一次登录会创建账号
@@ -252,8 +193,8 @@ class AuthController extends Controller {
     //   ctx.body = ctx.msg.paramsError;
     //   return;
     // }
-    const result = await this.service.auth.verifyUser(email);
-    if (result > 0) {
+    const userExistence = await this.service.auth.verifyUser(email);
+    if (userExistence) {
       ctx.body = ctx.msg.success;
       ctx.body.data = true;
     } else {

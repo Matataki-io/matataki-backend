@@ -313,13 +313,16 @@ class PostController extends Controller {
   async getScoreRanking() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20, channel = null, author = null, extra = null, filter = 0 } = this.ctx.query;
+    let { page = 1, pagesize = 20, channel = 1, author = null, extra = null, filter = 7 } = this.ctx.query;
+
+    if (typeof channel === 'string') channel = parseInt(channel);
+    if (typeof filter === 'string') filter = parseInt(filter);
 
     let postData;
-    if (page === 1 && pagesize === 20 && channel === null && author === null && extra === null && filter === 0) {
-      postData = this.app.ctx.cache.post.hot;
+    if (channel === 1 && author === null) {
+      postData = await this.service.post.scoreRank(page, pagesize, filter);
     } else {
-      postData = await this.service.post.scoreRank(page, pagesize, author, channel, extra, filter);
+      postData = await this.service.post.scoreRankSlow(page, pagesize, author, channel, extra, filter);
     }
 
     if (postData === 2) {
@@ -340,9 +343,12 @@ class PostController extends Controller {
   async getTimeRanking() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20, channel = null, author = null, extra = null, filter = 0 } = this.ctx.query;
+    let { page = 1, pagesize = 20, channel = 1, author = null, extra = null, filter = 7 } = this.ctx.query;
 
-    const postData = await this.service.post.timeRank(page, pagesize, author, channel, extra, filter);
+    if (typeof channel === 'string') channel = parseInt(channel);
+    if (typeof filter === 'string') filter = parseInt(filter);
+
+    const postData = await this.service.post.timeRankSlow(page, pagesize, author, channel, extra, filter);
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -425,10 +431,10 @@ class PostController extends Controller {
     const { channel = null, amount = 5 } = ctx.query;
 
     let postData;
-    if (channel === null && amount === 5) {
-      postData = this.app.cache.post.recommend;
+    if (channel === null) {
+      postData = await this.service.post.recommendPosts(amount);
     } else {
-      postData = await this.service.post.recommendPosts(channel, amount);
+      postData = await this.service.post.recommendPostsSlow(channel, amount);
     }
 
     if (postData === 3) {
@@ -806,10 +812,10 @@ class PostController extends Controller {
   }
 
   // 查询统计数据
-  stats() {
+  async stats() {
     const ctx = this.ctx;
     ctx.body = ctx.msg.success;
-    ctx.body.data = this.ctx.app.cache.post.stats;
+    ctx.body.data = await this.ctx.service.post.stats();
   }
 
   // 持币阅读

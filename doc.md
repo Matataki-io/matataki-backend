@@ -3368,3 +3368,96 @@ const folderOption = {
     "data": filepath
 }
 ```
+
+#### 账号绑定
+* POST /account/binding
+* 参数：
+```
+// platform：eos、ont
+{
+	"platform": "eos",
+	"username": "",
+	"publickey": "",
+	"sign": ""
+}
+
+// platform: eth
+{
+	"platform": "eth",
+	"publickey": "",
+	"sign": "",
+	"msgParams": {}
+}
+
+// platform: github, weixin
+{
+	"platform": "github",
+	"code": ""
+}
+
+// platform: email
+{
+	"platform": "email",
+  "email": "",
+	"captcha": "",
+	"password": ""
+}
+```
+
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+#### 账号解绑
+* POST /account/unbinding
+* 参数：
+```
+{
+	"account": "xxxx",
+  "platform": "平台",
+  "password_hash": "xxx" //如果平台是email，则需要这个字段
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+#### 更换主账号
+* POST /account/changeMainAccount
+* 参数：
+```
+{
+	"account": "xxxx",
+  "platform": "平台",
+  "password_hash": "xxx" //如果平台是email，则需要这个字段
+}
+```
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  "code": 0,
+  "message": "成功"
+}
+```
+#### 获取绑定账号列表
+* GET /account/list
+* 参数： 无
+* 请求头：x-access-token
+* 返回值：
+```
+{
+  code: 0,
+  message: ”成功“,
+  data: []
+}
+```
+

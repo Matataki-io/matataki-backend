@@ -52,6 +52,12 @@ class PostService extends Service {
           [ result.insertId ]
         );
 
+        await this.app.redis.multi()
+          .sadd('post', result.insertId)
+          .hincrby('post:stat', 'count', 1)
+          .zadd('post:hot:filter:1', 0, result.insertId)
+          .exec();
+
         // 加积分
         await this.service.mining.publish(data.uid, result.insertId, ''); // todo；posts表增加ip，这里传进来ip
 
@@ -348,8 +354,64 @@ class PostService extends Service {
 
   }
 
+  async scoreRank(page = 1, pagesize = 20, filter = 7) {
+    let count, ids;
+
+    if ((filter & 6) === 6 && !await this.app.redis.exists('post:hot:filter:6')) {
+      await this.app.redis.pipeline()
+        .zinterstore('post:hot:filter:6_common', 2, 'post:hot:filter:2', 'post:hot:filter:4', 'WEIGHTS', 1, 0)
+        .expire('post:hot:filter:6_common', 10)
+        .zunionstore('post:hot:filter:6', 3, 'post:hot:filter:2', 'post:hot:filter:4', 'post:hot:filter:6_common', 'WEIGHTS', 1, 1, -1)
+        .expire('post:hot:filter:6_common', 300)
+        .exec();
+    }
+
+    if (filter === 6) {
+      ids = await this.app.redis.zrevrange('post:hot:filter:6', (page - 1) * pagesize, page * pagesize - 1);
+      count = Number(await this.app.redis.zcard('post:hot:filter:6'));
+    } else {
+      const keys = new Set();
+      // 免费
+      if ((filter & 1) > 0) keys.add('post:hot:filter:1');
+
+      if ((filter & 6) === 6) {
+        keys.add('post:hot:filter:6');
+      } else {
+        // 持币阅读
+        if ((filter & 2) > 0) keys.add('post:hot:filter:2');
+        // 需要购买
+        if ((filter & 4) > 0) keys.add('post:hot:filter:4');
+      }
+
+      if (keys.size === 1) {
+        const key = Array.from(keys)[0];
+
+        ids = await this.app.redis.zrevrange(key, (page - 1) * pagesize, page * pagesize - 1);
+        count = Number(await this.app.redis.zcard(key));
+      } else {
+        const key = 'post:hot:filter:' + filter;
+
+        if (await this.app.redis.exists(key)) {
+          ids = await this.app.redis.zrevrange(key, (page - 1) * pagesize, page * pagesize - 1);
+        } else {
+          const pipeline = this.app.redis.multi();
+          pipeline.zunionstore(key, keys.size, Array.from(keys)).zrevrange(key, (page - 1) * pagesize, page * pagesize - 1);
+          pipeline.expire(key, 300);
+
+          const resultSet = await pipeline.exec();
+          ids = resultSet[1][1];
+        }
+
+        count = Number(await this.app.redis.zcard(key));
+      }
+    }
+
+    ids = ids.map(id => Number(id));
+
+    return { count, list: await this.getPostList(ids) };
+  }
   // 推荐分数排序(默认方法)(new format)(count-list格式)
-  async scoreRank(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
+  async scoreRankSlow(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
@@ -443,7 +505,35 @@ class PostService extends Service {
   }
 
   // 发布时间排序()(new format)(count-list格式)
-  async timeRank(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
+  async timeRank(page = 1, pagesize = 20, filter = 7) {
+    const key = `post:time:filter:${filter}:${(page - 1) * pagesize}-${page * pagesize - 1}`;
+
+    const count = await this.app.redis.zcard(`post:hot:filter:${filter}`);
+
+    let ids = await this.app.redis.lrange(key, 0, pagesize - 1);
+    if (ids.length === 0) {
+
+      const conditions = [];
+      // 免费
+      if ((filter & 1) > 0) conditions.push('(require_holdtokens = 0 AND require_buy = 0)');
+      // 持币阅读
+      if ((filter & 2) > 0) conditions.push('require_holdtokens = 1');
+      // 需要购买
+      if ((filter & 4) > 0) conditions.push('require_buy = 1');
+
+      const sql = `SELECT id FROM posts WHERE status = 0 AND channel_id = 1 AND (${conditions.join(' OR ')}) ORDER BY time_down ASC, id DESC LIMIT :start, :end;`
+
+      ids = (await this.app.mysql.query(sql, { start: (page - 1) * pagesize, end: 1 * pagesize })).map(row => row.id);
+
+      await this.app.redis.multi()
+        .rpush(key, ids)
+        .expire(key, 300)
+        .exec();
+    }
+
+    return { count, list: await this.getPostList(ids) };
+  }
+  async timeRankSlow(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
@@ -752,7 +842,23 @@ class PostService extends Service {
     return { count: amount[0].count, list: postList };
   }
 
-  async recommendPosts(channel = null, amount = 5) {
+  async recommendPosts(amount = 5) {
+    let ids = await this.app.redis.zrevrange('post:recommend', 0, amount);
+    if (ids.length === 0) {
+      ids = (await this.app.mysql.query('SELECT id FROM posts WHERE is_recommend = 1 AND status = 0 AND channel_id = 1;')).map(row => row.id);
+
+      const pipeline = this.app.redis.multi();
+      for (const id of ids) {
+        pipeline.zadd('post:recommend', id, id);
+      }
+      await pipeline.expire('post:recommend', 300).exec();
+
+      ids = await this.app.redis.zrevrange('post:recommend', 0, amount);
+    }
+
+    return await this.getPostList(ids);
+  }
+  async recommendPostsSlow(channel = null, amount = 5) {
 
     let sqlcode = '';
     sqlcode = 'SELECT id FROM posts '
@@ -999,13 +1105,11 @@ class PostService extends Service {
   }
 
   async stats() {
-    const sql = `SELECT COUNT(1) as count FROM users;
-                  SELECT COUNT(1) as count FROM posts;
-                  SELECT SUM(amount) as amount FROM assets_points;`;
-
-    const queryResult = await this.app.mysql.query(sql);
-
-    return { users: queryResult[0][0].count, articles: queryResult[1][0].count, points: queryResult[2][0].amount };
+    return {
+      users: Number(await this.app.redis.hget('user:stat', 'count')),
+      articles: Number(await this.app.redis.hget('post:stat', 'count')),
+      points: Number(await this.app.redis.hget('user:stat', 'point'))
+    }
   }
 
   // 持币阅读
@@ -1046,6 +1150,19 @@ class PostService extends Service {
         });
 
       await conn.commit();
+
+      if (require) {
+        await this.app.redis.multi()
+          .zrem('post:hot:filter:1', id)
+          .zadd('post:hot:filter:2', post.hot_score, id)
+          .exec();
+      } else {
+        await this.app.redis.multi()
+          .zrem('post:hot:filter:2', id)
+          .zadd('post:hot:filter:1', post.hot_score, id)
+          .exec();
+      }
+
       return 0;
     } catch (e) {
       await conn.rollback();
@@ -1137,6 +1254,12 @@ class PostService extends Service {
         });
 
       await conn.commit();
+
+      await this.app.redis.multi()
+        .zrem('post:hot:filter:1', id)
+        .zadd('post:hot:filter:4', post.hot_score, id)
+        .exec();
+
       return 0;
     } catch (e) {
       await conn.rollback();
@@ -1170,6 +1293,12 @@ class PostService extends Service {
         });
 
       await conn.commit();
+
+      await this.app.redis.multi()
+        .zrem('post:hot:filter:4', id)
+        .zadd('post:hot:filter:1', post.hot_score, id)
+        .exec();
+
       return 0;
     } catch (e) {
       await conn.rollback();
