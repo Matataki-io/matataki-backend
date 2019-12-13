@@ -362,7 +362,7 @@ class PostService extends Service {
         .zinterstore('post:hot:filter:6_common', 2, 'post:hot:filter:2', 'post:hot:filter:4', 'WEIGHTS', 1, 0)
         .expire('post:hot:filter:6_common', 10)
         .zunionstore('post:hot:filter:6', 3, 'post:hot:filter:2', 'post:hot:filter:4', 'post:hot:filter:6_common', 'WEIGHTS', 1, 1, -1)
-        .expire('post:hot:filter:6_common', 300)
+        .expire('post:hot:filter:6', 300)
         .exec();
     }
 
