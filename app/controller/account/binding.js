@@ -168,7 +168,7 @@ class AccountBindingController extends Controller {
   async unbinding() {
     const { ctx } = this;
     const uid = ctx.user.id;
-    const { account, platform, password_hash = null } = ctx.request.body;
+    const { account, platform, password = null } = ctx.request.body;
     if (!account || !platform) {
       ctx.body = ctx.msg.paramsError;
       return;
@@ -182,7 +182,8 @@ class AccountBindingController extends Controller {
       return;
     }
     // 邮箱账号验证密码
-    if (platform === 'email' && userAccount.password_hash !== password_hash) {
+    const passwordHash = sha256(password).toString();
+    if (platform === 'email' && userAccount.password_hash !== passwordHash) {
       ctx.body = {
         ...ctx.msg.failure,
       };
