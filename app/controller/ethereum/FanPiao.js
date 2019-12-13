@@ -5,10 +5,10 @@ class FanPiaoController extends Controller {
   async issue() {
     const ctx = this.ctx;
     // 取出发币参数
-    const { name, symbol, initialSupply, defaultOperators } = ctx.request.body;
+    const { name, symbol, decimals = 18, initialSupply } = ctx.request.body;
     try {
       // 交易成功返回交易hash
-      const txHash = await this.service.ethereum.fanPiao.issue(name, symbol, initialSupply, defaultOperators);
+      const txHash = await this.service.ethereum.fanPiao.issue(name, symbol, decimals, initialSupply);
       ctx.body = ctx.msg.success;
       ctx.body.data = { status: 'pending', txHash };
     } catch (error) {
