@@ -281,7 +281,7 @@ class SearchService extends Service {
 
     const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
     try {
-      await elaClient.index({
+      elaClient.index({
         id: userid,
         index: this.config.elasticsearch.indexUsers,
         body: {

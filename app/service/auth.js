@@ -439,7 +439,7 @@ class AuthService extends Service {
         + 'VALUES (:username, :email, :now, :platform, :source, :ip, :password, :referral);',
         { username, email, ip, platform, source, password: pwd, now, referral: referral_uid }
       );
-      const account = await this.service.account.binding.create({ uid: createAccount.insertId, account: username, password_hash: pwd, platform }, tran);
+      const account = await this.service.account.binding.create({ uid: createAccount.insertId, account: username, password_hash: pwd, platform, is_main: 1 }, tran);
       if (!account) tran.rollback();
       else tran.commit();
     } catch (err) {
