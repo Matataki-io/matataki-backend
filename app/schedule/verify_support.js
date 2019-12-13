@@ -51,7 +51,8 @@ class VerifySupport extends Subscription {
   async eos_verify(support) {
 
     // 根据 signid 去合约中取 table row，Limit 为username， 取到则继续验证 amount， contract ，symbol， referrer， 验证通过才进入结算
-    const user = await this.app.mysql.get('users', { id: support.uid });
+    const user = await this.service.account.binding.get2({ id: support.uid });
+    // const user = await this.app.mysql.get('users', { id: support.uid });
 
     try {
       const result = await this.eosClient.getTableRows({
@@ -68,7 +69,8 @@ class VerifySupport extends Subscription {
 
         let verifyPass = false;
 
-        const reffer = await this.app.mysql.get('users', { id: support.referreruid });
+        const reffer = await this.service.account.binding.get2({ id: support.referreruid });
+        // const reffer = await this.app.mysql.get('users', { id: support.referreruid });
         const reffer_name = reffer ? reffer.username : '';
 
         let contract_ref = row.ref;

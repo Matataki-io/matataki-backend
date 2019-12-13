@@ -1022,7 +1022,8 @@ class PostService extends Service {
       return 3;
     }
 
-    const user = await this.app.mysql.get('users', { id: uid });
+    const user = await this.service.account.binding.get2({ id: uid });
+    // const user = await this.app.mysql.get('users', { id: uid });
     if (!user) {
       return 4;
     }

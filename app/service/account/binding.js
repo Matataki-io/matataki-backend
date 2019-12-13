@@ -199,6 +199,50 @@ class AccountBindingService extends Service {
     }
     return null;
   }
+
+
+  /**
+   * 获取用户信息，连表查询users and user_accounts
+   * @param {*} {
+   *     username = null,
+   *     platform = null,
+   *     nickname = null,
+   *     id = null,
+   *   }
+   * @return {Object} user
+   * @memberof AccountBindingService
+   */
+  async get2({
+    username = null,
+    platform = null,
+    nickname = null,
+    id = null,
+  }) {
+    const whereArr = [];
+    const searchObj = {
+      username,
+      platform,
+      nickname,
+      id,
+    };
+    if (username !== null) whereArr.push('ua.account=:username');
+    if (platform !== null) whereArr.push('ua.platform=:platform');
+    if (nickname !== null) whereArr.push('u.nickname=:nickname');
+    if (id !== null) whereArr.push('u.id=:id');
+
+    const users = await this.app.mysql.query(`
+      SELECT ua.uid as id, ua.account as username, ua.platform, ua.password_hash,
+      u.email, u.nickname, u.avatar, u.create_time, u.introduction, u.accept, u.source,
+      u.reg_ip, u.last_login_time, u.is_recommend, u.referral_uid, u.last_login_ip, u.level, u.status, u.banner
+      FROM users as u
+      LEFT JOIN user_accounts as ua
+      ON ua.uid = u.id
+      WHERE ${whereArr.join(' AND ')} AND ua.is_main = 1;`, searchObj);
+    if (users && users.length > 0) {
+      return users[0];
+    }
+    return null;
+  }
 }
 
 module.exports = AccountBindingService;

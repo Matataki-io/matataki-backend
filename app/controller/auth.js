@@ -51,7 +51,8 @@ class AuthController extends Controller {
       if (!user) user = await this.handleEthereumHistoricError(username);
       if (!user) {
         await this.service.auth.insertUser(username, '', platform, source, this.clientIP, '', referral);
-        user = await this.app.mysql.get('users', { username, platform });
+        // user = await this.app.mysql.get('users', { username, platform });
+        user = await this.service.account.binding.get2({ username, platform });
       }
       this.logger.info('get_or_create_user:: user:', user);
       // 插入登录日志
@@ -66,8 +67,8 @@ class AuthController extends Controller {
 
   // 处理以太坊登录的历史问题
   async handleEthereumHistoricError(username) {
-    const old = await this.app.mysql.get('users', { username: username.slice(-12), platform: 'eth' });
-    // const old = this.app.mysql.get('user_accounts', { account: username.slice(-12), platform: 'eth' });
+    // const old = await this.app.mysql.get('users', { username: username.slice(-12), platform: 'eth' });
+    const old = await this.service.account.binding.get2({ username: username.slice(-12), platform: 'eth' });
     if (old) {
       this.logger.info('handleEthereumHistoricError pk: ', username);
       const tran = await this.app.mysql.beginTransaction();

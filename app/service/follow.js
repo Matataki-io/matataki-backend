@@ -32,7 +32,8 @@ class FollowService extends Service {
     try {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
-      const followed_user = await this.app.mysql.get('users', { id: uid });
+      const followed_user = await this.service.account.binding.get2({ id: uid });
+      // const followed_user = await this.app.mysql.get('users', { id: uid });
 
       if (!user || !followed_user) {
         return 3;
@@ -79,7 +80,8 @@ class FollowService extends Service {
 
     try {
 
-      const followed_user = await this.app.mysql.get('users', { id: uid });
+      const followed_user = await this.service.account.binding.get2({ id: uid });
+      // const followed_user = await this.app.mysql.get('users', { id: uid });
 
       if (!user || !followed_user) {
         return 3;

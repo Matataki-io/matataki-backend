@@ -37,7 +37,12 @@ class UserService extends Service {
   // }
 
   async get(id) {
-    const users = await this.app.mysql.select('users', {
+    const users = await this.service.account.binding.get2({ id });
+    if (users) {
+      users.username = this.maskEmailAddress(users.username);
+    }
+    return users;
+    /* const users = await this.app.mysql.select('users', {
       where: { id },
       columns: [ 'id', 'username', 'nickname', 'platform', 'referral_uid', 'create_time', 'avatar', 'level', 'status', 'introduction', 'accept', 'banner' ], // todo：需要再增加
     });
@@ -45,7 +50,7 @@ class UserService extends Service {
       users[0].username = this.maskEmailAddress(users[0].username);
       return users[0];
     }
-    return null;
+    return null; */
   }
 
   async getUserById(id) {
@@ -79,7 +84,8 @@ class UserService extends Service {
     let introduction = '';
     let banner = '';
 
-    const user = await this.app.mysql.get('users', { id });
+    const user = await this.service.account.binding.get2({ id });
+    // const user = await this.app.mysql.get('users', { id });
     if (user) {
       avatar = user.avatar || '';
       nickname = user.nickname || '';

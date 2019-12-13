@@ -155,7 +155,8 @@ class AuthService extends Service {
         }
 
         // 判断昵称是否重复, 重复就加前缀
-        const duplicatedNickname = await this.app.mysql.get('users', { nickname });
+        const duplicatedNickname = await this.service.account.binding.get2({ nickname });
+        // const duplicatedNickname = await this.app.mysql.get('users', { nickname });
 
         if (duplicatedNickname !== null) {
           nickname = `${platform}_${nickname}`;
@@ -169,7 +170,8 @@ class AuthService extends Service {
           { where: { username, platform } }
         );
 
-        currentUser = await this.app.mysql.get('users', { username, platform });
+        currentUser = await this.service.account.binding.get2({ username, platform });
+        // currentUser = await this.app.mysql.get('users', { username, platform });
       }
 
       // await this.service.search.importUser(currentUser.id);
@@ -516,7 +518,8 @@ class AuthService extends Service {
   }
 
   async getUser(username, platform) {
-    return await this.app.mysql.get('users', { username, platform });
+    return await this.service.account.binding.get2({ username, platform });
+    // return await this.app.mysql.get('users', { username, platform });
   }
 
 }
