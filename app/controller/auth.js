@@ -83,6 +83,7 @@ class AuthController extends Controller {
         return false;
       }
     }
+    return null;
   }
 
   async generateEthHostingWallet(user) {
