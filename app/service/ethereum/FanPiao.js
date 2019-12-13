@@ -28,7 +28,7 @@ class FanPiaoService extends Web3Service {
     this.logger.info('FanPiao-20 issuing now:', name, symbol, decimals, initialSupply);
     return new Promise((resolve, reject) => {
       this.initContract(20).deploy({
-        data: contract777_data.bytecode,
+        data: contract20_data.bytecode,
         arguments: [ name, symbol, decimals, initialSupply ],
       }).send({ // 发送交易
         from: this.publicKey,
