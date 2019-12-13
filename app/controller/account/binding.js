@@ -37,12 +37,14 @@ class AccountBindingController extends Controller {
         const githubResult = this.handleGithub(code);
         if (!githubResult) return;
         username = githubResult;
+        flag = true;
         break;
       }
       case 'weixin': {
         const weixinResult = this.handleWeixin(code);
         if (!weixinResult) return;
         username = weixinResult;
+        flag = true;
         break;
       }
       case 'email': {
