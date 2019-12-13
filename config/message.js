@@ -123,6 +123,7 @@ module.exports = {
   exchangeNotEnough: 10806,
   exchangeNotExist: 10807,
   orderHandled: 10900,
+  generateGithubTokenError: 11000,
 
   returnObj(lang) {
 
@@ -144,6 +145,7 @@ module.exports = {
       ontAddressInvalid: { code: this.ontAddressInvalid, message: 'ONT address has wrong format' },
       authCodeInvalid: { code: this.authCodeInvalid, message: 'Invalid OAuth code' },
       generateTokenError: { code: this.generateTokenError, message: 'Error occurs when generating the token' },
+      generateGithubTokenError: { code: this.generateGithubTokenError, message: 'Error occurs when generating the github token' },
 
       followYourself: { code: this.followYourself, message: 'You can\'t follow yourself' },
       unsupportedPlatform: { code: this.unsupportedPlatform, message: 'Unsupported platform' },
@@ -222,6 +224,7 @@ module.exports = {
       ontAddressInvalid: { code: this.ontAddressInvalid, message: 'ONT帐号有误' },
       authCodeInvalid: { code: this.authCodeInvalid, message: '授权信息有误' },
       generateTokenError: { code: this.generateTokenError, message: '无法生成token' },
+      generateGithubTokenError: { code: this.generateGithubTokenError, message: '无法生成github token' },
 
       followYourself: { code: this.followYourself, message: '不能关注自己' },
       unsupportedPlatform: { code: this.unsupportedPlatform, message: '不支持的授权平台' },

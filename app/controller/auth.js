@@ -112,7 +112,7 @@ class AuthController extends Controller {
     // 由access token再取用户信息
     const userinfo = await this.service.auth.getGithubUser(usertoken.access_token);
     if (userinfo === null) {
-      ctx.body = ctx.msg.generateTokenError;
+      ctx.body = ctx.msg.generateGithubTokenError;
       return;
     }
 
