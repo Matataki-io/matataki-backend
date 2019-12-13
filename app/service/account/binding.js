@@ -112,26 +112,31 @@ class AccountBindingService extends Service {
    * @memberof AccountBindingService
    */
   async updateMain({ uid, platform }) {
-    const userAccount = await this.get(uid, platform);
-    if (!userAccount) {
-      return false;
-    }
     const tran = await this.app.mysql.beginTransaction();
     try {
       // for update 锁定table row
-      const mainAccount = await tran.query('SELECT * FROM user_accounts WHERE uid=? AND is_main=1 limit 1 FOR UPDATE;', [ uid ]);
-      this.logger.error('Service.Account.binding.updateMain mainAccount. %j', mainAccount);
-      if (mainAccount) {
-        // 解绑
-        await tran.update('user_accounts', {
-          id: mainAccount[0].id,
-          is_main: 0,
-        });
+      const oldMainAccount = await tran.query('SELECT * FROM user_accounts WHERE uid=? AND is_main=1 limit 1 FOR UPDATE;', [ uid ]);
+      const newMainAccount = await tran.query('SELECT * FROM user_accounts WHERE uid=? AND platform=? limit 1 FOR UPDATE;', [ uid, platform ]);
+      if (oldMainAccount.length <= 0 || newMainAccount.length <= 0) {
+        await tran.rollback();
+        return false;
       }
+      this.logger.error('Service.Account.binding.updateMain oldMainAccount. %j', oldMainAccount);
+      // 解绑
+      await tran.update('user_accounts', {
+        id: oldMainAccount[0].id,
+        is_main: 0,
+      });
       // 绑定
       await tran.query('UPDATE user_accounts SET is_main=1 WHERE uid=:uid AND platform=:platform;', {
         uid,
         platform,
+      });
+      // 修改users表中数据
+      await tran.query('UPDATE users SET username=:username, platform=:platform WHERE id=:uid;', {
+        username: newMainAccount[0].account,
+        platform,
+        uid,
       });
       await tran.commit();
       return true;
