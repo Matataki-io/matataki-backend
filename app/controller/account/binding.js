@@ -117,7 +117,7 @@ class AccountBindingController extends Controller {
       };
       return false;
     }
-    this.logger.info('controller: Account binding:: handleWeixin: %j', handleWeixin);
+    this.logger.info('controller: Account binding:: handleWeixin: %j', accessTokenResult);
     return accessTokenResult.data.openid;
   }
 
