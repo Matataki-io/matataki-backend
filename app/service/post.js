@@ -52,11 +52,11 @@ class PostService extends Service {
           [ result.insertId ]
         );
 
-        await this.app.redis.multi()
-          .sadd('post', result.insertId)
-          .hincrby('post:stat', 'count', 1)
-          .zadd('post:hot:filter:1', 0, result.insertId)
-          .exec();
+        // await this.app.redis.multi()
+        //   .sadd('post', result.insertId)
+        //   .hincrby('post:stat', 'count', 1)
+        //   .zadd('post:hot:filter:1', 0, result.insertId)
+        //   .exec();
 
         // 加积分
         await this.service.mining.publish(data.uid, result.insertId, ''); // todo；posts表增加ip，这里传进来ip
@@ -1170,17 +1170,17 @@ class PostService extends Service {
 
       await conn.commit();
 
-      if (require) {
-        await this.app.redis.multi()
-          .zrem('post:hot:filter:1', id)
-          .zadd('post:hot:filter:2', post.hot_score, id)
-          .exec();
-      } else {
-        await this.app.redis.multi()
-          .zrem('post:hot:filter:2', id)
-          .zadd('post:hot:filter:1', post.hot_score, id)
-          .exec();
-      }
+      // if (require) {
+      //   await this.app.redis.multi()
+      //     .zrem('post:hot:filter:1', id)
+      //     .zadd('post:hot:filter:2', post.hot_score, id)
+      //     .exec();
+      // } else {
+      //   await this.app.redis.multi()
+      //     .zrem('post:hot:filter:2', id)
+      //     .zadd('post:hot:filter:1', post.hot_score, id)
+      //     .exec();
+      // }
 
       return 0;
     } catch (e) {
@@ -1313,10 +1313,10 @@ class PostService extends Service {
 
       await conn.commit();
 
-      await this.app.redis.multi()
-        .zrem('post:hot:filter:4', id)
-        .zadd('post:hot:filter:1', post.hot_score, id)
-        .exec();
+      // await this.app.redis.multi()
+      //   .zrem('post:hot:filter:4', id)
+      //   .zadd('post:hot:filter:1', post.hot_score, id)
+      //   .exec();
 
       return 0;
     } catch (e) {

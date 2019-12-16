@@ -39,12 +39,12 @@ class Bootstrapper {
       if (channel_id === 1) {
         if (is_recommend) pipeline.zadd('post:recommend', id, id);
 
-        if (require_holdtokens === 0 && require_buy === 0) {
-          pipeline.zadd('post:hot:filter:1', hot_score, id);
-        } else {
-          if (require_holdtokens) pipeline.zadd('post:hot:filter:2', hot_score, id);
-          if (require_buy) pipeline.zadd('post:hot:filter:4', hot_score, id);
-        }
+        // if (require_holdtokens === 0 && require_buy === 0) {
+        //   pipeline.zadd('post:hot:filter:1', hot_score, id);
+        // } else {
+        //   if (require_holdtokens) pipeline.zadd('post:hot:filter:2', hot_score, id);
+        //   if (require_buy) pipeline.zadd('post:hot:filter:4', hot_score, id);
+        // }
       }
     }
 
