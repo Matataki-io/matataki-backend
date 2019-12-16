@@ -46,7 +46,7 @@ class AuthController extends Controller {
     try {
       this.logger.info('get_or_create_user', { username, platform });
       // let user = await this.app.mysql.get('users', { username, platform });
-      let user = await this.service.account.binding.getSyncFieldWithUser(username, platform);
+      let user = await this.service.account.binding.get2({ username, platform });
       // 处理以太坊登录的历史问题
       if (!user) user = await this.handleEthereumHistoricError(username);
       if (!user) {

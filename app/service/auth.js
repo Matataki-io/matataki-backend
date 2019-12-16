@@ -138,7 +138,7 @@ class AuthService extends Service {
   async saveUser(username, nickname, avatarUrl, ip = '', referral = 0, platform = 'github') {
     try {
       // let currentUser = await this.app.mysql.get('users', { username, platform });
-      let currentUser = await this.service.account.binding.getSyncFieldWithUser(username, platform);
+      let currentUser = await this.service.account.binding.get2({ username, platform });
       // 用户是第一次登录, 先创建
       if (currentUser === null) {
         // await this.app.mysql.insert('users', {
@@ -204,7 +204,7 @@ class AuthService extends Service {
       'SELECT id FROM users WHERE username = :username;',
       { username }
     ); */
-    const user = await this.service.account.binding.getSyncFieldWithUser(username, 'email');
+    const user = await this.service.account.binding.get2({ username, platform: 'email' });
     return !!user;
     /* const userBinding = await this.app.mysql.get('user_accounts', { account: username, platform: 'email' });
     return user.length > 0 || userBinding !== null; */
@@ -376,7 +376,8 @@ class AuthService extends Service {
     } */
 
     // if (userPw.length === 0) {
-    const userPw = await this.service.account.binding.getSyncFieldWithUser(username, platform);
+    // const userPw = await this.service.account.binding.getSyncFieldWithUser(username, platform);
+    const userPw = await this.service.account.binding.get2({ username, platform });
     this.logger.info('AuthService:: verifyLogin: userPw ', userPw);
 
     if (!userPw) {

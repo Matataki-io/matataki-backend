@@ -233,7 +233,10 @@ class AccountBindingService extends Service {
     if (username !== null) whereArr.push('ua.account=:username');
     if (platform !== null) whereArr.push('ua.platform=:platform');
     if (nickname !== null) whereArr.push('u.nickname=:nickname');
-    if (id !== null) whereArr.push('u.id=:id');
+    if (id !== null) {
+      whereArr.push('u.id=:id');
+      whereArr.push('ua.is_main = 1');
+    }
 
     const users = await this.app.mysql.query(`
       SELECT ua.uid as id, ua.account as username, ua.platform, ua.password_hash,
@@ -242,8 +245,9 @@ class AccountBindingService extends Service {
       FROM users as u
       LEFT JOIN user_accounts as ua
       ON ua.uid = u.id
-      WHERE ${whereArr.join(' AND ')} AND ua.is_main = 1;`, searchObj);
+      WHERE ${whereArr.join(' AND ')};`, searchObj);
     if (users && users.length > 0) {
+      if (platform !== null) users[0].platform = platform;
       return users[0];
     }
     return null;
