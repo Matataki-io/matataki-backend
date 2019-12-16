@@ -1108,7 +1108,7 @@ class PostService extends Service {
   async stats() {
     let userCount = await this.app.redis.hget('user:stat', 'count');
     if (userCount === null) {
-      userCount = await this.app.redis.hset('user:stat', 'count', (await mysql.query('SELECT COUNT(1) as count FROM users;'))[0].count);
+      userCount = await this.app.redis.hset('user:stat', 'count', (await this.app.mysql.query('SELECT COUNT(1) as count FROM users;'))[0].count);
     }
 
     let postCount = await this.app.redis.hget('post:stat', 'count');
