@@ -74,6 +74,7 @@ class AuthController extends Controller {
       const tran = await this.app.mysql.beginTransaction();
       try {
         const userBinding = await tran.update('user_accounts', { account: username }, { where: { uid: old.id, platform: 'eth' } });
+        this.logger.info('controller: handleEthereumHistoricError:: userBinding:', userBinding);
         await tran.update('users', { username }, { where: { id: old.id, platform: 'eth' } });
         await tran.commit();
         return userBinding;

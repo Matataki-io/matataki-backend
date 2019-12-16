@@ -238,6 +238,7 @@ class AccountBindingService extends Service {
       whereArr.push('ua.is_main = 1');
     }
 
+    this.logger.info('service::binding:get2: whereArr, ', whereArr.join(' AND '));
     const users = await this.app.mysql.query(`
       SELECT ua.uid as id, ua.account as username, ua.platform, ua.password_hash,
       u.email, u.nickname, u.avatar, u.create_time, u.introduction, u.accept, u.source,
@@ -246,6 +247,7 @@ class AccountBindingService extends Service {
       LEFT JOIN user_accounts as ua
       ON ua.uid = u.id
       WHERE ${whereArr.join(' AND ')};`, searchObj);
+    this.logger.info('service::binding:get2: ', users);
     if (users && users.length > 0) {
       if (platform !== null) users[0].platform = platform;
       return users[0];
