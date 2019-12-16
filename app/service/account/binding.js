@@ -224,18 +224,23 @@ class AccountBindingService extends Service {
     id = null,
   }) {
     const whereArr = [];
-    const searchObj = {
-      username,
-      platform,
-      nickname,
-      id,
-    };
-    if (username !== null) whereArr.push('ua.account=:username');
-    if (platform !== null) whereArr.push('ua.platform=:platform');
-    if (nickname !== null) whereArr.push('u.nickname=:nickname');
+    const searchObj = {};
+    if (username !== null) {
+      whereArr.push('ua.account=:username');
+      searchObj.username = username;
+    }
+    if (platform !== null) {
+      whereArr.push('ua.platform=:platform');
+      searchObj.platform = platform;
+    }
+    if (nickname !== null) {
+      whereArr.push('u.nickname=:nickname');
+      searchObj.nickname = nickname;
+    }
     if (id !== null) {
       whereArr.push('u.id=:id');
       whereArr.push('ua.is_main = 1');
+      searchObj.id = id;
     }
 
     this.logger.info('service::binding:get2: whereArr, ', whereArr.join(' AND '));
@@ -248,7 +253,6 @@ class AccountBindingService extends Service {
       LEFT JOIN user_accounts as ua
       ON ua.uid = u.id
       WHERE ${whereArr.join(' AND ')};`, searchObj);
-    
     this.logger.info('service::binding:get2: ', users);
     if (users && users.length > 0) {
       if (platform !== null) users[0].platform = platform;
