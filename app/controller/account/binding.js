@@ -73,7 +73,7 @@ class AccountBindingController extends Controller {
       };
     } else {
       ctx.body = {
-        ...ctx.msg.failure,
+        ...ctx.msg.accountBinded,
       };
     }
   }

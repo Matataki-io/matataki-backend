@@ -124,6 +124,7 @@ module.exports = {
   exchangeNotExist: 10807,
   orderHandled: 10900,
   generateGithubTokenError: 11000,
+  accountBinded: 11001,
 
   returnObj(lang) {
 
@@ -204,6 +205,7 @@ module.exports = {
       exchangeNotEnough: { code: this.exchangeNotEnough, message: 'There is not enough liquidity.' },
       exchangeNotExist: { code: this.exchangeNotExist, message: 'No swap pairs.' },
       orderHandled: { code: this.orderHandled, message: 'order handle' },
+      accountBinded: { code: this.accountBinded, message: 'account already beed binded' },
     };
 
     const zh = {
@@ -283,6 +285,7 @@ module.exports = {
       exchangeNotEnough: { code: this.exchangeNotEnough, message: '流动性不足' },
       exchangeNotExist: { code: this.exchangeNotExist, message: '没有交易对.' },
       orderHandled: { code: this.orderHandled, message: '订单已处理' },
+      accountBinded: { code: this.accountBinded, message: '账号已被绑定' },
     };
 
     let message;
