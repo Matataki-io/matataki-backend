@@ -142,6 +142,8 @@ class FollowService extends Service {
       row.is_follow = false;
       row.is_fan = false;
       users.push(row.fuid);
+
+      row.followed = this.service.user.maskEmailAddress(row.followed);
     });
 
 
