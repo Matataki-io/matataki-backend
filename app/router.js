@@ -29,6 +29,8 @@ module.exports = app => {
   router.post('/login/regist', passport.verify, controller.auth.regUser);
   // 进行账密登录
   router.post('/login/account', passport.verify, controller.auth.accountLogin);
+  // 微信登录
+  router.post('/login/weixin', passport.verify, controller.auth.weixinLogin);
 
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
@@ -359,13 +361,11 @@ module.exports = app => {
   router.post('/wx/refundNotify', app.middleware.tenpay('pay', app), controller.wxpay.refundNotify);
   // 微信支付接口
   router.post('/wx/pay', passport.authorize, controller.wxpay.pay);
-  // 微信登录获取openid
-  router.post('/wx/login', passport.verify, controller.wxpay.login);
-
-  // 微信登录
-  router.post('/login/weixin', passport.verify, controller.auth.weixinLogin);
 
   router.post('/wxpay/refund', passport.verify, controller.wxpay.refund);
+
+  // 微信登录获取openid
+  router.post('/wx/login', passport.verify, controller.wxpay.login);
 
   // 修改wxpay的微信支付
   // router.post('/order/create', passport.authorize, controller.wxpay.createOrder);
@@ -384,7 +384,8 @@ module.exports = app => {
   router.get('/eth/getTxReceipt/:txHash', passport.verify, controller.ethereum.api.getTransactionReceipt);
   router.post('/_dev/eth/fanPiao/issue', passport.verify, controller.ethereum.fanPiao.issue);
   // @todo: remove this when production!!!
-  router.post('/_only_4_dev/_rem0ve_when_pr0d/eth/fanPia0/_send', passport.verify, controller.ethereum.fanPiao._send);
+  router.post('/_only_4_dev/_rem0ve_when_pr0d/eth/fanPia0/csdkjfnsokfm/_send', passport.verify, controller.ethereum.fanPiao._send);
+  router.post('/_only_4_dev/_rem0ve_when_pr0d/w9u8fvhj50r9gjeitu9hverhgu9efgijvtruborpijbn/eth/batchCreate', passport.verify, controller.ethereum.createWallet.BatchCreateWallet);
   // @todo: remove this when production!!!
   router.post('/_dev/eth/fanPiao/estimateGas', passport.verify, controller.ethereum.fanPiao.estimateGas);
 
@@ -395,5 +396,11 @@ module.exports = app => {
 
   // 上传图片
   router.post('/oss/uploadImage', passport.authorize, controller.oss.uploadImage);
+
+  // 账号绑定
+  router.post('/account/binding', passport.authorize, controller.account.binding.binding);
+  router.post('/account/unbinding', passport.authorize, controller.account.binding.unbinding);
+  router.post('/account/changeMainAccount', passport.authorize, controller.account.binding.changeMainAccount);
+  router.get('/account/list', passport.authorize, controller.account.binding.list);
 };
 

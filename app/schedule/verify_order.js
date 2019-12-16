@@ -31,8 +31,8 @@ class VerifyOrder extends Subscription {
     const expire = moment().subtract(12, 'hours').format('YYYY-MM-DD HH:mm:ss');
 
     const results = await this.app.mysql.query(`select * from orders where status=0 and create_time>'${expire}' limit 10`);
-    this.logger.info(results);
-    console.log(results);
+    // this.logger.info(results);
+    // console.log(results);
     if (results.length === 0) { return; }
 
     for (let i = 0; i < results.length; i++) {
@@ -48,7 +48,8 @@ class VerifyOrder extends Subscription {
   }
 
   async eos_verify(order) {
-    const user = await this.app.mysql.get('users', { id: order.uid });
+    const user = await this.service.account.binding.get2({ id: order.uid });
+    // const user = await this.app.mysql.get('users', { id: order.uid });
 
     // 根据 signid 去合约中取 table row，Limit 为username
     // 取到则继续验证 amount， contract ，symbol， referrer， 验证通过才进入结算
@@ -69,7 +70,8 @@ class VerifyOrder extends Subscription {
 
         let reffer_name = '';
         if (order.referreruid > 0) {
-          const reffer = await this.app.mysql.get('users', { id: order.referreruid });
+          const reffer = await this.service.account.binding.get2({ id: order.referreruid });
+          // const reffer = await this.app.mysql.get('users', { id: order.referreruid });
           reffer_name = reffer ? reffer.username : '';
         }
 

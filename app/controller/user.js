@@ -408,9 +408,11 @@ class UserController extends Controller {
   async search() {
     const { q = '' } = this.ctx.query;
 
-    let user = await this.app.mysql.get('users', { nickname: q });
+    let user = await this.service.account.binding.get2({ nickname: q });
+    // let user = await this.app.mysql.get('users', { nickname: q });
     if (!user) {
-      user = await this.app.mysql.get('users', { username: q });
+      user = await this.service.account.binding.get2({ username: q });
+      // user = await this.app.mysql.get('users', { username: q });
     }
 
     if (!user) {

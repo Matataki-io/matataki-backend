@@ -37,15 +37,20 @@ class UserService extends Service {
   // }
 
   async get(id) {
-    const users = await this.app.mysql.select('users', {
+    const users = await this.service.account.binding.get2({ id });
+    if (users) {
+      users.username = this.maskEmailAddress(users.username);
+    }
+    return users;
+    /* const users = await this.app.mysql.select('users', {
       where: { id },
       columns: [ 'id', 'username', 'nickname', 'platform', 'referral_uid', 'create_time', 'avatar', 'level', 'status', 'introduction', 'accept', 'banner' ], // todo：需要再增加
     });
     if (users && users.length > 0) {
-      users[0].username = this.maskEmailAddress(users[0].username)
+      users[0].username = this.maskEmailAddress(users[0].username);
       return users[0];
     }
-    return null;
+    return null; */
   }
 
   async getUserById(id) {
@@ -79,7 +84,8 @@ class UserService extends Service {
     let introduction = '';
     let banner = '';
 
-    const user = await this.app.mysql.get('users', { id });
+    const user = await this.service.account.binding.get2({ id });
+    // const user = await this.app.mysql.get('users', { id });
     if (user) {
       avatar = user.avatar || '';
       nickname = user.nickname || '';
@@ -130,7 +136,7 @@ class UserService extends Service {
       + 'SELECT amount FROM assets_points WHERE uid = :uid;' // 查询 assets_points 的 amount 积分
       + 'SELECT COUNT(*) AS referral_amount FROM users WHERE referral_uid = :uid;' // 统计 users 的 referral_uid 数量'=
       + 'SELECT count(1) AS count FROM post_bookmarks WHERE uid = :uid;'
-      ,{ uid: basicInfo.id }
+      , { uid: basicInfo.id }
     );
     basicInfo.follows = counts[0][0].follows;
     basicInfo.fans = counts[1][0].fans;
@@ -219,48 +225,44 @@ class UserService extends Service {
   }
 
   async recommendUser(amount, current_user = null) {
-    // 随机选取数个
-    const userList = await this.app.mysql.query(
-      'SELECT id, username, nickname, avatar FROM users WHERE is_recommend = 1 ORDER BY RAND() LIMIT :amount;',
-      { amount }
-    );
+    let ids = await this.app.redis.srandmember('user:recommend', amount);
+    if (ids.length === 0) {
+      ids = (await this.app.mysql.query('SELECT id FROM users WHERE is_recommend = 1;')).map(row => row.id);
 
-    const userids = [];
-    let myFans = [];
-    let myFollows = [];
+      const pipeline = this.app.redis.multi();
+      for (const id of ids) {
+        pipeline.sadd('user:recommend', id);
+      }
+      await pipeline.expire('user:recommend', 300).exec();
 
-    _.each(userList, everyUser => {
-      everyUser.username = this.maskEmailAddress(everyUser.username);
-      userids.push(everyUser.id);
-      everyUser.is_follow = false;
-      everyUser.is_fan = false;
-    });
-
-    if (current_user) {
-      const followStatus = await this.app.mysql.query(
-        'SELECT uid FROM follows WHERE uid IN (:userids) AND fuid = :me AND status = 1;'
-        + 'SELECT fuid FROM follows WHERE fuid IN (:userids) AND uid = :me AND status = 1;',
-        { userids, me: current_user }
-      );
-
-      myFans = followStatus[0];
-      myFollows = followStatus[1];
+      ids = await this.app.redis.srandmember('user:recommend', amount);
     }
 
-    _.each(userList, everyUser => {
-      _.each(myFans, everyFan => {
-        if (everyUser.id === everyFan.uid) {
-          everyUser.is_fan = true;
-        }
-      });
-      _.each(myFollows, everyFollow => {
-        if (everyUser.id === everyFollow.fuid) {
-          everyUser.is_follow = true;
-        }
-      });
-    });
+    const followKey = `user:${current_user}:follow_set`;
+    const followerKey = `user:${current_user}:follower_set`;
 
-    return userList;
+    const result = [];
+
+    for (const id of ids) {
+      const info = await this.app.redis.hgetall(`user:${id}:info`);
+
+      info.id = id;
+
+      if (info.nickname === '') info.nickname = null;
+      if (info.avatar === '') info.avatar = null;
+
+      if (current_user != null) {
+        info.is_follow = await this.app.redis.sismember(followKey, id);
+        info.is_fan = await this.app.redis.sismember(followerKey, id);
+      } else {
+        info.is_follow = false;
+        info.is_fan = false;
+      }
+
+      result.push(info);
+    }
+
+    return result;
   }
 
   async setProfile(userid, email, nickname, introduction, accept) {
@@ -285,7 +287,7 @@ class UserService extends Service {
         return nicknameInvalid;
       }
 
-      const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE nickname = ?) existence;', [nickname]))[0];
+      const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE nickname = ?) existence;', [ nickname ]))[0];
       if (existence) {
         return nicknameDuplicated;
       }
@@ -503,9 +505,9 @@ class UserService extends Service {
 
       if (result.affectedRows >= 1) {
         return 0;
-      } else {
-        return 3;
       }
+      return 3;
+
 
     } catch (err) {
       this.logger.error('UserService:: setBannerImage error: %j', err);
@@ -617,7 +619,7 @@ class UserService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM user_websites WHERE uid = ? AND website_id >= ?', [userId, websites.length]);
+      await conn.query('DELETE FROM user_websites WHERE uid = ? AND website_id >= ?', [ userId, websites.length ]);
 
       let websiteId = 0;
 
@@ -625,7 +627,7 @@ class UserService extends Service {
         await conn.query('INSERT INTO user_websites VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE url = VALUES(url)', [
           userId,
           websiteId,
-          website
+          website,
         ]);
 
         websiteId++;
@@ -666,23 +668,23 @@ class UserService extends Service {
       return null;
     }
 
-    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE id = ?) existence;', [userId]))[0];
+    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM users WHERE id = ?) existence;', [ userId ]))[0];
     if (!existence) {
       return null;
     }
 
     const websites = [];
 
-    const websiteResults = await this.app.mysql.query('SELECT url FROM user_websites WHERE uid = ?;', [userId]);
+    const websiteResults = await this.app.mysql.query('SELECT url FROM user_websites WHERE uid = ?;', [ userId ]);
     for (const { url } of websiteResults) {
       websites.push(url);
     }
 
     const socialAccounts = [];
 
-    const socialAccountResult = (await this.app.mysql.query('SELECT wechat, qq, weibo, github, telegram, twitter, facebook FROM user_social_accounts WHERE uid = ?;', [userId]))[0];
+    const socialAccountResult = (await this.app.mysql.query('SELECT wechat, qq, weibo, github, telegram, twitter, facebook FROM user_social_accounts WHERE uid = ?;', [ userId ]))[0];
     if (socialAccountResult) {
-      for (const [type, value] of Object.entries(socialAccountResult)) {
+      for (const [ type, value ] of Object.entries(socialAccountResult)) {
         if (!value) {
           continue;
         }
@@ -702,7 +704,7 @@ class UserService extends Service {
       return false;
     }
 
-    if (typeof order === "string") {
+    if (typeof order === 'string') {
       order = parseInt(order);
     }
 
@@ -719,7 +721,7 @@ class UserService extends Service {
 
     if (order === 1) {
       sql += `
-        ORDER BY b.create_time DESC`
+        ORDER BY b.create_time DESC`;
     } else if (order === 2) {
       sql += `
         ORDER BY p.create_time`;
@@ -757,7 +759,7 @@ class UserService extends Service {
           avatar,
           read,
           likes,
-          tags: []
+          tags: [],
         };
         posts.push(latestRow);
       }
@@ -766,8 +768,8 @@ class UserService extends Service {
         latestRow.tags.push({
           id: tagId,
           name: tagName,
-          type: tagType
-        })
+          type: tagType,
+        });
       }
     }
 
@@ -778,10 +780,10 @@ class UserService extends Service {
       return false;
     }
 
-    const { articleCount } = (await this.app.mysql.query('SELECT count(1) AS articleCount FROM post_bookmarks WHERE uid = ?;', [userId]))[0];
+    const { articleCount } = (await this.app.mysql.query('SELECT count(1) AS articleCount FROM post_bookmarks WHERE uid = ?;', [ userId ]))[0];
 
     return {
-      articleCount
+      articleCount,
     };
   }
 
@@ -801,7 +803,7 @@ class UserService extends Service {
     }
 
     let username = match[1];
-    const rest = str.slice(username.length)
+    const rest = str.slice(username.length);
 
     switch (username.length) {
       case 1:

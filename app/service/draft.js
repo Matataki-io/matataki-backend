@@ -28,36 +28,37 @@ class DraftService extends Service {
   }
 
   async transferOwner(uid, draftid, current_uid) {
-    let draft = await this.app.mysql.get('drafts', { id: draftid });
-    if(!draft){
-      throw new Error("draft not found");
+    const draft = await this.app.mysql.get('drafts', { id: draftid });
+    if (!draft) {
+      throw new Error('draft not found');
     }
 
-    if(draft.uid !== current_uid){
-      throw new Error("not your draft");
+    if (draft.uid !== current_uid) {
+      throw new Error('not your draft');
     }
 
-    let user = await this.app.mysql.get('users', { id : uid });
-    if(!user){
-      throw new Error("user not found");
+    const user = await this.service.account.binding.get2({ id: uid });
+    // const user = await this.app.mysql.get('users', { id: uid });
+    if (!user) {
+      throw new Error('user not found');
     }
 
-    if(!user.accept){
-      throw new Error("target user not accept owner transfer");
+    if (!user.accept) {
+      throw new Error('target user not accept owner transfer');
     }
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.update("drafts", {
+      await conn.update('drafts', {
         uid: user.id,
       }, { where: { id: draft.id } });
 
-      await conn.insert("post_transfer_log", {
+      await conn.insert('post_transfer_log', {
         postid: draftid,
         fromuid: current_uid,
         touid: uid,
-        type: "draft",
-        create_time: moment().format('YYYY-MM-DD HH:mm:ss')
+        type: 'draft',
+        create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
       });
 
       await conn.commit();
