@@ -20,7 +20,7 @@ class CacheUpdater extends Subscription {
     pipeline.hset('user:stat', 'count', users.length);
 
     for (const { id, username, nickname, avatar, is_recommend } of users) {
-      pipeline.hmset(`user:${id}:info`, 'username', ctx.service.user.maskEmailAddress(username), 'nickname', nickname, 'avatar', avatar);
+      pipeline.hmset(`user:${id}:info`, 'username', this.ctx.service.user.maskEmailAddress(username), 'nickname', nickname, 'avatar', avatar);
 
       if (is_recommend) pipeline.sadd('user:recommend', id);
     }
