@@ -463,7 +463,7 @@ class AuthService extends Service {
       }
 
       // 插入ES
-      await this.service.search.importUser(createAccount.insertId);
+      // await this.service.search.importUser(createAccount.insertId);
 
       return true;
     }
