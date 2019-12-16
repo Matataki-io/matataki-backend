@@ -97,6 +97,7 @@ class AccountBindingController extends Controller {
       ctx.body = ctx.msg.generateTokenError;
       return false;
     }
+    this.logger.info('controller: Account binding:: handleGithub: %j', userinfo);
     return userinfo.login;
   }
 
@@ -116,6 +117,7 @@ class AccountBindingController extends Controller {
       };
       return false;
     }
+    this.logger.info('controller: Account binding:: handleWeixin: %j', handleWeixin);
     return accessTokenResult.data.openid;
   }
 
