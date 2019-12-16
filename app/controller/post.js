@@ -319,11 +319,11 @@ class PostController extends Controller {
     if (typeof filter === 'string') filter = parseInt(filter);
 
     let postData;
-    if (channel === 1 && author === null) {
-      postData = await this.service.post.scoreRank(page, pagesize, filter);
-    } else {
+    // if (channel === 1 && author === null) {
+    //   postData = await this.service.post.scoreRank(page, pagesize, filter);
+    // } else {
       postData = await this.service.post.scoreRankSlow(page, pagesize, author, channel, extra, filter);
-    }
+    // }
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
