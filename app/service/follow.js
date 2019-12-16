@@ -122,42 +122,93 @@ class FollowService extends Service {
       return 2;
     }
 
-    const { redis } = this.app;
-    const { id: myId } = this.ctx.user;
+    // 获取关注数量 粉丝数量 被关注者详情
+    const infos = await this.app.mysql.query(
+      'SELECT COUNT(*) AS follows FROM follows WHERE uid = :uid AND status = 1;'
+      + 'SELECT COUNT(*) AS fans FROM follows WHERE fuid = :uid AND status = 1;'
+      + 'SELECT a.fuid, a.uid, a.followed, b.nickname, b.avatar FROM follows a '
+      + 'LEFT JOIN users b ON a.fuid = b.id WHERE a.uid = :uid AND a.status = 1 ORDER BY a.id DESC LIMIT :start, :end;',
+      { uid, start: (page - 1) * pagesize, end: 1 * pagesize }
+    );
 
-    const follows = await redis.llen(`user:${uid}:follow_list`);
-    const followers = await redis.llen(`user:${uid}:follower_list`);
-    const followIds = await redis.lrange(`user:${uid}:follow_list`, (page - 1) * pagesize, pagesize);
+    const follows = infos[0];
+    const fans = infos[1];
+    const results = infos[2];
 
-    const result = [];
+    const users = [];
 
-    for (const id of followIds) {
-      const info = await redis.hgetall(`user:${id}:info`);
+    _.each(results, row => {
+      row.fans = 0;
+      row.is_follow = false;
+      row.is_fan = false;
+      users.push(row.fuid);
 
-      info.fuid = id;
-      info.fans = await redis.llen(`user:${id}:follower_list`);
+      row.followed = this.service.user.maskEmailAddress(row.followed);
+    });
 
-      if (info.nickname === '') info.nickname = null;
-      if (info.avatar === '') info.avatar = null;
-      info.followed = info.username;
-      delete info.username;
 
-      if (myId) {
-        info.is_follow = await redis.sismember(`user:${myId}:follow_set`, id);
-        info.is_fan = await redis.sismember(`user:${myId}:follower_set`, id);
-      } else {
-        info.is_follow = false;
-        info.is_fan = false;
-      }
+    if (users.length > 0) {
+      // 获取列表中账号粉丝数
+      const fan = await this.app.mysql.query(
+        'SELECT fuid, COUNT(*) AS fans FROM follows WHERE status = 1 AND fuid IN (?) GROUP BY fuid;',
+        [ users ]
+      );
 
-      result.push(info);
+      // 分配粉丝数到每个人
+      _.each(results, row => {
+        _.each(fan, row2 => {
+          if (row.fuid === row2.fuid) {
+            row.fans = row2.fans;
+          }
+        });
+      });
     }
 
-    return {
-      totalFollows: follows,
-      totalFans: followers,
-      list: result,
+    const current_user = this.ctx.user;
+
+    if (current_user && users.length > 0) {
+
+      // 查询我对该列表的follow状态 我是否有fo这群人
+      const my_follows = await this.app.mysql.select('follows', {
+        where: {
+          status: 1,
+          uid: current_user.id,
+          fuid: users,
+        },
+        columns: [ 'fuid' ],
+      });
+
+      // 这群人是否有fo我
+      const my_fans = await this.app.mysql.select('follows', {
+        where: {
+          status: 1,
+          uid: users,
+          fuid: current_user.id,
+        },
+        columns: [ 'uid' ],
+      });
+
+      _.each(results, row => {
+        _.each(my_follows, row2 => {
+          if (row.fuid === row2.fuid) {
+            row.is_follow = true;
+          }
+        });
+        _.each(my_fans, fan => {
+          if (row.fuid === fan.uid) {
+            row.is_fan = true;
+          }
+        });
+      });
+    }
+
+    const res = {
+      totalFollows: follows[0].follows,
+      totalFans: fans[0].fans,
+      list: results,
     };
+
+    return res;
   }
 
   // 获取某个用户的粉丝列表
@@ -167,40 +218,91 @@ class FollowService extends Service {
       return 2;
     }
 
-    const { redis } = this.app;
-    const { id: myId } = this.ctx.user;
+    // 获取关注数量 粉丝数量 粉丝列表详情
+    const infos = await this.app.mysql.query(
+      'SELECT COUNT(*) AS follows FROM follows WHERE uid = :uid AND status = 1;'
+      + 'SELECT COUNT(*) AS fans FROM follows WHERE fuid = :uid AND status = 1;'
+      + 'SELECT a.uid, a.fuid, a.username, b.nickname, b.avatar FROM follows a '
+      + 'LEFT JOIN users b on a.uid = b.id WHERE a.fuid = :uid AND a.status = 1 ORDER BY a.id DESC LIMIT :start, :end;',
+      { uid, start: (page - 1) * pagesize, end: 1 * pagesize }
+    );
 
-    const follows = await redis.llen(`user:${uid}:follow_list`);
-    const followers = await redis.llen(`user:${uid}:follower_list`);
-    const followerIds = await redis.lrange(`user:${uid}:follower_list`, (page - 1) * pagesize, pagesize);
+    const follows = infos[0];
+    const fans = infos[1];
+    const results = infos[2];
 
-    const result = [];
+    const users = [];
 
-    for (const id of followerIds) {
-      const info = await redis.hgetall(`user:${id}:info`);
+    _.each(results, row => {
+      row.fans = 0;
+      row.is_follow = false;
+      row.is_fan = false;
+      users.push(row.uid);
 
-      info.uid = id;
-      info.fans = await redis.llen(`user:${id}:follower_list`);
+      row.username = this.service.user.maskEmailAddress(row.username);
+    });
 
-      if (info.nickname === '') info.nickname = null;
-      if (info.avatar === '') info.avatar = null;
+    if (users.length > 0) {
+      // 获取列表中账号粉丝数
+      const fan = await this.app.mysql.query(
+        'SELECT fuid, COUNT(*) AS fans FROM follows WHERE status = 1 AND fuid IN (?) GROUP BY fuid;',
+        [ users ]
+      );
 
-      if (myId) {
-        info.is_follow = await redis.sismember(`user:${myId}:follow_set`, id);
-        info.is_fan = await redis.sismember(`user:${myId}:follower_set`, id);
-      } else {
-        info.is_follow = false;
-        info.is_fan = false;
-      }
-
-      result.push(info);
+      // 分配粉丝数到每个人
+      _.each(results, row => {
+        _.each(fan, row2 => {
+          if (row.uid === row2.fuid) {
+            row.fans = row2.fans;
+          }
+        });
+      });
     }
 
-    return {
-      totalFollows: follows,
-      totalFans: followers,
-      list: result,
+    const current_user = this.ctx.user;
+
+    if (current_user && users.length > 0) {
+
+      // 查询我对该列表的follow状态
+      const my_follows = await this.app.mysql.select('follows', {
+        where: {
+          status: 1,
+          uid: current_user.id,
+          fuid: users,
+        },
+        columns: [ 'fuid' ],
+      });
+
+      const my_fans = await this.app.mysql.select('follows', {
+        where: {
+          status: 1,
+          uid: users,
+          fuid: current_user.id,
+        },
+        columns: [ 'uid' ],
+      });
+
+      _.each(results, row => {
+        _.each(my_follows, row2 => {
+          if (row.uid === row2.fuid) {
+            row.is_follow = true;
+          }
+        });
+        _.each(my_fans, fan => {
+          if (row.uid === fan.uid) {
+            row.is_fan = true;
+          }
+        });
+      });
+    }
+
+    const res = {
+      totalFollows: follows[0].follows,
+      totalFans: fans[0].fans,
+      list: results,
     };
+
+    return res;
   }
 
   // 提供推送信息
