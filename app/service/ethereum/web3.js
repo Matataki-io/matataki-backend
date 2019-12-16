@@ -12,7 +12,6 @@ class Web3Service extends Service {
     const provider = new Web3.providers.HttpProvider(ApiEndpoint);
     this.web3 = new Web3(provider);
     this.publicKey = this.web3.eth.accounts.privateKeyToAccount(privateKey).address;
-    // privateKey 还没决定好怎么用怎么放，我先定义在config用于开发工作
     this.web3.eth.accounts.wallet.add(privateKey);
   }
 
@@ -43,7 +42,7 @@ class Web3Service extends Service {
     gasLimit: this.web3.utils.toHex(200000),
     gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('1', 'gwei')),
   }) {
-    const { privateKey, runningNetwork } = this.config.ethereum;
+    const { runningNetwork, privateKey } = this.config.ethereum;
     const { web3 } = this;
     const txCount = await web3.eth.getTransactionCount('0x2F129a52aAbDcb9Fa025BFfF3D4C731c2D914932');
     const txObject = {
@@ -52,7 +51,10 @@ class Web3Service extends Service {
       data: encodeABI,
     };
     const tx = new Transaction(txObject, { chain: runningNetwork });
-    tx.sign(privateKey);
+    tx.sign(Buffer.from(
+      privateKey.slice(2),
+      'hex'
+    ));
     return web3.eth.sendSignedTransaction(`0x${tx.serialize().toString('hex')}`);
   }
 }
