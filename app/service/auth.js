@@ -444,8 +444,8 @@ class AuthService extends Service {
       );
       this.logger.info('service:: Auth: createAccount:', createAccount);
       const account = await this.service.account.binding.create({ uid: createAccount.insertId, account: username, password_hash: pwd, platform, is_main: 1 }, tran);
-      if (!account) tran.rollback();
-      else tran.commit();
+      if (!account) await tran.rollback();
+      else await tran.commit();
     } catch (err) {
       await tran.rollback();
       this.logger.error('AuthService:: insertUser: Error. %j', err);
@@ -480,10 +480,10 @@ class AuthService extends Service {
           passwordHash,
           email,
         });
-      tran.commit();
+      await tran.commit();
       return true;
     } catch (err) {
-      tran.rollback();
+      await tran.rollback();
       this.logger.error('AuthService:: updatePassword: Error ', err);
       return false;
     }
