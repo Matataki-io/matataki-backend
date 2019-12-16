@@ -34,14 +34,14 @@ class AccountBindingController extends Controller {
         break;
       }
       case 'github': {
-        const githubResult = this.handleGithub(code);
+        const githubResult = await this.handleGithub(code);
         if (!githubResult) return;
         username = githubResult;
         flag = true;
         break;
       }
       case 'weixin': {
-        const weixinResult = this.handleWeixin(code);
+        const weixinResult = await this.handleWeixin(code);
         if (!weixinResult) return;
         username = weixinResult;
         flag = true;
