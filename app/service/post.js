@@ -1108,17 +1108,20 @@ class PostService extends Service {
   async stats() {
     let userCount = await this.app.redis.hget('user:stat', 'count');
     if (userCount === null) {
-      userCount = await this.app.redis.hset('user:stat', 'count', (await this.app.mysql.query('SELECT COUNT(1) as count FROM users;'))[0].count);
+      userCount = (await this.app.mysql.query('SELECT COUNT(1) as count FROM users;'))[0].count;
+      await this.app.redis.hset('user:stat', 'count', userCount);
     }
 
     let postCount = await this.app.redis.hget('post:stat', 'count');
     if (postCount === null) {
-      postCount = await this.app.redis.hset('post:stat', 'count', (await this.app.mysql.query('SELECT COUNT(1) as count FROM posts WHERE status = 0;'))[0].count);
+      postCount = (await this.app.mysql.query('SELECT COUNT(1) as count FROM posts WHERE status = 0;'))[0].count;
+      await this.app.redis.hset('post:stat', 'count', postCount);
     }
 
     let userPoints = await this.app.redis.hget('user:stat', 'point');
     if (userPoints === null) {
-      userPoints = await this.app.redis.hset('user:stat', 'point', (await this.app.mysql.query('SELECT SUM(amount) as amount FROM assets_points;'))[0].amount);
+      userPoints = (await this.app.mysql.query('SELECT SUM(amount) as amount FROM assets_points;'))[0].amount;
+      await this.app.redis.hset('user:stat', 'point', userPoints);
     }
 
     return {
