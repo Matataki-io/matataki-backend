@@ -1274,10 +1274,10 @@ class PostService extends Service {
 
       await conn.commit();
 
-      await this.app.redis.multi()
+      /* await this.app.redis.multi()
         .zrem('post:hot:filter:1', id)
         .zadd('post:hot:filter:4', post.hot_score, id)
-        .exec();
+        .exec(); */
 
       return 0;
     } catch (e) {
