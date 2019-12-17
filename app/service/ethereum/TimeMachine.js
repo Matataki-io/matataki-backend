@@ -2,7 +2,7 @@
 const Web3Service = require('./web3');
 const ABI = require('./timemachine.json');
 
-const contractAddress = '0xeD91Fa66bFBAe41C352E812447b3477B9CdC3cee';
+const contractAddress = '0x4E7C7D414939B450DB695584D4e0bB9fb9f7C86d';
 
 class TimeMachineService extends Web3Service {
   initContract() {

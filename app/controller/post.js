@@ -5,7 +5,7 @@ const Controller = require('../core/base_controller');
 const moment = require('moment');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
-const sanitize = require('sanitize-html');
+// const sanitize = require('sanitize-html');
 class PostController extends Controller {
 
   constructor(ctx) {
@@ -120,6 +120,13 @@ class PostController extends Controller {
     // 添加文章到elastic search
     await this.service.search.importPost(id, ctx.user.id, title, articleContent);
 
+    let isHosting = await this.service.account.hosting.isHosting(ctx.user.id, 'ETH');
+    if (!isHosting) {
+      const result = await this.service.account.hosting.create(ctx.user.id);
+      if (!result) throw Error('Eth account hosting Failed');
+    }
+    isHosting = await this.service.account.hosting.isHosting(ctx.user.id, 'ETH');
+    await this.service.ethereum.timeMachine.publish(id, isHosting.public_key, hash);
     if (tags) {
       let tag_arr = tags.split(',');
       tag_arr = tag_arr.filter(x => { return x !== ''; });
@@ -267,6 +274,23 @@ class PostController extends Controller {
         ctx.body = ctx.msg.failure;
         return;
       }
+
+      this.service.ethereum.timeMachine.getCurrentRevisionId(signId).then(async isUploadedToBlockchain => {
+        if (isUploadedToBlockchain) {
+          await this.service.ethereum.timeMachine.updateIpfsHash(signId, hash);
+        } else {
+          // 之前没有把哈希更新到以太坊上
+          this.service.account.hosting.isHosting(ctx.user.id, 'ETH').then(async isHosting => {
+            if (!isHosting) {
+              const result = await this.service.account.hosting.create(ctx.user.id);
+              if (!result) throw Error('Eth account hosting Failed');
+            }
+            await this.service.ethereum.timeMachine.publish(signId, isHosting.public_key, hash);
+          });
+
+        }
+      });
+
 
       await this.service.search.importPost(signId, ctx.user.id, elaTitle, articleContent);
 
