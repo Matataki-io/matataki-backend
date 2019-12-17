@@ -28,6 +28,8 @@ class CacheUpdater extends Subscription {
     const relationships = await mysql.query('SELECT uid, fuid FROM follows WHERE status = 1;');
     for (const { uid, fuid } of relationships) {
       pipeline.del(`user:${uid}:follow_list`, `user:${fuid}:follower_list`, `user:${uid}:follow_set`, `user:${fuid}:follower_set`);
+    }
+    for (const { uid, fuid } of relationships) {
       pipeline.rpush(`user:${uid}:follow_list`, fuid);
       pipeline.rpush(`user:${fuid}:follower_list`, uid);
       pipeline.sadd(`user:${uid}:follow_set`, fuid);
