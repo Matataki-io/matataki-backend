@@ -57,8 +57,6 @@ class AuthController extends Controller {
       this.logger.info('get_or_create_user:: user:', user);
       // 插入登录日志
       await this.service.auth.insertLoginLog(user.id, this.clientIP);
-      // 检测用户有没有托管的以太坊私钥，没有就生成
-      await this.generateEthHostingWallet(user);
       return user;
     } catch (err) {
       return null;
@@ -85,14 +83,6 @@ class AuthController extends Controller {
       }
     }
     return null;
-  }
-
-  async generateEthHostingWallet(user) {
-    const isHostedEthWallet = await this.service.account.hosting.isHosting(user.id, 'ETH');
-    if (!isHostedEthWallet) {
-      await this.service.account.hosting.create(user.id);
-      return true;
-    } return false;
   }
 
   // github账号登录，第一次登录会创建账号
