@@ -12,7 +12,7 @@ class AccountHostingService extends Service {
   async create(uid) {
     try {
       const isHostedEthWallet = await this.isHosting(uid, 'ETH');
-      if (!isHostedEthWallet) return false;
+      if (isHostedEthWallet) return false;
       const wallet = this.service.ethereum.web3.create();
       this.logger.info('AccountHosting:: create ', wallet);
 
