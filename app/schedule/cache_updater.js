@@ -44,6 +44,8 @@ class CacheUpdater extends Subscription {
       pipeline.sadd(type === 'post' ? 'tag:post' : 'tag:product', id);
       pipeline.hmset(`tag:${id}`, 'name', name, 'type', type);
     }
+
+    await pipeline.exec();
   }
 }
 
