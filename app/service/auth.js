@@ -172,9 +172,6 @@ class AuthService extends Service {
 
         currentUser = await this.service.account.binding.get2({ username, platform });
         // currentUser = await this.app.mysql.get('users', { username, platform });
-      } else {
-        // 检测用户有没有托管的以太坊私钥，没有就生成
-        await this.service.account.hosting.create(currentUser.id);
       }
 
       // await this.service.search.importUser(currentUser.id);
@@ -392,8 +389,6 @@ class AuthService extends Service {
       this.logger.info('AuthService:: verifyLogin: Wrong password ', username);
       return 2;
     }
-    // 检测用户有没有托管的以太坊私钥，没有就生成
-    await this.service.account.hosting.create(userPw.id);
 
     // 增加登录日志
     await this.insertLoginLog(userPw.id, ipaddress);

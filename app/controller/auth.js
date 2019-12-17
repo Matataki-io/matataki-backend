@@ -57,8 +57,6 @@ class AuthController extends Controller {
       this.logger.info('get_or_create_user:: user:', user);
       // 插入登录日志
       await this.service.auth.insertLoginLog(user.id, this.clientIP);
-      // 检测用户有没有托管的以太坊私钥，没有就生成
-      await this.service.account.hosting.create(user.id);
       return user;
     } catch (err) {
       return null;
