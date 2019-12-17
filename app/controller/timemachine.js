@@ -33,7 +33,7 @@ class TimeMachineController extends Controller {
     const result = await this.service.ethereum.timeMachine.getCurrentRevisionId(id);
     ctx.body = {
       ...ctx.msg.success,
-      data: result,
+      data: Number(result),
     };
   }
 
