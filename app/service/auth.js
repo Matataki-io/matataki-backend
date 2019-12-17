@@ -172,6 +172,9 @@ class AuthService extends Service {
 
         currentUser = await this.service.account.binding.get2({ username, platform });
         // currentUser = await this.app.mysql.get('users', { username, platform });
+      } else {
+        // 检测用户有没有托管的以太坊私钥，没有就生成
+        await this.service.account.hosting.create(currentUser.id);
       }
 
       // await this.service.search.importUser(currentUser.id);
@@ -196,7 +199,6 @@ class AuthService extends Service {
       return null;
     }
   }
-
 
   // 验证用户账号是否存在， todo，添加platform信息
   async verifyUser(username) {
@@ -390,6 +392,8 @@ class AuthService extends Service {
       this.logger.info('AuthService:: verifyLogin: Wrong password ', username);
       return 2;
     }
+    // 检测用户有没有托管的以太坊私钥，没有就生成
+    await this.service.account.hosting.create(userPw.id);
 
     // 增加登录日志
     await this.insertLoginLog(userPw.id, ipaddress);
@@ -462,6 +466,9 @@ class AuthService extends Service {
         await this.app.redis.lpush(rediskey, [ 1, 2, 3, 4, 5 ]);
         this.app.redis.expire(rediskey, 30 * 24 * 3600); // 30天过期
       }
+
+      // 检测用户有没有托管的以太坊私钥，没有就生成
+      await this.service.account.hosting.create(createAccount.insertId);
 
       // 插入ES
       await this.service.search.importUser(createAccount.insertId);
