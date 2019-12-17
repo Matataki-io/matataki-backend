@@ -47,8 +47,15 @@ module.exports = app => {
   router.post('/post/edit', passport.authorize, controller.post.edit);
   // 单篇文章 (by 文章hash)
   router.get('/post/:hash', passport.verify, controller.post.postByHash);
+
   // 单篇文章 (by 文章id, for 短链接)，统一返回格式示例
   router.get('/p/:id', passport.verify, controller.post.p);
+
+  // 文章哈希上链相关
+  router.get('/p/:id/timeMachine/getLatestIpfsHash', passport.verify, controller.timemachine.getLatestIpfsHash);
+  router.get('/p/:id/timeMachine/getArticleRivisionHistory/:size', passport.verify, controller.timemachine.getArticleRivisionHistory);
+  router.get('/p/:id/timeMachine/getCurrentRevisionId', passport.verify, controller.timemachine.getCurrentRevisionCount);
+
   // 按照打赏金额排序的文章列表(新, 可按照币种排序)
   router.get('/posts/amountRanking', passport.verify, controller.post.getAmountRanking);
   // 按照打赏次数排序的文章列表(新)
