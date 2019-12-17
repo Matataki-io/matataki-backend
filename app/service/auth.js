@@ -197,7 +197,6 @@ class AuthService extends Service {
     }
   }
 
-
   // 验证用户账号是否存在， todo，添加platform信息
   async verifyUser(username) {
     /* const user = await this.app.mysql.query(
@@ -462,6 +461,9 @@ class AuthService extends Service {
         await this.app.redis.lpush(rediskey, [ 1, 2, 3, 4, 5 ]);
         this.app.redis.expire(rediskey, 30 * 24 * 3600); // 30天过期
       }
+
+      // 检测用户有没有托管的以太坊私钥，没有就生成
+      await this.service.account.hosting.create(createAccount.insertId);
 
       // 插入ES
       await this.service.search.importUser(createAccount.insertId);
