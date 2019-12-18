@@ -801,7 +801,8 @@ class PostController extends Controller {
     const post = await this.service.post.getByHash(hash, false);
 
     if (post.uid !== ctx.user.id) {
-      if (!this.hasPermission(post, ctx.user.id)) {
+      const permission = await this.hasPermission(post, ctx.user.id)
+      if (!permission) {
         ctx.body = ctx.msg.postNoPermission;
         return;
       }
