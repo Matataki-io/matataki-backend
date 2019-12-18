@@ -120,13 +120,12 @@ class PostController extends Controller {
     // 添加文章到elastic search
     await this.service.search.importPost(id, ctx.user.id, title, articleContent);
 
-    let isHosting = await this.service.account.hosting.isHosting(ctx.user.id, 'ETH');
+    const isHosting = await this.service.account.hosting.isHosting(ctx.user.id, 'ETH');
     if (!isHosting) {
       const result = await this.service.account.hosting.create(ctx.user.id);
       if (!result) throw Error('Eth account hosting Failed');
     }
-    isHosting = await this.service.account.hosting.isHosting(ctx.user.id, 'ETH');
-    await this.service.ethereum.timeMachine.publish(id, isHosting.public_key, hash);
+    await this.service.ethereum.timeMachine.updateIpfsHash(id, hash);
     if (tags) {
       let tag_arr = tags.split(',');
       tag_arr = tag_arr.filter(x => { return x !== ''; });
@@ -219,7 +218,7 @@ class PostController extends Controller {
     if (!short_content) {
       short_content = articleContent.substring(0, 300);
     }
-
+    const updateTimeMachine = this.service.ethereum.timeMachine.updateIpfsHash(signId, hash);
     let elaTitle = post.title;
     try {
       const conn = await this.app.mysql.beginTransaction();
@@ -275,28 +274,11 @@ class PostController extends Controller {
         return;
       }
 
-      this.service.ethereum.timeMachine.getCurrentRevisionId(signId).then(async isUploadedToBlockchain => {
-        if (isUploadedToBlockchain) {
-          await this.service.ethereum.timeMachine.updateIpfsHash(signId, hash);
-        } else {
-          // 之前没有把哈希更新到以太坊上
-          this.service.account.hosting.isHosting(ctx.user.id, 'ETH').then(async isHosting => {
-            if (!isHosting) {
-              const result = await this.service.account.hosting.create(ctx.user.id);
-              if (!result) throw Error('Eth account hosting Failed');
-            }
-            await this.service.ethereum.timeMachine.publish(signId, isHosting.public_key, hash);
-          });
-
-        }
-      });
-
-
+      await updateTimeMachine;
       await this.service.search.importPost(signId, ctx.user.id, elaTitle, articleContent);
 
       ctx.body = ctx.msg.success;
       ctx.body.data = signId;
-
     } catch (err) {
       ctx.logger.error(err);
       ctx.body = ctx.msg.failure;
@@ -346,7 +328,7 @@ class PostController extends Controller {
     // if (channel === 1 && author === null) {
     //   postData = await this.service.post.scoreRank(page, pagesize, filter);
     // } else {
-      postData = await this.service.post.scoreRankSlow(page, pagesize, author, channel, extra, filter);
+    postData = await this.service.post.scoreRankSlow(page, pagesize, author, channel, extra, filter);
     // }
 
     if (postData === 2) {
@@ -801,7 +783,7 @@ class PostController extends Controller {
     const post = await this.service.post.getByHash(hash, false);
 
     if (post.uid !== ctx.user.id) {
-      const permission = await this.hasPermission(post, ctx.user.id)
+      const permission = await this.hasPermission(post, ctx.user.id);
       if (!permission) {
         ctx.body = ctx.msg.postNoPermission;
         return;
