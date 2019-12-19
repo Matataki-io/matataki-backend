@@ -1175,3 +1175,14 @@ CREATE INDEX `idx_uid_create_time` ON `assets_change_log`(`uid`, `create_time`);
 
 -- 2019-12-02
 ALTER TABLE `users` ADD COLUMN `banner` VARCHAR(255);
+
+-- 2019-12-18 Frank
+`config.local.js` 增添字段 `config.timemachine`
+```js
+  config.timemachine = {
+    contracts: {
+      prod: '0xE6A3F82E3C2c75Ab5F27e9Bd7D739b63841E4662',
+      test: '0xa8343EE80FDA0F0017B04A77369417e028C3bAe0',
+    },
+  };
+```

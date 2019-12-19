@@ -2,25 +2,19 @@
 const Web3Service = require('./web3');
 const ABI = require('./timemachine.json');
 
-const contractAddress = '0x4E7C7D414939B450DB695584D4e0bB9fb9f7C86d';
-
 class TimeMachineService extends Web3Service {
+  get contractAddress() {
+    const { env, timemachine } = this.config;
+    return timemachine.contracts[env];
+  }
+
   initContract() {
+    const { contractAddress } = this;
     return new this.web3.eth.Contract(ABI, contractAddress);
   }
 
-  async publish(articleId, author, ipfsHash) {
-    const contract = this.initContract();
-    const encodeABI = contract.methods.publish(articleId, author, ipfsHash).encodeABI();
-    return this.sendTransaction(encodeABI, {
-      to: contractAddress,
-      value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
-      gasLimit: this.web3.utils.toHex(200000),
-      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('1', 'gwei')),
-    });
-  }
-
   updateIpfsHash(articleId, ipfsHash) {
+    const { contractAddress } = this;
     const contract = this.initContract();
     const encodeABI = contract.methods.updateIpfsHash(articleId, ipfsHash).encodeABI();
     return this.sendTransaction(encodeABI, {
@@ -43,7 +37,9 @@ class TimeMachineService extends Web3Service {
     return this.initContract().methods.getCurrentRevisionId(articleId).call();
   }
 
-  setAdmin(_address) {
+  // 一般没事不要调用这两个admin相关的函数
+  _setAdmin(_address) {
+    const { contractAddress } = this;
     const contract = this.initContract();
     const encodeABI = contract.methods.setAdmin(_address).encodeABI();
     return this.sendTransaction(encodeABI, {
@@ -54,7 +50,8 @@ class TimeMachineService extends Web3Service {
     });
   }
 
-  revokeAdmin(_address) {
+  _revokeAdmin(_address) {
+    const { contractAddress } = this;
     const contract = this.initContract();
     const encodeABI = contract.methods.revokeAdmin(_address).encodeABI();
     return this.sendTransaction(encodeABI, {
@@ -70,6 +67,7 @@ class TimeMachineService extends Web3Service {
   }
 
   updateArticleOwner(articleId, _newOwner) {
+    const { contractAddress } = this;
     const contract = this.initContract();
     const encodeABI = contract.methods.updateArticleOwner(articleId, _newOwner).encodeABI();
     return this.sendTransaction(encodeABI, {
