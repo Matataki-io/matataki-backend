@@ -409,5 +409,8 @@ module.exports = app => {
   router.post('/account/unbinding', passport.authorize, controller.account.binding.unbinding);
   router.post('/account/changeMainAccount', passport.authorize, controller.account.binding.changeMainAccount);
   router.get('/account/list', passport.authorize, controller.account.binding.list);
+
+  // alipay
+  // router.post('/alipay/pay', passport.verify, controller.alipay.pay);
 };
 
