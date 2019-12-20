@@ -122,17 +122,47 @@ class FanPiaoService extends Web3Service {
     return this.sendTransactionWithOurKey(encodeABI, { to: contractAddress });
   }
 
+  /**
+   * ERC20 的 transferFrom，需要 sender 提前在合约 approve 了我们的动用资金的权限
+   * @param {*} type 饭票的合约类型，undefined 时为 20
+   * @param {*} contractAddress 饭票合约地址
+   * @param {string} sender 发送者的公钥
+   * @param {string} recipient 接收者的公钥
+   * @param {string} amount 数额
+   */
   transferFrom(type, contractAddress, sender, recipient, amount) {
     const contract = this.initContract(type, contractAddress);
     const encodeABI = contract.methods.transferFrom(sender, recipient, amount).encodeABI();
     return this.sendTransactionWithOurKey(encodeABI, { to: contractAddress });
   }
 
+  /**
+   * ERC20 的 transfer
+   * @param {*} type 饭票的合约类型，undefined 时为 20
+   * @param {*} contractAddress 饭票合约地址
+   * @param {string} from 发送者的私钥
+   * @param {string} recipient 接收者的公钥
+   * @param {string} amount 数额
+   */
   transfer(type, contractAddress, from, recipient, amount) {
     const contract = this.initContract(type, contractAddress);
     const encodeABI = contract.methods.transfer(recipient, amount).encodeABI();
-    return this.sendTransactionWithKey(encodeABI, { to: contractAddress });
+    return this.sendTransaction(from, encodeABI, { to: contractAddress });
   }
+
+  /**
+   * burn , burner 销毁饭票的入口
+   * @param {*} type 饭票的合约类型，undefined 时为 20
+   * @param {*} contractAddress 饭票合约地址
+   * @param {*} burner 销毁饭票的主人私钥
+   * @param {*} amount 销毁的数额
+   */
+  burn(type, contractAddress, burner, amount) {
+    const contract = this.initContract(type, contractAddress);
+    const encodeABI = contract.methods.transfer(amount).encodeABI();
+    return this.sendTransaction(burner, encodeABI, { to: contractAddress });
+  }
+
 }
 
 module.exports = FanPiaoService;

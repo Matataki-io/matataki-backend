@@ -1186,3 +1186,8 @@ ALTER TABLE `users` ADD COLUMN `banner` VARCHAR(255);
     },
   };
 ```
+
+-- 2019-12-20 Frank
+数据库 `assets_minetokens_log`  新增字段 `tx_hash`
+
+`tx_hash` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '同步到链上的哈希',
