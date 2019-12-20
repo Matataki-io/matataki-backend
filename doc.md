@@ -20,6 +20,11 @@
 * author: 作者id，默认返回全部author的文章，传入author参数，则只返回指定author的文章。
 * channel: 频道id, 1为普通文章, 2为商品文章, 不带则不筛选, 返回所有文章
 * extra: 需要额外返回的项目， 以逗号分割， 如short_content,others,aaaabc
+* filter: 过滤
+  * 1: 免费
+  * 2: 需要持票
+  * 4: 需要购买
+  * 3,5,6,7: 以上的组合
 
 * curl -X GET https://api.smartsignature.io/posts/timeRanking
 * curl -X GET https://api.smartsignature.io/posts/timeRanking?page=2
