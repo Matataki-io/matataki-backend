@@ -3461,3 +3461,48 @@ const folderOption = {
 }
 ```
 
+#### 获取 Fan 票相关创作
+
+* GET /minetoken/:id/related
+
+* 参数
+* id: Fan 票 Id
+* page: 页数，默认第一页
+* filter: 过滤
+  * 1: 不需要购买
+  * 2: 需要购买
+  * 3: 全部
+
+* sort: 排序
+  * popular-desc: 按热度排序
+  * time-desc: 按时间排序
+
+* 返回内容
+```json
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        {
+            "id": 101120,
+            "uid": 1105,
+            "author": "guanchao71@hotmail.com",
+            "title": "测试权限文章",
+            "hash": "QmZcWMUwzsBpkdvdiFackaWJSnYpmT3Bw3FgugTqg8rMsY",
+            "create_time": "2019-12-16T13:56:43.000Z",
+            "cover": "/image/2019/12/16/382f30d51333360e3e3a0b94fbcff1ca.jpg",
+            "require_holdtokens": 1,
+            "require_buy": 0,
+            "nickname": "林可 @matataki.io",
+            "avatar": "/avatar/2019/11/07/740fd91594538dbe1f016bd301e7e234.jpg",
+            "read": 29,
+            "eosvalue": 0,
+            "ups": 0,
+            "ontvalue": 0,
+            "tags": [],
+            "sale": 0,
+            "likes": 0
+        }
+    ]
+}
+```
