@@ -36,25 +36,54 @@ class Web3Service extends Service {
     return this.web3.eth.getTransactionReceipt(txHash);
   }
 
-  async sendTransaction(encodeABI, txParams = {
+  /**
+   * sendTransactionWithOurKey 使用我们的 Key 发送交易
+   * 用于部署合约、代操作等需要我们帐户发送交易的场合
+   * 实际调用下方的 sendTransactionWithKey
+   * @param {object} encodeABI Web3 交易可以输出 encodeABI 用于交易
+   * @param {object} txParams 交易的参数
+   */
+  async sendTransactionWithOurKey(encodeABI, txParams = {
     to: '',
     value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
     gasLimit: this.web3.utils.toHex(200000),
     gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('1', 'gwei')),
   }) {
-    const { runningNetwork, privateKey } = this.config.ethereum;
+    const { privateKey } = this.config.ethereum;
+    return this.sendTransactionWithKey(privateKey, encodeABI, txParams);
+  }
+
+  /**
+   * sendTransaction 发送以太坊的交易（除了部署合约）
+   * 因为我们没有钱包环境，我们只能用 Web3 生成交易信息，并使用 ethereum.js-tx 来签名
+   * 再使用 sendSignedTransaction 发送交易
+   * @param {*} _privateKey 以太坊钱包的私钥
+   * @param {object} encodeABI Web3 交易可以输出 encodeABI 用于交易
+   * @param {object} txParams 交易的参数
+   */
+  async sendTransaction(_privateKey, encodeABI, txParams = {
+    to: '',
+    value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
+    gasLimit: this.web3.utils.toHex(200000),
+    gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('1', 'gwei')),
+  }) {
+    // 处理0x开头的私钥
+    let privateKey = _privateKey.slice(0, 2) === '0x' ? _privateKey.slice(2) : _privateKey;
+    // privateKey 转化为 Buffer 用于签署 tx
+    privateKey = Buffer.from(_privateKey.slice(2), 'hex');
+    const { runningNetwork } = this.config.ethereum;
     const { web3 } = this;
-    const txCount = await web3.eth.getTransactionCount('0x2F129a52aAbDcb9Fa025BFfF3D4C731c2D914932');
+    // 发送交易的钱包公钥
+    const { address } = web3.eth.accounts.privateKeyToAccount(`0x${privateKey}`);
+    // txCount 决定了交易顺序
+    const txCount = await web3.eth.getTransactionCount(address);
     const txObject = {
       ...txParams,
       nonce: web3.utils.toHex(txCount),
       data: encodeABI,
     };
     const tx = new Transaction(txObject, { chain: runningNetwork });
-    tx.sign(Buffer.from(
-      privateKey.slice(2),
-      'hex'
-    ));
+    tx.sign(privateKey);
     return web3.eth.sendSignedTransaction(`0x${tx.serialize().toString('hex')}`);
   }
 }

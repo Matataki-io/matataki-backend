@@ -17,7 +17,7 @@ class TimeMachineService extends Web3Service {
     const { contractAddress } = this;
     const contract = this.initContract();
     const encodeABI = contract.methods.updateIpfsHash(articleId, ipfsHash).encodeABI();
-    return this.sendTransaction(encodeABI, {
+    return this.sendTransactionWithOurKey(encodeABI, {
       to: contractAddress,
       value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
       gasLimit: this.web3.utils.toHex(200000),
@@ -42,7 +42,7 @@ class TimeMachineService extends Web3Service {
     const { contractAddress } = this;
     const contract = this.initContract();
     const encodeABI = contract.methods.setAdmin(_address).encodeABI();
-    return this.sendTransaction(encodeABI, {
+    return this.sendTransactionWithOurKey(encodeABI, {
       to: contractAddress,
       value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
       gasLimit: this.web3.utils.toHex(200000),
@@ -54,7 +54,7 @@ class TimeMachineService extends Web3Service {
     const { contractAddress } = this;
     const contract = this.initContract();
     const encodeABI = contract.methods.revokeAdmin(_address).encodeABI();
-    return this.sendTransaction(encodeABI, {
+    return this.sendTransactionWithOurKey(encodeABI, {
       to: contractAddress,
       value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
       gasLimit: this.web3.utils.toHex(200000),
@@ -70,7 +70,7 @@ class TimeMachineService extends Web3Service {
     const { contractAddress } = this;
     const contract = this.initContract();
     const encodeABI = contract.methods.updateArticleOwner(articleId, _newOwner).encodeABI();
-    return this.sendTransaction(encodeABI, {
+    return this.sendTransactionWithOurKey(encodeABI, {
       to: contractAddress,
       value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
       gasLimit: this.web3.utils.toHex(200000),
