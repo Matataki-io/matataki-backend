@@ -10,7 +10,7 @@ class FanPiaoService extends Web3Service {
    * @param {number} type 合约类型 默认为`777`
    * @param {string} address 饭票合约地址，部署时可为 `null`
    */
-  initContract(type = 777, address = null) {
+  initContract(type = 20, address = null) {
     const ABI = type === 777 ? contract777_data.abi : contract20_data.abi;
     return new this.web3.eth.Contract(ABI, address);
   }
@@ -27,7 +27,7 @@ class FanPiaoService extends Web3Service {
   issue(name, symbol, decimals, initialSupply) {
     this.logger.info('FanPiao-20 issuing now:', name, symbol, decimals, initialSupply);
     return new Promise((resolve, reject) => {
-      this.initContract(20).deploy({
+      this.initContract().deploy({
         data: contract20_data.bytecode,
         arguments: [ name, symbol, decimals, initialSupply ],
       }).send({ // 发送交易
@@ -77,10 +77,9 @@ class FanPiaoService extends Web3Service {
     const name = 'ABC';
     const symbol = 'AB Coin';
     const initialSupply = '1145141919810000000000000000000';
-    const defaultOperators = [];
     return this.initContract().deploy({
       data: contract777_data.bytecode,
-      arguments: [ name, symbol, initialSupply, [ this.publicKey, ...defaultOperators ]],
+      arguments: [ name, symbol, 18, initialSupply ],
     }).estimateGas({
       from: this.publicKey,
       gas: 10000000,
@@ -101,21 +100,11 @@ class FanPiaoService extends Web3Service {
     // 开发ing，先硬编码
     const contract = this.initContract(777, contractAddress);
     const toBytes32 = string => this.web3.utils.stringToHex(string);
-    return new Promise((resolve, reject) => {
-      contract.methods
-        .operatorSend(sender, recipient, amount, toBytes32(data), toBytes32(operatorData)).send({
-          from: this.publicKey,
-          gas: 10000000,
-          gasPrice: '3400000000',
-        })
-        .on('transactionHash', hash => {
-          resolve(hash);
-        })
-        .on('error', (error, receipt) => {
-          if (receipt) reject(receipt);
-          else reject(error);
-        });
-    });
+    const encodedAbi = contract.methods.operatorSend(
+      sender, recipient, amount, toBytes32(data), toBytes32(operatorData)
+    ).encodeABI();
+    return this.sendTransactionWithOurKey(encodedAbi, { to: contractAddress });
+
   }
 
   /**
@@ -126,23 +115,23 @@ class FanPiaoService extends Web3Service {
    * @param {string} to 收新铸币的地址，如果是一个合约地址，则必须实现 IERC777Recipient 接口
    * @param {string} amount 铸币数量，单位是wei（最小单位）
    */
-  _mint(type = 777, contractAddress, to, amount) {
+  _mint(type, contractAddress, to, amount) {
     // 开发ing，先硬编码
     const contract = this.initContract(type, contractAddress);
-    return new Promise((resolve, reject) => {
-      contract.methods.mint(to, amount).send({
-        from: this.publicKey,
-        gas: 10000000,
-        gasPrice: '3400000000',
-      })
-        .on('transactionHash', hash => {
-          resolve(hash);
-        })
-        .on('error', (error, receipt) => {
-          if (receipt) reject(receipt);
-          else reject(error);
-        });
-    });
+    const encodeABI = contract.methods.mint(to, amount).encodeABI();
+    return this.sendTransactionWithOurKey(encodeABI, { to: contractAddress });
+  }
+
+  transferFrom(type, contractAddress, sender, recipient, amount) {
+    const contract = this.initContract(type, contractAddress);
+    const encodeABI = contract.methods.transferFrom(sender, recipient, amount).encodeABI();
+    return this.sendTransactionWithOurKey(encodeABI, { to: contractAddress });
+  }
+
+  transfer(type, contractAddress, from, recipient, amount) {
+    const contract = this.initContract(type, contractAddress);
+    const encodeABI = contract.methods.transfer(recipient, amount).encodeABI();
+    return this.sendTransactionWithKey(encodeABI, { to: contractAddress });
   }
 }
 
