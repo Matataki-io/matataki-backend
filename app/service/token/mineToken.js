@@ -64,22 +64,31 @@ class MineTokenService extends Service {
     return result.affectedRows > 0;
   }
 
-  // 获取token信息
-  async get(tokenId) {
-    const token = await this.app.mysql.get('minetokens', { id: tokenId });
+  /**
+   * 获取token信息
+   * @param {object} parameters 查找的参数
+   */
+  async getToken(parameters) {
+    const token = await this.app.mysql.get('minetokens', parameters);
     return token;
   }
 
-  // 获取token
-  async getBySymbol(symbol) {
-    const token = await this.app.mysql.get('minetokens', { symbol });
-    return token;
+  /**
+   * 通过ID获取token信息
+   * @param {number} id token的ID
+   */
+  get(id) {
+    return this.getToken({ id });
   }
 
   // 获取token
-  async getByUserId(userId) {
-    const token = await this.app.mysql.get('minetokens', { uid: userId });
-    return token;
+  getBySymbol(symbol) {
+    return this.getToken({ symbol });
+  }
+
+  // 获取token
+  getByUserId(uid) {
+    return this.getToken({ uid });
   }
 
   // 保存网址、社交媒体账号
