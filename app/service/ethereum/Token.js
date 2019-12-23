@@ -1,10 +1,10 @@
 
 'use strict';
 const Web3 = require('web3');
+const { Transaction } = require('ethereumjs-tx');
 const contract20_data = require('./CommonFanPiao.json');
 const contract777_data = require('./FanPiao777v2.json');
-const configFile = require('../../../config/config.local');
-const { Transaction } = require('ethereumjs-tx');
+const configFile = require('../../../config/config.default');
 
 const config = configFile({ name: 'Fake EggAppInfo just for config ' });
 
