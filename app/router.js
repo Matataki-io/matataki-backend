@@ -400,6 +400,9 @@ module.exports = app => {
   // 上传图片
   router.post('/oss/uploadImage', passport.authorize, controller.oss.uploadImage);
 
+  // 给我们的机器人提供一个查询钱包
+  router.get('/_internal_bot/getEthWalletByTelegramId/:telegram/', passport.apiVerify, controller.internalApi.telegram.getWalletAddressFromTelegramUid);
+
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
   router.post('/account/unbinding', passport.authorize, controller.account.binding.unbinding);
