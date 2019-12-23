@@ -71,5 +71,26 @@ module.exports = {
     await next();
   },
 
+
+  // 只用于API调用，access-token 不对则抛异常
+  async apiVerify(ctx, next) {
+    const { lang } = ctx.headers;
+    ctx.msg = message.returnObj(lang);
+
+    const token = ctx.header['x-access-token'];
+
+    // 先这样硬编码，UUID 可以随便生成，你应该不能把这个passport用于敏感功能
+    const isTokenInTheList = [ '90e5a273-aa1c-4258-9020-2d79d76e816c' ].includes(token);
+
+    // 没有authorization token信息就401
+    if (!isTokenInTheList) {
+      ctx.status = 401;
+      ctx.body = ctx.msg.unauthorized;
+      return;
+    }
+
+    await next();
+  },
+
 };
 
