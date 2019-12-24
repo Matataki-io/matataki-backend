@@ -16,7 +16,6 @@ class TokenDeploy extends Subscription {
       where: { type: 'issue' },
     });
     if (!issuingTokens || issuingTokens.length === 0) {
-      this.logger.info('TokenDeploy scedule::checking issuingTokens list', '没有部署中的token 啊，那没事了');
       return; // 没有部署中的token 啊，那没事了
     }
     this.logger.info('issuingTokens', issuingTokens);
