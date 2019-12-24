@@ -414,5 +414,6 @@ module.exports = app => {
 
   // alipay
   // router.post('/alipay/pay', passport.verify, controller.alipay.pay);
+  // router.post('/stablecoin/transfer', passport.verify, controller.ethereum.stablecoin.transfer);
 };
 
