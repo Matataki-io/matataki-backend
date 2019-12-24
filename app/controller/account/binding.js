@@ -54,7 +54,7 @@ class AccountBindingController extends Controller {
       case 'telegram': {
         const telegramResult = this.handleTelegram(telegramBotName, telegramParams);
         username = telegramParams.id;
-        flag = !telegramResult;
+        flag = telegramResult;
         break;
       }
       default: {
