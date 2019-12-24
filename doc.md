@@ -3473,6 +3473,7 @@ const folderOption = {
 * 参数
 * id: Fan 票 Id
 * page: 页数，默认第一页
+* pagesize: 每页的数量， 默认 10
 * filter: 过滤
   * 1: 不需要购买
   * 2: 需要购买

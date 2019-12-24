@@ -579,15 +579,14 @@ class MineTokenService extends Service {
     };
   }
 
-  async getRelated(tokenId, filter = 0, sort = 'popular-desc', page = 1) {
+  async getRelated(tokenId, filter = 0, sort = 'popular-desc', page = 1, pagesize = 10) {
     if (tokenId === null) {
       return false;
     }
 
-    const pagesize = 10;
-
     if (typeof filter === 'string') filter = parseInt(filter);
     if (typeof page === 'string') page = parseInt(page);
+    if (typeof pagesize === "string") pagesize = parseInt(pagesize);
 
     let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
     let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
