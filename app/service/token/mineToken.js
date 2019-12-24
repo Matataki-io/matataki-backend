@@ -21,7 +21,7 @@ class MineTokenService extends Service {
   }
 
   // 作者创建一个token
-  async create(userId, name, symbol, decimals, logo, brief, introduction) {
+  async create(userId, name, symbol, decimals, logo, brief, introduction, txHash) {
     let token = await this.getByUserId(userId);
     if (token) {
       return -1;
@@ -46,7 +46,16 @@ class MineTokenService extends Service {
       + 'SELECT ?,?,?,?,0,?,1,?,?,? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
     const result = await this.app.mysql.query(sql,
       [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), logo, brief, introduction, userId, symbol ]);
+    await this.emitIssueEvent(userId, result.insertId, null, txHash);
     return result.insertId;
+  }
+
+  async emitIssueEvent(from_uid, tokenId, ip, transactionHash) {
+    // 现在要留存发币后上链结果的hash，以留存证据
+    return this.app.mysql.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
+      [ from_uid, 0, tokenId, 0, moment().format('YYYY-MM-DD HH:mm:ss'),
+        ip, consts.mineTokenTransferTypes.issue, transactionHash,
+      ]);
   }
 
   // 更新粉丝币信息
@@ -62,6 +71,16 @@ class MineTokenService extends Service {
     };
 
     const result = await this.app.mysql.update('minetokens', row, options);
+    return result.affectedRows > 0;
+  }
+
+  // 更新粉丝币合约地址
+  async updateContractAddress(userId, tokenId, contract_address) {
+    const options = {
+      where: { uid: userId, id: tokenId },
+    };
+
+    const result = await this.app.mysql.update('minetokens', { contract_address }, options);
     return result.affectedRows > 0;
   }
 
