@@ -6,20 +6,23 @@ class MineTokenController extends Controller {
   // 创建
   async create() {
     const ctx = this.ctx;
-    const { name, symbol, decimals = 4, logo, brief, introduction } = this.ctx.request.body;
+    const { name, symbol, decimals = 4, logo, brief, introduction, initialSupply } = this.ctx.request.body;
     // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
     if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
+    } else if (!initialSupply) {
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = '请填写初始发行额度';
     } else { // 好耶 字数没有超限
       let txHash;
       try {
-        txHash = await this.service.ethereum.fanPiao.issue(name, symbol, decimals, 0);
+        txHash = await this.service.ethereum.fanPiao.issue(name, symbol, decimals, initialSupply);
       } catch (error) {
         this.logger.error('Create error: ', error);
         ctx.body = ctx.msg.failure;
         ctx.body.data = { error };
       }
-      const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, decimals, logo, brief, introduction, txHash); // decimals默认4位
+      const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash); // decimals默认4位
       if (result === -1) {
         ctx.body = ctx.msg.tokenAlreadyCreated;
       } else if (result === -2) {

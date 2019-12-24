@@ -21,7 +21,7 @@ class MineTokenService extends Service {
   }
 
   // 作者创建一个token
-  async create(userId, name, symbol, decimals, logo, brief, introduction, txHash) {
+  async create(userId, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash) {
     let token = await this.getByUserId(userId);
     if (token) {
       return -1;
@@ -47,6 +47,7 @@ class MineTokenService extends Service {
     const result = await this.app.mysql.query(sql,
       [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), logo, brief, introduction, userId, symbol ]);
     await this.emitIssueEvent(userId, result.insertId, null, txHash);
+    await this._mint(result.insertId, userId, initialSupply, null, null);
     return result.insertId;
   }
 
@@ -246,6 +247,35 @@ class MineTokenService extends Service {
     } catch (e) {
       await conn.rollback();
       this.logger.error('MineTokenService.mint exception. %j', e);
+      return -1;
+    }
+  }
+
+  async _mint(tokenId, to, amount) {
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      if (!await this.canMint(tokenId, amount, conn)) {
+        await conn.rollback();
+        return -3;
+      }
+
+      // 唯一索引`uid`, `token_id`
+      await conn.query('INSERT INTO assets_minetokens(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+        [ to, tokenId, amount, amount ]);
+
+      await conn.query('UPDATE minetokens SET total_supply = total_supply + ? WHERE id = ?;',
+        [ amount, tokenId ]);
+
+      // 现在要写入上链结果的hash
+      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, type) VALUES(?,?,?,?,?,?);',
+        [ 0, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'),
+          consts.mineTokenTransferTypes.mint ]);
+
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('MineTokenService.mint exception: ', e);
       return -1;
     }
   }

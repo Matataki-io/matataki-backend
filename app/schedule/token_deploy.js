@@ -15,12 +15,11 @@ class TokenDeploy extends Subscription {
     const issuingTokens = await mysql.select('assets_minetokens_log', {
       where: { type: 'issue' },
     });
-
     if (!issuingTokens || issuingTokens.length === 0) {
       this.logger.info('TokenDeploy scedule::checking issuingTokens list', '没有部署中的token 啊，那没事了');
       return; // 没有部署中的token 啊，那没事了
     }
-
+    this.logger.info('issuingTokens', issuingTokens);
     const receipts = await Promise.all(issuingTokens.map(async ({ token_id, tx_hash }) => {
       const receipt = await this.service.ethereum.web3.getTransactionReceipt(tx_hash);
       this.logger.info('TokenDeploy scedule::new receipt: ', receipt);
