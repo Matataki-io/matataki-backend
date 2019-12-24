@@ -11,7 +11,7 @@ class AccountBindingController extends Controller {
   async binding() {
     const { ctx } = this;
     const uid = ctx.user.id;
-    let { code, platform, email, captcha = null, password, sign, username, publickey, msgParams, telegramParams } = ctx.request.body;
+    let { code, platform, email, captcha = null, password, sign, username, publickey, msgParams, telegramParams, telegramBotName } = ctx.request.body;
     // username = account;
 
     let flag = false;
@@ -52,7 +52,7 @@ class AccountBindingController extends Controller {
         break;
       }
       case 'telegram': {
-        const telegramResult = this.handleTelegram(telegramParams);
+        const telegramResult = this.handleTelegram(telegramBotName, telegramParams);
         username = telegramParams.id;
         flag = telegramResult;
         break;
@@ -127,9 +127,10 @@ class AccountBindingController extends Controller {
     return accessTokenResult.data.openid;
   }
 
-  async handleTelegram(user) {
-    const token = '1002126652:AAHc7P2unUzzBx6zybWpysx-5CTfr9D5QoA';
-    return this.service.auth.telegram_auth(token, user);
+  async handleTelegram(botName, user) {
+    const telegramBot = this.config.telegramBot;
+    if (!telegramBot[botName]) return false;
+    return this.service.auth.telegram_auth(telegramBot[botName], user);
   }
 
   /**
