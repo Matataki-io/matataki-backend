@@ -94,6 +94,7 @@ class AuthService extends Service {
     const hmac = createHmac('sha256', secret)
       .update(checkString)
       .digest('hex');
+    this.logger.info('controller:telegram_auth::', { secret, hmac });
     return hmac === hash;
   }
 
