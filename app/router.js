@@ -392,6 +392,9 @@ module.exports = app => {
   router.post('/_dev/eth/fanPiao/issue', passport.verify, controller.ethereum.fanPiao.issue);
   router.post('/_dev/eth/fanPiao/estimateGas', passport.verify, controller.ethereum.fanPiao.estimateGas);
 
+  // get metadata from url
+  router.get('/metadata/getFromUrl/', passport.verify, controller.metadata.get);
+
   // 通知
   router.get('/notification', passport.authorize, controller.notification.overview);
   router.get('/notification/fetch', passport.authorize, controller.notification.fetch);
