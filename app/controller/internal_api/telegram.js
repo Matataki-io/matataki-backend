@@ -29,9 +29,9 @@ class TelegramController extends Controller {
   }
   async getAssociatedInfo() {
     const { ctx } = this;
-    const { account } = ctx.params;
+    const { id } = ctx.params;
 
-    let [user] = await this.app.mysql.query(`SELECT id, nickname, email, username FROM users WHERE id = (SELECT uid FROM user_accounts WHERE platform = 'telegram' AND account = ?)`, [account]);
+    let [user] = await this.app.mysql.query(`SELECT id, nickname, email, username FROM users WHERE id = (SELECT uid FROM user_accounts WHERE platform = 'telegram' AND account = ?)`, [id]);
     if (!user) {
       user = null;
     } else {
@@ -57,6 +57,24 @@ class TelegramController extends Controller {
         minetoken,
       },
     };
+  }
+  async getContractAddress() {
+    const { ctx } = this;
+    const { id } = ctx.params;
+
+    const info = await this.app.mysql.get('minetokens', { id });
+
+    if (!info) {
+      ctx.status = 404;
+      ctx.body = ctx.msg.failure;
+    }
+
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        contractAddress: info.contract_address
+      }
+    }
   }
 }
 
