@@ -16,7 +16,8 @@ class MineTokenController extends Controller {
     } else { // 好耶 字数没有超限
       let txHash;
       try {
-        txHash = await this.service.ethereum.fanPiao.issue(name, symbol, decimals, initialSupply);
+        const { public_key } = await this.service.account.hosting.isHosting(ctx.user.id, 'ETH');
+        txHash = await this.service.ethereum.fanPiao.issue(name, symbol, decimals, initialSupply, public_key);
       } catch (error) {
         this.logger.error('Create error: ', error);
         ctx.body = ctx.msg.failure;
