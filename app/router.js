@@ -405,6 +405,7 @@ module.exports = app => {
 
   // 给我们的机器人提供一个查询钱包
   router.get('/_internal_bot/getEthWalletByTelegramId/:account/', passport.apiVerify, controller.internalApi.telegram.getWalletAddressFromTelegramUid);
+  router.get('/_internal_bot/:account/info', passport.apiVerify, controller.internalApi.telegram.getAssociatedInfo);
 
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
