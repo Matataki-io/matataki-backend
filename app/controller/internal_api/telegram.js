@@ -31,15 +31,17 @@ class TelegramController extends Controller {
     const { ctx } = this;
     const { account } = ctx.params;
 
-    let user = await this.app.mysql.get('user_accounts', { platform: 'telegram', account });
-    if (user) {
+    let [user] = await this.app.mysql.query(`SELECT id, nickname, email, username FROM users WHERE id = (SELECT uid FROM user_accounts WHERE platform = 'telegram' AND account = ?)`, [account]);
+    if (!user) {
+      user = null;
+    } else {
       user = {
-        id: user.uid,
+        id: user.id,
         name: user.nickname || this.service.user.maskEmailAddress(user.email) || user.username,
       };
     }
 
-    let minetoken = await this.app.mysql.get('minetokens', { uid: user.uid });
+    let minetoken = user ? await this.app.mysql.get('minetokens', { uid: user.id }) : null;
     if (minetoken) {
       minetoken = {
         id: minetoken.id,
