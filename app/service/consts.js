@@ -85,6 +85,7 @@ module.exports = {
   },
 
   mineTokenTransferTypes: {
+    issue: 'issue',
     mint: 'mint',
     transfer: 'transfer',
     exchange_purchase: 'exchange_purchase',
