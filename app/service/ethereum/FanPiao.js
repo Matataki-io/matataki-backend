@@ -32,8 +32,8 @@ class FanPiaoService extends Web3Service {
         arguments: [ name, symbol, decimals, initialSupply ],
       }).send({ // 发送交易
         from: this.publicKey,
-        gas: 10000000,
-        gasPrice: '3400000000',
+        gas: 8000000,
+        gasPrice: this.web3.utils.toWei('2', 'gwei'),
       })
         // 我也很无奈，await promise 要等待部署成功或者部署失败（反正都要等到天荒地老）
         // 要拿 transactionHash 还得用这样的形式
