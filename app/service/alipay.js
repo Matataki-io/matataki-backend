@@ -9,12 +9,12 @@ class AlipayService extends Service {
   constructor(ctx, app) {
     super(ctx, app);
     ctx.alipaySdk = new AlipaySdk({
-      appId: this.config.alipaydev.APP_ID,
-      privateKey: this.config.alipaydev.APP_PRIVATE_KEY,
-      alipayPublicKey: this.config.alipaydev.ALIPAY_PUBLIC_KEY,
+      appId: this.config.alipay.APP_ID,
+      privateKey: this.config.alipay.APP_PRIVATE_KEY,
+      alipayPublicKey: this.config.alipay.ALIPAY_PUBLIC_KEY,
       signType: 'RSA2',
       keyType: 'PKCS8',
-      gateway: this.config.alipaydev.gateway,
+      gateway: this.config.alipay.gateway,
     });
   }
 
@@ -28,10 +28,13 @@ class AlipayService extends Service {
    */
   async pagePay(totalAmount, subject) {
     const { ctx } = this;
+    const { notify_url, return_url } = this.config.alipay;
+    const outTradeNo = ctx.helper.genCharacterNumber(31);
+
     const formData = new AlipayFormData();
     formData.setMethod('get');
-    // formData.addField('notifyUrl', 'http://www.com/notify');
-    const outTradeNo = ctx.helper.genCharacterNumber(31);
+    formData.addField('notifyUrl', notify_url);
+    formData.addField('returnUrl', return_url);
     formData.addField('bizContent', {
       outTradeNo,
       productCode: 'FAST_INSTANT_TRADE_PAY',
@@ -43,15 +46,6 @@ class AlipayService extends Service {
       {},
       { formData }
     );
-    /* const result = await ctx.alipaySdk.exec('alipay.trade.page.pay', {
-      // notifyUrl: '',
-      bizContent: {
-        outTradeNo,
-        productCode: 'FAST_INSTANT_TRADE_PAY',
-        totalAmount,
-        subject,
-      },
-    }); */
     return result;
   }
 
@@ -65,9 +59,28 @@ class AlipayService extends Service {
    */
   async wapPay(totalAmount, subject) {
     const { ctx } = this;
+    const { notify_url, return_url } = this.config.alipay;
     const outTradeNo = ctx.helper.genCharacterNumber(31);
-    const result = await ctx.alipaySdk.exec('alipay.trade.wap.pay', {
+
+    const formData = new AlipayFormData();
+    formData.setMethod('get');
+    formData.addField('notifyUrl', notify_url);
+    formData.addField('returnUrl', return_url);
+    formData.addField('bizContent', {
+      outTradeNo,
+      productCode: 'QUICK_WAP_WAY',
+      totalAmount,
+      subject,
+    });
+    const result = await ctx.alipaySdk.exec(
+      'alipay.trade.wap.pay',
+      {},
+      { formData }
+    );
+    return result;
+    /* const result = await ctx.alipaySdk.exec('alipay.trade.wap.pay', {
       // notifyUrl: '',
+      // returnUrl: '',
       bizContent: {
         outTradeNo,
         productCode: 'QUICK_WAP_WAY',
@@ -76,7 +89,7 @@ class AlipayService extends Service {
         subject,
       },
     });
-    return result;
+    return result; */
   }
 
   /**
