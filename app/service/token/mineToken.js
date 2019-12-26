@@ -2,6 +2,7 @@
 const _ = require('lodash');
 const moment = require('moment');
 const Service = require('egg').Service;
+const Token = require('../ethereum/Token');
 const consts = require('../consts');
 
 class MineTokenService extends Service {
@@ -20,7 +21,7 @@ class MineTokenService extends Service {
   }
 
   // 作者创建一个token
-  async create(userId, name, symbol, decimals, logo, brief, introduction) {
+  async create(userId, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash) {
     let token = await this.getByUserId(userId);
     if (token) {
       return -1;
@@ -42,10 +43,21 @@ class MineTokenService extends Service {
     }
 
     const sql = 'INSERT INTO minetokens(uid, name, symbol, decimals, total_supply, create_time, status, logo, brief, introduction) '
-      + 'SELECT ?,?,?,?,0,?,1,?,?,? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
+    //                      ⬇️⬅️ 故意把 Status 设为 0，合约部署成功了 worker 会把它设置回 1 (active)
+      + 'SELECT ?,?,?,?,0,?,0,?,?,? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
     const result = await this.app.mysql.query(sql,
       [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), logo, brief, introduction, userId, symbol ]);
+    await this.emitIssueEvent(userId, result.insertId, null, txHash);
+    await this._mint(result.insertId, userId, initialSupply, null, null);
     return result.insertId;
+  }
+
+  async emitIssueEvent(from_uid, tokenId, ip, transactionHash) {
+    // 现在要留存发币后上链结果的hash，以留存证据
+    return this.app.mysql.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
+      [ from_uid, 0, tokenId, 0, moment().format('YYYY-MM-DD HH:mm:ss'),
+        ip, consts.mineTokenTransferTypes.issue, transactionHash,
+      ]);
   }
 
   // 更新粉丝币信息
@@ -64,22 +76,41 @@ class MineTokenService extends Service {
     return result.affectedRows > 0;
   }
 
-  // 获取token信息
-  async get(tokenId) {
-    const token = await this.app.mysql.get('minetokens', { id: tokenId });
+  // 更新粉丝币合约地址
+  async updateContractAddress(userId, tokenId, contract_address) {
+    const options = {
+      where: { uid: userId, id: tokenId },
+    };
+
+    const result = await this.app.mysql.update('minetokens', { contract_address }, options);
+    return result.affectedRows > 0;
+  }
+
+  /**
+   * 获取token信息
+   * @param {object} parameters 查找的参数
+   */
+  async getToken(parameters) {
+    const token = await this.app.mysql.get('minetokens', parameters);
     return token;
   }
 
-  // 获取token
-  async getBySymbol(symbol) {
-    const token = await this.app.mysql.get('minetokens', { symbol });
-    return token;
+  /**
+   * 通过ID获取token信息
+   * @param {number} id token的ID
+   */
+  get(id) {
+    return this.getToken({ id });
   }
 
   // 获取token
-  async getByUserId(userId) {
-    const token = await this.app.mysql.get('minetokens', { uid: userId });
-    return token;
+  getBySymbol(symbol) {
+    return this.getToken({ symbol });
+  }
+
+  // 获取token
+  getByUserId(uid) {
+    return this.getToken({ uid });
   }
 
   // 保存网址、社交媒体账号
@@ -180,6 +211,15 @@ class MineTokenService extends Service {
     if (!token) {
       return -2;
     }
+    const EtherToken = new Token(20, token.contract_address);
+    const { public_key: toWallet } = await this.service.account.hosting.isHosting(to, 'ETH');
+    let transactionHash;
+    try {
+      const blockchainMintAction = await EtherToken._mint(toWallet, amount);
+      transactionHash = blockchainMintAction.transactionHash;
+    } catch (error) {
+      console.error(error);
+    }
 
     const tokenId = token.id;
 
@@ -197,8 +237,11 @@ class MineTokenService extends Service {
       await conn.query('UPDATE minetokens SET total_supply = total_supply + ? WHERE id = ?;',
         [ amount, tokenId ]);
 
-      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type) VALUES(?,?,?,?,?,?,?);',
-        [ 0, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, consts.mineTokenTransferTypes.mint ]);
+      // 现在要写入上链结果的hash
+      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
+        [ 0, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'),
+          ip, consts.mineTokenTransferTypes.mint, transactionHash,
+        ]);
 
       await conn.commit();
       return 0;
@@ -207,6 +250,39 @@ class MineTokenService extends Service {
       this.logger.error('MineTokenService.mint exception. %j', e);
       return -1;
     }
+  }
+
+  async _mint(tokenId, to, amount) {
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      if (!await this.canMint(tokenId, amount, conn)) {
+        await conn.rollback();
+        return -3;
+      }
+
+      // 唯一索引`uid`, `token_id`
+      await conn.query('INSERT INTO assets_minetokens(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+        [ to, tokenId, amount, amount ]);
+
+      await conn.query('UPDATE minetokens SET total_supply = total_supply + ? WHERE id = ?;',
+        [ amount, tokenId ]);
+
+      // 现在要写入上链结果的hash
+      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, type) VALUES(?,?,?,?,?,?);',
+        [ 0, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'),
+          consts.mineTokenTransferTypes.mint ]);
+
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('MineTokenService.mint exception: ', e);
+      return -1;
+    }
+  }
+
+  async getHostingWallet(uid) {
+    return this.service.account.hosting.isHosting(uid, 'ETH');
   }
 
   async transferFrom(tokenId, from, to, value, ip, type = '', conn) {
@@ -221,8 +297,23 @@ class MineTokenService extends Service {
     } else {
       conn = await this.app.mysql.beginTransaction();
     }
-
+    const [ fromWallet, toWallet ] = await Promise.all(
+      [ from, to ].map(id => this.getHostingWallet(id))
+    );
     try {
+      const token = await this.get(tokenId);
+      const EtherToken = new Token(20, token.contract_address);
+      let transactionHash;
+      try {
+        const transferAction = await EtherToken.transfer(
+          fromWallet.private_key,
+          toWallet.public_key,
+          value);
+        transactionHash = transferAction.transactionHash;
+      } catch (error) {
+        console.error(error);
+      }
+
       const amount = parseInt(value);
       // 减少from的token
       const result = await conn.query('UPDATE assets_minetokens SET amount = amount - ? WHERE uid = ? AND token_id = ? AND amount >= ?;',
@@ -240,8 +331,8 @@ class MineTokenService extends Service {
         [ to, tokenId, amount, amount ]);
 
       // 记录日志
-      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type) VALUES(?,?,?,?,?,?,?);',
-        [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type ]);
+      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
+        [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash ]);
 
       if (!isOutConn) {
         await conn.commit();
@@ -538,25 +629,34 @@ class MineTokenService extends Service {
     };
   }
 
-  async getRelated(tokenId, filter = 0, sort = 'popular-desc', page = 1) {
+  async getRelated(tokenId, filter = 0, sort = 'popular-desc', page = 1, pagesize = 10, onlyCreator = false) {
     if (tokenId === null) {
       return false;
     }
 
-    const pagesize = 10;
-
     if (typeof filter === 'string') filter = parseInt(filter);
     if (typeof page === 'string') page = parseInt(page);
+    if (typeof pagesize === 'string') pagesize = parseInt(pagesize);
 
     let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
     let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
 
     if (filter === 1) {
       sql += 'AND require_buy = 0 ';
-      countSql += 'AND require_buy = 0;';
+      countSql += 'AND require_buy = 0';
     } else if (filter === 2) {
       sql += 'AND require_buy = 1 ';
-      countSql += 'AND require_buy = 1;';
+      countSql += 'AND require_buy = 1';
+    }
+
+    const whereTerm = {};
+    if (onlyCreator) {
+      sql += ' AND p.uid = :uid ';
+      countSql += ' AND p.uid = :uid;';
+      const { uid } = await this.get(tokenId);
+      whereTerm.uid = uid;
+    } else {
+      countSql += ';';
     }
 
     switch (sort) {
@@ -574,15 +674,18 @@ class MineTokenService extends Service {
 
     sql += 'LIMIT :start, :end;';
 
+    this.logger.info('service.token.mineToken.getRelated sql', sql + countSql);
+
     const results = await this.app.mysql.query(sql + countSql, {
       tokenId,
       start: (page - 1) * pagesize,
       end: 1 * pagesize,
+      ...whereTerm,
     });
 
     return {
       count: results[1][0].count,
-      list: await this.service.post.getPostList(results[0].map(row => row.id)),
+      list: await this.service.post.getPostList(results[0].map(row => row.id), { short_content: true }),
     };
   }
 }

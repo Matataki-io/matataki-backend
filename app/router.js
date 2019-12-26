@@ -390,11 +390,10 @@ module.exports = app => {
   router.get('/eth/getTransaction/:txHash', passport.verify, controller.ethereum.api.getTransaction);
   router.get('/eth/getTxReceipt/:txHash', passport.verify, controller.ethereum.api.getTransactionReceipt);
   router.post('/_dev/eth/fanPiao/issue', passport.verify, controller.ethereum.fanPiao.issue);
-  // @todo: remove this when production!!!
-  router.post('/_only_4_dev/_rem0ve_when_pr0d/eth/fanPia0/csdkjfnsokfm/_send', passport.verify, controller.ethereum.fanPiao._send);
-  router.post('/_only_4_dev/_rem0ve_when_pr0d/w9u8fvhj50r9gjeitu9hverhgu9efgijvtruborpijbn/eth/batchCreate', passport.verify, controller.ethereum.createWallet.BatchCreateWallet);
-  // @todo: remove this when production!!!
   router.post('/_dev/eth/fanPiao/estimateGas', passport.verify, controller.ethereum.fanPiao.estimateGas);
+
+  // get metadata from url
+  router.get('/metadata/getFromUrl/', passport.verify, controller.metadata.get);
 
   // 通知
   router.get('/notification', passport.authorize, controller.notification.overview);
@@ -404,10 +403,22 @@ module.exports = app => {
   // 上传图片
   router.post('/oss/uploadImage', passport.authorize, controller.oss.uploadImage);
 
+  // 给我们的机器人提供一个查询钱包
+  router.get('/_internal_bot/account/:id/ethWallet', passport.apiVerify, controller.internalApi.telegram.getWalletAddressFromTelegramUid);
+  router.get('/_internal_bot/account/:id/info', passport.apiVerify, controller.internalApi.telegram.getAssociatedInfo);
+  router.get('/_internal_bot/minetoken/:id/contractAddress', passport.apiVerify, controller.internalApi.telegram.getContractAddress);
+
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
   router.post('/account/unbinding', passport.authorize, controller.account.binding.unbinding);
   router.post('/account/changeMainAccount', passport.authorize, controller.account.binding.changeMainAccount);
   router.get('/account/list', passport.authorize, controller.account.binding.list);
+
+  // alipay
+  router.post('/alipay/wapPay', passport.verify, controller.alipay.wapPay);
+  router.post('/alipay/pagePay', passport.verify, controller.alipay.pagePay);
+  router.post('/alipay/notify', passport.verify, controller.alipay.notify);
+  // router.post('/alipay/auth', passport.verify, controller.alipay.auth);
+  // router.post('/stablecoin/transfer', passport.verify, controller.ethereum.stablecoin.transfer);
 };
 

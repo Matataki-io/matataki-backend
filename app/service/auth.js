@@ -10,6 +10,7 @@ const consts = require('./consts');
 const ecc = require('eosjs-ecc');
 const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
+const { createHash, createHmac } = require('crypto');
 
 class AuthService extends Service {
 
@@ -80,6 +81,21 @@ class AuthService extends Service {
 
     return pass;
 
+  }
+
+  telegram_auth(token, { hash, ...data }) {
+    const secret = createHash('sha256')
+      .update(token)
+      .digest();
+    const checkString = Object.keys(data)
+      .sort()
+      .map(k => `${k}=${data[k]}`)
+      .join('\n');
+    const hmac = createHmac('sha256', secret)
+      .update(checkString)
+      .digest('hex');
+    this.logger.info('controller:telegram_auth::', { hash, hmac });
+    return hmac === hash;
   }
 
 

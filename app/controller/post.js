@@ -125,7 +125,7 @@ class PostController extends Controller {
       const result = await this.service.account.hosting.create(ctx.user.id);
       if (!result) throw Error('Eth account hosting Failed');
     }
-    await this.service.ethereum.timeMachine.updateIpfsHash(id, hash);
+    // await this.service.ethereum.timeMachine.updateIpfsHash(id, hash);
     if (tags) {
       let tag_arr = tags.split(',');
       tag_arr = tag_arr.filter(x => { return x !== ''; });
@@ -218,7 +218,7 @@ class PostController extends Controller {
     if (!short_content) {
       short_content = articleContent.substring(0, 300);
     }
-    const updateTimeMachine = this.service.ethereum.timeMachine.updateIpfsHash(signId, hash);
+    // const updateTimeMachine = this.service.ethereum.timeMachine.updateIpfsHash(signId, hash);
     let elaTitle = post.title;
     try {
       const conn = await this.app.mysql.beginTransaction();
@@ -274,7 +274,7 @@ class PostController extends Controller {
         return;
       }
 
-      await updateTimeMachine;
+      // await updateTimeMachine;
       await this.service.search.importPost(signId, ctx.user.id, elaTitle, articleContent);
 
       ctx.body = ctx.msg.success;

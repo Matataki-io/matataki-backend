@@ -788,6 +788,10 @@ class UserService extends Service {
   }
 
   maskEmailAddress(str) {
+    if (typeof str !== 'string') {
+      return null;
+    }
+
     let result = maskedEmailCache.get(str);
     if (result) {
       return result;

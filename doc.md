@@ -20,6 +20,11 @@
 * author: 作者id，默认返回全部author的文章，传入author参数，则只返回指定author的文章。
 * channel: 频道id, 1为普通文章, 2为商品文章, 不带则不筛选, 返回所有文章
 * extra: 需要额外返回的项目， 以逗号分割， 如short_content,others,aaaabc
+* filter: 过滤
+  * 1: 免费
+  * 2: 需要持票
+  * 4: 需要购买
+  * 3,5,6,7: 以上的组合
 
 * curl -X GET https://api.smartsignature.io/posts/timeRanking
 * curl -X GET https://api.smartsignature.io/posts/timeRanking?page=2
@@ -3372,6 +3377,7 @@ const folderOption = {
 #### 账号绑定
 * POST /account/binding
 * 参数：
+
 ```
 // platform：eos、ont
 {
@@ -3406,12 +3412,14 @@ const folderOption = {
 
 * 请求头：x-access-token
 * 返回值：
+
 ```
 {
   "code": 0,
   "message": "成功"
 }
 ```
+
 #### 账号解绑
 * POST /account/unbinding
 * 参数：
@@ -3461,3 +3469,51 @@ const folderOption = {
 }
 ```
 
+#### 获取 Fan 票相关创作
+
+* GET /minetoken/:id/related
+
+* 参数
+* id: Fan 票 Id
+* page: 页数，默认第一页
+* pagesize: 每页的数量， 默认 10
+* filter: 过滤
+  * 1: 不需要购买
+  * 2: 需要购买
+  * 3: 全部
+* onlyCreator: number(0/1)，只看创始人，默认0
+
+* sort: 排序
+  * popular-desc: 按热度排序
+  * time-desc: 按时间排序
+
+* 返回内容
+```json
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        {
+            "id": 101120,
+            "uid": 1105,
+            "author": "guanchao71@hotmail.com",
+            "title": "测试权限文章",
+            "short_content": "xxxxx",
+            "hash": "QmZcWMUwzsBpkdvdiFackaWJSnYpmT3Bw3FgugTqg8rMsY",
+            "create_time": "2019-12-16T13:56:43.000Z",
+            "cover": "/image/2019/12/16/382f30d51333360e3e3a0b94fbcff1ca.jpg",
+            "require_holdtokens": 1,
+            "require_buy": 0,
+            "nickname": "林可 @matataki.io",
+            "avatar": "/avatar/2019/11/07/740fd91594538dbe1f016bd301e7e234.jpg",
+            "read": 29,
+            "eosvalue": 0,
+            "ups": 0,
+            "ontvalue": 0,
+            "tags": [],
+            "sale": 0,
+            "likes": 0
+        }
+    ]
+}
+```
