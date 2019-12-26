@@ -31,7 +31,8 @@ class AliPayController extends Controller {
   }
   async notify() {
     const { ctx } = this;
-    ctx.logger.info('alipay notify info', ctx.request);
+    ctx.logger.info('alipay notify info', ctx);
+    ctx.logger.info('alipay notify info query', ctx.query);
   }
   async auth() {
     const { ctx } = this;
