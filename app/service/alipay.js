@@ -2,37 +2,76 @@
 
 const Service = require('egg').Service;
 const AlipaySdk = require('alipay-sdk').default;
+const AlipayFormData = require('alipay-sdk/lib/form').default;
+
 
 class AlipayService extends Service {
   constructor(ctx, app) {
     super(ctx, app);
     ctx.alipaySdk = new AlipaySdk({
-      appId: this.config.alipay.APP_ID,
-      privateKey: this.config.alipay.APP_PRIVATE_KEY,
-      alipayPublicKey: this.config.alipay.ALIPAY_PUBLIC_KEY,
+      appId: this.config.alipaydev.APP_ID,
+      privateKey: this.config.alipaydev.APP_PRIVATE_KEY,
+      alipayPublicKey: this.config.alipaydev.ALIPAY_PUBLIC_KEY,
       signType: 'RSA2',
       keyType: 'PKCS8',
-      gateway: this.config.alipay.gateway,
+      gateway: this.config.alipaydev.gateway,
     });
   }
 
   /**
    * https://docs.open.alipay.com/api_1/alipay.trade.page.pay
-   * 统一收单下单并支付页面接口
+   * 支付宝网页支付
    * @param {*} totalAmount 订单金额
    * @param {*} subject 订单标题
    * @return {*} -
    * @memberof AlipayService
    */
-  async pay(totalAmount, subject) {
+  async pagePay(totalAmount, subject) {
     const { ctx } = this;
+    const formData = new AlipayFormData();
+    formData.setMethod('get');
+    // formData.addField('notifyUrl', 'http://www.com/notify');
     const outTradeNo = ctx.helper.genCharacterNumber(31);
-    console.log('outTradeNo', outTradeNo);
-    const result = await ctx.alipaySdk.exec('alipay.trade.page.pay', {
+    formData.addField('bizContent', {
+      outTradeNo,
+      productCode: 'FAST_INSTANT_TRADE_PAY',
+      totalAmount,
+      subject,
+    });
+    const result = await ctx.alipaySdk.exec(
+      'alipay.trade.page.pay',
+      {},
+      { formData }
+    );
+    /* const result = await ctx.alipaySdk.exec('alipay.trade.page.pay', {
       // notifyUrl: '',
       bizContent: {
         outTradeNo,
         productCode: 'FAST_INSTANT_TRADE_PAY',
+        totalAmount,
+        subject,
+      },
+    }); */
+    return result;
+  }
+
+  /**
+   * https://docs.open.alipay.com/api_1/alipay.trade.page.pay
+   * 支付宝移动端支付
+   * @param {*} totalAmount 订单金额
+   * @param {*} subject 订单标题
+   * @return {*} -
+   * @memberof AlipayService
+   */
+  async wapPay(totalAmount, subject) {
+    const { ctx } = this;
+    const outTradeNo = ctx.helper.genCharacterNumber(31);
+    const result = await ctx.alipaySdk.exec('alipay.trade.wap.pay', {
+      // notifyUrl: '',
+      bizContent: {
+        outTradeNo,
+        productCode: 'QUICK_WAP_WAY',
+        quit_url: 'https://test.smartsignature.io/',
         totalAmount,
         subject,
       },
@@ -73,6 +112,17 @@ class AlipayService extends Service {
       // notifyUrl: '',
       bizContent: {
         outTradeNo,
+      },
+    });
+    return result;
+  }
+  async auth() {
+    const { ctx } = this;
+    const result = await ctx.alipaySdk.exec('alipay.user.info.auth', {
+      // notifyUrl: '',
+      bizContent: {
+        scopes: 'auth_user' ,
+        state: 'test',
       },
     });
     return result;
