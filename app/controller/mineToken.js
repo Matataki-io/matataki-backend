@@ -148,9 +148,9 @@ class MineTokenController extends Controller {
   async getRelated() {
     const { ctx } = this;
     const tokenId = parseInt(ctx.params.id);
-    const { channel, filter, sort, page, pagesize } = ctx.query;
+    const { channel, filter, sort, page, pagesize, onlyCreator = false } = ctx.query;
 
-    const result = await ctx.service.token.mineToken.getRelated(tokenId, filter, sort, page, pagesize);
+    const result = await ctx.service.token.mineToken.getRelated(tokenId, filter, sort, page, pagesize, onlyCreator);
     if (result === false) {
       ctx.status = 400;
       ctx.body = ctx.msg.failure;
