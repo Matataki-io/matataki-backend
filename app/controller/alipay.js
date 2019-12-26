@@ -31,8 +31,10 @@ class AliPayController extends Controller {
   }
   async notify() {
     const { ctx } = this;
-    ctx.logger.info('alipay notify info query', await ctx.service.alipay.checkNotifySign(ctx.request.body));
-    ctx.logger.info('alipay notify info body', await ctx.service.alipay.checkNotifySign(ctx.body));
+    ctx.logger.info('alipay notify info 1', ctx.request.body);
+    ctx.logger.info('alipay notify info 2', ctx.body);
+    ctx.logger.info('alipay notify info 3', await ctx.service.alipay.checkNotifySign(ctx.body));
+    ctx.logger.info('alipay notify info 4', await ctx.service.alipay.checkNotifySign(ctx.body));
   }
   async auth() {
     const { ctx } = this;
