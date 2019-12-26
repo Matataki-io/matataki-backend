@@ -20,13 +20,13 @@ class AlipayService extends Service {
 
   /**
    * https://docs.open.alipay.com/api_1/alipay.trade.page.pay
-   * 统一收单下单并支付页面接口
+   * 支付宝网页支付
    * @param {*} totalAmount 订单金额
    * @param {*} subject 订单标题
    * @return {*} -
    * @memberof AlipayService
    */
-  async pay(totalAmount, subject) {
+  async pagePay(totalAmount, subject) {
     const { ctx } = this;
     const formData = new AlipayFormData();
     formData.setMethod('get');
@@ -52,6 +52,30 @@ class AlipayService extends Service {
         subject,
       },
     }); */
+    return result;
+  }
+
+  /**
+   * https://docs.open.alipay.com/api_1/alipay.trade.page.pay
+   * 支付宝移动端支付
+   * @param {*} totalAmount 订单金额
+   * @param {*} subject 订单标题
+   * @return {*} -
+   * @memberof AlipayService
+   */
+  async wapPay(totalAmount, subject) {
+    const { ctx } = this;
+    const outTradeNo = ctx.helper.genCharacterNumber(31);
+    const result = await ctx.alipaySdk.exec('alipay.trade.wap.pay', {
+      // notifyUrl: '',
+      bizContent: {
+        outTradeNo,
+        productCode: 'QUICK_WAP_WAY',
+        quit_url: 'https://test.smartsignature.io/',
+        totalAmount,
+        subject,
+      },
+    });
     return result;
   }
 
@@ -88,6 +112,17 @@ class AlipayService extends Service {
       // notifyUrl: '',
       bizContent: {
         outTradeNo,
+      },
+    });
+    return result;
+  }
+  async auth() {
+    const { ctx } = this;
+    const result = await ctx.alipaySdk.exec('alipay.user.info.auth', {
+      // notifyUrl: '',
+      bizContent: {
+        scopes: 'auth_user' ,
+        state: 'test',
       },
     });
     return result;

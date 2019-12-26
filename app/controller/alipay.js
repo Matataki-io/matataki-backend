@@ -13,7 +13,15 @@ const typeOptions = {
 class AliPayController extends Controller {
   async pay() {
     const { ctx } = this;
-    const result = await ctx.service.alipay.pay(1, '测试');
+    const result = await ctx.service.alipay.wapPay(1, '测试');
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+  async auth() {
+    const { ctx } = this;
+    const result = await ctx.service.alipay.auth();
     ctx.body = {
       ...ctx.msg.success,
       data: result,
