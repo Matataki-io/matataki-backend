@@ -134,7 +134,7 @@ class AlipayService extends Service {
     const result = await ctx.alipaySdk.exec('alipay.user.info.auth', {
       // notifyUrl: '',
       bizContent: {
-        scopes: 'auth_user' ,
+        scopes: 'auth_user',
         state: 'test',
       },
     });
