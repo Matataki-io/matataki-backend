@@ -2,7 +2,6 @@
 
 const Controller = require('../core/base_controller');
 const nanoid = require('nanoid');
-const AlipaySdk = require('alipay-sdk').default;
 
 const typeOptions = {
   add: 'add',
@@ -32,8 +31,8 @@ class AliPayController extends Controller {
   }
   async notify() {
     const { ctx } = this;
-    ctx.logger.info('alipay notify info body', AlipaySdk.checkNotifySign(ctx.body));
-    ctx.logger.info('alipay notify info query', AlipaySdk.checkNotifySign(ctx.request.body));
+    ctx.logger.info('alipay notify info body', await ctx.service.alipay.checkNotifySign(ctx.body));
+    ctx.logger.info('alipay notify info query', await ctx.service.alipay.checkNotifySign(ctx.request.body));
   }
   async auth() {
     const { ctx } = this;
