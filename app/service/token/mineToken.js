@@ -629,24 +629,34 @@ class MineTokenService extends Service {
     };
   }
 
-  async getRelated(tokenId, filter = 0, sort = 'popular-desc', page = 1, pagesize = 10) {
+  async getRelated(tokenId, filter = 0, sort = 'popular-desc', page = 1, pagesize = 10, onlyCreator = false) {
     if (tokenId === null) {
       return false;
     }
 
     if (typeof filter === 'string') filter = parseInt(filter);
     if (typeof page === 'string') page = parseInt(page);
-    if (typeof pagesize === "string") pagesize = parseInt(pagesize);
+    if (typeof pagesize === 'string') pagesize = parseInt(pagesize);
 
     let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
     let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
 
     if (filter === 1) {
       sql += 'AND require_buy = 0 ';
-      countSql += 'AND require_buy = 0;';
+      countSql += 'AND require_buy = 0';
     } else if (filter === 2) {
       sql += 'AND require_buy = 1 ';
-      countSql += 'AND require_buy = 1;';
+      countSql += 'AND require_buy = 1';
+    }
+
+    const whereTerm = {};
+    if (onlyCreator) {
+      sql += ' AND p.uid = :uid ';
+      countSql += ' AND p.uid = :uid;';
+      const { uid } = await this.get(tokenId);
+      whereTerm.uid = uid;
+    } else {
+      countSql += ';';
     }
 
     switch (sort) {
@@ -664,15 +674,18 @@ class MineTokenService extends Service {
 
     sql += 'LIMIT :start, :end;';
 
+    this.logger.info('service.token.mineToken.getRelated sql', sql + countSql);
+
     const results = await this.app.mysql.query(sql + countSql, {
       tokenId,
       start: (page - 1) * pagesize,
       end: 1 * pagesize,
+      ...whereTerm,
     });
 
     return {
       count: results[1][0].count,
-      list: await this.service.post.getPostList(results[0].map(row => row.id)),
+      list: await this.service.post.getPostList(results[0].map(row => row.id), { short_content: true }),
     };
   }
 }

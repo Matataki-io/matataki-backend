@@ -3478,6 +3478,7 @@ const folderOption = {
   * 1: 不需要购买
   * 2: 需要购买
   * 3: 全部
+* onlyCreator: Boolean，只看创始人，默认false
 
 * sort: 排序
   * popular-desc: 按热度排序
@@ -3494,6 +3495,7 @@ const folderOption = {
             "uid": 1105,
             "author": "guanchao71@hotmail.com",
             "title": "测试权限文章",
+            "short_content": "xxxxx",
             "hash": "QmZcWMUwzsBpkdvdiFackaWJSnYpmT3Bw3FgugTqg8rMsY",
             "create_time": "2019-12-16T13:56:43.000Z",
             "cover": "/image/2019/12/16/382f30d51333360e3e3a0b94fbcff1ca.jpg",
