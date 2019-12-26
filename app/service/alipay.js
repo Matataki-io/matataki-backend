@@ -140,6 +140,9 @@ class AlipayService extends Service {
     });
     return result;
   }
+  async checkNotifySign(postData) {
+    return this.ctx.alipaySdk.checkNotifySign(postData);
+  }
 }
 
 module.exports = AlipayService;
