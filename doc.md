@@ -3377,6 +3377,7 @@ const folderOption = {
 #### 账号绑定
 * POST /account/binding
 * 参数：
+
 ```
 // platform：eos、ont
 {
@@ -3411,12 +3412,14 @@ const folderOption = {
 
 * 请求头：x-access-token
 * 返回值：
+
 ```
 {
   "code": 0,
   "message": "成功"
 }
 ```
+
 #### 账号解绑
 * POST /account/unbinding
 * 参数：
