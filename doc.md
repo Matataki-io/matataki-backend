@@ -3481,7 +3481,7 @@ const folderOption = {
   * 1: 不需要购买
   * 2: 需要购买
   * 3: 全部
-* onlyCreator: Boolean，只看创始人，默认false
+* onlyCreator: number(0/1)，只看创始人，默认0
 
 * sort: 排序
   * popular-desc: 按热度排序
