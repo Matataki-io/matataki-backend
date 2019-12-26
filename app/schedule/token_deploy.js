@@ -10,8 +10,8 @@ class TokenDeploy extends Subscription {
   }
 
   async subscribe() {
+    this.logger.info('Running TokenDeploy', new Date().toLocaleString());
     const { mysql } = this.app;
-
     const issuingTokens = await mysql.select('assets_minetokens_log', {
       where: { type: 'issue' },
     });
@@ -30,9 +30,10 @@ class TokenDeploy extends Subscription {
         return null;
       }
       // 出合约地址了，即部署成功，更新数据库信息
-      const updateLogResult = mysql.update('assets_minetokens_log', { type: 'issued' }, {
-        where: { token_id, type: 'issue' },
-      });
+      // const updateLogResult = mysql.update('assets_minetokens_log', { type: 'issued' }, {
+      //   where: { token_id, type: 'issue' },
+      // });"
+      const updateLogResult = mysql.query(`update assets_minetokens_log set type="issued" where token_id=${token_id} AND type = "issue"`);
       const updateMinetokensResult = mysql.update('minetokens', { status: 1, contract_address: receipt.contractAddress }, {
         where: { id: token_id },
       });
