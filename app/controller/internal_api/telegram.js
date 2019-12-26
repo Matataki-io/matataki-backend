@@ -6,7 +6,7 @@ class TelegramController extends Controller {
   async getWalletAddressFromTelegramUid() {
     const { ctx } = this;
     const { id, blockchain = 'ETH' } = ctx.params;
-    const user = await this.app.mysql.get('user_accounts', { platform: 'telegram', id });
+    const user = await this.app.mysql.get('user_accounts', { platform: 'telegram', account: id });
     if (!user) {
       ctx.status = 404;
       ctx.body = ctx.msg.failure;
