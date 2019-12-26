@@ -43,7 +43,7 @@ class MineTokenService extends Service {
     }
 
     const sql = 'INSERT INTO minetokens(uid, name, symbol, decimals, total_supply, create_time, status, logo, brief, introduction) '
-    //                      ⬇️⬅️ 故意把 Status 设为 0，合约部署成功了 worker 会把它设置回 1 (active)
+      //                      ⬇️⬅️ 故意把 Status 设为 0，合约部署成功了 worker 会把它设置回 1 (active)
       + 'SELECT ?,?,?,?,0,?,0,?,?,? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
     const result = await this.app.mysql.query(sql,
       [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), logo, brief, introduction, userId, symbol ]);
@@ -206,16 +206,22 @@ class MineTokenService extends Service {
   }
 
   // 铸币
-  async mint(userId, to, amount, ip) {
-    const token = await this.getByUserId(userId);
+  async mint(fromUid, toUid, amount, ip) {
+    const token = await this.getByUserId(fromUid);
     if (!token) {
       return -2;
     }
     const EtherToken = new Token(20, token.contract_address);
-    const { public_key: toWallet } = await this.service.account.hosting.isHosting(to, 'ETH');
+    const [ fromWallet, toWallet ] = await Promise.all([
+      this.service.account.hosting.isHosting(fromUid, 'ETH'),
+      this.service.account.hosting.isHosting(toUid, 'ETH'),
+    ]);
+    const { private_key } = fromWallet;
+    const { public_key: target } = toWallet;
     let transactionHash;
     try {
-      const blockchainMintAction = await EtherToken._mint(toWallet, amount);
+      const blockchainMintAction = await EtherToken._mint(private_key, target, amount);
+      this.logger.info('Minting token', token, blockchainMintAction)
       transactionHash = blockchainMintAction.transactionHash;
     } catch (error) {
       console.error(error);
@@ -232,14 +238,14 @@ class MineTokenService extends Service {
 
       // 唯一索引`uid`, `token_id`
       await conn.query('INSERT INTO assets_minetokens(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
-        [ to, tokenId, amount, amount ]);
+        [ toUid, tokenId, amount, amount ]);
 
       await conn.query('UPDATE minetokens SET total_supply = total_supply + ? WHERE id = ?;',
         [ amount, tokenId ]);
 
       // 现在要写入上链结果的hash
       await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
-        [ 0, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'),
+        [ 0, toUid, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'),
           ip, consts.mineTokenTransferTypes.mint, transactionHash,
         ]);
 
@@ -636,7 +642,7 @@ class MineTokenService extends Service {
 
     if (typeof filter === 'string') filter = parseInt(filter);
     if (typeof page === 'string') page = parseInt(page);
-    if (typeof pagesize === "string") pagesize = parseInt(pagesize);
+    if (typeof pagesize === 'string') pagesize = parseInt(pagesize);
 
     let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
     let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
