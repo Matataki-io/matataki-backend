@@ -404,7 +404,9 @@ module.exports = app => {
   router.post('/oss/uploadImage', passport.authorize, controller.oss.uploadImage);
 
   // 给我们的机器人提供一个查询钱包
-  router.get('/_internal_bot/getEthWalletByTelegramId/:account/', passport.apiVerify, controller.internalApi.telegram.getWalletAddressFromTelegramUid);
+  router.get('/_internal_bot/account/:id/ethWallet', passport.apiVerify, controller.internalApi.telegram.getWalletAddressFromTelegramUid);
+  router.get('/_internal_bot/account/:id/info', passport.apiVerify, controller.internalApi.telegram.getAssociatedInfo);
+  router.get('/_internal_bot/minetoken/:id/contractAddress', passport.apiVerify, controller.internalApi.telegram.getContractAddress);
 
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);

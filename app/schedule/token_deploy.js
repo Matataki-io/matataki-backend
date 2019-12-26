@@ -31,7 +31,7 @@ class TokenDeploy extends Subscription {
       }
       // 出合约地址了，即部署成功，更新数据库信息
       const updateLogResult = mysql.update('assets_minetokens_log', { type: 'issued' }, {
-        where: { token_id },
+        where: { token_id, type: 'issue' },
       });
       const updateMinetokensResult = mysql.update('minetokens', { status: 1, contract_address: receipt.contractAddress }, {
         where: { id: token_id },
