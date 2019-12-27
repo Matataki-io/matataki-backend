@@ -26,11 +26,12 @@ class Token {
     * @param {object} encodeABI Web3 交易可以输出 encodeABI 用于交易
     * @param {object} txParams 交易的参数
     */
-  async sendTransactionWithOurKey(encodeABI, txParams = {
-    value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
+  async sendTransactionWithOurKey(encodeABI, {
+    value = 0,
+    gasLimit = 5000000,
   }) {
     const { privateKey } = config.ethereum;
-    return this.sendTransaction(privateKey, encodeABI, txParams);
+    return this.sendTransaction(privateKey, encodeABI, { value, gasLimit });
   }
 
   /**
@@ -41,10 +42,9 @@ class Token {
     * @param {object} encodeABI Web3 交易可以输出 encodeABI 用于交易
     * @param {object} txParams 交易的参数
     */
-  async sendTransaction(_privateKey, encodeABI, txParams = {
-    value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
-    gasLimit: this.web3.utils.toHex(500000),
-    gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('3', 'gwei')),
+  async sendTransaction(_privateKey, encodeABI, {
+    value = 0,
+    gasLimit = 500000,
   }) {
     // 处理0x开头的私钥
     console.info('sendTransaction to: ', this.contractAddress);
@@ -56,10 +56,14 @@ class Token {
     // 发送交易的钱包公钥
     const { address } = web3.eth.accounts.privateKeyToAccount(_privateKey);
     // txCount 决定了交易顺序
-    const txCount = await web3.eth.getTransactionCount(address);
+    const [ gasPrice, txCount ] = await Promise.all([
+      web3.eth.getGasPrice(), web3.eth.getTransactionCount(address),
+    ]);
     const txObject = {
-      ...txParams,
+      value: web3.utils.toHex(value),
+      gasLimit: web3.utils.toHex(gasLimit),
       nonce: web3.utils.toHex(txCount),
+      gasPrice: web3.utils.toHex(gasPrice),
       to: this.contractAddress,
       data: encodeABI,
     };
@@ -98,7 +102,7 @@ class Token {
     // 开发ing，先硬编码
     console.info(this.address);
     const encodeABI = this.contract.methods.mint(to, amount).encodeABI();
-    return this.sendTransaction(from, encodeABI);
+    return this.sendTransaction(from, encodeABI, { gasLimit: 100000 });
   }
 
   /**
@@ -121,8 +125,7 @@ class Token {
   transfer(from, recipient, amount) {
     const encodeABI = this.contract.methods.transfer(recipient, amount).encodeABI();
     return this.sendTransaction(from, encodeABI, {
-      gasLimit: this.web3.utils.toHex(150000),
-      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('2', 'gwei')),
+      gasLimit: 150000,
     });
   }
 
@@ -133,7 +136,9 @@ class Token {
     */
   burn(burner, amount) {
     const encodeABI = this.contract.methods.transfer(amount).encodeABI();
-    return this.sendTransaction(burner, encodeABI);
+    return this.sendTransaction(burner, encodeABI, {
+      gasLimit: 150000,
+    });
   }
 }
 
