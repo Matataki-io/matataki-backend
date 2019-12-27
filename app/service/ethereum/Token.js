@@ -90,15 +90,15 @@ class Token {
   /**
     *   ⚠️ 这个 _mint 函数没有设置权限控制，请在 controller 调用时小心设置好权限控制
     *  _mint, 我们作为合约 Minter 给 to 印钱
-    *  @param {string} to 收新铸币的地址，如果是一个合约地址，则必须实现 IERC777Recipient 接口
+    *  @param {string} from 发送铸币交易的钱包私钥，需要是MinterRole
+    *  @param {string} to 收新铸币的地址
     *  @param {string} amount 铸币数量，单位是wei（最小单位）
     */
-  _mint(to, amount) {
+  _mint(from, to, amount) {
     // 开发ing，先硬编码
-    console.info('_mint', to, amount);
     console.info(this.address);
     const encodeABI = this.contract.methods.mint(to, amount).encodeABI();
-    return this.sendTransactionWithOurKey(encodeABI);
+    return this.sendTransaction(from, encodeABI);
   }
 
   /**
