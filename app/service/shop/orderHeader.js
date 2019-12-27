@@ -258,6 +258,7 @@ class OrderHeaderService extends Service {
   // 处理订单，paySuccessful之后调用
   async processingOrder(tradeNo) {
     const result = await this.handling(tradeNo);
+    this.logger.info('service.shop.orderHeader method processingOrder', result);
     if (result < 0) {
       // 交易失败
       await this.app.mysql.query('UPDATE order_headers SET status = 7 WHERE trade_no = ?;', [ tradeNo ]);
