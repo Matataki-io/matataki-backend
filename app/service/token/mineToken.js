@@ -221,7 +221,7 @@ class MineTokenService extends Service {
     let transactionHash;
     try {
       const blockchainMintAction = await EtherToken._mint(private_key, target, amount);
-      this.logger.info('Minting token', token, blockchainMintAction)
+      this.logger.info('Minting token', token, blockchainMintAction);
       transactionHash = blockchainMintAction.transactionHash;
     } catch (error) {
       console.error(error);
@@ -303,22 +303,22 @@ class MineTokenService extends Service {
     } else {
       conn = await this.app.mysql.beginTransaction();
     }
-    const [ fromWallet, toWallet ] = await Promise.all(
-      [ from, to ].map(id => this.getHostingWallet(id))
-    );
+    // const [ fromWallet, toWallet ] = await Promise.all(
+    //   [ from, to ].map(id => this.getHostingWallet(id))
+    // );
     try {
-      const token = await this.get(tokenId);
-      const EtherToken = new Token(20, token.contract_address);
-      let transactionHash;
-      try {
-        const transferAction = await EtherToken.transfer(
-          fromWallet.private_key,
-          toWallet.public_key,
-          value);
-        transactionHash = transferAction.transactionHash;
-      } catch (error) {
-        console.error(error);
-      }
+      // const token = await this.get(tokenId);
+      // const EtherToken = new Token(20, token.contract_address);
+      // let transactionHash;
+      // try {
+      //   const transferAction = await EtherToken.transfer(
+      //     fromWallet.private_key,
+      //     toWallet.public_key,
+      //     value);
+      //   transactionHash = transferAction.transactionHash;
+      // } catch (error) {
+      //   console.error(error);
+      // }
 
       const amount = parseInt(value);
       // 减少from的token
