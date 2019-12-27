@@ -25,7 +25,7 @@ class KeepWalletBalance extends Subscription {
       address: ethAccounts[idx].public_key,
       balance: balances[idx],
     }));
-    const lowestLimit = web3.utils.toWei('500000', 'gwei');
+    const lowestLimit = web3.utils.toWei('0.0015', 'ether');
     const needAirdropList = accountStat.filter(
       ({ balance }) => new BigNumber(balance).lt(lowestLimit)
     ).map(({ address }) => address);
