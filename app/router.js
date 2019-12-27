@@ -389,8 +389,6 @@ module.exports = app => {
   // for ethereum related routes
   router.get('/eth/getTransaction/:txHash', passport.verify, controller.ethereum.api.getTransaction);
   router.get('/eth/getTxReceipt/:txHash', passport.verify, controller.ethereum.api.getTransactionReceipt);
-  router.post('/_dev/eth/fanPiao/issue', passport.verify, controller.ethereum.fanPiao.issue);
-  router.post('/_dev/eth/fanPiao/estimateGas', passport.verify, controller.ethereum.fanPiao.estimateGas);
 
   // get metadata from url
   router.get('/metadata/getFromUrl/', passport.verify, controller.metadata.get);
