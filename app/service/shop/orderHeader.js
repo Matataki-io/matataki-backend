@@ -58,7 +58,7 @@ class OrderHeaderService extends Service {
             case typeOptions.buy_token_input: {
               cny_amount = item.cny_amount;
               token_amount = await this.service.token.exchange.getCnyToTokenInputPrice(item.tokenId, cny_amount);
-              min_tokens = this.calMinTokenByInput(cny_amount);
+              min_tokens = this.calMinTokenByInput(token_amount);
               break;
             }
             case typeOptions.add: {
