@@ -303,23 +303,10 @@ class MineTokenService extends Service {
     } else {
       conn = await this.app.mysql.beginTransaction();
     }
-    // const [ fromWallet, toWallet ] = await Promise.all(
-    //   [ from, to ].map(id => this.getHostingWallet(id))
-    // );
+    const [ fromWallet, toWallet ] = await Promise.all(
+      [ from, to ].map(id => this.getHostingWallet(id))
+    );
     try {
-      // const token = await this.get(tokenId);
-      // const EtherToken = new Token(20, token.contract_address);
-      // let transactionHash;
-      // try {
-      //   const transferAction = await EtherToken.transfer(
-      //     fromWallet.private_key,
-      //     toWallet.public_key,
-      //     value);
-      //   transactionHash = transferAction.transactionHash;
-      // } catch (error) {
-      //   console.error(error);
-      // }
-
       const amount = parseInt(value);
       // 减少from的token
       const result = await conn.query('UPDATE assets_minetokens SET amount = amount - ? WHERE uid = ? AND token_id = ? AND amount >= ?;',
@@ -330,6 +317,19 @@ class MineTokenService extends Service {
           await conn.rollback();
         }
         return false;
+      }
+
+      const token = await this.get(tokenId);
+      const EtherToken = new Token(20, token.contract_address);
+      let transactionHash;
+      try {
+        const transferAction = await EtherToken.transfer(
+          fromWallet.private_key,
+          toWallet.public_key,
+          value);
+        transactionHash = transferAction.transactionHash;
+      } catch (error) {
+        console.error(error);
       }
 
       // 增加to的token
