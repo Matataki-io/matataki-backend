@@ -329,7 +329,7 @@ class MineTokenService extends Service {
           value);
         transactionHash = transferAction.transactionHash;
       } catch (error) {
-        console.error(error);
+        this.logger.error('transferFrom::syncBlockchain', error);
       }
 
       // 增加to的token
