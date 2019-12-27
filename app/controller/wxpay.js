@@ -325,6 +325,7 @@ class WxPayController extends Controller {
       const orderId = order.id;
       const type = order.type;
       ctx.set('Content-Type', 'text/xml');
+      ctx.body = '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
       switch (typeOptions[type]) {
         case 'add': // 添加流动性
           await ctx.service.token.exchange.addLiquidityOrder(orderId);
@@ -336,17 +337,10 @@ class WxPayController extends Controller {
           await ctx.service.token.exchange.cnyToTokenOutputOrder(orderId);
           break;
         default: {
-          ctx.body = `<xml>
-                        <return_code><![CDATA[FAIL]]></return_code>
-                        <return_msg><![CDATA[update error]]></return_msg>
-                      </xml>`;
+          ctx.body = '<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[update error]]></return_msg></xml>';
           return;
         }
       }
-      ctx.body = `<xml>
-                    <return_code><![CDATA[SUCCESS]]></return_code>
-                    <return_msg><![CDATA[OK]]></return_msg>
-                  </xml>`;
     }
   }
   async login() {
@@ -396,15 +390,10 @@ class WxPayController extends Controller {
     const { ctx } = this;
     const { return_code, out_trade_no } = ctx.request.weixin;// 订单号
     ctx.logger.info('wxpay notify info', out_trade_no, ctx.request.weixin);
-    ctx.body = `<xml>
-                  <return_code><![CDATA[SUCCESS]]></return_code>
-                  <return_msg><![CDATA[OK]]></return_msg>
-                </xml>`;
+    ctx.set('Content-Type', 'text/xml');
+    ctx.body = '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
     if (return_code === 'SUCCESS') {
-      ctx.body = `<xml>
-                    <return_code><![CDATA[SUCCESS]]></return_code>
-                    <return_msg><![CDATA[OK]]></return_msg>
-                  </xml>`;
+      ctx.body = '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>';
     }
   }
 }
