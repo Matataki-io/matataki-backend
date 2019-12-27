@@ -324,9 +324,7 @@ class MineTokenService extends Service {
       let transactionHash;
       try {
         const transferAction = await EtherToken.transfer(
-          fromWallet.private_key,
-          toWallet.public_key,
-          value);
+          fromWallet.private_key, toWallet.public_key, amount);
         transactionHash = transferAction.transactionHash;
       } catch (error) {
         this.logger.error('transferFrom::syncBlockchain', error);
