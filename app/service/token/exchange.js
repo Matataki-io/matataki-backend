@@ -465,6 +465,7 @@ class ExchangeService extends Service {
     // 超时
     const timestamp = Math.floor(Date.now() / 1000);
     if (deadline < timestamp) {
+      this.logger.info('service.exchange.cnyToTokenInput deadline < timestamp', { deadline, timestamp });
       return -1;
     }
 
@@ -472,6 +473,7 @@ class ExchangeService extends Service {
     const exchangeResult = await conn.query('SELECT token_id, total_supply, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
     // 没有交易对
     if (!exchangeResult || exchangeResult.length <= 0) {
+      this.logger.info('service.exchange.cnyToTokenInput no tran pair', exchangeResult);
       return -1;
     }
     const exchange = exchangeResult[0];
@@ -482,6 +484,7 @@ class ExchangeService extends Service {
 
     // 可兑换的token数量不满足最小值
     if (tokens_bought < min_tokens) {
+      this.logger.info('service.exchange.cnyToTokenInput tokens_bought < min_tokens', { token_reserve, cny_reserve, tokens_bought, min_tokens });
       return -1;
     }
 
@@ -489,6 +492,7 @@ class ExchangeService extends Service {
     const transferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, recipient, tokens_bought, '', consts.mineTokenTransferTypes.exchange_purchase, conn);
     // 转移资产失败
     if (!transferResult) {
+      this.logger.info('service.exchange.cnyToTokenInput transfer failed Result:', transferResult);
       return -1;
     }
 
@@ -496,6 +500,7 @@ class ExchangeService extends Service {
     const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, exchange.exchange_uid, cny_sold, conn);
     // 转移资产失败
     if (!cnyTransferResult) {
+      this.logger.info('service.exchange.cnyToTokenInput cnyTransfer failed Result', cnyTransferResult);
       return -1;
     }
 
@@ -589,6 +594,7 @@ class ExchangeService extends Service {
 
     const order = result[0];
     if (order.status !== 6) {
+      this.logger.info('service.exchange.cnyToTokenSubOrder order.status !== 6');
       return -1;
     }
 
@@ -617,6 +623,7 @@ class ExchangeService extends Service {
       }
     }
     if (res < 0) {
+      this.logger.info('service.exchange.cnyToTokenSubOrder res < 0 ', order.type, res);
       return -1;
     }
 
