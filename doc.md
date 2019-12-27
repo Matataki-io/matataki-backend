@@ -3377,6 +3377,7 @@ const folderOption = {
 #### 账号绑定
 * POST /account/binding
 * 参数：
+
 ```
 // platform：eos、ont
 {
@@ -3411,12 +3412,14 @@ const folderOption = {
 
 * 请求头：x-access-token
 * 返回值：
+
 ```
 {
   "code": 0,
   "message": "成功"
 }
 ```
+
 #### 账号解绑
 * POST /account/unbinding
 * 参数：
@@ -3478,6 +3481,7 @@ const folderOption = {
   * 1: 不需要购买
   * 2: 需要购买
   * 3: 全部
+* onlyCreator: number(0/1)，只看创始人，默认0
 
 * sort: 排序
   * popular-desc: 按热度排序
@@ -3494,6 +3498,7 @@ const folderOption = {
             "uid": 1105,
             "author": "guanchao71@hotmail.com",
             "title": "测试权限文章",
+            "short_content": "xxxxx",
             "hash": "QmZcWMUwzsBpkdvdiFackaWJSnYpmT3Bw3FgugTqg8rMsY",
             "create_time": "2019-12-16T13:56:43.000Z",
             "cover": "/image/2019/12/16/382f30d51333360e3e3a0b94fbcff1ca.jpg",

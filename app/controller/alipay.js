@@ -11,9 +11,36 @@ const typeOptions = {
 };
 
 class AliPayController extends Controller {
-  async pay() {
+  async wapPay() {
     const { ctx } = this;
-    const result = await ctx.service.alipay.pay();
+    const { amount, title } = ctx.request.body;
+    const result = await ctx.service.alipay.wapPay(amount, title);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+  async pagePay() {
+    const { ctx } = this;
+    const { amount, title } = ctx.request.body;
+    const result = await ctx.service.alipay.pagePay(amount, title);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+  async notify() {
+    const { ctx } = this;
+    const signResult = await ctx.service.alipay.checkNotifySign(ctx.request.body);
+    if (signResult) {
+      ctx.logger.info('alipay notify info 1', ctx.request.body);
+      console.log('success');
+      ctx.body = 'success';
+    }
+  }
+  async auth() {
+    const { ctx } = this;
+    const result = await ctx.service.alipay.auth();
     ctx.body = {
       ...ctx.msg.success,
       data: result,
