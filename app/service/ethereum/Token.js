@@ -27,8 +27,8 @@ class Token {
     * @param {object} txParams 交易的参数
     */
   async sendTransactionWithOurKey(encodeABI, {
-    value = this.web3.utils.toWei('0', 'ether'),
-    gasLimit = 9000000,
+    value = 0,
+    gasLimit = 5000000,
   }) {
     const { privateKey } = config.ethereum;
     return this.sendTransaction(privateKey, encodeABI, { value, gasLimit });
@@ -43,8 +43,8 @@ class Token {
     * @param {object} txParams 交易的参数
     */
   async sendTransaction(_privateKey, encodeABI, {
-    value = this.web3.utils.toWei('0', 'ether'),
-    gasLimit = 9000000,
+    value = 0,
+    gasLimit = 500000,
   }) {
     // 处理0x开头的私钥
     console.info('sendTransaction to: ', this.contractAddress);
@@ -102,7 +102,7 @@ class Token {
     // 开发ing，先硬编码
     console.info(this.address);
     const encodeABI = this.contract.methods.mint(to, amount).encodeABI();
-    return this.sendTransaction(from, encodeABI);
+    return this.sendTransaction(from, encodeABI, { gasLimit: 100000 });
   }
 
   /**
@@ -125,8 +125,7 @@ class Token {
   transfer(from, recipient, amount) {
     const encodeABI = this.contract.methods.transfer(recipient, amount).encodeABI();
     return this.sendTransaction(from, encodeABI, {
-      gasLimit: this.web3.utils.toHex(150000),
-      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('2', 'gwei')),
+      gasLimit: 150000,
     });
   }
 
@@ -137,7 +136,9 @@ class Token {
     */
   burn(burner, amount) {
     const encodeABI = this.contract.methods.transfer(amount).encodeABI();
-    return this.sendTransaction(burner, encodeABI);
+    return this.sendTransaction(burner, encodeABI, {
+      gasLimit: 150000,
+    });
   }
 }
 
