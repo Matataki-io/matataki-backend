@@ -42,6 +42,14 @@ class SyncMinetokenTransaction extends Subscription {
       // receipt 为 null （交易未结束）时，直接跳过, 让他继续为 0
       if (!receipt) { return null; }
       const on_chain_tx_status = receipt.status ? txStatusCode.OK : txStatusCode.FAIL;
+      if (!receipt.status) {
+        this.service.serverchan.sendNotification(
+          '以太坊交易被EVM回滚',
+          `交易详细: \n ${JSON.stringify(receipt)
+          }`)
+          .then(() => { this.logger.info(`Reported tx: ${receipt.transactionHash} to serverchan`); })
+          .catch(e => this.logger.error(e));
+      }
       return mysql.update('assets_minetokens_log', {
         on_chain_tx_status,
       }, {
