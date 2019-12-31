@@ -34,6 +34,7 @@ class ReferencesService extends Service {
         ref_sign_id,
         title: post.title,
         summary: post.short_content,
+        cover: post.cover,
       };
     }
 
@@ -48,7 +49,7 @@ class ReferencesService extends Service {
       });
       // 微信公众号就是屑，网页版在客户端渲染title，直接抓取 html 时的 <title> 为空
       // 但是多谢微信意识到 OpenGraph 规范的存在，我们可以试着读取 - Frank
-      let { title, description: summary } = await this.service.metadata.GetFromRawPage(rawPage, url);
+      let { title, description: summary, image: cover } = await this.service.metadata.GetFromRawPage(rawPage, url);
 
       if (!title) {
         const matchOgTitle = rawPage.data.match(/<meta.*?property="og:title". *?content=["|']*(.*?)["|'|\/]*>/);
@@ -66,6 +67,7 @@ class ReferencesService extends Service {
         ref_sign_id,
         title,
         summary,
+        cover,
       };
     } catch (err) {
       this.logger.error('References::extractRefTitle: error:', err);
