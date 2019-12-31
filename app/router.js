@@ -418,5 +418,10 @@ module.exports = app => {
   router.post('/alipay/notify', passport.verify, controller.alipay.notify);
   // router.post('/alipay/auth', passport.verify, controller.alipay.auth);
   // router.post('/stablecoin/transfer', passport.verify, controller.ethereum.stablecoin.transfer);
+
+  // moment
+  router.post('/share', passport.authorize, controller.share.create);
+  router.get('/share', passport.verify, controller.share.index);
+  router.get('/share/:id', passport.verify, controller.share.show);
 };
 
