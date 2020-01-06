@@ -3517,3 +3517,39 @@ const folderOption = {
     ]
 }
 ```
+
+#### 创建分享
+* POST /share
+* 响应状态码： 200
+* 请求头：x-access-token
+* 参数：
+```json
+{
+	"author": "shellteo@163.com",
+	"content": "很不错啊这篇文章！牛逼！",
+	"platform": "email",
+	"refs": [{
+		"url": "https://www.jianshu.com/p/83da7a020b4f",
+		"title":"我背单词这些年",
+		"summary":"给你说个APP，你可别告诉别人。我使用墨墨已经一年多了，然后我现在说一下我对这个软件的使用感受",
+		"cover":"http://upload-images.jianshu.io/upload_images/16543274-7308458b2f0ca74d.jpg"
+	},{
+		"url":"https://sspai.com/post/40787",
+		"title":"真正提高效率：自定义你的 Touch Bar - 少数派",
+		"summary":"自 Touch Bar 在 MacBook Pro 上问世以来，对其最大的争议就是它并不能很好地提高工作效率，幸好我们可以通过 BetterTouchTool 对 TouchBar 进行深度定制，达到真正提高工作效率。",
+		"cover":"https://cdn.sspai.com/2017/09/06/06cd4b16169f0299814d880b84697ea1.jpg"
+	}]
+}
+```
+* 返回内容：
+```json
+{
+    "code": 0,
+    "message": "成功",
+    "data": 101235
+}
+```
+
+#### 分享列表
+
+#### 分享详情
