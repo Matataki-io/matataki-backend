@@ -59,7 +59,7 @@ class ShareController extends Controller {
     if (type === 'time') {
       postData = await this.service.share.timeRank(page, pagesize);
     } else if (type === 'hot') {
-      postData = await this.service.post.hotRank(page, pagesize);
+      postData = await this.service.share.hotRank(page, pagesize);
     }
 
     if (postData === 2 || postData === null) {
@@ -76,8 +76,12 @@ class ShareController extends Controller {
   // 详情
   async show() {
     const { ctx } = this;
-    const id = ctx.params;
-    ctx.body = id;
+    const id = ctx.params.id;
+    const result = await this.service.share.get(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
   }
 }
 

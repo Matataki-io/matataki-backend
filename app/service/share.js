@@ -77,32 +77,6 @@ class ShareService extends Service {
       return -1;
     }
   }
-  async getByHash(hash, requireProfile) {
-    const posts = await this.app.mysql.query(
-      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy FROM posts WHERE hash = ? AND channel_id = ?;',
-      [ hash, SHARE_CHANNEL_ID ]
-    );
-
-    /* const rows = await this.app.mysql.select('posts', {
-      where: {
-        hash,
-        channel_id: SHARE_CHANNEL_ID,
-      },
-      columns: ['author', 'title'],
-    }); */
-    let post = posts[0];
-    if (!post) {
-      return null;
-    }
-
-    if (requireProfile) {
-      post = await this.getPostProfile(post);
-    }
-    post.tokens = await this.getMineTokens(post.id);
-    post.username = this.service.user.maskEmailAddress(post.username);
-    return post;
-  }
   async get(id) {
     const posts = await this.app.mysql.select('posts', {
       where: { id, channel_id: SHARE_CHANNEL_ID },
@@ -112,29 +86,6 @@ class ShareService extends Service {
       return posts[0];
     }
     return null;
-  }
-
-  /*
-  查询太多影响性能，修改计划：
-  把公共属性和持币阅读权限放到一起返回
-  其他和当前登录相关的属性放入新接口返回
-  */
-  async getById(id) {
-    const posts = await this.app.mysql.query(
-      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy, cc_license FROM posts WHERE id = ?;',
-      [ id ]
-    );
-
-    if (posts === null || posts.length === 0) {
-      return null;
-    }
-
-    let post = posts[0];
-    post = await this.getPostProfile(post);
-    post.tokens = await this.getMineTokens(id);
-    post.username = this.service.user.maskEmailAddress(post.username);
-    return post;
   }
   async timeRank(page = 1, pagesize = 20) {
     const wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = 3 ';
@@ -175,19 +126,18 @@ class ShareService extends Service {
       beRefsLen = beRefs.length;
     // 引用
     for (let i = 0; i < refsLen; i++) {
-      const id = refs[i].id;
+      const id = refs[i].sign_id;
       id2posts[id].refs.push(refs[i]);
     }
     // 被引用
     for (let i = 0; i < beRefsLen; i++) {
-      const id = beRefs[i].id;
+      const id = beRefs[i].ref_sign_id;
       id2posts[id].beRefs.push(beRefs[i]);
     }
     return {
       count,
       list: posts,
     };
-
   }
   async hotRank(page = 1, pagesize = 20) {
     const wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = 3 ';
@@ -198,13 +148,48 @@ class ShareService extends Service {
       LEFT JOIN users b ON a.uid = b.id 
       LEFT JOIN post_read_count c ON a.id = c.post_id 
       ${wheresql}
-      ORDER BY hot_score DESC, id DESC LIMIT :start, :end
+      ORDER BY hot_score DESC, id DESC LIMIT :start, :end;
       SELECT COUNT(*) AS count FROM posts a
       ${wheresql};`;
     const queryResult = await this.app.mysql.query(
       sql,
       { start: (page - 1) * pagesize, end: 1 * pagesize }
     );
+    const posts = queryResult[0];
+    const count = queryResult[1][0].count;
+    const postids = [];
+    const len = posts.length;
+    const id2posts = {};
+    for (let i = 0; i < len; i++) {
+      const row = posts[i];
+      posts[i].refs = [];
+      posts[i].beRefs = [];
+      id2posts[row.id] = row;
+      postids.push(row.id);
+    }
+    const refResult = await this.app.mysql.query(
+      'SELECT * FROM post_references WHERE sign_id IN (:postids);'
+      + 'SELECT * FROM post_references WHERE ref_sign_id IN (:postids);',
+      { postids }
+    );
+    const refs = refResult[0],
+      beRefs = refResult[1],
+      refsLen = refs.length,
+      beRefsLen = beRefs.length;
+    // 引用
+    for (let i = 0; i < refsLen; i++) {
+      const id = refs[i].sign_id;
+      id2posts[id].refs.push(refs[i]);
+    }
+    // 被引用
+    for (let i = 0; i < beRefsLen; i++) {
+      const id = beRefs[i].ref_sign_id;
+      id2posts[id].beRefs.push(beRefs[i]);
+    }
+    return {
+      count,
+      list: posts,
+    };
   }
   async timeRankSlow(page = 1, pagesize = 20, author = null, filter = 0) {
 
