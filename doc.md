@@ -3551,5 +3551,40 @@ const folderOption = {
 ```
 
 #### 分享列表
+* GET /share
+* 响应状态码： 200
+* 参数：
+  - type(time|hot)，默认time，排序类型
+  - page
+  - pagesize
+* 返回内容：
+```json
+{
+  "code": 0,
+  "message": "成功",
+  "data": {
+      "count": 5,
+      "list": [
+          {
+              "id": 101235,
+              "uid": 1042,
+              "author": "shellteo@163.com",
+              "title": "很不错啊这篇文章！牛逼！",
+              "hash": "QmahykZ5NCDMZ3syhWYSXojyBLxc7eqvkQQpqLaZmjGPT3",
+              "create_time": "2020-01-06T06:20:36.000Z",
+              "cover": null,
+              "require_holdtokens": 0,
+              "require_buy": 0,
+              "nickname": "zxppppp",
+              "avatar": "/avatar/2019/10/16/9eff045272a135e771b60f5bb3badd89.png",
+              "read": 0,
+              "likes": 0,
+              "refs": [], // 引用数组
+              "beRefs": [] // 被引用数组
+          },
+      ]
+  }
+}
+```
 
 #### 分享详情
