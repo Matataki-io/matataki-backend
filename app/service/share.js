@@ -19,9 +19,9 @@ class ShareService extends Service {
   }
 
   async addReference({ uid, signId, url, title, summary, cover }, conn) {
-    if (!await this.service.references.hasReferencePermission(uid, signId)) {
+    /* if (!await this.service.references.hasReferencePermission(uid, signId)) {
       return -1;
-    }
+    } */
 
     let ref_sign_id = 0;
     if (this.service.references.checkInnerPost(url)) {
@@ -30,7 +30,7 @@ class ShareService extends Service {
 
     try {
       const sql = ` INSERT INTO post_references (sign_id, ref_sign_id, url, title, summary, number, create_time, status, cover) 
-                  SELECT :sign_id, :ref_sign_id, :url, :title, :summary, (SELECT IFNULL(MAX(number), 0) + 1 FROM post_references WHERE sign_id=:sign_id), :time, 0
+                  SELECT :sign_id, :ref_sign_id, :url, :title, :summary, (SELECT IFNULL(MAX(number), 0) + 1 FROM post_references WHERE sign_id=:sign_id), :time, 0, :cover
                   ON DUPLICATE KEY UPDATE title = :title, summary = :summary, create_time = :time, status = 0, cover = :cover; `;
       await conn.query(sql, {
         sign_id: signId, ref_sign_id, url, title, summary, time: moment().format('YYYY-MM-DD HH:mm:ss'), cover,
@@ -70,7 +70,7 @@ class ShareService extends Service {
         }
       }
       conn.commit();
-      return 0;
+      return signId;
     } catch (err) {
       await conn.rollback();
       this.logger.error('ShareService::create error: %j', err);
