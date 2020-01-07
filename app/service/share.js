@@ -115,11 +115,7 @@ class ShareService extends Service {
       id2posts[row.id] = row;
       postids.push(row.id);
     }
-    const refResult = await this.app.mysql.query(
-      'SELECT * FROM post_references WHERE sign_id IN (:postids);'
-      + 'SELECT * FROM post_references WHERE ref_sign_id IN (:postids);',
-      { postids }
-    );
+    const refResult = await this.getRef(postids);
     const refs = refResult[0],
       beRefs = refResult[1],
       refsLen = refs.length,
@@ -167,11 +163,7 @@ class ShareService extends Service {
       id2posts[row.id] = row;
       postids.push(row.id);
     }
-    const refResult = await this.app.mysql.query(
-      'SELECT * FROM post_references WHERE sign_id IN (:postids);'
-      + 'SELECT * FROM post_references WHERE ref_sign_id IN (:postids);',
-      { postids }
-    );
+    const refResult = await this.getRef(postids);
     const refs = refResult[0],
       beRefs = refResult[1],
       refsLen = refs.length,
@@ -190,6 +182,30 @@ class ShareService extends Service {
       count,
       list: posts,
     };
+  }
+  async getRef(postids) {
+    const refResult = await this.app.mysql.query(
+      `SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
+      t2.channel_id,
+      t3.username, t3.email, t3.nickname, t3.platform, t3.avatar
+      FROM post_references t1
+      LEFT JOIN posts t2
+      ON t1.ref_sign_id = t2.id
+      LEFT JOIN users t3
+      ON t2.uid = t3.id
+      WHERE sign_id IN ( :postids ) AND t1.status = 0;
+      SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
+      t2.channel_id,
+      t3.username, t3.email, t3.nickname, t3.platform, t3.avatar
+      FROM post_references t1
+      LEFT JOIN posts t2
+      ON t1.sign_id = t2.id
+      LEFT JOIN users t3
+      ON t2.uid = t3.id
+      WHERE ref_sign_id IN ( :postids ) AND t1.status = 0;`,
+      { postids }
+    );
+    return refResult;
   }
   async timeRankSlow(page = 1, pagesize = 20, author = null, filter = 0) {
 

@@ -7,19 +7,23 @@ const htmlparser = require('node-html-parser');
 const domains = [ 'https://wwwtest.smartsignature.io/p/', 'https://wwwtest.smartsignature.io/p/', 'https://test.frontenduse.top/p/',
   'https://matataki.io/p/', 'https://www.matataki.io/p/', 'https://smartsignature.frontenduse.top/p/' ];
 
+const matatakiUrlReg = /http(?:s)?:\/\/\w+.(?:smartsignature.io|matataki.(?:io|cn)|frontenduse.top)\/(?:p|share)\/(\d+)/;
+
 class ReferencesService extends Service {
   // 是否是内部的文章
   checkInnerPost(url) {
-    for (const domain of domains) {
+    return matatakiUrlReg.test(url.toLowerCase());
+    /* for (const domain of domains) {
       if (url.toLowerCase().startsWith(domain)) {
         return true;
       }
     }
-    return false;
+    return false; */
   }
 
   extractSignId(url) {
-    return parseInt(url.match(/\/p\/(\d+)/)[1]);
+    return parseInt(url.match(matatakiUrlReg)[1]);
+    // return parseInt(url.match(/\/p\/(\d+)/)[1]);
   }
 
   async extractRefTitle(url) {
