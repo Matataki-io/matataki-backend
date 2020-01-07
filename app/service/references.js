@@ -2,6 +2,7 @@
 const axios = require('axios');
 const moment = require('moment');
 const Service = require('egg').Service;
+const path=require('path');
 const htmlparser = require('node-html-parser');
 
 const domains = [ 'https://wwwtest.smartsignature.io/p/', 'https://wwwtest.smartsignature.io/p/', 'https://test.frontenduse.top/p/',
@@ -33,12 +34,18 @@ class ReferencesService extends Service {
     }
 
     if (ref_sign_id > 0) {
-      const post = await this.service.post.get(ref_sign_id);
+      const post = await this.service.post.getById2(ref_sign_id);
+      if (post === null) return null;
+      const { username, email, nickname, platform, avatar } = post;
       return {
         ref_sign_id,
         title: post.title,
         summary: post.short_content,
         cover: post.cover,
+        channel_id: post.channel_id,
+        user: {
+          username, email, nickname, platform, avatar,
+        },
       };
     }
 
@@ -53,7 +60,12 @@ class ReferencesService extends Service {
       });
       // 微信公众号就是屑，网页版在客户端渲染title，直接抓取 html 时的 <title> 为空
       // 但是多谢微信意识到 OpenGraph 规范的存在，我们可以试着读取 - Frank
-      let { title, description: summary, image: cover } = await this.service.metadata.GetFromRawPage(rawPage, url);
+      let { title, description: summary, image: coverUrl } = await this.service.metadata.GetFromRawPage(rawPage, url);
+      let cover = '';
+      if (coverUrl) {
+        const imgFileName = './uploads/today_' + Date.now() + '.' + path.extname(coverUrl);
+        cover = await this.service.postImport.uploadArticleImage(coverUrl, imgFileName);
+      }
 
       if (!title) {
         const matchOgTitle = rawPage.data.match(/<meta.*?property="og:title". *?content=["|']*(.*?)["|'|\/]*>/);

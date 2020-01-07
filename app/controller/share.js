@@ -31,7 +31,7 @@ class ShareController extends Controller {
     const id = await ctx.service.share.create({
       author,
       username: ctx.user.username,
-      title: content,
+      short_content: content,
       hash,
       is_original: 1,
       create_time: now,
