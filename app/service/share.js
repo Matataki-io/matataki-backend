@@ -89,7 +89,7 @@ class ShareService extends Service {
   }
   async timeRank(page = 1, pagesize = 20) {
     const wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = 3 ';
-    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, 
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
       b.nickname, b.avatar, 
       c.real_read_count AS \`read\`, c.likes 
       FROM posts a
@@ -137,7 +137,7 @@ class ShareService extends Service {
   }
   async hotRank(page = 1, pagesize = 20) {
     const wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = 3 ';
-    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, 
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
       b.nickname, b.avatar, 
       c.real_read_count AS \`read\`, c.likes 
       FROM posts a
@@ -187,21 +187,28 @@ class ShareService extends Service {
     const refResult = await this.app.mysql.query(
       `SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
       t2.channel_id,
-      t3.username, t3.email, t3.nickname, t3.platform, t3.avatar
+      t3.username, t3.nickname, t3.platform, t3.avatar,
+      t4.real_read_count, t4.likes, t4.dislikes
       FROM post_references t1
       LEFT JOIN posts t2
       ON t1.ref_sign_id = t2.id
       LEFT JOIN users t3
       ON t2.uid = t3.id
+      LEFT JOIN post_read_count t4
+      ON t1.ref_sign_id = t4.post_id
       WHERE sign_id IN ( :postids ) AND t1.status = 0;
+
       SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
       t2.channel_id,
-      t3.username, t3.email, t3.nickname, t3.platform, t3.avatar
+      t3.username, t3.nickname, t3.platform, t3.avatar,
+      t4.real_read_count, t4.likes, t4.dislikes
       FROM post_references t1
       LEFT JOIN posts t2
       ON t1.sign_id = t2.id
       LEFT JOIN users t3
       ON t2.uid = t3.id
+      LEFT JOIN post_read_count t4
+      ON t1.sign_id = t4.post_id
       WHERE ref_sign_id IN ( :postids ) AND t1.status = 0;`,
       { postids }
     );

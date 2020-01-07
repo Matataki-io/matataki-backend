@@ -120,6 +120,27 @@ class PostService extends Service {
     }
     return null;
   }
+  async getById2(id) {
+    const posts = await this.app.mysql.query(
+      `SELECT p.*,
+      u.username, u.nickname, u.platform, u.avatar,
+      prc.real_read_count, prc.likes, prc.dislikes
+      FROM posts p
+      LEFT JOIN users u
+      ON p.uid = u.id
+      LEFT JOIN post_read_count prc
+      ON p.id = prc.post_id
+      WHERE p.id = ?;`,
+      [ id ]
+    );
+
+    if (posts === null || posts.length === 0) {
+      return null;
+    }
+
+    const post = posts[0];
+    return post;
+  }
 
   // 根据id获取文章
   /*
