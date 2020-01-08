@@ -10,6 +10,7 @@ class ShareController extends Controller {
     const ctx = this.ctx;
     // ref_sign_id title summary cover url
     const { author, content, platform, refs } = ctx.request.body;
+    this.logger.info('controller.share params', { author, content, platform, refs });
     if (!Array.isArray(refs)) {
       ctx.body = ctx.msg.paramsError;
       return;
@@ -23,6 +24,7 @@ class ShareController extends Controller {
       author,
       content,
     }));
+    this.logger.info('controller.share hash', hash);
     if (!hash) {
       ctx.body = ctx.msg.ipfsUploadFailed;
       return;
@@ -40,6 +42,8 @@ class ShareController extends Controller {
       is_recommend: 0,
       category_id: 0,
     }, refs);
+
+    this.logger.info('controller.share id', id);
 
     // 添加文章到elastic search
     // await this.service.search.importPost(id, ctx.user.id, title, '');

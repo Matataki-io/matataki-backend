@@ -24,8 +24,10 @@ class ShareService extends Service {
     } */
 
     let ref_sign_id = 0;
+    this.logger.info('service.share addReference url', url);
     if (this.service.references.checkInnerPost(url)) {
       ref_sign_id = this.service.references.extractSignId(url);
+      this.logger.info('service.share addReference ref_sign_id', ref_sign_id);
     }
 
     try {
@@ -49,6 +51,7 @@ class ShareService extends Service {
         ...data,
         channel_id: SHARE_CHANNEL_ID,
       });
+      this.logger.info('service.share insert posts result', result);
       if (result.affectedRows === 1) {
         // 创建统计表栏目
         await conn.query(
@@ -56,14 +59,17 @@ class ShareService extends Service {
           + ' VALUES(?, 0, 0, 0 ,0, 0);',
           [ result.insertId ]
         );
+        this.logger.info('service.share create insert post_read_count');
       }
       const signId = result.insertId;
       const uid = this.ctx.user.id;
       for (const ref of refs) {
         const { url, title, summary, cover } = ref;
+        this.logger.info('service.share create addReference params', ref);
         const result = await this.addReference({
           uid, signId, url, title, summary, cover,
         }, conn);
+        this.logger.info('service.share create addReference result', result);
         if (result < 0) {
           conn.rollback();
           return -1;
@@ -115,6 +121,12 @@ class ShareService extends Service {
       id2posts[row.id] = row;
       postids.push(row.id);
     }
+    if (len === 0) {
+      return {
+        count,
+        list: posts,
+      };
+    }
     const refResult = await this.getRef(postids);
     const refs = refResult[0],
       beRefs = refResult[1],
@@ -162,6 +174,12 @@ class ShareService extends Service {
       posts[i].beRefs = [];
       id2posts[row.id] = row;
       postids.push(row.id);
+    }
+    if (len === 0) {
+      return {
+        count,
+        list: posts,
+      };
     }
     const refResult = await this.getRef(postids);
     const refs = refResult[0],
