@@ -23,12 +23,12 @@ class PostScore extends Subscription {
     const shareList = [];
     for (const post of posts) {
       const { id, create_time, channel_id, dislikes, likes, real_read_count, support_count, down } = post;
-      let hot_score = (real_read_count * 2 + likes * 4 - dislikes * 10 + support_count * 10 - down * 10);
+      let hot_score = (real_read_count * 2 + likes * 4 - dislikes * 10 + support_count * 10 - down * 10) + 1000000;
       if (this.isAfter3Days(create_time)) {
-        hot_score *= 1.5;
+        hot_score += 1000;
       }
-      hot_score -= this.dateDiff(create_time) * 3;
-      hot_score /= 10;
+      hot_score -= this.dateDiff(create_time);
+      // hot_score /= 10;
       if (channel_id === 1) {
         postList.push(hot_score, id);
       }
@@ -36,6 +36,8 @@ class PostScore extends Subscription {
         shareList.push(hot_score, id);
       }
     }
+    await this.app.redis.del('post:score:filter:1');
+    await this.app.redis.del('post:score:filter:3');
     this.app.redis.zadd('post:score:filter:1', postList);
     this.app.redis.zadd('post:score:filter:3', shareList);
   }
@@ -43,7 +45,7 @@ class PostScore extends Subscription {
     return moment(time).isAfter(moment().subtract(3, 'days'));
   }
   dateDiff(time) {
-    return moment().diff(moment(time), 'days');
+    return moment().diff(moment(time), 'minute');
   }
 }
 

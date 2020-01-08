@@ -474,7 +474,7 @@ class PostService extends Service {
 
       wheresql += 'AND (' + conditions.join(' OR ') + ') ';
     }
-    const postids = await this.service.hot.list(page = 1, pagesize = 20, 1);
+    const postids = await this.service.hot.list(page, pagesize, 1);
 
     const sqlcode = totalsql + wheresql + ';';
     const queryResult = await this.app.mysql.query(
