@@ -10,7 +10,7 @@ class Bootstrapper {
 
   async loadCache() {
     const { mysql, redis } = this.app;
-    await this.app.runSchedule('hot_cal');
+    await this.app.runSchedule('calculate_hot_score');
 
     const schemaVersionKey = 'schema_version';
     const cacheSchemaVersion = 2;

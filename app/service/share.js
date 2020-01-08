@@ -148,24 +148,24 @@ class ShareService extends Service {
     };
   }
   async hotRank(page = 1, pagesize = 20) {
-    const wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = 3 ';
+    const postids = await this.service.hot.list(page, pagesize, SHARE_CHANNEL_ID);
     const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
       b.nickname, b.avatar, 
       c.real_read_count AS \`read\`, c.likes 
       FROM posts a
       LEFT JOIN users b ON a.uid = b.id 
       LEFT JOIN post_read_count c ON a.id = c.post_id 
-      ${wheresql}
-      ORDER BY hot_score DESC, id DESC LIMIT :start, :end;
+      WHERE a.id IN (:postids)
+      ORDER BY FIELD(a.id, :postids);
+      
       SELECT COUNT(*) AS count FROM posts a
-      ${wheresql};`;
+      WHERE a.\`status\` = 0 AND a.channel_id = 3;`;
     const queryResult = await this.app.mysql.query(
       sql,
-      { start: (page - 1) * pagesize, end: 1 * pagesize }
+      { start: (page - 1) * pagesize, end: 1 * pagesize, postids }
     );
     const posts = queryResult[0];
     const count = queryResult[1][0].count;
-    const postids = [];
     const len = posts.length;
     const id2posts = {};
     for (let i = 0; i < len; i++) {
@@ -173,7 +173,6 @@ class ShareService extends Service {
       posts[i].refs = [];
       posts[i].beRefs = [];
       id2posts[row.id] = row;
-      postids.push(row.id);
     }
     if (len === 0) {
       return {
@@ -205,7 +204,7 @@ class ShareService extends Service {
     const refResult = await this.app.mysql.query(
       `SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
       t2.channel_id,
-      t3.username, t3.nickname, t3.platform, t3.avatar,
+      t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
       t4.real_read_count, t4.likes, t4.dislikes
       FROM post_references t1
       LEFT JOIN posts t2
@@ -218,7 +217,7 @@ class ShareService extends Service {
 
       SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
       t2.channel_id,
-      t3.username, t3.nickname, t3.platform, t3.avatar,
+      t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
       t4.real_read_count, t4.likes, t4.dislikes
       FROM post_references t1
       LEFT JOIN posts t2
@@ -232,177 +231,6 @@ class ShareService extends Service {
     );
     return refResult;
   }
-  async timeRankSlow(page = 1, pagesize = 20, author = null, filter = 0) {
-
-    // 获取文章列表, 分为商品文章和普通文章
-    // 再分为带作者和不带作者的情况.
-
-    const totalsql = 'SELECT COUNT(*) AS count FROM posts ';
-    const listsql = 'SELECT id FROM posts ';
-    let wheresql = `WHERE status = 0 AND channel_id = ${SHARE_CHANNEL_ID} `;
-
-    if (author) wheresql += 'AND uid = :author ';
-
-    if (typeof filter === 'string') filter = parseInt(filter);
-    if (filter > 0) {
-      const conditions = [];
-
-      // 免费
-      if ((filter & 1) > 0) {
-        conditions.push('(require_holdtokens = 0 AND require_buy = 0)');
-      }
-
-      // 持币阅读
-      if ((filter & 2) > 0) {
-        conditions.push('require_holdtokens = 1');
-      }
-
-      // 需要购买
-      if ((filter & 4) > 0) {
-        conditions.push('require_buy = 1');
-      }
-
-      wheresql += 'AND (' + conditions.join(' OR ') + ') ';
-    }
-
-    const ordersql = 'ORDER BY time_down ASC, id DESC LIMIT :start, :end';
-    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
-    const queryResult = await this.app.mysql.query(
-      sqlcode,
-      { author, start: (page - 1) * pagesize, end: 1 * pagesize }
-    );
-
-    const amount = queryResult[0];
-    const posts = queryResult[1];
-
-    // TBD: 有无文章接口都要改成一致！
-    if (posts.length === 0) {
-      // return [];
-      return { count: 0, list: [] };
-    }
-
-    const postids = [];
-    for (let i = 0; i < posts.length; i++) {
-      postids.push(posts[i].id);
-    }
-
-    const postList = await this.getPostList(postids, {});
-
-    return { count: amount[0].count, list: postList };
-  }
-  // 推荐分数排序(默认方法)(new format)(count-list格式)
-  async scoreRankSlow(page = 1, pagesize = 20, author = null, filter = 0) {
-
-    // 获取文章列表, 分为商品文章和普通文章
-    // 再分为带作者和不带作者的情况.
-
-    const totalsql = 'SELECT COUNT(*) AS count FROM posts ';
-    const listsql = 'SELECT id FROM posts ';
-    let wheresql = `WHERE status = 0 AND channel_id = ${SHARE_CHANNEL_ID} `;
-
-    if (author) {
-      wheresql += 'AND uid = :author ';
-    }
-
-    if (typeof filter === 'string') filter = parseInt(filter);
-
-    if (filter > 0) {
-      const conditions = [];
-
-      // 免费
-      if ((filter & 1) > 0) {
-        conditions.push('(require_holdtokens = 0 AND require_buy = 0)');
-      }
-
-      // 持币阅读
-      if ((filter & 2) > 0) {
-        conditions.push('require_holdtokens = 1');
-      }
-
-      // 需要购买
-      if ((filter & 4) > 0) {
-        conditions.push('require_buy = 1');
-      }
-
-      wheresql += 'AND (' + conditions.join(' OR ') + ') ';
-    }
-
-    const ordersql = 'ORDER BY hot_score DESC, id DESC LIMIT :start, :end';
-    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
-    const queryResult = await this.app.mysql.query(
-      sqlcode,
-      { author, start: (page - 1) * pagesize, end: 1 * pagesize }
-    );
-
-    const amount = queryResult[0];
-    const posts = queryResult[1];
-
-    if (posts.length === 0) {
-      return { count: 0, list: [] };
-    }
-
-    const postids = [];
-    for (let i = 0; i < posts.length; i++) {
-      postids.push(posts[i].id);
-    }
-
-    let postList = await this.getPostList(postids, { hot_score: true });
-
-    // 由赞赏次数进行排序
-    // 还没加上时间降序
-    postList = postList.sort((a, b) => {
-      if (a.hot_score === b.hot_score) {
-        return a.id > b.id ? -1 : 1;
-      }
-      return a.hot_score > b.hot_score ? -1 : 1;
-    });
-
-    // 必须删掉hot_score， 不随接口返回
-    for (let i = 0; i < postList.length; i++) {
-      delete postList[i].hot_score;
-    }
-
-    return { count: amount[0].count, list: postList };
-  }
-  async getPostList(signids) {
-
-    let postList = [];
-
-    if (signids.length === 0) {
-      return postList;
-    }
-    // 查询文章和作者的信息, 结果是按照时间排序
-    // 如果上层也需要按照时间排序的, 则无需再排, 需要其他排序方式则需再排
-    const sql = `
-      SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, b.nickname, b.avatar FROM posts a
-      LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (?) AND a.status = 0 ORDER BY id DESC;`;
-    postList = await this.app.mysql.query(
-      sql,
-      [ signids ]
-    );
-
-    // 有关阅读次数,赞赏金额,赞赏次数的统计
-    // 还有产品信息， 标签
-    const stats = await this.app.mysql.query(
-      `SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue, likes
-       FROM post_read_count WHERE post_id IN (:signid);`,
-      { signid: signids }
-    );
-
-    for (let i = 0; i < postList.length; i++) {
-      const row = postList[i];
-      for (let j = 0; j < stats.length; j++) {
-        const row2 = stats[j];
-        if (row.id === row2.id) {
-          row.read = row2.num;
-          row.likes = row2.likes;
-        }
-      }
-    }
-
-    return postList;
-  }
-
 }
 
 module.exports = ShareService;

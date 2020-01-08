@@ -12,7 +12,7 @@ class PostScore extends Subscription {
   }
 
   async subscribe() {
-    this.logger.info('score cal');
+    this.logger.info('Running:schedule culate_hot_score');
     const posts = await this.app.mysql.query(
       `SELECT p.id, p.create_time, p.channel_id, c.dislikes, c.likes, c.real_read_count, c.support_count, c.down 
       FROM posts p 
@@ -23,11 +23,12 @@ class PostScore extends Subscription {
     const shareList = [];
     for (const post of posts) {
       const { id, create_time, channel_id, dislikes, likes, real_read_count, support_count, down } = post;
-      let hot_score = (real_read_count * 0.2 + likes * 0.4 - dislikes * 1 + support_count * 1 - down * 1);
+      let hot_score = (real_read_count * 2 + likes * 4 - dislikes * 10 + support_count * 10 - down * 10);
       if (this.isAfter3Days(create_time)) {
         hot_score *= 1.5;
       }
       hot_score -= this.dateDiff(create_time) * 3;
+      hot_score /= 10;
       if (channel_id === 1) {
         postList.push(hot_score, id);
       }

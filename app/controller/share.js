@@ -87,6 +87,18 @@ class ShareController extends Controller {
       data: result,
     };
   }
+  async getHotArticle() {
+    const { ctx } = this;
+    const result1 = await this.app.redis.zrevrange('post:score:filter:1', 0, 19);
+    const result2 = await this.app.redis.zrevrange('post:score:filter:3', 0, 9);
+    ctx.body = {
+      ...ctx.msg.success,
+      l1: result1.length,
+      l2: result2.length,
+      data1: result1,
+      data2: result2,
+    };
+  }
 }
 
 module.exports = ShareController;
