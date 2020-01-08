@@ -260,13 +260,23 @@ class ReferencesService extends Service {
     };
   }
   async getReferences(signId, page = 1, pagesize = 20) {
-    const references = await this.app.mysql.query(`
-    SELECT url, title, summary, number
-    FROM post_references
-    WHERE sign_id = :signId and status = 0
-    LIMIT :start, :end;
-    SELECT COUNT(*) AS count FROM post_references WHERE sign_id = :signId and status = 0;`,
-    { signId, start: (page - 1) * pagesize, end: 1 * pagesize });
+    const sql = `
+      SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
+      t2.channel_id,
+      t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
+      t4.real_read_count, t4.likes, t4.dislikes
+      FROM post_references t1
+      LEFT JOIN posts t2
+      ON t1.ref_sign_id = t2.id
+      LEFT JOIN users t3
+      ON t2.uid = t3.id
+      LEFT JOIN post_read_count t4
+      ON t1.ref_sign_id = t4.post_id
+      WHERE sign_id = :signId and t1.status = 0
+      LIMIT :start, :end;
+      SELECT COUNT(*) AS count FROM post_references WHERE sign_id = :signId and status = 0;`;
+    const references = await this.app.mysql.query(sql,
+      { signId, start: (page - 1) * pagesize, end: 1 * pagesize });
     return {
       count: references[1][0].count,
       list: references[0],
@@ -276,12 +286,20 @@ class ReferencesService extends Service {
   // 查看本文被引用列表
   async getPosts(signId, page = 1, pagesize = 20) {
     const references = await this.app.mysql.query(`
-    SELECT p.id, p.title
-    FROM post_references r
-    INNER JOIN posts p ON p.id = r.sign_id
-    WHERE r.ref_sign_id = :id AND r.status = 0
-    LIMIT :start, :end;
-    SELECT COUNT(*) AS count FROM post_references WHERE ref_sign_id = :id AND sign_id > 0 AND status = 0;`,
+      SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
+      t2.channel_id,
+      t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
+      t4.real_read_count, t4.likes, t4.dislikes
+      FROM post_references t1
+      LEFT JOIN posts t2
+      ON t1.sign_id = t2.id
+      LEFT JOIN users t3
+      ON t2.uid = t3.id
+      LEFT JOIN post_read_count t4
+      ON t1.sign_id = t4.post_id
+      WHERE ref_sign_id = :id AND t1.status = 0
+      LIMIT :start, :end;
+      SELECT COUNT(*) AS count FROM post_references WHERE ref_sign_id = :id AND sign_id > 0 AND status = 0;`,
     { id: signId, start: (page - 1) * pagesize, end: 1 * pagesize });
     return {
       count: references[1][0].count,
