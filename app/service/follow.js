@@ -53,7 +53,7 @@ class FollowService extends Service {
             .rpush(`user:${uid}:follower_list`, user.id)
             .sadd(`user:${user.id}:follow_set`, uid)
             .sadd(`user:${uid}:follower_set`, user.id)
-            .hincrby(this.service.notification.userCounterKey(user.id), 'follow', 1)
+            .hdel(this.service.notification.userCounterKey(user.id), 'follow')
             .exec();
         } catch (e) {
           console.error(e);
@@ -102,6 +102,7 @@ class FollowService extends Service {
           .lrem(`user:${uid}:follower_list`, user.id)
           .srem(`user:${user.id}:follow_set`, uid)
           .srem(`user:${uid}:follower_set`, user.id)
+          .hdel(this.service.notification.userCounterKey(user.id), 'follow') // In case of following just a few seconds, showing a ghost notification
           .exec();
 
         return 0;

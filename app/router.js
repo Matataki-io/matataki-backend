@@ -423,5 +423,6 @@ module.exports = app => {
   router.post('/share', passport.authorize, controller.share.create);
   router.get('/share', passport.verify, controller.share.index);
   router.get('/share/:id', passport.verify, controller.share.show);
+  router.get('/dev/score', passport.verify, controller.share.getHotArticle);
 };
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 'use strict';
 const consts = require('./consts');
 
@@ -119,6 +120,27 @@ class PostService extends Service {
       return posts[0];
     }
     return null;
+  }
+  async getById2(id) {
+    const posts = await this.app.mysql.query(
+      `SELECT p.*,
+      u.username, u.nickname, u.platform, u.avatar,
+      prc.real_read_count, prc.likes, prc.dislikes
+      FROM posts p
+      LEFT JOIN users u
+      ON p.uid = u.id
+      LEFT JOIN post_read_count prc
+      ON p.id = prc.post_id
+      WHERE p.id = ?;`,
+      [ id ]
+    );
+
+    if (posts === null || posts.length === 0) {
+      return null;
+    }
+
+    const post = posts[0];
+    return post;
   }
 
   // 根据id获取文章
@@ -417,7 +439,6 @@ class PostService extends Service {
     // 再分为带作者和不带作者的情况.
 
     const totalsql = 'SELECT COUNT(*) AS count FROM posts ';
-    const listsql = 'SELECT id FROM posts ';
     let wheresql = 'WHERE status = 0 ';
 
     if (author) {
@@ -453,29 +474,21 @@ class PostService extends Service {
 
       wheresql += 'AND (' + conditions.join(' OR ') + ') ';
     }
+    const postids = await this.service.hot.list(page, pagesize, 1);
 
-    const ordersql = 'ORDER BY hot_score DESC, id DESC LIMIT :start, :end';
-    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const sqlcode = totalsql + wheresql + ';';
     const queryResult = await this.app.mysql.query(
       sqlcode,
       { author, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
     const amount = queryResult[0];
-    const posts = queryResult[1];
 
-    // TBD: 有无文章接口都要改成一致！
-    if (posts.length === 0) {
-      // return [];
+    if (postids.length === 0) {
       return { count: 0, list: [] };
     }
 
-    const postids = [];
-    _.each(posts, row => {
-      postids.push(row.id);
-    });
-
-    const extraItem = { hot_score: true };
+    const extraItem = {};
     if (extra) {
       const extraSplit = extra.split(',');
       _.each(extraSplit, row => {
@@ -485,23 +498,9 @@ class PostService extends Service {
       });
     }
 
-    let postList = await this.getPostList(postids, extraItem);
+    const postList = await this.getPostList(postids, extraItem);
 
-    // 由赞赏次数进行排序
-    // 还没加上时间降序
-    postList = postList.sort((a, b) => {
-      if (a.hot_score === b.hot_score) {
-        return a.id > b.id ? -1 : 1;
-      }
-      return a.hot_score > b.hot_score ? -1 : 1;
-    });
-
-    // 必须删掉hot_score， 不随接口返回
-    _.each(postList, row => {
-      delete row.hot_score;
-    });
-
-    return { count: amount[0].count, list: postList };
+    return { count: amount.count, list: postList };
   }
 
   // 发布时间排序()(new format)(count-list格式)
@@ -910,16 +909,13 @@ class PostService extends Service {
       if (extraItem.short_content) {
         sqlcode += ' a.short_content,';
       }
-      if (extraItem.hot_score) {
-        sqlcode += ' a.hot_score,';
-      }
     }
 
     sqlcode += ' a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, b.nickname, b.avatar FROM posts a';
-    sqlcode += ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (?) AND a.status = 0 ORDER BY id DESC;';
+    sqlcode += ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (:signids) AND a.status = 0 ORDER BY FIELD(a.id, :signids);';
     postList = await this.app.mysql.query(
       sqlcode,
-      [ signids ]
+      { signids }
     );
 
     const hashs = [];

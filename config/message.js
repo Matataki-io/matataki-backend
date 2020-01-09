@@ -125,6 +125,7 @@ module.exports = {
   orderHandled: 10900,
   generateGithubTokenError: 11000,
   accountBinded: 11001,
+  publishRatelimit: 11002,
 
   returnObj(lang) {
 
@@ -206,6 +207,7 @@ module.exports = {
       exchangeNotExist: { code: this.exchangeNotExist, message: 'No swap pairs.' },
       orderHandled: { code: this.orderHandled, message: 'order handle' },
       accountBinded: { code: this.accountBinded, message: 'account already exist, cannot beed binded' },
+      publishRatelimit: { code: this.publishRatelimit, message: 'too many requests' },
     };
 
     const zh = {
@@ -286,6 +288,7 @@ module.exports = {
       exchangeNotExist: { code: this.exchangeNotExist, message: '没有交易对.' },
       orderHandled: { code: this.orderHandled, message: '订单已处理' },
       accountBinded: { code: this.accountBinded, message: '账号已存在，无法绑定' },
+      publishRatelimit: { code: this.publishRatelimit, message: '请求过多' },
     };
 
     let message;

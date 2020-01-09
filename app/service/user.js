@@ -699,7 +699,7 @@ class UserService extends Service {
     return { websites, socialAccounts };
   }
 
-  async getBookmarks(userId, order = 1, page = 1, pagesize = 20) {
+  async getBookmarks(userId, order = 1, page = 1, pagesize = 20, channel_id = 1) {
     if (userId === null) {
       return false;
     }
@@ -717,7 +717,7 @@ class UserService extends Service {
       JOIN users u ON u.id = p.uid
       LEFT JOIN post_tag pt ON pt.sid = p.id
       LEFT JOIN tags t ON t.id = pt.tid
-      WHERE b.uid = :userId`;
+      WHERE b.uid = :userId AND p.channel_id = :channel_id `;
 
     if (order === 1) {
       sql += `
@@ -737,6 +737,7 @@ class UserService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
       userId,
+      channel_id,
     });
     const { count } = result[1][0];
     const rows = result[0];

@@ -5,7 +5,7 @@ const BigNumber = require('bignumber.js');
 class KeepWalletBalance extends Subscription {
   static get schedule() {
     return {
-      interval: '30m',
+      interval: '1m',
       type: 'all',
       immediate: true,
     };

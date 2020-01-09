@@ -109,7 +109,8 @@ class NotificationService extends Service {
       this.ctx.logger.error(err);
       return 3;
     }
-    await this.app.mysql.query(`INSERT INTO ${TABLE} (uid, provider, ${timeType}) VALUES (:userId, :providerName, NOW()) ON DUPLICATE KEY UPDATE ${timeType} = NOW()`, { userId: user.id, providerName });
+    const now = moment().format('YYYY-MM-DD HH:mm:ss'); // Possible MySQL timezone issue
+    await this.app.mysql.query(`INSERT INTO ${TABLE} (uid, provider, ${timeType}) VALUES (:userId, :providerName, :now) ON DUPLICATE KEY UPDATE ${timeType} = :now`, { userId: user.id, providerName, now });
     if (timeType === TIME_READ_TILL) await this.app.redis.hdel(this.userCounterKey(user.id), providerName);
   }
 

@@ -10,16 +10,19 @@ class Bootstrapper {
 
   async loadCache() {
     const { mysql, redis } = this.app;
+    await this.app.redis.del('post:score:filter:1');
+    await this.app.redis.del('post:score:filter:3');
+    await this.app.runSchedule('calculate_hot_score');
 
     const schemaVersionKey = 'schema_version';
     const cacheSchemaVersion = 2;
 
-    let currentVersion = await redis.get(schemaVersionKey);
+    const currentVersion = await redis.get(schemaVersionKey);
     if (currentVersion !== null && Number(currentVersion) >= cacheSchemaVersion) {
       return;
     }
 
-    this.app.logger.info("Current cache is outdated. Preloading new version...");
+    this.app.logger.info('Current cache is outdated. Preloading new version...');
 
     const pipeline = redis.multi();
 

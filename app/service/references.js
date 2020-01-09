@@ -2,24 +2,29 @@
 const axios = require('axios');
 const moment = require('moment');
 const Service = require('egg').Service;
+const path=require('path');
 const htmlparser = require('node-html-parser');
 
 const domains = [ 'https://wwwtest.smartsignature.io/p/', 'https://wwwtest.smartsignature.io/p/', 'https://test.frontenduse.top/p/',
   'https://matataki.io/p/', 'https://www.matataki.io/p/', 'https://smartsignature.frontenduse.top/p/' ];
 
+const matatakiUrlReg = /http(?:s)?:\/\/\w+.(?:smartsignature.io|matataki.(?:io|cn)|frontenduse.top)\/(?:p|share)\/(\d+)/;
+
 class ReferencesService extends Service {
   // 是否是内部的文章
   checkInnerPost(url) {
-    for (const domain of domains) {
+    return matatakiUrlReg.test(url.toLowerCase());
+    /* for (const domain of domains) {
       if (url.toLowerCase().startsWith(domain)) {
         return true;
       }
     }
-    return false;
+    return false; */
   }
 
   extractSignId(url) {
-    return parseInt(url.match(/\/p\/(\d+)/)[1]);
+    return parseInt(url.match(matatakiUrlReg)[1]);
+    // return parseInt(url.match(/\/p\/(\d+)/)[1]);
   }
 
   async extractRefTitle(url) {
@@ -29,12 +34,18 @@ class ReferencesService extends Service {
     }
 
     if (ref_sign_id > 0) {
-      const post = await this.service.post.get(ref_sign_id);
+      const post = await this.service.post.getById2(ref_sign_id);
+      if (post === null) return null;
+      const { username, email, nickname, platform, avatar } = post;
       return {
         ref_sign_id,
         title: post.title,
         summary: post.short_content,
         cover: post.cover,
+        channel_id: post.channel_id,
+        user: {
+          username, email, nickname, platform, avatar,
+        },
       };
     }
 
@@ -49,7 +60,12 @@ class ReferencesService extends Service {
       });
       // 微信公众号就是屑，网页版在客户端渲染title，直接抓取 html 时的 <title> 为空
       // 但是多谢微信意识到 OpenGraph 规范的存在，我们可以试着读取 - Frank
-      let { title, description: summary, image: cover } = await this.service.metadata.GetFromRawPage(rawPage, url);
+      let { title, description: summary, image: coverUrl } = await this.service.metadata.GetFromRawPage(rawPage, url);
+      let cover = '';
+      if (coverUrl) {
+        const imgFileName = './uploads/today_' + Date.now() + '.' + path.extname(coverUrl);
+        cover = await this.service.postImport.uploadArticleImage(coverUrl, imgFileName);
+      }
 
       if (!title) {
         const matchOgTitle = rawPage.data.match(/<meta.*?property="og:title". *?content=["|']*(.*?)["|'|\/]*>/);
@@ -244,13 +260,23 @@ class ReferencesService extends Service {
     };
   }
   async getReferences(signId, page = 1, pagesize = 20) {
-    const references = await this.app.mysql.query(`
-    SELECT url, title, summary, number
-    FROM post_references
-    WHERE sign_id = :signId and status = 0
-    LIMIT :start, :end;
-    SELECT COUNT(*) AS count FROM post_references WHERE sign_id = :signId and status = 0;`,
-    { signId, start: (page - 1) * pagesize, end: 1 * pagesize });
+    const sql = `
+      SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
+      t2.channel_id,
+      t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
+      t4.real_read_count, t4.likes, t4.dislikes
+      FROM post_references t1
+      LEFT JOIN posts t2
+      ON t1.ref_sign_id = t2.id
+      LEFT JOIN users t3
+      ON t2.uid = t3.id
+      LEFT JOIN post_read_count t4
+      ON t1.ref_sign_id = t4.post_id
+      WHERE sign_id = :signId and t1.status = 0
+      LIMIT :start, :end;
+      SELECT COUNT(*) AS count FROM post_references WHERE sign_id = :signId and status = 0;`;
+    const references = await this.app.mysql.query(sql,
+      { signId, start: (page - 1) * pagesize, end: 1 * pagesize });
     return {
       count: references[1][0].count,
       list: references[0],
@@ -260,12 +286,20 @@ class ReferencesService extends Service {
   // 查看本文被引用列表
   async getPosts(signId, page = 1, pagesize = 20) {
     const references = await this.app.mysql.query(`
-    SELECT p.id, p.title
-    FROM post_references r
-    INNER JOIN posts p ON p.id = r.sign_id
-    WHERE r.ref_sign_id = :id AND r.status = 0
-    LIMIT :start, :end;
-    SELECT COUNT(*) AS count FROM post_references WHERE ref_sign_id = :id AND sign_id > 0 AND status = 0;`,
+      SELECT t1.sign_id, t1.ref_sign_id, t1.create_time, t1.number,
+      t2.channel_id, t2.title, t2.short_content AS summary, t2.cover, 
+      t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
+      t4.real_read_count, t4.likes, t4.dislikes
+      FROM post_references t1
+      LEFT JOIN posts t2
+      ON t1.sign_id = t2.id
+      LEFT JOIN users t3
+      ON t2.uid = t3.id
+      LEFT JOIN post_read_count t4
+      ON t1.sign_id = t4.post_id
+      WHERE ref_sign_id = :id AND t1.status = 0
+      LIMIT :start, :end;
+      SELECT COUNT(*) AS count FROM post_references WHERE ref_sign_id = :id AND sign_id > 0 AND status = 0;`,
     { id: signId, start: (page - 1) * pagesize, end: 1 * pagesize });
     return {
       count: references[1][0].count,

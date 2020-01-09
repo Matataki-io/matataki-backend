@@ -18,6 +18,7 @@ class PostScore extends Subscription {
 
   // todo：如果文章很多的情况下，此处运行会很慢，长时间锁表，需要用另外的机制逐条刷新数据，一条文章被阅读、点赞等行为发一个消息，然后积累【5】分钟后更新数据
   async subscribe() {
+    return;
     if (this.ctx.app.config.isDebug) return;
 
     this.logger.info('PostScoreSchedule:: Start to update Score...');
