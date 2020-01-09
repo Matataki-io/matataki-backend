@@ -149,6 +149,12 @@ class ShareService extends Service {
   }
   async hotRank(page = 1, pagesize = 20) {
     const postids = await this.service.hot.list(page, pagesize, SHARE_CHANNEL_ID);
+    if (postids === null || postids.length <= 0) {
+      return {
+        count: 0,
+        list: [],
+      };
+    }
     const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
       b.nickname, b.avatar, 
       c.real_read_count AS \`read\`, c.likes 
