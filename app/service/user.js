@@ -717,7 +717,7 @@ class UserService extends Service {
       JOIN users u ON u.id = p.uid
       LEFT JOIN post_tag pt ON pt.sid = p.id
       LEFT JOIN tags t ON t.id = pt.tid
-      WHERE b.uid = :userId AND p.channel_id = :channel_id;`;
+      WHERE b.uid = :userId AND p.channel_id = :channel_id `;
 
     if (order === 1) {
       sql += `
