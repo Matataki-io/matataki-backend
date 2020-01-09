@@ -34,11 +34,11 @@ class PostScore extends Subscription {
     for (const post of posts) {
       const { id, create_time, channel_id, dislikes, likes, real_read_count, support_count, down } = post;
       // 计算热度积分
-      let hot_score = (real_read_count * 2 + likes * 4 - dislikes * 10 + support_count * 10 - down * 10) + 1000000;
+      let hot_score = (real_read_count * 1 + likes * 10 - dislikes * 10 + support_count * 10 - down * 10) + 1000000;
       // 3天内的提权
-      if (this.isAfter3Days(create_time)) hot_score += 1000;
+      if (this.isAfter3Days(create_time)) hot_score += 10;
       // 按小时减少权重
-      hot_score -= this.dateDiff(create_time);
+      hot_score -= this.dateDiff(create_time) / 30;
       hot_score /= 10;
       if (channel_id === 1) {
         postList.push(hot_score, id);
