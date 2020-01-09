@@ -33,13 +33,14 @@ class PostScore extends Subscription {
     const shareList = [];
     for (const post of posts) {
       const { id, create_time, channel_id, dislikes, likes, real_read_count, support_count, down } = post;
-      // 计算热度积分
+      const hot_score = this.cal(real_read_count, likes, dislikes, down, create_time);
+      /* // 计算热度积分
       let hot_score = (real_read_count * 1 + likes * 10 - dislikes * 10 + support_count * 10 - down * 10) + 1000000;
       // 3天内的提权
       if (this.isAfter3Days(create_time)) hot_score += 10;
       // 按小时减少权重
       hot_score -= this.dateDiff(create_time) / 30;
-      hot_score /= 10;
+      hot_score /= 10; */
       if (channel_id === 1) {
         postList.push(hot_score, id);
       }
@@ -59,6 +60,14 @@ class PostScore extends Subscription {
   }
   dateDiff(time) {
     return moment().diff(moment(time), 'minute');
+  }
+  cal(read, like, dis, down, time) {
+    const { log2, log, max, abs, round } = Math;
+    const second = moment(time).diff(moment('1970-01-01 00:00:00'), 'second');
+    let sign = like - dis > 0 ? 1 : (like - dis === 0 ? 0 : -1);
+    if (down) sign = -1;
+    const score = log(max(read, 1)) + log2(max(1, abs(like - dis))) + round((sign * second / 45000) * (10 ** 7)) / (10 ** 7);
+    return score;
   }
 }
 
