@@ -10,6 +10,8 @@ class Bootstrapper {
 
   async loadCache() {
     const { mysql, redis } = this.app;
+    await this.app.redis.del('post:score:filter:1');
+    await this.app.redis.del('post:score:filter:3');
     await this.app.runSchedule('calculate_hot_score');
 
     const schemaVersionKey = 'schema_version';
