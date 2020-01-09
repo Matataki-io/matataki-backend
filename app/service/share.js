@@ -215,8 +215,8 @@ class ShareService extends Service {
       ON t1.ref_sign_id = t4.post_id
       WHERE sign_id IN ( :postids ) AND t1.status = 0;
 
-      SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
-      t2.channel_id,
+      SELECT t1.sign_id, t1.ref_sign_id, t1.create_time, t1.number,
+      t2.channel_id, t2.title, t2.short_content AS summary, t2.cover, 
       t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
       t4.real_read_count, t4.likes, t4.dislikes
       FROM post_references t1
