@@ -77,6 +77,23 @@ class TokenController extends Controller {
     };
   }
 
+  // 查询该symbol对应的token
+  async getBySymbol() {
+    const { ctx } = this;
+    const { symbol } = ctx.params;
+    const tokenDetail = await ctx.service.token.mineToken.getBySymbol(symbol);
+    if (!tokenDetail) {
+      ctx.body = {
+        ...ctx.msg.failure,
+      };
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: tokenDetail,
+    };
+  }
+
   // 查询当前用户发行的token详情
   async minetokenDetail() {
     const ctx = this.ctx;
