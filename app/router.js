@@ -277,6 +277,8 @@ module.exports = app => {
   router.get('/token/tokenlogs', passport.authorize, controller.token.getTokenLogs);
   // 查询用户:id发行的token
   router.get('/token/user/:id', passport.verify, controller.token.getByUserId);
+  // 查询符号为:symbol的token
+  router.get('/token/symbol/:symbol', passport.verify, controller.token.getBySymbol);
 
   // 查询当前用户的资产余额
   router.get('/asset/balance', passport.verify, controller.asset.getBalance);
@@ -405,6 +407,7 @@ module.exports = app => {
   router.get('/_internal_bot/account/:id/ethWallet', passport.apiVerify, controller.internalApi.telegram.getWalletAddressFromTelegramUid);
   router.get('/_internal_bot/account/:id/info', passport.apiVerify, controller.internalApi.telegram.getAssociatedInfo);
   router.get('/_internal_bot/minetoken/:id/contractAddress', passport.apiVerify, controller.internalApi.telegram.getContractAddress);
+  router.post('/_internal_bot/minetoken/:id/transferFrom', passport.apiAuthorize, controller.internalApi.telegram.transferFrom);
 
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);

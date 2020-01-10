@@ -1,5 +1,5 @@
 'use strict';
-
+const consts = require('../../service/consts');
 const Controller = require('../../core/base_controller');
 
 class TelegramController extends Controller {
@@ -31,7 +31,7 @@ class TelegramController extends Controller {
     const { ctx } = this;
     const { id } = ctx.params;
 
-    let [user] = await this.app.mysql.query(`SELECT id, nickname, email, username FROM users WHERE id = (SELECT uid FROM user_accounts WHERE platform = 'telegram' AND account = ?)`, [id]);
+    let [ user ] = await this.app.mysql.query('SELECT id, nickname, email, username FROM users WHERE id = (SELECT uid FROM user_accounts WHERE platform = \'telegram\' AND account = ?)', [ id ]);
     if (!user) {
       user = null;
     } else {
@@ -46,7 +46,7 @@ class TelegramController extends Controller {
       minetoken = {
         id: minetoken.id,
         name: minetoken.name,
-        symbol: minetoken.symbol
+        symbol: minetoken.symbol,
       };
     }
 
@@ -72,9 +72,18 @@ class TelegramController extends Controller {
     ctx.body = {
       ...ctx.msg.success,
       data: {
-        contractAddress: info.contract_address
-      }
-    }
+        contractAddress: info.contract_address,
+      },
+    };
+  }
+
+  async transferFrom() {
+    const { ctx } = this;
+    const { id } = ctx.params;
+    const { from, to, value } = ctx.request.body;
+    const result = await this.service.token.mineToken.transferFrom(id, from, to, value, this.clientIP, consts.mineTokenTransferTypes.transfer);
+    if (!result) ctx.status = 400;
+    ctx.body = result ? ctx.msg.success : ctx.msg.failure;
   }
 }
 

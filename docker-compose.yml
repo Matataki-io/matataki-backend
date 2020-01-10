@@ -19,6 +19,7 @@ services:
     command: npm run dev
     volumes:
       - /usr/local/smart-signature/ss-backend-config/config.prod.js:/usr/src/app/config/config.default.js
+      - /usr/local/smart-signature/ss-backend-config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
     ports:
       - 7653:7001
     networks:
@@ -32,6 +33,7 @@ services:
     command: npm run dev
     volumes:
       - /usr/local/smart-signature/ss-backend-config/config.prod.js:/usr/src/app/config/config.default.js
+      - /usr/local/smart-signature/ss-backend-config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
     ports:
       - 7654:7001
     networks:
@@ -45,6 +47,7 @@ services:
     command: npm run dev
     volumes:
       - /usr/local/smart-signature/ss-backend-config/config.local.js:/usr/src/app/config/config.default.js
+      - /usr/local/smart-signature/ss-backend-config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
     ports:
       - 7652:7001
     networks:
