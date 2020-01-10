@@ -83,6 +83,7 @@ class TokenController extends Controller {
     const { symbol } = ctx.params;
     const tokenDetail = await ctx.service.token.mineToken.getBySymbol(symbol);
     if (!tokenDetail) {
+      ctx.status = 400;
       ctx.body = {
         ...ctx.msg.failure,
       };

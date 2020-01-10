@@ -82,6 +82,7 @@ class TelegramController extends Controller {
     const { id } = ctx.params;
     const { from, to, value } = ctx.request.body;
     const result = await this.service.token.mineToken.transferFrom(id, from, to, value, this.clientIP, consts.mineTokenTransferTypes.transfer);
+    if (!result) ctx.status = 400;
     ctx.body = result ? ctx.msg.success : ctx.msg.failure;
   }
 }
