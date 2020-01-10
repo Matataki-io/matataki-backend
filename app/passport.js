@@ -1,6 +1,7 @@
 'use strict';
 const jwt = require('jwt-simple');
 const message = require('../config/message');
+const apiAccessToken = require('../config/apiaccesstoken');
 
 module.exports = {
 
@@ -100,7 +101,7 @@ module.exports = {
     const token = ctx.header['x-access-token'];
 
     // 先这样硬编码，UUID 可以随便生成，你应该不能把这个passport用于敏感功能
-    const isTokenInTheList = this.config.api.accessTokens.includes(token);
+    const isTokenInTheList = apiAccessToken.includes(token);
 
     // token不在 accessTokens 就拒绝服务
     if (!isTokenInTheList) {
