@@ -38,6 +38,7 @@ class TelegramController extends Controller {
       user = {
         id: user.id,
         name: user.nickname || this.service.user.maskEmailAddress(user.email) || user.username,
+        username: user.username,
       };
     }
 
