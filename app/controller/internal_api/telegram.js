@@ -90,11 +90,11 @@ class TelegramController extends Controller {
     const { ctx } = this;
     const { userId, symbol } = ctx.params;
     try {
-      const { id: tokenId } = await ctx.service.token.mineToken.getBySymbol(symbol);
-      const result = await ctx.service.token.mineToken.balanceOf(userId, tokenId);
+      const { id: tokenId, decimals } = await ctx.service.token.mineToken.getBySymbol(symbol);
+      const balance = await ctx.service.token.mineToken.balanceOf(userId, tokenId);
       ctx.body = {
         ...ctx.msg.success,
-        data: result,
+        data: { balance, decimals },
       };
     } catch (error) {
       ctx.status = 400;
