@@ -646,8 +646,27 @@ class MineTokenService extends Service {
     if (typeof page === 'string') page = parseInt(page);
     if (typeof pagesize === 'string') pagesize = parseInt(pagesize);
 
-    let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
-    let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
+    let sql = `
+      SELECT p.*
+      FROM posts p
+      LEFT JOIN post_minetokens m
+      ON p.id = m.sign_id
+      WHERE (uid = (
+        SELECT uid FROM minetokens WHERE id = :tokenId
+      ) AND p.require_holdtokens = 0
+      ) OR m.token_id = :tokenId `;
+    let countSql = `
+      SELECT count(1) as count 
+      FROM posts p
+      LEFT JOIN post_minetokens m
+      ON p.id = m.sign_id
+      WHERE (uid = (
+        SELECT uid FROM minetokens WHERE id = :tokenId
+      ) AND p.require_holdtokens = 0
+      ) OR m.token_id = :tokenId `;
+
+    // let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
+    // let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
 
     if (filter === 1) {
       sql += 'AND require_buy = 0 ';
