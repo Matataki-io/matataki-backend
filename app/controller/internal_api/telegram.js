@@ -105,6 +105,15 @@ class TelegramController extends Controller {
       };
     }
   }
+
+  async getAllMinetokens() {
+    const { ctx } = this;
+    const result = await ctx.service.token.mineToken.getAllTokens();
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
 }
 
 module.exports = TelegramController;

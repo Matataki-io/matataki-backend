@@ -428,6 +428,10 @@ class MineTokenService extends Service {
     };
   }
 
+  getAllTokens() {
+    return this.app.mysql.select('minetokens');
+  }
+
   async getHoldLiquidity(userId, page = 1, pagesize = 10) {
     const sql = `
       SELECT t1.token_id, t1.liquidity_balance, t1.create_time,
