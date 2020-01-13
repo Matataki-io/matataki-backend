@@ -408,6 +408,7 @@ module.exports = app => {
   router.get('/_internal_bot/account/:id/info', passport.apiVerify, controller.internalApi.telegram.getAssociatedInfo);
   router.get('/_internal_bot/minetoken/:id/contractAddress', passport.apiVerify, controller.internalApi.telegram.getContractAddress);
   router.post('/_internal_bot/minetoken/:id/transferFrom', passport.apiAuthorize, controller.internalApi.telegram.transferFrom);
+  router.get('/_internal_bot/minetoken/:userId/:symbol/balance', passport.apiVerify, controller.internalApi.telegram.getUserTokenDetail);
 
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
