@@ -637,7 +637,7 @@ class MineTokenService extends Service {
     };
   }
 
-  async getRelated(tokenId, filter = 0, sort = 'popular-desc', page = 1, pagesize = 10, onlyCreator = false) {
+  async getRelated(tokenId, filter = 0, sort = 'popular-desc', page = 1, pagesize = 10, onlyCreator = false, channel_id = 1) {
     if (tokenId === null) {
       return false;
     }
@@ -651,19 +651,19 @@ class MineTokenService extends Service {
       FROM posts p
       LEFT JOIN post_minetokens m
       ON p.id = m.sign_id
-      WHERE (uid = (
+      WHERE ((uid = (
         SELECT uid FROM minetokens WHERE id = :tokenId
       ) AND p.require_holdtokens = 0
-      ) OR m.token_id = :tokenId `;
+      ) OR m.token_id = :tokenId) AND channel_id = :channel_id `;
     let countSql = `
       SELECT count(1) as count 
       FROM posts p
       LEFT JOIN post_minetokens m
       ON p.id = m.sign_id
-      WHERE (uid = (
+      WHERE ((uid = (
         SELECT uid FROM minetokens WHERE id = :tokenId
       ) AND p.require_holdtokens = 0
-      ) OR m.token_id = :tokenId `;
+      ) OR m.token_id = :tokenId) AND channel_id = :channel_id `;
 
     // let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
     // let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
@@ -705,6 +705,7 @@ class MineTokenService extends Service {
 
     const results = await this.app.mysql.query(sql + countSql, {
       tokenId,
+      channel_id,
       start: (page - 1) * pagesize,
       end: 1 * pagesize,
       ...whereTerm,
