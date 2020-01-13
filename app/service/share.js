@@ -93,8 +93,9 @@ class ShareService extends Service {
     }
     return null;
   }
-  async timeRank(page = 1, pagesize = 20) {
-    const wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = 3 ';
+  async timeRank(page = 1, pagesize = 20, author = null) {
+    let wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = 3 ';
+    if (author) wheresql += ' AND uid = :author ';
     const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
       b.nickname, b.avatar, 
       c.real_read_count AS \`read\`, c.likes 
@@ -107,7 +108,7 @@ class ShareService extends Service {
       ${wheresql};`;
     const queryResult = await this.app.mysql.query(
       sql,
-      { start: (page - 1) * pagesize, end: 1 * pagesize }
+      { start: (page - 1) * pagesize, end: 1 * pagesize, author }
     );
     const posts = queryResult[0];
     const count = queryResult[1][0].count;

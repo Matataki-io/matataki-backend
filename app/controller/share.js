@@ -64,12 +64,13 @@ class ShareController extends Controller {
   // 分享列表
   async index() {
     const { ctx } = this;
-    const { page = 1, pagesize = 20, type = 'time' } = ctx.query;
+    let { author = null, page = 1, pagesize = 20, type = 'time' } = ctx.query;
     let postData = null;
+    if (author) type = 'time';
     if (type === 'time') {
-      postData = await this.service.share.timeRank(page, pagesize);
+      postData = await this.service.share.timeRank(page, pagesize, author);
     } else if (type === 'hot') {
-      postData = await this.service.share.hotRank(page, pagesize);
+      postData = await this.service.share.hotRank(page, pagesize, author);
     }
 
     if (postData === 2 || postData === null) {
