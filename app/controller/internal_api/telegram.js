@@ -85,6 +85,25 @@ class TelegramController extends Controller {
     if (!result) ctx.status = 400;
     ctx.body = result ? ctx.msg.success : ctx.msg.failure;
   }
+
+  async getUserTokenDetail() {
+    const { ctx } = this;
+    const { userId, symbol } = ctx.params;
+    try {
+      const { id: tokenId, decimals } = await ctx.service.token.mineToken.getBySymbol(symbol);
+      const balance = await ctx.service.token.mineToken.balanceOf(userId, tokenId);
+      ctx.body = {
+        ...ctx.msg.success,
+        data: { balance, decimals },
+      };
+    } catch (error) {
+      ctx.status = 400;
+      ctx.body = {
+        ...ctx.msg.failure,
+        error: error.message,
+      };
+    }
+  }
 }
 
 module.exports = TelegramController;
