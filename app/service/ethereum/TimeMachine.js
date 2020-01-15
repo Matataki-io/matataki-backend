@@ -21,7 +21,7 @@ class TimeMachineService extends Web3Service {
       to: contractAddress,
       value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
       gasLimit: this.web3.utils.toHex(200000),
-      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('1', 'gwei')),
+      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('3', 'gwei')),
     });
   }
 
@@ -46,7 +46,7 @@ class TimeMachineService extends Web3Service {
       to: contractAddress,
       value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
       gasLimit: this.web3.utils.toHex(200000),
-      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('1', 'gwei')),
+      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('3', 'gwei')),
     });
   }
 
@@ -58,7 +58,7 @@ class TimeMachineService extends Web3Service {
       to: contractAddress,
       value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
       gasLimit: this.web3.utils.toHex(200000),
-      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('1', 'gwei')),
+      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('3', 'gwei')),
     });
   }
 
@@ -74,7 +74,7 @@ class TimeMachineService extends Web3Service {
       to: contractAddress,
       value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
       gasLimit: this.web3.utils.toHex(200000),
-      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('1', 'gwei')),
+      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('3', 'gwei')),
     });
   }
 }

@@ -47,7 +47,7 @@ class Web3Service extends Service {
     to: '',
     value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
     gasLimit: this.web3.utils.toHex(200000),
-    gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('1', 'gwei')),
+    gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('3', 'gwei')),
   }) {
     const { privateKey } = this.config.ethereum;
     return this.sendTransaction(privateKey, encodeABI, txParams);
@@ -66,7 +66,7 @@ class Web3Service extends Service {
       to: '',
       value: this.web3.utils.toHex(this.web3.utils.toWei('0', 'ether')),
       gasLimit: this.web3.utils.toHex(200000),
-      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('1', 'gwei')),
+      gasPrice: this.web3.utils.toHex(this.web3.utils.toWei('3', 'gwei')),
       ...txParams,
     };
     // 处理0x开头的私钥
