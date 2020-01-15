@@ -212,7 +212,9 @@ class ShareService extends Service {
       `SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
       t2.channel_id,
       t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
-      t4.real_read_count, t4.likes, t4.dislikes
+      t4.real_read_count, t4.likes, t4.dislikes,
+      t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
+      t7.id as token_id, t6.amount as token_amount, t7.name as token_name, t7.symbol as token_symbol, t7.decimals  as token_decimals
       FROM post_references t1
       LEFT JOIN posts t2
       ON t1.ref_sign_id = t2.id
@@ -220,12 +222,20 @@ class ShareService extends Service {
       ON t2.uid = t3.id
       LEFT JOIN post_read_count t4
       ON t1.ref_sign_id = t4.post_id
-      WHERE sign_id IN ( :postids ) AND t1.status = 0;
+      LEFT JOIN product_prices t5
+      ON t1.ref_sign_id = t5.sign_id
+      LEFT JOIN post_minetokens t6
+      ON t1.ref_sign_id = t6.sign_id
+      LEFT JOIN minetokens t7
+      ON t7.id = t6.token_id 
+      WHERE t1.sign_id IN ( :postids ) AND t1.status = 0;
 
       SELECT t1.sign_id, t1.ref_sign_id, t1.create_time, t1.number,
       t2.channel_id, t2.title, t2.short_content AS summary, t2.cover, 
       t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
-      t4.real_read_count, t4.likes, t4.dislikes
+      t4.real_read_count, t4.likes, t4.dislikes,
+      t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
+      t7.id as token_id, t6.amount as token_amount, t7.name as token_name, t7.symbol as token_symbol, t7.decimals  as token_decimals
       FROM post_references t1
       LEFT JOIN posts t2
       ON t1.sign_id = t2.id
@@ -233,7 +243,13 @@ class ShareService extends Service {
       ON t2.uid = t3.id
       LEFT JOIN post_read_count t4
       ON t1.sign_id = t4.post_id
-      WHERE ref_sign_id IN ( :postids ) AND t1.status = 0;`,
+      LEFT JOIN product_prices t5
+      ON t1.sign_id = t5.sign_id
+      LEFT JOIN post_minetokens t6
+      ON t1.sign_id = t6.sign_id
+      LEFT JOIN minetokens t7
+      ON t7.id = t6.token_id 
+      WHERE t1.ref_sign_id IN ( :postids ) AND t1.status = 0;`,
       { postids }
     );
     return refResult;

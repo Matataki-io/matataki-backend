@@ -433,7 +433,7 @@ class PostService extends Service {
     return { count, list: await this.getPostList(ids) };
   }
   // 推荐分数排序(默认方法)(new format)(count-list格式)
-  async scoreRankSlow(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
+  async scoreRankSlow_backup(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
@@ -502,6 +502,75 @@ class PostService extends Service {
 
     return { count: amount.count, list: postList };
   }
+  // 推荐分数排序(默认方法)(new format)(count-list格式)
+  async scoreRankSlow(page = 1, pagesize = 20, channel = 1) {
+    const postids = await this.service.hot.list(page, pagesize, channel);
+    if (postids === null || postids.length <= 0) {
+      return {
+        count: 0,
+        list: [],
+      };
+    }
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
+      b.nickname, b.avatar, 
+      c.real_read_count AS \`read\`, c.likes,
+
+      t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
+      t7.id as token_id, t6.amount as token_amount, t7.name as token_name, t7.symbol as token_symbol, t7.decimals  as token_decimals
+
+      FROM posts a
+      LEFT JOIN users b ON a.uid = b.id 
+      LEFT JOIN post_read_count c ON a.id = c.post_id 
+
+      LEFT JOIN product_prices t5
+      ON a.id = t5.sign_id
+      LEFT JOIN post_minetokens t6
+      ON a.id = t6.sign_id
+      LEFT JOIN minetokens t7
+      ON t7.id = t6.token_id 
+
+      WHERE a.id IN (:postids)
+      ORDER BY FIELD(a.id, :postids);
+      
+      SELECT COUNT(*) AS count FROM posts a
+      WHERE a.\`status\` = 0 AND a.channel_id = :channel;`;
+
+    const queryResult = await this.app.mysql.query(
+      sql,
+      { start: (page - 1) * pagesize, end: 1 * pagesize, postids, channel }
+    );
+
+    const posts = queryResult[0];
+    const amount = queryResult[1];
+
+    if (posts.length === 0) {
+      return { count: 0, list: [] };
+    }
+
+    const len = posts.length;
+    const id2posts = {};
+    for (let i = 0; i < len; i++) {
+      const row = posts[i];
+      row.tags = [];
+      id2posts[row.id] = row;
+      postids.push(row.id);
+    }
+    const tagSql = 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);';
+
+    const tagResult = await this.app.mysql.query(
+      tagSql,
+      { signid: postids }
+    );
+    const tagResultLen = tagResult.length;
+    for (let i = 0; i < tagResultLen; i++) {
+      const row = tagResult[i];
+      const id = row.sid;
+      id2posts[id].tags.push({
+        id: row.tid, name: row.name, type: row.type,
+      });
+    }
+    return { count: amount[0].count, list: posts };
+  }
 
   // 发布时间排序()(new format)(count-list格式)
   async timeRank(page = 1, pagesize = 20, filter = 7) {
@@ -532,83 +601,88 @@ class PostService extends Service {
 
     return { count, list: await this.getPostList(ids) };
   }
-  async timeRankSlow(page = 1, pagesize = 20, author = null, channel = null, extra = null, filter = 0) {
+  async timeRankSlow(page = 1, pagesize = 20, author = null, channel = null, filter = 0) {
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
-
-    const totalsql = 'SELECT COUNT(*) AS count FROM posts ';
-    const listsql = 'SELECT id FROM posts ';
-    let wheresql = 'WHERE status = 0 ';
-
-    if (author) {
-      wheresql += 'AND uid = :author ';
-    }
-    const channelid = parseInt(channel);
-    if (channel !== null) {
-      if (isNaN(channelid)) {
-        return 2;
-      }
-      wheresql += 'AND channel_id = ' + channelid + ' ';
-    }
+    let wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = :channel ';
+    if (author) wheresql += ' AND uid = :author ';
 
     if (typeof filter === 'string') filter = parseInt(filter);
 
     if (filter > 0) {
       const conditions = [];
-
       // 免费
       if ((filter & 1) > 0) {
         conditions.push('(require_holdtokens = 0 AND require_buy = 0)');
       }
-
       // 持币阅读
       if ((filter & 2) > 0) {
         conditions.push('require_holdtokens = 1');
       }
-
       // 需要购买
       if ((filter & 4) > 0) {
         conditions.push('require_buy = 1');
       }
-
       wheresql += 'AND (' + conditions.join(' OR ') + ') ';
     }
 
-    const ordersql = 'ORDER BY time_down ASC, id DESC LIMIT :start, :end';
-    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
+      b.nickname, b.avatar, 
+      c.real_read_count AS \`read\`, c.likes,
+      t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
+      t7.id as token_id, t6.amount as token_amount, t7.name as token_name, t7.symbol as token_symbol, t7.decimals  as token_decimals
+
+      FROM posts a
+      LEFT JOIN users b ON a.uid = b.id 
+      LEFT JOIN post_read_count c ON a.id = c.post_id 
+      LEFT JOIN product_prices t5
+      ON a.id = t5.sign_id
+      LEFT JOIN post_minetokens t6
+      ON a.id = t6.sign_id
+      LEFT JOIN minetokens t7
+      ON t7.id = t6.token_id 
+
+      ${wheresql} 
+      ORDER BY a.time_down ASC, a.id DESC LIMIT :start, :end;
+      SELECT COUNT(*) AS count FROM posts a
+      ${wheresql};`;
     const queryResult = await this.app.mysql.query(
-      sqlcode,
-      { author, start: (page - 1) * pagesize, end: 1 * pagesize }
+      sql,
+      { author, start: (page - 1) * pagesize, end: 1 * pagesize, channel }
     );
 
-    const amount = queryResult[0];
-    const posts = queryResult[1];
+    const posts = queryResult[0];
+    const amount = queryResult[1];
 
-    // TBD: 有无文章接口都要改成一致！
     if (posts.length === 0) {
-      // return [];
       return { count: 0, list: [] };
     }
-
     const postids = [];
-    _.each(posts, row => {
+    const len = posts.length;
+    const id2posts = {};
+    for (let i = 0; i < len; i++) {
+      const row = posts[i];
+      row.tags = [];
+      id2posts[row.id] = row;
       postids.push(row.id);
-    });
+    }
+    const tagSql = 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);';
 
-    const extraItem = {};
-    if (extra) {
-      const extraSplit = extra.split(',');
-      _.each(extraSplit, row => {
-        if (row === 'short_content') {
-          extraItem.short_content = true;
-        }
+    const tagResult = await this.app.mysql.query(
+      tagSql,
+      { signid: postids }
+    );
+    const tagResultLen = tagResult.length;
+    for (let i = 0; i < tagResultLen; i++) {
+      const row = tagResult[i];
+      const id = row.sid;
+      id2posts[id].tags.push({
+        id: row.tid, name: row.name, type: row.type,
       });
     }
 
-    const postList = await this.getPostList(postids, extraItem);
-
-    return { count: amount[0].count, list: postList };
+    return { count: amount[0].count, list: posts };
   }
 
   // (new format)(count-list格式)
