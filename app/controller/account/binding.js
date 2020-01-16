@@ -206,15 +206,31 @@ class AccountBindingController extends Controller {
       return;
     }
     const result = await ctx.service.account.binding.del({ uid, platform });
-    if (result) {
-      ctx.body = {
-        ...ctx.msg.success,
+    let msg = ctx.msg.success;
+    if (result === 0) {
+      msg = ctx.msg.success;
+    } else if (result === 1) {
+      msg = {
+        ...ctx.msg.failure,
+        message: '账号不存在',
+      };
+    } else if (result === 2) {
+      msg = {
+        ...ctx.msg.failure,
+        message: '主账号下面还有其他账号',
+      };
+    } else if (result === 3) {
+      msg = {
+        ...ctx.msg.failure,
+        message: '账号删除失败',
       };
     } else {
-      ctx.body = {
-        ...ctx.msg.failure,
+      msg = {
+        code: 999,
+        message: result,
       };
     }
+    ctx.body = msg;
   }
 
   /**
