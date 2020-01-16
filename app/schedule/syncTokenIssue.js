@@ -25,7 +25,7 @@ class SyncTokenIssue extends Subscription {
     );
     this.logger.info('mappingAsRequests', mappingAsRequests);
     const txHashes = await this.sendMultiIssues(mappingAsRequests);
-    const mappingResult = failIssueTxs.map((tx, idx) => ({ id: tx.id, type: 'issued', tx_hash: txHashes[idx] }));
+    const mappingResult = failIssueTxs.map((tx, idx) => ({ id: tx.id, type: 'issue', tx_hash: txHashes[idx] }));
     this.logger.info('sync failed tokens', mappingResult);
     Promise.all(mappingResult.map(res => mysql.update('assets_minetokens_log', res)));
 
