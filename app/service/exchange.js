@@ -202,9 +202,11 @@ class ExchangeService extends Service {
         break;
 
       case 'name-asc':
+      case 'symbol-asc':
         sqlOrder = ' ORDER BY symbol';
         break;
       case 'name-desc':
+      case 'symbol-desc':
         sqlOrder = ' ORDER BY symbol DESC';
         break;
 
@@ -228,6 +230,14 @@ class ExchangeService extends Service {
 
       case 'exchange-desc':
         sqlOrder = ' ORDER BY t7.amount DESC';
+        break;
+
+      case 'id-asc':
+        sqlOrder = ' ORDER BY t1.id';
+        break;
+
+      case 'id-desc':
+        sqlOrder = ' ORDER BY t1.id DESC';
         break;
 
       default:
