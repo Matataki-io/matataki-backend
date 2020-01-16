@@ -95,7 +95,7 @@ class ShareService extends Service {
   }
   async timeRank(page = 1, pagesize = 20, author = null) {
     let wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = 3 ';
-    if (author) wheresql += ' AND uid = :author ';
+    if (author) wheresql += ' AND a.uid = :author ';
     const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
       b.nickname, b.avatar, 
       c.real_read_count AS \`read\`, c.likes 

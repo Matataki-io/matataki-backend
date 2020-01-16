@@ -606,7 +606,7 @@ class PostService extends Service {
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
     let wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = :channel ';
-    if (author) wheresql += ' AND uid = :author ';
+    if (author) wheresql += ' AND a.uid = :author ';
 
     if (typeof filter === 'string') filter = parseInt(filter);
 
