@@ -239,6 +239,12 @@ class ExchangeService extends Service {
       case 'id-desc':
         sqlOrder = ' ORDER BY t1.id DESC';
         break;
+      case 'time-asc':
+        sqlOrder = ' ORDER BY t1.create_time';
+        break;
+      case 'time-desc':
+        sqlOrder = ' ORDER BY t1.create_time DESC';
+        break;
 
       default:
         return false;
