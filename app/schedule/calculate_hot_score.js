@@ -6,7 +6,7 @@ class PostScore extends Subscription {
 
   static get schedule() {
     return {
-      interval: '3s',
+      interval: '5s',
       type: 'worker',
     };
   }
@@ -22,6 +22,21 @@ class PostScore extends Subscription {
     -- 按天减少权重
     UPDATE posts SET hot_score = hot_score - datediff(now(), create_time) * 3;
     */
+    const delPosts = await this.app.mysql.query('SELECT p.id, p.channel_id FROM posts p WHERE p.status!=0;');
+    const delPostList = [];
+    const delShareList = [];
+    for (const delpost of delPosts) {
+      const { id, channel_id } = delpost;
+      if (channel_id === 1) {
+        delPostList.push(id);
+      }
+      if (channel_id === 3) {
+        delShareList.push(id);
+      }
+    }
+    if (delPostList.length > 0) await this.app.redis.zrem('post:score:filter:1', delPostList);
+    if (delShareList.length > 0) await this.app.redis.zrem('post:score:filter:3', delShareList);
+
     const posts = await this.app.mysql.query(
       `SELECT p.id, p.create_time, p.channel_id, c.dislikes, c.likes, c.real_read_count, c.support_count, c.down 
       FROM posts p 
