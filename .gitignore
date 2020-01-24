@@ -24,6 +24,7 @@ unittest/
 build/
 cmd.sh
 .vscode/
+.vs/
 scripts/config.local.json
 scripts/article-cart/config.local.json
 scripts/oss-copy/config.local.json

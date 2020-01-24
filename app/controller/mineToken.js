@@ -130,7 +130,8 @@ class MineTokenController extends Controller {
     const { tokenId, to, amount } = this.ctx.request.body;
     // amount 客户端*精度，10^decimals
     const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP, consts.mineTokenTransferTypes.transfer);
-    ctx.body = result ? ctx.msg.success : ctx.msg.failure;
+      ctx.body = result ? { ...ctx.msg.success, tx_hash: result }
+          : ctx.msg.failure;
   }
 
   // 查询当前用户token余额
