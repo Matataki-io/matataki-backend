@@ -355,6 +355,42 @@ class PostImportService extends Service {
       };
     }
   }
+  async handleMatters(url) {
+    try {
+      const rawPage = await axios({
+        url,
+        method: 'get',
+        headers: {
+          Accept: 'text / html, application/ xhtml + xml, application/ xml; q = 0.9, image / webp, image / apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
+        },
+      });
+      let { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
+      title = title.replace(/\s*- Matters/, '');
+      const parsedPage = htmlparser.parse(rawPage.data);
+      const parsedContent = parsedPage.querySelector('div.u-content');
+      const turndownService = new turndown();
+      const parsedImages = parsedPage.querySelectorAll('img');
+      let coverLocation = null;
+      for (const image of parsedImages) {
+        const originSrc = image.rawAttributes.src;
+        const uploadUrl = await this.uploadArticleImage(originSrc,
+          `./uploads/today_matters_${Date.now().toString()}`);
+        if (!coverLocation) { coverLocation = uploadUrl; }
+        image.rawAttributes.src = 'https://ssimg.frontenduse.top' + uploadUrl;
+      }
+      const articleContent = turndownService.turndown(parsedContent.toString());
+      return {
+        title,
+        cover: coverLocation,
+        content: articleContent,
+      };
+
+    } catch (err) {
+      this.logger.error('PostImportService:: handleMatters: error:', err);
+      return null;
+    }
+  }
 }
 
 module.exports = PostImportService;
