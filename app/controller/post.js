@@ -687,10 +687,12 @@ class PostController extends Controller {
       x => this.service.postImport.handleJianShu(x));
     const mattersMatch = makeMatch(/https:\/\/(www\.)?matters\.news\/.+/,
       x => this.service.postImport.handleMatters(x));
+    const zhihuMatch = makeMatch(/https:\/\/zhuanlan\.zhihu\.com\/p\/\d+/,
+      x => this.service.postImport.handleZhihu(x));
 
     const result = await wechatMatch || await chainnewsMatch
       || await orangeMatch || await jianshuMatch || await gaojinMatch
-      || await mattersMatch;
+      || await mattersMatch || await zhihuMatch;
 
     if (result === 1) {
       this.logger.info('PostController:: importer: Import article failed..', url);
