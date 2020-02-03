@@ -63,8 +63,6 @@ class PostController extends Controller {
       author,
       username: ctx.user.username,
       title,
-      // public_key: publickey,
-      // sign,
       hash,
       is_original,
       fission_factor: fissionFactor,
@@ -106,8 +104,7 @@ class PostController extends Controller {
   /* 目前没有判断ipfs hash是否是现在用户上传的文章，所以可能会伪造一个已有的hash */
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '',
-      publickey, sign, hash, fissionFactor = 2000, cover,
+    const { signId, author = '', title = '', content = '', hash, fissionFactor = 2000, cover,
       is_original = 0, tags = '', shortContent = null } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
@@ -132,7 +129,7 @@ class PostController extends Controller {
       return;
     }
 
-    ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash, is_original);
+    ctx.logger.info('debug info', signId, author, title, content, hash, is_original);
 
     const articleData = await this.service.post.ipfsCatch(hash);
     if (!articleData) {
@@ -159,17 +156,13 @@ class PostController extends Controller {
           sign_id: signId,
           hash: post.hash,
           title: post.title,
-          sign: post.sign,
           cover: post.cover,
           is_original: post.is_original,
-          public_key: post.public_key,
           create_time: now,
         });
 
         const updateRow = {
           hash,
-          public_key: publickey,
-          sign,
           short_content,
         };
 
@@ -188,7 +181,7 @@ class PostController extends Controller {
 
         // console.log("cover!!!", cover , typeof cover);
 
-        // 修改 post 的 hash, publickey, sign title
+        // 修改 post 的 hash, title
         await conn.update('posts', updateRow, { where: { id: signId } });
 
         let tag_arr = tags.split(',');
