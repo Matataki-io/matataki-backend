@@ -25,7 +25,7 @@ class PostController extends Controller {
   // 发布文章
   async publish() {
     const ctx = this.ctx;
-    const { author = '', title = '', content = '', // msgParams, publickey,
+    const { author = '', title = '', content = '',
       hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos',
       tags = '', commentPayPoint = 0, shortContent = null, cc_license = null } = ctx.request.body;
 
@@ -43,44 +43,6 @@ class PostController extends Controller {
       return;
     }
 
-    // try {
-    //   // 验证签名
-    //   if (platform === 'eos') {
-    //     const hash_piece1 = hash.slice(0, 12);
-    //     const hash_piece2 = hash.slice(12, 24);
-    //     const hash_piece3 = hash.slice(24, 36);
-    //     const hash_piece4 = hash.slice(36, 48);
-
-    //     const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
-    //     await this.eos_signature_verify(author, sign_data, sign, publickey);
-    //   } else if (platform === 'metamask') {
-    //     if (!this.service.ethereum.signatureService.verifyArticle(sign, msgParams, publickey)) {
-    //       throw Error('以太坊签名无效');
-    //     }
-    //   } else if (platform === 'ont') {
-    //     /*
-    //             const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
-    //             this.ont_signature_verify(msg, sign, publickey);
-    //     */
-
-
-    //   }
-    //   // Github以及Email用户不验证签名
-    //   // else if (platform === 'github') {
-    //   //   this.logger.info('There is a GitHub user publishing...');
-    //   // } else if (platform === 'email') {
-    //   //   this.logger.info('There is a Email account user publishing...');
-    //   // }
-
-    //   // else {
-    //   //   ctx.body = ctx.msg.postPublishSignVerifyError; // 'platform not support';
-    //   //   return;
-    //   // }
-    // } catch (err) {
-    //   ctx.logger.info('debug info', err);
-    //   ctx.body = ctx.msg.postPublishSignVerifyError; // err.message;
-    //   return;
-    // }
 
     // 从ipfs获取文章内容
     const articleData = await this.service.post.ipfsCatch(hash);
@@ -144,9 +106,9 @@ class PostController extends Controller {
   /* 目前没有判断ipfs hash是否是现在用户上传的文章，所以可能会伪造一个已有的hash */
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', msgParams,
+    const { signId, author = '', title = '', content = '',
       publickey, sign, hash, fissionFactor = 2000, cover,
-      is_original = 0, platform = 'eos', tags = '', shortContent = null } = ctx.request.body;
+      is_original = 0, tags = '', shortContent = null } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -171,39 +133,6 @@ class PostController extends Controller {
     }
 
     ctx.logger.info('debug info', signId, author, title, content, publickey, sign, hash, is_original);
-
-    try {
-      if (platform === 'eos') {
-        const hash_piece1 = hash.slice(0, 12);
-        const hash_piece2 = hash.slice(12, 24);
-        const hash_piece3 = hash.slice(24, 36);
-        const hash_piece4 = hash.slice(36, 48);
-
-        const sign_data = `${author} ${hash_piece1} ${hash_piece2} ${hash_piece3} ${hash_piece4}`;
-
-        await this.eos_signature_verify(author, sign_data, sign, publickey);
-      } else if (platform === 'metamask') {
-        if (!this.service.ethereum.signatureService.verifyArticle(sign, msgParams, publickey)) {
-          throw Error('以太坊签名无效');
-        }
-      } else if (platform === 'ont') {
-        /*
-                const msg = ONT.utils.str2hexstr(`${author} ${hash}`);
-                this.ont_signature_verify(msg, sign, publickey);
-        */
-      }
-      // else if (platform === 'github') {
-      //   this.logger.info('There is a GitHub user editing...');
-      // } else if (platform === 'email') {
-      //   this.logger.info('There is a Email account user publishing...');
-      // } else {
-      //   ctx.body = ctx.msg.unsupportedPlatform;
-      //   return;
-      // }
-    } catch (err) {
-      ctx.body = ctx.msg.postPublishSignVerifyError;
-      return;
-    }
 
     const articleData = await this.service.post.ipfsCatch(hash);
     if (!articleData) {
