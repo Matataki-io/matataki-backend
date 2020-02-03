@@ -569,7 +569,15 @@ class PostService extends Service {
         id: row.tid, name: row.name, type: row.type,
       });
     }
-    return { count: amount[0].count, list: posts };
+    // Frank - 这里要展开屏蔽邮箱地址的魔法了
+    const emailMask = str => str.replace(
+      /(?<=.)[^@\n](?=[^@\n]*?@)|(?:(?<=@.)|(?!^)\G(?=[^@\n]*$)).(?=.*\.)/gm,
+      '*');
+    const list = posts.map(post => {
+      const author = emailMask(post.author);
+      return { ...post, author };
+    });
+    return { count: amount[0].count, list };
   }
 
   // 发布时间排序()(new format)(count-list格式)
@@ -589,7 +597,7 @@ class PostService extends Service {
       // 需要购买
       if ((filter & 4) > 0) conditions.push('require_buy = 1');
 
-      const sql = `SELECT id FROM posts WHERE status = 0 AND channel_id = 1 AND (${conditions.join(' OR ')}) ORDER BY time_down ASC, id DESC LIMIT :start, :end;`
+      const sql = `SELECT id FROM posts WHERE status = 0 AND channel_id = 1 AND (${conditions.join(' OR ')}) ORDER BY time_down ASC, id DESC LIMIT :start, :end;`;
 
       ids = (await this.app.mysql.query(sql, { start: (page - 1) * pagesize, end: 1 * pagesize })).map(row => row.id);
 
@@ -1190,15 +1198,15 @@ class PostService extends Service {
 
     let userPoints = await this.app.redis.hget('user:stat', 'point');
     if (userPoints === null) {
-      userPoints = (await this.app.mysql.query('SELECT SUM(amount) as amount FROM assets_points;'))[0].amount;
+      userPoints = (await this.app.mysql.query('SELECT SUM(amount) as amount FROM ,assets;_points;'))[0].amount;
       await this.app.redis.hset('user:stat', 'point', userPoints);
     }
 
     return {
       users: Number(userCount),
       articles: Number(postCount),
-      points: Number(userPoints)
-    }
+      points: Number(userPoints),
+    };
   }
 
   // 持币阅读
