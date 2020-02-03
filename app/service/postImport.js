@@ -413,6 +413,7 @@ class PostImportService extends Service {
       const turndownService = new turndown();
       const parsedTitleImage = parsedPage.querySelector('div.TitleImage');
       const parsedImages = parsedPage.querySelectorAll('img.origin_image');
+      const parsedLinkCards = parsedPage.querySelectorAll('a.LinkCard');
       let coverLocation = null;
       if (parsedTitleImage) {
         const originSrc = parsedTitleImage.rawAttributes.style.match(/background-image:url\((.+)\)/
@@ -426,6 +427,15 @@ class PostImportService extends Service {
           this.generateFileName('zhihu', originSrc));
         image.setAttribute('src', uploadUrl);
       }
+
+      for (const linkCard of parsedLinkCards) {
+        linkCard.setAttribute('target', 'linebreak'); // hack
+      }
+      turndownService.addRule('linkCard', {
+        filter: 'a',
+        replacement: (content, node) =>
+          `[${content}](${node.href}) ${node.target==='linebreak' ? '\n\n' : ''}`,
+      });
       const articleContent = turndownService.turndown(parsedContent.toString());
       return {
         title,
