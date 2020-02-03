@@ -355,6 +355,89 @@ class PostImportService extends Service {
       };
     }
   }
+  generateFileName(platform, origin) {
+    let suffix = origin.split('.');
+    suffix = suffix[suffix.length - 1];
+    return `./uploads/today_${platform}_${new Date().valueOf()}.${suffix}`;
+  }
+  async handleMatters(url) {
+    try {
+      const rawPage = await axios({
+        url,
+        method: 'get',
+        headers: {
+          Accept: 'text / html, application/ xhtml + xml, application/ xml; q = 0.9, image / webp, image / apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
+        },
+      });
+      let { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
+      title = title.replace(/\s*- Matters/, '');
+      const parsedPage = htmlparser.parse(rawPage.data);
+      const parsedContent = parsedPage.querySelector('div.u-content');
+      const turndownService = new turndown();
+      const parsedImages = parsedPage.querySelectorAll('img');
+      let coverLocation = null;
+      for (const image of parsedImages) {
+        const originSrc = image.rawAttributes.src;
+        const uploadUrl = await this.uploadArticleImage(originSrc,
+          this.generateFileName('matters', originSrc));
+        if (!coverLocation) { coverLocation = uploadUrl; }
+        image.setAttribute('src', 'https://ssimg.frontenduse.top' + uploadUrl);
+      }
+      const articleContent = turndownService.turndown(parsedContent.toString());
+      return {
+        title,
+        cover: coverLocation,
+        content: articleContent,
+      };
+
+    } catch (err) {
+      this.logger.error('PostImportService:: handleMatters: error:', err);
+      return null;
+    }
+  }
+
+  async handleZhihu(url) {
+    try {
+      const rawPage = await axios({
+        url,
+        method: 'get',
+        headers: {
+          Accept: 'text / html, application/ xhtml + xml, application/ xml; q = 0.9, image / webp, image / apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
+        },
+      });
+      const { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
+      const parsedPage = htmlparser.parse(rawPage.data);
+      const parsedContent = parsedPage.querySelector('div.RichText.ztext.Post-RichText');
+      const turndownService = new turndown();
+      const parsedTitleImage = parsedPage.querySelector('div.TitleImage');
+      const parsedImages = parsedPage.querySelectorAll('img.origin_image');
+      let coverLocation = null;
+      if (parsedTitleImage) {
+        const originSrc = parsedTitleImage.rawAttributes.style.match(/background-image:url\((.+)\)/
+        )[1];
+        coverLocation = await this.uploadArticleImage(originSrc,
+          this.generateFileName('zhihu', originSrc));
+      }
+      for (const image of parsedImages) {
+        const originSrc = image.rawAttributes['data-original'];
+        const uploadUrl = 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
+          this.generateFileName('zhihu', originSrc));
+        image.setAttribute('src', uploadUrl);
+      }
+      const articleContent = turndownService.turndown(parsedContent.toString());
+      return {
+        title,
+        cover: coverLocation,
+        content: articleContent,
+      };
+
+    } catch (err) {
+      this.logger.error('PostImportService:: handleZhihu: error:', err);
+      return null;
+    }
+  }
 }
 
 module.exports = PostImportService;

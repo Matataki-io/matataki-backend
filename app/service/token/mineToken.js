@@ -341,7 +341,7 @@ class MineTokenService extends Service {
       if (!isOutConn) {
         await conn.commit();
       }
-      return true;
+      return transactionHash;
     } catch (e) {
       if (!isOutConn) {
         await conn.rollback();

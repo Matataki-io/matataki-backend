@@ -661,59 +661,47 @@ class PostController extends Controller {
       ctx.body = ctx.msg.paramsError;
       return;
     }
-    let result = null;
-    let matchStatus = 0;
-    const wechatMatch = url.match(/https:\/\/mp\.weixin\.qq\.com\/s[?\/]{1}[_\-=&#a-zA-Z0-9]{1,200}/);
-    if (wechatMatch) {
-      matchStatus = 1;
-      result = await this.service.postImport.handleWechat(wechatMatch[0]);
-    }
+    const makeResponse = res => {
+      if (res) {
+        this.logger.info('PostController:: importer: Import article succeed..', url);
+        ctx.body = ctx.msg.success;
+        ctx.body.data = res;
+        return true;
+      }
+      return 1;
+    };
+    const makeMatch = async (matchRule, handler) => (
+      url.match(matchRule) ? makeResponse(await handler(url)) : false);
+    // true = succeed
+    // false = unspported platform
+    // 1 = import failed
+    const wechatMatch = makeMatch(/https:\/\/mp\.weixin\.qq\.com\/s[?\/]{1}[_\-=&#a-zA-Z0-9]{1,200}/,
+      x => this.service.postImport.handleWechat(x));
+    const chainnewsMatch = makeMatch(/https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/,
+      x => this.service.postImport.handleChainnews(x));
+    const orangeMatch = makeMatch(/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/,
+      x => this.service.postImport.handleOrange(x));
+    const jianshuMatch = makeMatch(/https:\/\/(www\.)?jianshu\.com\/p\/[\w]{12}/,
+      x => this.service.postImport.handleJianShu(x));
+    const gaojinMatch = makeMatch(/https:\/\/(www\.)?igaojin\.me/,
+      x => this.service.postImport.handleJianShu(x));
+    const mattersMatch = makeMatch(/https:\/\/(www\.)?matters\.news\/.+/,
+      x => this.service.postImport.handleMatters(x));
+    const zhihuMatch = makeMatch(/https:\/\/zhuanlan\.zhihu\.com\/p\/\d+/,
+      x => this.service.postImport.handleZhihu(x));
 
-    if (matchStatus === 0) {
-      const chainnewsMatch = url.match(/https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/);
-      if (chainnewsMatch) {
-        matchStatus = 1;
-        result = await this.service.postImport.handleChainnews(chainnewsMatch[0]);
-      }
-    }
+    const result = await wechatMatch || await chainnewsMatch
+      || await orangeMatch || await jianshuMatch || await gaojinMatch
+      || await mattersMatch || await zhihuMatch;
 
-    if (matchStatus === 0) {
-      const orangeMatch = url.match(/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/);
-      if (orangeMatch && matchStatus !== 1) {
-        matchStatus = 1;
-        result = await this.service.postImport.handleOrange(orangeMatch[0]);
-      }
-    }
-    if (matchStatus === 0) {
-      const jianshuMatch = url.match(/https:\/\/(www\.)?jianshu\.com\/p\/[\w]{12}/);
-      if (jianshuMatch && matchStatus !== 1) {
-        matchStatus = 1;
-        result = await this.service.postImport.handleJianShu(jianshuMatch[0]);
-      }
-    }
-    // https://igaojin.me
-    // 高金blog导入
-    if (matchStatus === 0) {
-      const gaojinMatch = url.match(/https:\/\/(www\.)?igaojin\.me/);
-      if (gaojinMatch && matchStatus !== 1) {
-        matchStatus = 1;
-        result = await this.service.postImport.handleGaojin(url);
-      }
-    }
-
-    if (matchStatus === 0) {
+    if (result === 1) {
+      this.logger.info('PostController:: importer: Import article failed..', url);
+      ctx.body = ctx.msg.failure;
+      return;
+    } else if (result === false) {
       ctx.body = ctx.msg.importPlatformNotSupported;
       return;
     }
-    if (result) {
-      // console.log(result.content);
-      this.logger.info('PostController:: importer: Import article succeed..', url);
-      ctx.body = ctx.msg.success;
-      ctx.body.data = result;
-      return;
-    }
-    this.logger.info('PostController:: importer: Import article failed..', url);
-    ctx.body = ctx.msg.failure;
   }
 
   async uploadImage() {
