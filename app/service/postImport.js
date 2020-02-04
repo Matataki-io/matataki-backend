@@ -60,36 +60,32 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: handleWechat: error:', err);
       return null;
     }
-    const parsedPage = htmlparser.parse(rawPage.data);
+    const $ = cheerio.load(rawPage.data);
+    const mediaContent = $('div.rich_media_content');
 
     // 把图片上传至本站， 并替换链接
     // TBD: 仍然有出现图片未被替换的问题
     let imgRawUrl, imgUpUrl, imgFileName;
-    const imgElement = parsedPage.querySelector('div.rich_media_content').querySelectorAll('img');
-    for (let index = 0; index < imgElement.length; index += 1) {
-      imgRawUrl = imgElement[index].rawAttributes['data-src'];
-      imgFileName = './uploads/today_' + Date.now() + '.' + imgElement[0].rawAttributes['data-type'];
+    // const imgElement = parsedPage.querySelector('div.rich_media_content').querySelectorAll('img');
+    const _imgElement = mediaContent.find('img').toArray();
+
+    for (let index = 0; index < _imgElement.length; index += 1) {
+      imgRawUrl = _imgElement[index].attribs['data-src'];
+      imgFileName = './uploads/today_' + Date.now() + '.' + _imgElement[0].attribs['data-type'];
       imgUpUrl = await this.uploadArticleImage(imgRawUrl, imgFileName);
       // 匹配图片URL， 并进行替换
       if (imgUpUrl) {
-        imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(
+        _imgElement[index].attribs['data-src'] = _imgElement[index].attribs['data-src'].replace(
           /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
-        imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(
-          /style=\"[a-zA-Z0-9-.!:;%,() ]{0,200}\"/g, 'style="vertical-align: middle;width: 90%;height: 90%;"');
+        _imgElement[index].attribs.style = 'vertical-align: middle;width: 90%;height: 90%;';
       } else {
         this.logger.info('PostImportService:: handleWechat: upload Image failed, ignored');
-        imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace(
-          /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, '');
+        _imgElement[index].attribs['data-src'] = '';
       }
-      imgElement[index].rawAttrs = imgElement[index].rawAttrs.replace('data-src', 'src');
+      _imgElement[index].attribs.src = _imgElement[index].attribs['data-src'];
     }
     let parsedContent = '';
-    // 处理文本
-    const parsedContentNodes = parsedPage.querySelector('div.rich_media_content').childNodes;
-    for (let index = 0; index < parsedContentNodes.length; index += 1) {
-      parsedContent += parsedContentNodes[index].toString();
-    }
-    parsedContent = pretty(parsedContent);
+    parsedContent = pretty($('div.rich_media_content').html());
 
     // 处理元数据 —— 标题、封面
     const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
