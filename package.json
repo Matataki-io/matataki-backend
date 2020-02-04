@@ -37,7 +37,7 @@
     "jwt-simple": "^0.5.5",
     "moment": "^2.24.0",
     "nanoid": "^2.1.1",
-    "node-html-parser": "^1.1.16",
+    "node-html-parser": "^1.2.1",
     "nodemailer": "^6.1.1",
     "ontology-ts-sdk": "^1.0.22",
     "page-metadata-parser": "^1.1.4",
