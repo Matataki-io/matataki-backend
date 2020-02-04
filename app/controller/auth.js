@@ -24,7 +24,14 @@ class AuthController extends Controller {
       // hash
     } = telegramParams;
     const jwttoken = await this.service.auth.saveUser(id, first_name, photo_url, this.clientIP, referral, 'telegram');
-    ctx.body = jwttoken;
+    if (jwttoken === null) {
+      ctx.body = ctx.msg.generateTokenError;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: jwttoken,
+    };
   }
 
   // eos、ont、eth登录，首次登录自动注册
