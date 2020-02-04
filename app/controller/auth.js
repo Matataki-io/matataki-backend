@@ -3,6 +3,29 @@
 const Controller = require('../core/base_controller');
 
 class AuthController extends Controller {
+  async telegramAuth() {
+    const ctx = this.ctx;
+    const { telegramParams, telegramBotName, referral = 0 } = ctx.request.body;
+    const telegramBot = this.config.telegramBot;
+    if (!telegramBot[telegramBotName]) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    const authResult = this.service.auth.telegram_auth(telegramBot[telegramBotName], telegramParams);
+    if (!authResult) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    const { id,
+      first_name,
+      // username,
+      photo_url,
+      // auth_date,
+      // hash
+    } = telegramParams;
+    const jwttoken = await this.service.auth.saveUser(id, first_name, photo_url, this.clientIP, referral, 'telegram');
+    ctx.body = jwttoken;
+  }
 
   // eos、ont、eth登录，首次登录自动注册
   async auth() {
