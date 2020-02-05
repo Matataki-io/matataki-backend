@@ -378,7 +378,7 @@ class PostImportService extends Service {
         const uploadUrl = await this.uploadArticleImage(originSrc,
           this.generateFileName('matters', originSrc));
         if (!coverLocation) { coverLocation = uploadUrl; }
-        image.setAttribute('src', 'https://ssimg.frontenduse.top' + uploadUrl);
+        image.setAttribute('src', uploadUrl ? 'https://ssimg.frontenduse.top' + uploadUrl : '');
       }
       const articleContent = turndownService.turndown(parsedContent.toString());
       return {
@@ -419,8 +419,8 @@ class PostImportService extends Service {
       for (const image of parsedImages) {
         const originSrc = image.rawAttributes['data-original'];
         const uploadUrl = originSrc ? 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
-          this.generateFileName('zhihu', originSrc)) : '';
-        image.setAttribute('src', uploadUrl);
+          this.generateFileName('zhihu', originSrc)) : null;
+        image.setAttribute('src', uploadUrl ? uploadUrl : '');
       }
 
       for (const linkCard of parsedLinkCards) {
