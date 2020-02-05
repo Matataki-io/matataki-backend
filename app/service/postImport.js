@@ -407,20 +407,19 @@ class PostImportService extends Service {
       const parsedPage = htmlparser.parse(rawPage.data);
       const parsedContent = parsedPage.querySelector('div.RichText.ztext.Post-RichText');
       const turndownService = new turndown();
-      const parsedTitleImage = parsedPage.querySelector('div.TitleImage');
-      const parsedImages = parsedPage.querySelectorAll('img.origin_image');
+      const parsedTitleImage = parsedPage.querySelector('img.TitleImage');
+      const parsedImages = parsedContent.querySelectorAll('img');
       const parsedLinkCards = parsedPage.querySelectorAll('a.LinkCard');
       let coverLocation = null;
       if (parsedTitleImage) {
-        const originSrc = parsedTitleImage.rawAttributes.style.match(/background-image:url\((.+)\)/
-        )[1];
+        const originSrc = parsedTitleImage.rawAttributes.src;
         coverLocation = await this.uploadArticleImage(originSrc,
           this.generateFileName('zhihu', originSrc));
       }
       for (const image of parsedImages) {
         const originSrc = image.rawAttributes['data-original'];
-        const uploadUrl = 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
-          this.generateFileName('zhihu', originSrc));
+        const uploadUrl = originSrc ? 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
+          this.generateFileName('zhihu', originSrc)) : '';
         image.setAttribute('src', uploadUrl);
       }
 
