@@ -37,8 +37,11 @@ module.exports = app => {
   // 发布文章
   // router.post('/publish', passport.authorize, controller.post.publish);
   router.post('/post/publish', passport.authorize, controller.post.publish);
-  // 上传文章到IPFS
+
+  // Frank(Feb 6th, 2020): 既然放弃了发文签名，我们应该逐步取消掉这个路由了
+  // @todo: 准备放弃上传文章到IPFS的路由，合并到上方的publish
   router.post('/post/ipfs', passport.authorize, controller.post.uploadPost);
+
   // 从IPFS拿取文章内容
   router.get('/post/ipfs/:hash', passport.verify, controller.post.catchPost);
   // 上传图片
