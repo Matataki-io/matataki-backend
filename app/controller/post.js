@@ -26,10 +26,16 @@ class PostController extends Controller {
   async publish() {
     const ctx = this.ctx;
     const { author = '', title = '', content = '',
-      hash, fissionFactor = 2000, cover, is_original = 0, platform = 'eos',
+      hash, data, // 即将用 data 取代 hash，取消前端上传到IPFS
+      fissionFactor = 2000, cover, is_original = 0, platform = 'eos',
       tags = '', commentPayPoint = 0, shortContent = null, cc_license = null } = ctx.request.body;
 
-    ctx.logger.info('debug info', author, title, content, hash, is_original);
+    // 上传的data是json对象， 需要字符串化
+    const metadataHash = await this.service.post.ipfsUpload(JSON.stringify(data));
+    // @todo: 渲染html并上传
+    // 无 hash 则上传失败
+    if (!metadataHash) ctx.body = ctx.msg.ipfsUploadFailed;
+    ctx.logger.info('debug info', author, title, content, is_original);
 
     if (fissionFactor > 2000) {
       ctx.body = ctx.msg.postPublishParamsError; // msg: 'fissionFactor should >= 2000',
@@ -43,27 +49,16 @@ class PostController extends Controller {
       return;
     }
 
-
-    // 从ipfs获取文章内容
-    const articleData = await this.service.post.ipfsCatch(hash);
-    if (!articleData) {
-      ctx.body = ctx.msg.ipfsCatchFailed; // err.message;
-      return;
-    }
-    const articleJson = JSON.parse(articleData.toString());
     // 只清洗文章文本的标识
-    const articleContent = await this.service.post.wash(articleJson.content);
+    const articleContent = await this.service.post.wash(data.content);
     // 设置短摘要
-    let short_content = shortContent;
-    if (!short_content) {
-      short_content = articleContent.substring(0, 300);
-    }
+    const short_content = shortContent || articleContent.substring(0, 300);
 
     const id = await ctx.service.post.publish({
       author,
       username: ctx.user.username,
       title,
-      hash,
+      hash: metadataHash,
       is_original,
       fission_factor: fissionFactor,
       create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
@@ -78,14 +73,8 @@ class PostController extends Controller {
     });
 
     // 添加文章到elastic search
-    await this.service.search.importPost(id, ctx.user.id, title, articleContent);
+    // await this.service.search.importPost(id, ctx.user.id, title, articleContent);
 
-    const isHosting = await this.service.account.hosting.isHosting(ctx.user.id, 'ETH');
-    if (!isHosting) {
-      const result = await this.service.account.hosting.create(ctx.user.id);
-      if (!result) throw Error('Eth account hosting Failed');
-    }
-    // await this.service.ethereum.timeMachine.updateIpfsHash(id, hash);
     if (tags) {
       let tag_arr = tags.split(',');
       tag_arr = tag_arr.filter(x => { return x !== ''; });
@@ -104,7 +93,9 @@ class PostController extends Controller {
   /* 目前没有判断ipfs hash是否是现在用户上传的文章，所以可能会伪造一个已有的hash */
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', hash, fissionFactor = 2000, cover,
+    const { signId, author = '', title = '', content = '',
+      hash, data, // will replace hash with data soon
+      fissionFactor = 2000, cover,
       is_original = 0, tags = '', shortContent = null } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
@@ -117,7 +108,6 @@ class PostController extends Controller {
       ctx.body = ctx.msg.badFissionFactor;
       return;
     }
-
     const post = await this.app.mysql.get('posts', { id: signId });
     if (!post) {
       ctx.body = ctx.msg.postNotFound;
@@ -128,23 +118,16 @@ class PostController extends Controller {
       ctx.body = ctx.msg.notYourPost;
       return;
     }
+    const metadataHash = await this.service.post.ipfsUpload(JSON.stringify(data));
+    // @todo: 渲染html并上传
+    // 无 hash 则上传失败
+    if (!metadataHash) ctx.body = ctx.msg.ipfsUploadFailed;
+    ctx.logger.info('debug info', signId, author, title, content, is_original);
 
-    ctx.logger.info('debug info', signId, author, title, content, hash, is_original);
-
-    const articleData = await this.service.post.ipfsCatch(hash);
-    if (!articleData) {
-      ctx.body = ctx.msg.ipfsCatchFailed; // err.message;
-      return;
-    }
-    const articleJson = JSON.parse(articleData.toString());
     // 只清洗文章文本的标识
-    const articleContent = await this.service.post.wash(articleJson.content);
+    const articleContent = await this.service.post.wash(data.content);
 
-    let short_content = shortContent;
-    if (!short_content) {
-      short_content = articleContent.substring(0, 300);
-    }
-    // const updateTimeMachine = this.service.ethereum.timeMachine.updateIpfsHash(signId, hash);
+    const short_content = shortContent || articleContent.substring(0, 300);
     let elaTitle = post.title;
     try {
       const conn = await this.app.mysql.beginTransaction();
@@ -162,7 +145,7 @@ class PostController extends Controller {
         });
 
         const updateRow = {
-          hash,
+          hash: metadataHash,
           short_content,
         };
 
@@ -655,18 +638,6 @@ class PostController extends Controller {
   async uploadPost() {
     const ctx = this.ctx;
     const { data } = ctx.request.body;
-
-    // data.content = data.content
-    //   .split('\n') // 分开段落来 sanitize 避免有问题的tag把文章吞掉
-    //   .map(paragraph => sanitize(paragraph, {
-    //     allowedTags: [ 'b', 'i', 'em', 'strong', 'a', 'iframe' ],
-    //     allowedAttributes: {
-    //       a: [ 'href' ],
-    //       iframe: [ 'src' ],
-    //     },
-    //     // allowedIframeHostnames: [ 'www.youtube.com', 'player.bilibili.com' ],
-    //   }))
-    //   .join('\n'); // 再拼接回去
 
     this.logger.info('upload ipfs data', data);
     // 上传的data是json对象， 需要字符串化
