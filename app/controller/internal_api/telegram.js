@@ -84,7 +84,10 @@ class TelegramController extends Controller {
     const { from, to, value } = ctx.request.body;
     const result = await this.service.token.mineToken.transferFrom(id, from, to, value, this.clientIP, consts.mineTokenTransferTypes.transfer);
     if (!result) ctx.status = 400;
-    ctx.body = result ? ctx.msg.success : ctx.msg.failure;
+    ctx.body = result ? {
+      ...ctx.msg.success,
+      data: { tx_hash: result },
+    } : ctx.msg.failure;
   }
 
   async getUserTokenDetail() {
