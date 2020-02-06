@@ -368,19 +368,19 @@ class PostImportService extends Service {
       });
       let { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
       title = title.replace(/\s*- Matters/, '');
-      const parsedPage = htmlparser.parse(rawPage.data);
-      const parsedContent = parsedPage.querySelector('div.u-content');
+      const $ = cheerio.load(rawPage.data);
+      const parsedContent = $('div.u-content');
       const turndownService = new turndown();
-      const parsedImages = parsedPage.querySelectorAll('img');
+      const parsedImages = $('img');
       let coverLocation = null;
-      for (const image of parsedImages) {
-        const originSrc = image.rawAttributes.src;
+      for (const image of parsedImages.toArray()) {
+        const originSrc = $(image).attr('src');
         const uploadUrl = await this.uploadArticleImage(originSrc,
           this.generateFileName('matters', originSrc));
         if (!coverLocation) { coverLocation = uploadUrl; }
-        image.setAttribute('src', uploadUrl ? 'https://ssimg.frontenduse.top' + uploadUrl : '');
+        $(image).attr('src', uploadUrl ? 'https://ssimg.frontenduse.top' + uploadUrl : '');
       }
-      const articleContent = turndownService.turndown(parsedContent.toString());
+      const articleContent = turndownService.turndown(parsedContent.html());
       return {
         title,
         cover: coverLocation,
@@ -404,34 +404,35 @@ class PostImportService extends Service {
         },
       });
       const { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
-      const parsedPage = htmlparser.parse(rawPage.data);
-      const parsedContent = parsedPage.querySelector('div.RichText.ztext.Post-RichText');
+      const $ = cheerio.load(rawPage.data);
+      const parsedContent = $('div.RichText.ztext.Post-RichText');
       const turndownService = new turndown();
-      const parsedTitleImage = parsedPage.querySelector('img.TitleImage');
-      const parsedImages = parsedContent.querySelectorAll('img');
-      const parsedLinkCards = parsedPage.querySelectorAll('a.LinkCard');
+      const parsedTitleImage = $('img.TitleImage');
+      const parsedImages = $('img', parsedContent);
+      const parsedLinkCards = $('a.LinkCard');
       let coverLocation = null;
       if (parsedTitleImage) {
-        const originSrc = parsedTitleImage.rawAttributes.src;
+        const originSrc = parsedTitleImage.attr('src');
         coverLocation = await this.uploadArticleImage(originSrc,
           this.generateFileName('zhihu', originSrc));
       }
-      for (const image of parsedImages) {
-        const originSrc = image.rawAttributes['data-original'];
+      for (const image of parsedImages.toArray()) {
+        const originSrc = $(image).attr('data-original');
         const uploadUrl = originSrc ? 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
           this.generateFileName('zhihu', originSrc)) : null;
-        image.setAttribute('src', uploadUrl ? uploadUrl : '');
+        $(image).attr('src', uploadUrl ? uploadUrl : '');
       }
 
-      for (const linkCard of parsedLinkCards) {
-        linkCard.setAttribute('target', 'linebreak'); // hack
+      for (const linkCard of parsedLinkCards.toArray()) {
+        $(linkCard).attr('target', 'linebreak'); // hack
       }
       turndownService.addRule('linkCard', {
         filter: 'a',
         replacement: (content, node) =>
           `[${content}](${node.href}) ${node.target==='linebreak' ? '\n\n' : ''}`,
       });
-      const articleContent = turndownService.turndown(parsedContent.toString());
+      turndownService.remove('noscript');
+      const articleContent = turndownService.turndown(parsedContent.html());
       return {
         title,
         cover: coverLocation,
