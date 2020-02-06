@@ -35,6 +35,7 @@
     "ipfs-http-client-lite": "^0.3.0",
     "ipfs-mini": "^1.1.5",
     "jwt-simple": "^0.5.5",
+    "markdown-article-to-html": "^1.0.1",
     "moment": "^2.24.0",
     "nanoid": "^2.1.1",
     "node-html-parser": "^1.2.1",
