@@ -55,6 +55,9 @@ module.exports = app => {
   // 单篇文章 (by 文章id, for 短链接)，统一返回格式示例
   router.get('/p/:id', passport.verify, controller.post.p);
 
+  // 通过文章ID获取 IPFS 信息
+  router.get('/p/:id/ipfs', passport.verify, controller.post.getIpfsById);
+
   // 文章哈希上链相关
   router.get('/p/:id/timeMachine/getLatestIpfsHash', passport.verify, controller.timemachine.getLatestIpfsHash);
   router.get('/p/:id/timeMachine/getArticleRivisionHistory/:size', passport.verify, controller.timemachine.getArticleRivisionHistory);
