@@ -10,7 +10,6 @@ const htmlparser = require('node-html-parser');
 const pretty = require('pretty');
 const turndown = require('turndown');
 const cheerio = require('cheerio'); // 如果是客户端渲染之类的 可以考虑用 puppeteer
-const puppeteer = require('puppeteer');
 class PostImportService extends Service {
 
   // 搬运时候上传图片
@@ -447,13 +446,12 @@ class PostImportService extends Service {
   }
   async handleWeibo(url) {
     try {
-      const browser = await puppeteer.launch();
-      const page = await browser.newPage();
-      await page.goto(url);
-      await page.waitFor('div.WB_editor_iframe_new');
-      const rawPage = await page.content();
-      await browser.close();
-      const $ = cheerio.load(rawPage);
+      const { data } = await axios({
+        url: 'http://headl3ss-par53r.smartsignature.io:7333/get-weibo',
+        method: 'post',
+        data: { url },
+      });
+      const $ = cheerio.load(data);
       const title = $('div.title').text();
       const parsedTitleImage = $('img');
       const parsedContent = $('div.WB_editor_iframe_new');
@@ -466,9 +464,11 @@ class PostImportService extends Service {
       }
       for (const image of parsedImages.toArray()) {
         const originSrc = $(image).attr('src');
-        const uploadUrl = 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
-          this.generateFileName('zhihu', originSrc));
-        $(image).attr('src', uploadUrl);
+        if (originSrc) {
+          const uploadUrl = 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
+            this.generateFileName('weibo', originSrc));
+          $(image).attr('src', uploadUrl);
+        }
       }
       const turndownService = new turndown();
       const articleContent = turndownService.turndown(parsedContent.html());
