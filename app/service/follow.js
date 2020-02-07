@@ -98,8 +98,8 @@ class FollowService extends Service {
 
       if (updateSuccess) {
         await this.app.redis.multi()
-          .lrem(`user:${user.id}:follow_list`, uid)
-          .lrem(`user:${uid}:follower_list`, user.id)
+          .lrem(`user:${user.id}:follow_list`, 1, uid)
+          .lrem(`user:${uid}:follower_list`, 1, user.id)
           .srem(`user:${user.id}:follow_set`, uid)
           .srem(`user:${uid}:follower_set`, user.id)
           .hdel(this.service.notification.userCounterKey(user.id), 'follow') // In case of following just a few seconds, showing a ghost notification
@@ -110,7 +110,7 @@ class FollowService extends Service {
       return 1;
 
     } catch (err) {
-      ctx.logger.error(err.sqlMessage);
+      ctx.logger.error(err);
       return 1;
     }
 
