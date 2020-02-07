@@ -128,7 +128,7 @@ class FollowService extends Service {
 
     const follows = await redis.llen(`user:${uid}:follow_list`);
     const followers = await redis.llen(`user:${uid}:follower_list`);
-    const followIds = await redis.lrange(`user:${uid}:follow_list`, (page - 1) * pagesize, pagesize);
+    const followIds = await redis.lrange(`user:${uid}:follow_list`, (page - 1) * pagesize, page * pagesize);
 
     const result = [];
 
@@ -173,7 +173,7 @@ class FollowService extends Service {
 
     const follows = await redis.llen(`user:${uid}:follow_list`);
     const followers = await redis.llen(`user:${uid}:follower_list`);
-    const followerIds = await redis.lrange(`user:${uid}:follower_list`, (page - 1) * pagesize, pagesize);
+    const followerIds = await redis.lrange(`user:${uid}:follower_list`, (page - 1) * pagesize, page * pagesize);
 
     const result = [];
 
