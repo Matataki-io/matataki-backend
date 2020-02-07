@@ -25,8 +25,7 @@ class PostController extends Controller {
   // 发布文章
   async publish() {
     const ctx = this.ctx;
-    const { author = '', title = '', content = '',
-      hash, data, // 即将用 data 取代 hash，取消前端上传到IPFS
+    const { author = '', title = '', content = '', data,
       fissionFactor = 2000, cover, is_original = 0, platform = 'eos',
       tags = '', commentPayPoint = 0, shortContent = null, cc_license = null } = ctx.request.body;
 
@@ -73,7 +72,7 @@ class PostController extends Controller {
     });
 
     // 添加文章到elastic search
-    // await this.service.search.importPost(id, ctx.user.id, title, articleContent);
+    await this.service.search.importPost(id, ctx.user.id, title, articleContent);
 
     if (tags) {
       let tag_arr = tags.split(',');
@@ -93,8 +92,7 @@ class PostController extends Controller {
   /* 目前没有判断ipfs hash是否是现在用户上传的文章，所以可能会伪造一个已有的hash */
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '',
-      hash, data, // will replace hash with data soon
+    const { signId, author = '', title = '', content = '', data,
       fissionFactor = 2000, cover,
       is_original = 0, tags = '', shortContent = null } = ctx.request.body;
 
