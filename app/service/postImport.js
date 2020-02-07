@@ -10,6 +10,7 @@ const htmlparser = require('node-html-parser');
 const pretty = require('pretty');
 const turndown = require('turndown');
 const cheerio = require('cheerio'); // 如果是客户端渲染之类的 可以考虑用 puppeteer
+const puppeteer = require('puppeteer');
 class PostImportService extends Service {
 
   // 搬运时候上传图片
@@ -441,6 +442,43 @@ class PostImportService extends Service {
 
     } catch (err) {
       this.logger.error('PostImportService:: handleZhihu: error:', err);
+      return null;
+    }
+  }
+  async handleWeibo(url) {
+    try {
+      const browser = await puppeteer.launch();
+      const page = await browser.newPage();
+      await page.goto(url);
+      await page.waitFor('div.WB_editor_iframe_new');
+      const rawPage = await page.content();
+      await browser.close();
+      const $ = cheerio.load(rawPage);
+      const title = $('div.title').text();
+      const parsedTitleImage = $('img');
+      const parsedContent = $('div.WB_editor_iframe_new');
+      const parsedImages = $('img', parsedContent);
+      let coverLocation = null;
+      if (parsedTitleImage) {
+        const originSrc = parsedTitleImage.attr('src');
+        coverLocation = await this.uploadArticleImage(originSrc,
+          this.generateFileName('weibo', originSrc));
+      }
+      for (const image of parsedImages.toArray()) {
+        const originSrc = $(image).attr('src');
+        const uploadUrl = 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
+          this.generateFileName('zhihu', originSrc));
+        $(image).attr('src', uploadUrl);
+      }
+      const turndownService = new turndown();
+      const articleContent = turndownService.turndown(parsedContent.html());
+      return {
+        title,
+        cover: coverLocation,
+        content: articleContent,
+      };
+    } catch (err) {
+      this.logger.error('PostImportService:: handleWeibo: error:', err);
       return null;
     }
   }
