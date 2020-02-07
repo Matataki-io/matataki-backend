@@ -32,7 +32,13 @@ class BaseController extends Controller {
   }
 
   get user() {
-    return this.ctx.session.user;
+    const copy = this.ctx.user;
+    const displayName = copy.nickname || copy.username;
+    const emailMask = str => str.replace(
+      /(?<=.)[^@\n](?=[^@\n]*?@)|(?:(?<=@.)|(?!^)\G(?=[^@\n]*$)).(?=.*\.)/gm,
+      '*');
+    // 如果displayName不是邮箱则不会被大马赛克
+    return { ...copy, displayName: emailMask(displayName) };
   }
 
   success(data) {

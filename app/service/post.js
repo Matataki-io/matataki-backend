@@ -41,7 +41,7 @@ class PostService extends Service {
     return parsedContent;
   }
 
-  async publish(data) {
+  async publish(data, { metadataHash, htmlHash }) {
     try {
       const result = await this.app.mysql.insert('posts', data);
 
@@ -61,7 +61,10 @@ class PostService extends Service {
 
         // 加积分
         await this.service.mining.publish(data.uid, result.insertId, ''); // todo；posts表增加ip，这里传进来ip
-
+        // 添加 IPFS 记录
+        await this.app.mysql.insert('post_ipfs',
+          { articleId: result.insertId, metadataHash, htmlHash }
+        );
         return result.insertId;
       }
     } catch (err) {
@@ -114,7 +117,7 @@ class PostService extends Service {
   async get(id) {
     const posts = await this.app.mysql.select('posts', {
       where: { id },
-      columns: [ 'id', 'hash', 'cover', 'uid', 'title', 'short_content', 'status', 'create_time', 'comment_pay_point', 'channel_id', 'require_buy' ], // todo：需要再增加
+      columns: [ 'id', 'hash', 'cover', 'uid', 'title', 'short_content', 'status', 'create_time', 'comment_pay_point', 'channel_id', 'require_buy ' ], // todo：需要再增加
     });
     if (posts && posts.length > 0) {
       return posts[0];

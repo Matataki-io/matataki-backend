@@ -6,6 +6,7 @@ const moment = require('moment');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
 // const sanitize = require('sanitize-html');
+const { articleToHtml } = require('markdown-article-to-html');
 class PostController extends Controller {
 
   constructor(ctx) {
@@ -28,12 +29,29 @@ class PostController extends Controller {
     const { author = '', title = '', content = '', data,
       fissionFactor = 2000, cover, is_original = 0, platform = 'eos',
       tags = '', commentPayPoint = 0, shortContent = null, cc_license = null } = ctx.request.body;
-
+    // 只清洗文章文本的标识
+    const articleContent = await this.service.post.wash(data.content);
+    // 设置短摘要
+    const short_content = shortContent || articleContent.substring(0, 300);
+    // 渲染html并上传
+    const renderedHtml = articleToHtml({
+      title,
+      author: {
+        nickname: this.user.displayName,
+        uid: ctx.user.id,
+        username: this.user.displayName,
+      },
+      description: short_content,
+      datePublished: new Date(),
+      markdown: data.content,
+    }, { minify: true });
     // 上传的data是json对象， 需要字符串化
-    const metadataHash = await this.service.post.ipfsUpload(JSON.stringify(data));
-    // @todo: 渲染html并上传
+    const [ metadataHash, htmlHash ] = await Promise.all([
+      this.service.post.ipfsUpload(JSON.stringify(data)),
+      this.service.post.ipfsUpload(renderedHtml),
+    ]);
     // 无 hash 则上传失败
-    if (!metadataHash) ctx.body = ctx.msg.ipfsUploadFailed;
+    if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
     ctx.logger.info('debug info', author, title, content, is_original);
 
     if (fissionFactor > 2000) {
@@ -47,11 +65,6 @@ class PostController extends Controller {
       ctx.body = ctx.msg.pointCommentSettingError;
       return;
     }
-
-    // 只清洗文章文本的标识
-    const articleContent = await this.service.post.wash(data.content);
-    // 设置短摘要
-    const short_content = shortContent || articleContent.substring(0, 300);
 
     const id = await ctx.service.post.publish({
       author,
@@ -69,7 +82,7 @@ class PostController extends Controller {
       short_content,
       comment_pay_point,
       cc_license,
-    });
+    }, { metadataHash, htmlHash });
 
     // 添加文章到elastic search
     await this.service.search.importPost(id, ctx.user.id, title, articleContent);
@@ -116,16 +129,31 @@ class PostController extends Controller {
       ctx.body = ctx.msg.notYourPost;
       return;
     }
-    const metadataHash = await this.service.post.ipfsUpload(JSON.stringify(data));
-    // @todo: 渲染html并上传
-    // 无 hash 则上传失败
-    if (!metadataHash) ctx.body = ctx.msg.ipfsUploadFailed;
-    ctx.logger.info('debug info', signId, author, title, content, is_original);
-
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(data.content);
 
     const short_content = shortContent || articleContent.substring(0, 300);
+    // 渲染html并上传
+    const renderedHtml = articleToHtml({
+      title,
+      author: {
+        nickname: this.user.displayName,
+        uid: ctx.user.id,
+        username: this.user.displayName,
+      },
+      description: short_content,
+      datePublished: new Date(),
+      markdown: data.content,
+    }, { minify: true });
+    // 上传的data是json对象， 需要字符串化
+    const [ metadataHash, htmlHash ] = await Promise.all([
+      this.service.post.ipfsUpload(JSON.stringify(data)),
+      this.service.post.ipfsUpload(renderedHtml),
+    ]);
+    // 无 hash 则上传失败
+    if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
+    ctx.logger.info('debug info', signId, author, title, content, is_original);
+
     let elaTitle = post.title;
     try {
       const conn = await this.app.mysql.beginTransaction();
@@ -164,6 +192,7 @@ class PostController extends Controller {
 
         // 修改 post 的 hash, title
         await conn.update('posts', updateRow, { where: { id: signId } });
+        await conn.insert('post_ipfs', { articleId: signId, metadataHash, htmlHash });
 
         let tag_arr = tags.split(',');
         tag_arr = tag_arr.filter(x => { return x !== ''; });
@@ -375,6 +404,14 @@ class PostController extends Controller {
 
     ctx.body = ctx.msg.success;
     ctx.body.data = post;
+  }
+
+  async getIpfsById() {
+    const { ctx } = this;
+    const { id } = ctx.params;
+    const records = await this.app.mysql.select('post_ipfs', { where: { articleId: id } });
+    ctx.body = records.length === 0 ? ctx.msg.failure : ctx.msg.success;
+    ctx.body.data = records;
   }
 
   // 获取当前用户查看文章的属性
