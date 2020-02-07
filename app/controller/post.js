@@ -594,10 +594,13 @@ class PostController extends Controller {
       x => this.service.postImport.handleMatters(x));
     const zhihuMatch = makeMatch(/https:\/\/zhuanlan\.zhihu\.com\/p\/\d+/,
       x => this.service.postImport.handleZhihu(x));
+    // 微博PC端文章
+    const weiboMatch = makeMatch(/https:\/\/weibo\.com\/ttarticle\/p\/show.+/,
+      x => this.service.postImport.handleWeibo(x));
 
     const result = await wechatMatch || await chainnewsMatch
       || await orangeMatch || await jianshuMatch || await gaojinMatch
-      || await mattersMatch || await zhihuMatch;
+      || await mattersMatch || await zhihuMatch || await weiboMatch;
 
     if (result === 1) {
       this.logger.info('PostController:: importer: Import article failed..', url);
