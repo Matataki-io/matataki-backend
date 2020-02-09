@@ -486,7 +486,7 @@ class PostImportService extends Service {
       const $ = cheerio.load(rawPage.data);
       const title = $('h2#activity-name').text().trim();
       const coverLocation = null;
-      const article = $('div#js-content');
+      const article = $('div#js_content');
       for (const image of $('img', article).toArray()) {
         const originSrc = $(image).attr('src');
         if (originSrc) {
