@@ -356,16 +356,20 @@ class PostImportService extends Service {
     suffix = suffix[suffix.length - 1];
     return `./uploads/today_${platform}_${new Date().valueOf()}.${suffix}`;
   }
+  async defaultRequest(url) {
+    const rawPage = await axios({
+      url,
+      method: 'get',
+      headers: {
+        Accept: 'text / html, application/ xhtml + xml, application/ xml; q = 0.9, image / webp, image / apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
+      },
+    });
+    return rawPage;
+  }
   async handleMatters(url) {
     try {
-      const rawPage = await axios({
-        url,
-        method: 'get',
-        headers: {
-          Accept: 'text / html, application/ xhtml + xml, application/ xml; q = 0.9, image / webp, image / apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
-        },
-      });
+      const rawPage = await this.defaultRequest(url);
       let { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
       title = title.replace(/\s*- Matters/, '');
       const $ = cheerio.load(rawPage.data);
@@ -395,14 +399,7 @@ class PostImportService extends Service {
 
   async handleZhihu(url) {
     try {
-      const rawPage = await axios({
-        url,
-        method: 'get',
-        headers: {
-          Accept: 'text / html, application/ xhtml + xml, application/ xml; q = 0.9, image / webp, image / apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
-        },
-      });
+      const rawPage = await this.defaultRequest(url);
       const { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
       const $ = cheerio.load(rawPage.data);
       const parsedContent = $('div.RichText.ztext.Post-RichText');
@@ -472,6 +469,33 @@ class PostImportService extends Service {
       }
       const turndownService = new turndown();
       const articleContent = turndownService.turndown(parsedContent.html());
+      return {
+        title,
+        cover: coverLocation,
+        content: articleContent,
+      };
+    } catch (err) {
+      this.logger.error('PostImportService:: handleWeibo: error:', err);
+      return null;
+    }
+  }
+  // handle Archive 获取archive.is的微信文章
+  async handleArchive(url) {
+    try {
+      const rawPage = await this.defaultRequest(url);
+      const $ = cheerio.load(rawPage.data);
+      const title = $('h2#activity-name').text().trim();
+      const coverLocation = null;
+      const article = $('div#js-content');
+      for (const image of $('img', article).toArray()) {
+        const originSrc = $(image).attr('src');
+        if (originSrc) {
+          const uploadUrl = 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
+            this.generateFileName('archive', originSrc));
+          $(image).attr('src', uploadUrl);
+        }
+      }
+      const articleContent = pretty(article.html());
       return {
         title,
         cover: coverLocation,

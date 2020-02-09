@@ -632,10 +632,13 @@ class PostController extends Controller {
     // 微博PC端文章
     const weiboMatch = makeMatch(/https:\/\/(www\.)?weibo\.com\/ttarticle\/p\/show.+/,
       x => this.service.postImport.handleWeibo(x));
+    const archiveMatch = makeMatch(/https:\/\/(www\.)?archive\.is\/.+/,
+      x => this.service.postImport.handleArchive(x));
 
     const result = await wechatMatch || await chainnewsMatch
       || await orangeMatch || await jianshuMatch || await gaojinMatch
-      || await mattersMatch || await zhihuMatch || await weiboMatch;
+      || await mattersMatch || await zhihuMatch || await weiboMatch
+      || await archiveMatch;
 
     if (result === 1) {
       this.logger.info('PostController:: importer: Import article failed..', url);
