@@ -632,7 +632,7 @@ class PostController extends Controller {
     // 微博PC端文章
     const weiboMatch = makeMatch(/https:\/\/(www\.)?weibo\.com\/ttarticle\/p\/show.+/,
       x => this.service.postImport.handleWeibo(x));
-    const archiveMatch = makeMatch(/https:\/\/(www\.)?archive\.is\/.+/,
+    const archiveMatch = makeMatch(/https?:\/\/(www\.)?archive\.is\/.+/,
       x => this.service.postImport.handleArchive(x));
 
     const result = await wechatMatch || await chainnewsMatch
