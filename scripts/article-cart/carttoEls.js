@@ -90,7 +90,7 @@ async function catcherPost(start = 0, end = null) {
     // 取内容失败， 多数是无效的ipfs哈希引起， 会掠过， 不会退出
     try {
       articleRawContent = await axios({
-        url: `https://api.smartsignature.io/post/ipfs/${currentHash}`,
+        url: `${config.apiServer}/post/ipfs/${currentHash}`,
         method: 'get',
         timeout: 3000,
       });
