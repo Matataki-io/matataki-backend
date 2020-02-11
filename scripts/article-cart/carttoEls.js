@@ -52,7 +52,7 @@ async function catcherPost(start = 0, end = null) {
 
   // 还是只拉取有效， 没有被删除的文章好了
   const articleCountQuery = await mysqlConnection.execute(
-    'SELECT COUNT(*) AS count FROM posts WHERE status = 0;'
+    'SELECT COUNT(*) AS count FROM posts WHERE status = 0 AND channel_id = 1;'
   );
 
   console.log(`There are ${articleCountQuery[0][0].count} articles here...`);
@@ -64,7 +64,7 @@ async function catcherPost(start = 0, end = null) {
     // 在某篇文章处卡断推出， 请重启脚本
     articleDetailQuery = await mysqlConnection.execute(
       'SELECT id, create_time, title, channel_id, hash '
-      + 'FROM posts WHERE status = 0 ORDER BY id DESC LIMIT ?, 1;',
+      + 'FROM posts WHERE status = 0 AND channel_id = 1 ORDER BY id DESC LIMIT ?, 1;',
       [ index ]
     );
     currentId = articleDetailQuery[0][0].id;
