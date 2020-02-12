@@ -5,10 +5,14 @@
 // 创建文章/用户index
 // node carttoEls.js create posts
 // node carttoEls.js create users
+// node carttoEls.js create shares
+// node carttoEls.js create tokens
 
 // 同步文章/用户数据
 // node carttoEls.js sync posts
 // node carttoEls.js sync users
+// node carttoEls.js sync shares
+// node carttoEls.js sync tokens
 // 也可以从顺序第多少个开始（第X个， 不是id为X）
 // node carttoEls.js sync posts 100
 // node carttoEls.js sync users 10
@@ -16,6 +20,8 @@
 // 删除index
 // node carttoEls.js delete posts
 // node carttoEls.js delete users
+// node carttoEls.js delete shares
+// node carttoEls.js delete tokens
 
 // 搜索
 // node carttoEls.js search posts 100001
@@ -190,6 +196,91 @@ async function catcherUser(start = 0, end = null) {
   }
 }
 
+async function catcherShare() {
+  // 创建MySQL连接
+  const mysqlConnection = await mysql.createPool({
+    host: config.mysql_host,
+    user: config.mysql_user,
+    password: config.mysql_password,
+    database: config.mysql_db,
+    // ssl: {},
+  });
+  // 创建Elastic连接
+  const elaClient = new elastic.Client({ node: config.elastic_address });
+
+  const result = await mysqlConnection.execute(
+    'SELECT * FROM posts WHERE status = 0 AND channel_id = 3;'
+  );
+
+  for (const item of result[0]) {
+    console.log('---- ---- ---- ---- ---- ---- ---- ----');
+    console.log(`sync share: ${item.name}`);
+    const { id, create_time, channel_id, short_content } = item;
+    const elaQuery = await elaClient.search({
+      index: config.indexShares,
+      q: `id:${id}`,
+    });
+    if (elaQuery.body.hits.hits.length !== 0) {
+      console.log(`Current share id ${id} already added...`);
+      continue;
+    }
+    await elaClient.index({
+      id,
+      index: config.indexShares,
+      body: {
+        id,
+        create_time,
+        channel_id,
+        content: short_content,
+      },
+    });
+  }
+}
+
+async function catcherToken() {
+  // 创建MySQL连接
+  const mysqlConnection = await mysql.createPool({
+    host: config.mysql_host,
+    user: config.mysql_user,
+    password: config.mysql_password,
+    database: config.mysql_db,
+    ssl: {},
+  });
+  // 创建Elastic连接
+  const elaClient = new elastic.Client({ node: config.elastic_address });
+
+  const result = await mysqlConnection.execute(
+    'SELECT * FROM minetokens WHERE `status` = 1;'
+  );
+
+  for (const item of result[0]) {
+    console.log('---- ---- ---- ---- ---- ---- ---- ----');
+    console.log(`sync token: ${item.name}`);
+    const { id, create_time, name, symbol, brief, introduction, contract_address } = item;
+    const elaQuery = await elaClient.search({
+      index: config.indexTokens,
+      q: `id:${id}`,
+    });
+    if (elaQuery.body.hits.hits.length !== 0) {
+      console.log(`Current token id ${id} already added...`);
+      continue;
+    }
+    await elaClient.index({
+      id,
+      index: config.indexTokens,
+      body: {
+        id,
+        create_time,
+        name,
+        symbol,
+        brief,
+        introduction,
+        contract_address,
+      },
+    });
+  }
+}
+
 // 看一看？
 async function performSearch(word) {
   const elaClient = new elastic.Client({ node: config.elastic_address });
@@ -318,6 +409,77 @@ async function createUs() {
   });
 }
 
+async function createShare() {
+  await axios({
+    url: `${config.elastic_address}/${config.indexShares}`,
+    method: 'PUT',
+    data: {
+      mappings: {
+        properties: {
+          id: {
+            type: 'long',
+          },
+          create_time: {
+            type: 'date',
+          },
+          channel_id: {
+            type: 'short',
+          },
+          content: {
+            type: 'text',
+            analyzer: 'ik_max_word',
+            search_analyzer: 'ik_smart',
+          },
+        },
+      },
+    },
+  });
+}
+
+async function createToken() {
+  await axios({
+    url: `${config.elastic_address}/${config.indexTokens}`,
+    method: 'PUT',
+    data: {
+      mappings: {
+        properties: {
+          id: {
+            type: 'long',
+          },
+          create_time: {
+            type: 'date',
+          },
+          name: {
+            type: 'text',
+            analyzer: 'ik_max_word',
+            search_analyzer: 'ik_max_word',
+          },
+          symbol: {
+            type: 'text',
+            analyzer: 'ik_smart',
+            search_analyzer: 'ik_smart',
+          },
+          brief: {
+            type: 'text',
+            analyzer: 'ik_max_word',
+            search_analyzer: 'ik_smart',
+          },
+          introduction: {
+            type: 'text',
+            analyzer: 'ik_max_word',
+            search_analyzer: 'ik_smart',
+          },
+          contract_address: {
+            type: 'text',
+            analyzer: 'ik_smart',
+            search_analyzer: 'ik_smart',
+          },
+        },
+      },
+    },
+  });
+}
+
 // 忘记它罢！
 async function deleteTb() {
   await axios({
@@ -329,6 +491,20 @@ async function deleteTb() {
 async function deleteUs() {
   await axios({
     url: `${config.elastic_address}/${config.indexUsers}`,
+    method: 'DELETE',
+  });
+}
+
+async function deleteShare() {
+  await axios({
+    url: `${config.elastic_address}/${config.indexShares}`,
+    method: 'DELETE',
+  });
+}
+
+async function deleteToken() {
+  await axios({
+    url: `${config.elastic_address}/${config.indexTokens}`,
     method: 'DELETE',
   });
 }
@@ -347,19 +523,31 @@ async function handle() {
     console.log('Run "node carttoEls.js search :word" to perform a search.');
     return 9;
   }
-  if (process.argv[2] === 'create') {
-    if (process.argv[3] === 'posts') {
+  const type = process.argv[2];
+  if (type === 'create') {
+    const space = process.argv[3];
+    if (space === 'posts') {
       await createTb();
-    } else if (process.argv[3] === 'users') {
+    } else if (space === 'users') {
       await createUs();
+    } else if (space === 'shares') {
+      await createShare();
+    } else if (space === 'tokens') {
+      await createToken();
     }
-  } else if (process.argv[2] === 'delete') {
-    if (process.argv[3] === 'posts') {
+  } else if (type === 'delete') {
+    const space = process.argv[3];
+    if (space === 'posts') {
       await deleteTb();
-    } else if (process.argv[3] === 'users') {
+    } else if (space === 'users') {
       await deleteUs();
+    } else if (space === 'shares') {
+      await deleteShare();
+    } else if (space === 'tokens') {
+      await deleteToken();
     }
-  } else if (process.argv[2] === 'sync') {
+  } else if (type === 'sync') {
+    const space = process.argv[3];
     // node carttoEls.js sync posts 0 9999
     if (process.argv.length < 4) {
       return 8;
@@ -378,17 +566,22 @@ async function handle() {
         endIndex = null;
       }
     }
-    if (process.argv[3] === 'posts') {
+    if (space === 'posts') {
       await catcherPost(startIndex, endIndex);
-    } else if (process.argv[3] === 'users') {
+    } else if (space === 'users') {
       await catcherUser(startIndex, endIndex);
+    } else if (space === 'shares') {
+      await catcherShare();
+    } else if (space === 'tokens') {
+      await catcherToken();
     }
-  } else if (process.argv[2] === 'search') {
+  } else if (type === 'search') {
     if (process.argv.length < 4) {
       return 6;
     }
     const area = process.argv[3];
     const keyword = process.argv[4];
+    // await performSearch(keyword);
     await search2(area, keyword);
   }
 }
