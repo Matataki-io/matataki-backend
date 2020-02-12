@@ -409,6 +409,15 @@ class PostController extends Controller {
   async getIpfsById() {
     const { ctx } = this;
     const { id } = ctx.params;
+    const post = await this.service.post.getById(id);
+
+    if (post.uid !== ctx.user.id) {
+      const permission = await this.hasPermission(post, ctx.user.id);
+      if (!permission) {
+        ctx.body = ctx.msg.postNoPermission;
+        return;
+      }
+    }
     const records = await this.app.mysql.select('post_ipfs', { where: { articleId: id } });
     ctx.body = records.length === 0 ? ctx.msg.failure : ctx.msg.success;
     ctx.body.data = records;
