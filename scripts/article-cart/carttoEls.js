@@ -45,7 +45,7 @@ async function catcherPost(start = 0, end = null) {
     user: config.mysql_user,
     password: config.mysql_password,
     database: config.mysql_db,
-    ssl: {},
+    // ssl: {},
   });
   // 创建Elastic连接
   const elaClient = new elastic.Client({ node: config.elastic_address });
@@ -63,7 +63,7 @@ async function catcherPost(start = 0, end = null) {
     console.log(`Current index ${index}`);
     // 在某篇文章处卡断推出， 请重启脚本
     articleDetailQuery = await mysqlConnection.execute(
-      'SELECT id, create_time, title, channel_id, hash '
+      'SELECT id, create_time, title, short_content, channel_id, hash, require_holdtokens, require_buy '
       + 'FROM posts WHERE status = 0 AND channel_id = 1 ORDER BY id DESC LIMIT ?, 1;',
       [ index ]
     );
@@ -86,27 +86,32 @@ async function catcherPost(start = 0, end = null) {
       continue;
     }
     console.log(`Current article id ${currentId} hash ${currentHash}`);
+    // 付费文章和免费文章
+    if (articleDetailQuery[0][0].require_holdtokens || articleDetailQuery[0][0].require_buy) {
+      console.log('Paid article！');
+      parsedContent = articleDetailQuery[0][0].short_content;
+    } else {
+      // 取内容失败， 多数是无效的ipfs哈希引起， 会掠过， 不会退出
+      try {
+        articleRawContent = await axios({
+          url: `${config.apiServer}/post/ipfs/${currentHash}`,
+          method: 'get',
+          timeout: 3000,
+        });
+      } catch (e) {
+        console.log(`Current article id ${currentId} has a broken hash... ignored...`);
+        console.log(e);
+        continue;
+      }
 
-    // 取内容失败， 多数是无效的ipfs哈希引起， 会掠过， 不会退出
-    try {
-      articleRawContent = await axios({
-        url: `${config.apiServer}/post/ipfs/${currentHash}`,
-        method: 'get',
-        timeout: 3000,
-      });
-    } catch (e) {
-      console.log(`Current article id ${currentId} has a broken hash... ignored...`);
-      console.log(e);
-      continue;
+      // ipfs获取出错， 可能为其中没有实际文本内容， 会掠过， 不会退出
+      if (articleRawContent.data.code !== 0) {
+        console.log(`Current article id ${currentId} wrong content structure... ignored...`);
+        continue;
+      }
+
+      parsedContent = await wash(articleRawContent.data.data.content);
     }
-
-    // ipfs获取出错， 可能为其中没有实际文本内容， 会掠过， 不会退出
-    if (articleRawContent.data.code !== 0) {
-      console.log(`Current article id ${currentId} wrong content structure... ignored...`);
-      continue;
-    }
-
-    parsedContent = await wash(articleRawContent.data.data.content);
     console.log(parsedContent.substring(0, 100));
 
     // 插入文章失败， 请重启脚本
