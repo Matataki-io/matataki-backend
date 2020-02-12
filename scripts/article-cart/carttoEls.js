@@ -45,7 +45,7 @@ async function catcherPost(start = 0, end = null) {
     user: config.mysql_user,
     password: config.mysql_password,
     database: config.mysql_db,
-    // ssl: {},
+    ssl: {},
   });
   // 创建Elastic连接
   const elaClient = new elastic.Client({ node: config.elastic_address });
