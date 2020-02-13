@@ -28,7 +28,10 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { author = '', title = '', content = '', data,
       fissionFactor = 2000, cover, is_original = 0, platform = 'eos',
-      tags = '', commentPayPoint = 0, shortContent = null, cc_license = null } = ctx.request.body;
+      tags = '', commentPayPoint = 0, shortContent = null, cc_license = null,
+      // 新字段，requireToken 和 requireBuy 对应老接口的 data
+      requireToken = null, requireBuy = null } = ctx.request.body;
+    const isEncrypt = Boolean(requireToken) || Boolean(requireBuy);
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(data.content);
     // 设置短摘要
@@ -83,6 +86,15 @@ class PostController extends Controller {
       comment_pay_point,
       cc_license,
     }, { metadataHash, htmlHash });
+
+    // 记录付费信息
+    if (requireToken) {
+      await this.service.post.addMineTokens(ctx.user.id, id, requireBuy);
+    }
+
+    if (requireBuy) {
+      await this.service.post.addPrices(ctx.user.id, id, requireBuy);
+    }
 
     // 添加文章到elastic search
     await this.service.search.importPost(id, ctx.user.id, title, articleContent);
