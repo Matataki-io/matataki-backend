@@ -1443,7 +1443,7 @@ class PostService extends Service {
       markdown = `${description}
 很抱歉这是一篇付费/持币阅读文章，内容已被加密。
 若需要阅读更多内容，请返回到 Matataki 查看原文`;
-      metadata = this.service.cryptography.encrypt(metadata);
+      metadata = JSON.stringify(this.service.cryptography.encrypt(metadata));
     }
 
     // 渲染html并上传
