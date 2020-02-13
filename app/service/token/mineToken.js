@@ -53,7 +53,6 @@ class MineTokenService extends Service {
     // es里添加新加入的fan票
     await this.service.search.importToken({
       id: result.insertId,
-      create_time,
       name,
       symbol,
       brief,

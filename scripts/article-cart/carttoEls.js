@@ -214,7 +214,7 @@ async function catcherShare() {
 
   for (const item of result[0]) {
     console.log('---- ---- ---- ---- ---- ---- ---- ----');
-    console.log(`sync share share: ${item.id}`);
+    console.log(`sync share id: ${item.id}`);
     const { id, create_time, channel_id, short_content } = item;
     const elaQuery = await elaClient.search({
       index: config.indexShares,

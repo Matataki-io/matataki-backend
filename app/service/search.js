@@ -479,8 +479,8 @@ class SearchService extends Service {
 
     return { count, list: tokenList };
   }
-  async importShare({ id, create_time, content }) {
-    this.logger.error('SearchService:: importShare: start ', { id, create_time, content });
+  async importShare({ id, content }) {
+    this.logger.error('SearchService:: importShare: start ', { id, content });
 
     const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
     try {
@@ -489,7 +489,7 @@ class SearchService extends Service {
         index: this.config.elasticsearch.indexShares,
         body: {
           id,
-          create_time,
+          create_time: moment(),
           channel_id: 3,
           content,
         },
@@ -499,8 +499,8 @@ class SearchService extends Service {
       return null;
     }
   }
-  async importToken({ id, create_time, name, symbol, brief, introduction, contract_address }) {
-    this.logger.error('SearchService:: importShare: start ', { id, create_time, name, symbol, brief, introduction, contract_address });
+  async importToken({ id, name, symbol, brief, introduction, contract_address }) {
+    this.logger.error('SearchService:: importToken: start ', { id, name, symbol, brief, introduction, contract_address });
 
     const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
     try {
@@ -509,7 +509,7 @@ class SearchService extends Service {
         index: this.config.elasticsearch.indexTokens,
         body: {
           id,
-          create_time,
+          create_time: moment(),
           name,
           symbol,
           brief,
@@ -518,7 +518,7 @@ class SearchService extends Service {
         },
       });
     } catch (err) {
-      this.logger.error('SearchService:: importPost: error ', err);
+      this.logger.error('SearchService:: importToken: error ', err);
       return null;
     }
   }
