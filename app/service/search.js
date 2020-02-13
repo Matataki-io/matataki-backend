@@ -388,7 +388,7 @@ class SearchService extends Service {
     }
 
     // 获取详情
-    const tokenList = await this.app.mysql.query(
+    const shareList = await this.app.mysql.query(
       `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
       b.nickname, b.avatar, 
       c.real_read_count AS \`read\`, c.likes 
@@ -402,10 +402,10 @@ class SearchService extends Service {
 
     // 填充高亮匹配信息
     for (let i = 0; i < list.length; i++) {
-      if (list[i].highlight.content) tokenList[i].short_content = list[i].highlight.content[0];
+      if (list[i].highlight.content) shareList[i].short_content = list[i].highlight.content[0];
     }
 
-    return { count, list: tokenList };
+    return { count, list: shareList };
   }
   async searchToken(keyword, page = 1, pagesize = 10) {
     let tokenQuery;
