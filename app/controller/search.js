@@ -87,6 +87,57 @@ class SearchController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
   }
+  async searchShare() {
+    const ctx = this.ctx;
+    const { word = 'smart', page = 1, pagesize = 10 } = ctx.query;
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    if (word.length > 50) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    // 记录搜索结果，type：4代表分享
+    await this.service.search.writeLog(word, 4);
+    const result = await this.service.search.searchShare(word, page, pagesize);
+
+    if (!result) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+
+  }
+
+  async searchToken() {
+    const ctx = this.ctx;
+    const { word = 'smart', page = 1, pagesize = 10 } = ctx.query;
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    if (word.length > 50) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    // 记录搜索结果，type：5代表token
+    await this.service.search.writeLog(word, 5);
+    const result = await this.service.search.searchToken(word, page, pagesize);
+
+    if (!result) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+
+  }
 
   async recommand() {
     const ctx = this.ctx;

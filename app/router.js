@@ -436,5 +436,8 @@ module.exports = app => {
   router.get('/share', passport.verify, controller.share.index);
   router.get('/share/:id', passport.verify, controller.share.show);
   router.get('/dev/score', passport.verify, controller.share.getHotArticle);
+
+  router.get('/search/token', passport.verify, controller.search.searchToken);
+  router.get('/search/share', passport.verify, controller.search.searchShare);
 };
 
