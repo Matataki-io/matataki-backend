@@ -36,6 +36,8 @@ class PostController extends Controller {
     const articleContent = await this.service.post.wash(data.content);
     // 设置短摘要
     const short_content = shortContent || articleContent.substring(0, 300);
+
+    // 如果是付费文章，IPFS 元数据里的内容均加密，生成的静态页面会提醒用户回到MTTK
     // 渲染html并上传
     const renderedHtml = articleToHtml({
       title,
@@ -763,21 +765,21 @@ class PostController extends Controller {
     ctx.body.data = await this.ctx.service.post.stats();
   }
 
-  // 持币阅读
+  // 持币阅读 - Disabled(Frank) 合并到 publish 和 edit 的 API
   async addMineTokens() {
     const ctx = this.ctx;
-    const { signId, tokens } = ctx.request.body;
-    if (!signId) {
-      ctx.body = ctx.msg.paramsError;
-      return;
-    }
+    // const { signId, tokens } = ctx.request.body;
+    // if (!signId) {
+    //   ctx.body = ctx.msg.paramsError;
+    //   return;
+    // }
 
-    const result = await ctx.service.post.addMineTokens(ctx.user.id, signId, tokens);
-    if (result === 0) {
-      ctx.body = ctx.msg.success;
-    } else {
-      ctx.body = ctx.msg.failure;
-    }
+    // const result = await ctx.service.post.addMineTokens(ctx.user.id, signId, tokens);
+    // if (result === 0) {
+    ctx.body = ctx.msg.success;
+    // } else {
+    //   ctx.body = ctx.msg.failure;
+    // }
   }
 
   async extractRefTitle() {
@@ -942,12 +944,13 @@ class PostController extends Controller {
     ctx.body.data = posts;
   }
 
-  // 设置订单价格
+  // 设置订单价格 - Disabled(Frank) 合并到 publish 和 edit 的 API
   async addPrices() {
     const ctx = this.ctx;
-    const signId = parseInt(ctx.params.id);
-    const { price } = ctx.request.body;
-    const result = await this.service.post.addPrices(ctx.user.id, signId, price);
+    // const signId = parseInt(ctx.params.id);
+    // const { price } = ctx.request.body;
+    // const result = await this.service.post.addPrices(ctx.user.id, signId, price);
+    const result = 0; // disable this
     ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
   }
 
