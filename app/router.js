@@ -439,5 +439,7 @@ module.exports = app => {
 
   router.get('/search/token', passport.verify, controller.search.searchToken);
   router.get('/search/share', passport.verify, controller.search.searchShare);
+  router.get('/search/post', passport.verify, controller.search.search);
+  router.get('/search/user', passport.verify, controller.search.searchUser);
 };
 

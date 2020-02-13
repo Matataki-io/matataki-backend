@@ -57,6 +57,44 @@ class SearchController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
   }
+  async searchPost() {
+    const ctx = this.ctx;
+    const { word = 'smart', page = 1, pagesize = 10 } = ctx.query;
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    if (word.length > 50) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    // 还需要记录搜索历史
+    await this.service.search.writeLog(word, 1);
+
+    let result;
+    // 带了文章id， 视为精确搜索
+    if (word[0] === '#') {
+      const postid = parseInt(word.substring(1, word.length));
+      if (isNaN(postid)) {
+        ctx.body = ctx.msg.paramsError;
+        return;
+      }
+      const post = await this.service.search.precisePost(postid);
+      // 精确搜索， 需要独立把文章摘要提取出来
+      result = post;
+    } else {
+      result = await this.service.search.searchPost(word, 1, page, pagesize);
+    }
+    if (!result) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
 
   // 搜索用户
   async searchUser() {
