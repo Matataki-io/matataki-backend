@@ -37,24 +37,10 @@ class PostController extends Controller {
     // 设置短摘要
     const short_content = shortContent || articleContent.substring(0, 300);
 
-    // 如果是付费文章，IPFS 元数据里的内容均加密，生成的静态页面会提醒用户回到MTTK
-    // 渲染html并上传
-    const renderedHtml = articleToHtml({
-      title,
-      author: {
-        nickname: this.user.displayName,
-        uid: ctx.user.id,
-        username: this.user.displayName,
-      },
+    const { metadataHash, htmlHash } = await this.service.post.uploadArticleToIpfs({
+      isEncrypt, data, title, displayName: this.user.displayName,
       description: short_content,
-      datePublished: new Date(),
-      markdown: data.content,
-    }, { minify: true });
-    // 上传的data是json对象， 需要字符串化
-    const [ metadataHash, htmlHash ] = await Promise.all([
-      this.service.post.ipfsUpload(JSON.stringify(data)),
-      this.service.post.ipfsUpload(renderedHtml),
-    ]);
+    });
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
     ctx.logger.info('debug info', author, title, content, is_original);
@@ -121,7 +107,11 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { signId, author = '', title = '', content = '', data,
       fissionFactor = 2000, cover,
-      is_original = 0, tags = '', shortContent = null } = ctx.request.body;
+      is_original = 0, tags = '', shortContent = null,
+      // 新字段，requireToken 和 requireBuy 对应老接口的 data
+      requireToken = null, requireBuy = null,
+    } = ctx.request.body;
+    const isEncrypt = Boolean(requireToken) || Boolean(requireBuy);
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -147,23 +137,10 @@ class PostController extends Controller {
     const articleContent = await this.service.post.wash(data.content);
 
     const short_content = shortContent || articleContent.substring(0, 300);
-    // 渲染html并上传
-    const renderedHtml = articleToHtml({
-      title,
-      author: {
-        nickname: this.user.displayName,
-        uid: ctx.user.id,
-        username: this.user.displayName,
-      },
+    const { metadataHash, htmlHash } = await this.service.post.uploadArticleToIpfs({
+      isEncrypt, data, title, displayName: this.user.displayName,
       description: short_content,
-      datePublished: new Date(),
-      markdown: data.content,
-    }, { minify: true });
-    // 上传的data是json对象， 需要字符串化
-    const [ metadataHash, htmlHash ] = await Promise.all([
-      this.service.post.ipfsUpload(JSON.stringify(data)),
-      this.service.post.ipfsUpload(renderedHtml),
-    ]);
+    });
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
     ctx.logger.info('debug info', signId, author, title, content, is_original);
@@ -218,6 +195,15 @@ class PostController extends Controller {
         await conn.rollback();
         ctx.body = ctx.msg.failure;
         return;
+      }
+
+      // 记录付费信息
+      if (requireToken) {
+        await this.service.post.addMineTokens(ctx.user.id, signId, requireBuy);
+      }
+
+      if (requireBuy) {
+        await this.service.post.addPrices(ctx.user.id, signId, requireBuy);
       }
 
       // await updateTimeMachine;

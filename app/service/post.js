@@ -8,6 +8,8 @@ const moment = require('moment');
 const fs = require('fs');
 const removemd = require('remove-markdown');
 // const IpfsHttpClientLite = require('ipfs-http-client-lite');
+const { articleToHtml } = require('markdown-article-to-html');
+
 
 class PostService extends Service {
 
@@ -1430,6 +1432,38 @@ class PostService extends Service {
     });
 
     return affectedRows === 1;
+  }
+
+  async uploadArticleToIpfs({
+    title, description, displayName, data, isEncrypt = false }) {
+    let markdown = data.content;
+    let metadata = JSON.stringify(data);
+    // 如果需要加密，则替换渲染HTML文章内容
+    if (isEncrypt) {
+      markdown = `${description}
+很抱歉这是一篇付费/持币阅读文章，内容已被加密。
+若需要阅读更多内容，请返回到 Matataki 查看原文`;
+      metadata = this.service.cryptography.encrypt(metadata);
+    }
+
+    // 渲染html并上传
+    const renderedHtml = articleToHtml({
+      title,
+      author: {
+        nickname: displayName,
+        uid: this.ctx.user.id,
+        username: displayName,
+      },
+      description,
+      datePublished: new Date(),
+      markdown,
+    });
+    // 上传的data是json对象， 需要字符串化
+    const [ metadataHash, htmlHash ] = await Promise.all([
+      this.ipfsUpload(metadata),
+      this.ipfsUpload(renderedHtml),
+    ]);
+    return { metadataHash, htmlHash };
   }
 
 }
