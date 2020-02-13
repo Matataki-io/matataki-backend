@@ -10,6 +10,7 @@ class PostScore extends Subscription {
     };
   }
   async subscribe() {
+    if (this.ctx.app.config.isDebug) return;
     const postList = await this.app.redis.zrange('post:score:filter:1', 0, -1, 'WITHSCORES');
     const shareList = await this.app.redis.zrange('post:score:filter:3', 0, -1, 'WITHSCORES');
     const postListLen = postList.length;

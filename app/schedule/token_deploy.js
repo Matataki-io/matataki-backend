@@ -10,6 +10,7 @@ class TokenDeploy extends Subscription {
   }
 
   async subscribe() {
+    if (this.ctx.app.config.isDebug) return;
     this.logger.info('Running TokenDeploy', new Date().toLocaleString());
     const { mysql } = this.app;
     const issuingTokens = await mysql.select('assets_minetokens_log', {

@@ -10,6 +10,7 @@ class CacheUpdater extends Subscription {
   }
 
   async subscribe() {
+    if (this.ctx.app.config.isDebug) return;
     const { mysql, redis } = this.app;
 
     const pipeline = redis.multi();

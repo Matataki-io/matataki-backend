@@ -12,6 +12,7 @@ class PostScore extends Subscription {
   }
 
   async subscribe() {
+    if (this.ctx.app.config.isDebug) return;
     this.logger.info('Running:schedule calculate_hot_score');
     /*
     -- 计算热度积分
