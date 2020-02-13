@@ -720,9 +720,14 @@ class PostController extends Controller {
     const catchRequest = await this.service.post.ipfsCatch(hash);
 
     if (catchRequest) {
+      let data = JSON.parse(catchRequest.toString());
+      if (data.iv) {
+        // 是加密的数据，开始解密
+        data = JSON.parse(this.service.cryptography.decrypt(data));
+      }
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
-      ctx.body.data = JSON.parse(catchRequest.toString());
+      ctx.body.data = data;
       return;
     }
 
