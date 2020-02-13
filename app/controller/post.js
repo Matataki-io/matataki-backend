@@ -6,7 +6,6 @@ const moment = require('moment');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
 // const sanitize = require('sanitize-html');
-const { articleToHtml } = require('markdown-article-to-html');
 class PostController extends Controller {
 
   constructor(ctx) {
@@ -31,7 +30,8 @@ class PostController extends Controller {
       tags = '', commentPayPoint = 0, shortContent = null, cc_license = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
       requireToken = null, requireBuy = null } = ctx.request.body;
-    const isEncrypt = Boolean(requireToken) || Boolean(requireBuy);
+    const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
+
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(data.content);
     // 设置短摘要
@@ -43,7 +43,7 @@ class PostController extends Controller {
     });
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
-    ctx.logger.info('debug info', author, title, content, is_original);
+    ctx.logger.info('debug info', title, isEncrypt);
 
     if (fissionFactor > 2000) {
       ctx.body = ctx.msg.postPublishParamsError; // msg: 'fissionFactor should >= 2000',
@@ -111,7 +111,7 @@ class PostController extends Controller {
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
       requireToken = null, requireBuy = null,
     } = ctx.request.body;
-    const isEncrypt = Boolean(requireToken) || Boolean(requireBuy);
+    const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 编辑的时候，signId需要带上
     if (!signId) {
