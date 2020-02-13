@@ -3588,3 +3588,29 @@ const folderOption = {
 ```
 
 #### 分享详情
+
+### ES搜索
+* 统一请求方法： GET
+* 统一请求参数：
+  - word
+  - page = 1
+  - pagesize = 10
+* 统一返回json: 
+```
+{
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "count": 0,
+        "list": []
+    }
+}
+```
+#### 搜索文章
+url: /search/post
+#### 搜索用户
+url: /search/user
+#### 搜索分享
+url: /search/share
+#### 搜索Fan票
+url: /search/token
