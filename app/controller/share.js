@@ -51,8 +51,8 @@ class ShareController extends Controller {
 
     this.logger.info('controller.share id', id);
 
-    // 添加文章到elastic search
-    // await this.service.search.importPost(id, ctx.user.id, title, '');
+    // 添加分享到elastic search
+    await this.service.search.importShare({ id, create_time: now, content });
 
     if (id > 0) {
       ctx.body = ctx.msg.success;

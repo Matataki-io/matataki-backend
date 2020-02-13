@@ -45,10 +45,21 @@ class MineTokenService extends Service {
     const sql = 'INSERT INTO minetokens(uid, name, symbol, decimals, total_supply, create_time, status, logo, brief, introduction) '
       //                      ⬇️⬅️ 故意把 Status 设为 0，合约部署成功了 worker 会把它设置回 1 (active)
       + 'SELECT ?,?,?,?,0,?,0,?,?,? FROM DUAL WHERE NOT EXISTS(SELECT 1 FROM minetokens WHERE uid=? OR symbol=?);';
+    const create_time = moment().format('YYYY-MM-DD HH:mm:ss');
     const result = await this.app.mysql.query(sql,
-      [ userId, name, symbol, decimals, moment().format('YYYY-MM-DD HH:mm:ss'), logo, brief, introduction, userId, symbol ]);
+      [ userId, name, symbol, decimals, create_time, logo, brief, introduction, userId, symbol ]);
     await this.emitIssueEvent(userId, result.insertId, null, txHash);
     await this._mint(result.insertId, userId, initialSupply, null, null);
+    // es里添加新加入的fan票
+    await this.service.search.importToken({
+      id: result.insertId,
+      create_time,
+      name,
+      symbol,
+      brief,
+      introduction,
+      contract_address: txHash,
+    });
     return result.insertId;
   }
 

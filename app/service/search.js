@@ -479,6 +479,49 @@ class SearchService extends Service {
 
     return { count, list: tokenList };
   }
+  async importShare({ id, create_time, content }) {
+    this.logger.error('SearchService:: importShare: start ', { id, create_time, content });
+
+    const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
+    try {
+      await elaClient.index({
+        id,
+        index: this.config.elasticsearch.indexShares,
+        body: {
+          id,
+          create_time,
+          channel_id: 3,
+          content,
+        },
+      });
+    } catch (err) {
+      this.logger.error('SearchService:: importPost: error ', err);
+      return null;
+    }
+  }
+  async importToken({ id, create_time, name, symbol, brief, introduction, contract_address }) {
+    this.logger.error('SearchService:: importShare: start ', { id, create_time, name, symbol, brief, introduction, contract_address });
+
+    const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
+    try {
+      await elaClient.index({
+        id,
+        index: this.config.elasticsearch.indexTokens,
+        body: {
+          id,
+          create_time,
+          name,
+          symbol,
+          brief,
+          introduction,
+          contract_address,
+        },
+      });
+    } catch (err) {
+      this.logger.error('SearchService:: importPost: error ', err);
+      return null;
+    }
+  }
 }
 
 module.exports = SearchService;
