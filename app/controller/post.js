@@ -77,7 +77,7 @@ class PostController extends Controller {
 
     // 记录付费信息
     if (requireToken) {
-      await this.service.post.addMineTokens(ctx.user.id, id, requireBuy);
+      await this.service.post.addMineTokens(ctx.user.id, id, requireToken);
     }
 
     if (requireBuy) {
@@ -199,7 +199,7 @@ class PostController extends Controller {
 
       // 记录付费信息
       if (requireToken) {
-        await this.service.post.addMineTokens(ctx.user.id, signId, requireBuy);
+        await this.service.post.addMineTokens(ctx.user.id, signId, requireToken);
       }
 
       if (requireBuy) {
