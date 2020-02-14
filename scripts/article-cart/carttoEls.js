@@ -414,13 +414,13 @@ async function createUs() {
             type: 'text',
             analyzer: 'ik_max_word',
             search_analyzer: 'ik_max_word',
-            // fields: {
-            //   english: {
-            //     type: 'text',
-            //     analyzer: 'my_analyzer',
-            //     search_analyzer: 'ik_max_word',
-            //   },
-            // },
+            fields: {
+              english: {
+                type: 'text',
+                analyzer: 'my_analyzer',
+                search_analyzer: 'ik_max_word',
+              },
+            },
           },
           username: {
             type: 'text',
