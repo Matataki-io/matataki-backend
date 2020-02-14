@@ -1,5 +1,7 @@
 'use strict';
 const IPFS = require('ipfs-mini');
+const axios = require('axios');
+const FormData = require('form-data');
 const Service = require('egg').Service;
 
 class ipfs extends Service {
@@ -35,6 +37,20 @@ class ipfs extends Service {
         }
       });
     });
+  }
+  async uploadToAws(file) {
+    const { username, password } = this.config.awsIpfs;
+    const fd = new FormData();
+    fd.append('', file);
+    try {
+      const { data } = await axios.post('https://ipfs.smartsignature.io/api/v0/add', fd, {
+        auth: { username, password },
+        headers: fd.getHeaders(),
+      });
+      return data.Hash;
+    } catch (error) {
+      this.logger.info('uploadToAws failed', error);
+    }
   }
 }
 
