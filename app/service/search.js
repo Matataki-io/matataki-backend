@@ -21,7 +21,7 @@ class SearchService extends Service {
   }
 
   async searchPost(keyword, channelId = null, page = 1, pagesize = 10) {
-    this.logger.info('SearchService:: Search for', keyword);
+    this.logger.info('SearchService:: SearchPost for', keyword);
     let postQuery;
     const elasticClient = new elastic.Client({ node: this.config.elasticsearch.host });
     const searchProject = {
@@ -113,9 +113,12 @@ class SearchService extends Service {
     for (let hindex = 0; hindex < postQuery.body.hits.hits.length; hindex += 1) {
       postids.push(postQuery.body.hits.hits[hindex]._source.id);
     }
+    this.logger.info('SearchService:: SearchPost ids', postids);
 
     // 传统的获取文章列表方法
     let postList = await this.service.post.getPostList(postids, { short_content: true });
+
+    this.logger.info('SearchService:: SearchPost postList', postList);
 
     // 再度排序
     postList = postList.sort((a, b) => {
