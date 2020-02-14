@@ -156,7 +156,14 @@ class SearchService extends Service {
         query: {
           bool: {
             should: [
-              { match: { nickname: keyword } },
+              // { match: { nickname: keyword } },
+              {
+                multi_match: {
+                  query: keyword,
+                  fields: [ 'nickname', 'nickname.english' ],
+                  type: 'most_fields',
+                },
+              },
               { match: { username: keyword } },
             ],
           },
@@ -164,6 +171,7 @@ class SearchService extends Service {
         highlight: {
           fields: {
             nickname: {},
+            'nickname.english': {},
             username: {},
           },
         },
@@ -176,13 +184,19 @@ class SearchService extends Service {
       this.logger.error('SearchService:: SearchUser: error: ', err);
       return null;
     }
+    // return userQuery;
 
     const userids = [];
     const count = userQuery.body.hits.total.value;
+    const list = userQuery.body.hits.hits;
 
     // 生成userid列表
-    for (let uindex = 0; uindex < userQuery.body.hits.hits.length; uindex += 1) {
-      userids.push(userQuery.body.hits.hits[uindex]._source.id);
+    for (let i = 0; i < list.length; i++) {
+      userids.push(list[i]._source.id);
+    }
+
+    if (userids.length === 0) {
+      return { count: 0, list: [] };
     }
 
     // 获取详情
@@ -194,14 +208,11 @@ class SearchService extends Service {
     });
 
     // 填充高亮匹配信息
-    for (let uindex = 0; uindex < userQuery.body.hits.hits.length; uindex += 1) {
-      if (userQuery.body.hits.hits[uindex].highlight.nickname) {
-        userList[uindex].nickname = userQuery.body.hits.hits[uindex].highlight.nickname[0];
-      }
+    for (let i = 0; i < list.length; i += 1) {
+      if (list[i].highlight['nickname.english']) userList[i].nickname = list[i].highlight['nickname.english'][0];
+      if (list[i].highlight.nickname) userList[i].nickname = list[i].highlight.nickname[0];
 
-      if (userQuery.body.hits.hits[uindex].highlight.username) {
-        userList[uindex].username = userQuery.body.hits.hits[uindex].highlight.username[0];
-      }
+      if (list[i].highlight.username) userList[i].username = list[i].highlight.username[0];
     }
 
     return { count, list: userList };
