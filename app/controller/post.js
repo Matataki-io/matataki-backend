@@ -25,7 +25,7 @@ class PostController extends Controller {
   // 发布文章
   async publish() {
     const ctx = this.ctx;
-    const { author = '', title = '', content = '', data,
+    const { author = '', title = '', data,
       fissionFactor = 2000, cover, is_original = 0, platform = 'eos',
       tags = '', commentPayPoint = 0, shortContent = null, cc_license = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
@@ -80,8 +80,9 @@ class PostController extends Controller {
       await this.service.post.addMineTokens(ctx.user.id, id, requireToken);
     }
 
-    if (requireBuy) {
-      await this.service.post.addPrices(ctx.user.id, id, requireBuy);
+    // 超过 0 元才算数，0元则无视
+    if (requireBuy && requireBuy.price > 0) {
+      await this.service.post.addPrices(ctx.user.id, id, requireBuy.price);
     }
 
     // 添加文章到elastic search
@@ -202,8 +203,11 @@ class PostController extends Controller {
         await this.service.post.addMineTokens(ctx.user.id, signId, requireToken);
       }
 
-      if (requireBuy) {
-        await this.service.post.addPrices(ctx.user.id, signId, requireBuy);
+      // 超过 0 元才算数，0元则无视
+      if (requireBuy && requireBuy.price > 0) {
+        await this.service.post.addPrices(ctx.user.id, signId, requireBuy.price);
+      } else {
+        await this.service.post.delPrices(ctx.user.id, signId);
       }
 
       // await updateTimeMachine;
