@@ -385,6 +385,23 @@ async function createUs() {
     url: `${config.elastic_address}/${config.indexUsers}`,
     method: 'PUT',
     data: {
+      settings: {
+        analysis: {
+          analyzer: {
+            my_analyzer: {
+              tokenizer: 'my_tokenizer',
+            },
+          },
+          tokenizer: {
+            my_tokenizer: {
+              type: 'edge_ngram',
+              min_gram: 1,
+              max_gram: 10,
+              token_chars: [ 'letter', 'digit' ],
+            },
+          },
+        },
+      },
       mappings: {
         properties: {
           id: {
@@ -397,10 +414,17 @@ async function createUs() {
             type: 'text',
             analyzer: 'ik_max_word',
             search_analyzer: 'ik_max_word',
+            // fields: {
+            //   english: {
+            //     type: 'text',
+            //     analyzer: 'my_analyzer',
+            //     search_analyzer: 'ik_max_word',
+            //   },
+            // },
           },
           username: {
             type: 'text',
-            analyzer: 'ik_max_word',
+            analyzer: 'my_analyzer',
             search_analyzer: 'ik_max_word',
           },
         },
@@ -441,6 +465,23 @@ async function createToken() {
     url: `${config.elastic_address}/${config.indexTokens}`,
     method: 'PUT',
     data: {
+      settings: {
+        analysis: {
+          analyzer: {
+            my_analyzer: {
+              tokenizer: 'my_tokenizer',
+            },
+          },
+          tokenizer: {
+            my_tokenizer: {
+              type: 'edge_ngram',
+              min_gram: 1,
+              max_gram: 10,
+              token_chars: [ 'letter', 'digit' ],
+            },
+          },
+        },
+      },
       mappings: {
         properties: {
           id: {
@@ -456,8 +497,8 @@ async function createToken() {
           },
           symbol: {
             type: 'text',
-            analyzer: 'ik_max_word',
-            search_analyzer: 'ik_max_word',
+            analyzer: 'my_analyzer',
+            search_analyzer: 'my_analyzer',
           },
           brief: {
             type: 'text',
