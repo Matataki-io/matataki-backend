@@ -118,7 +118,7 @@ class SearchService extends Service {
     // 传统的获取文章列表方法
     let postList = await this.service.post.getPostList(postids, { short_content: true });
 
-    this.logger.info('SearchService:: SearchPost postList', postList);
+    this.logger.info('SearchService:: SearchPost postList.length', postList.length);
 
     // 再度排序
     postList = postList.sort((a, b) => {
