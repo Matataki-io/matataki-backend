@@ -694,8 +694,15 @@ class PostService extends Service {
         id: row.tid, name: row.name, type: row.type,
       });
     }
-
-    return { count: amount[0].count, list: posts };
+    // Frank - 这里要展开屏蔽邮箱地址的魔法了
+    const emailMask = str => str.replace(
+      /(?<=.)[^@\n](?=[^@\n]*?@)|(?:(?<=@.)|(?!^)\G(?=[^@\n]*$)).(?=.*\.)/gm,
+      '*');
+    const list = posts.map(post => {
+      const author = emailMask(post.author);
+      return { ...post, author };
+    });
+    return { count: amount[0].count, list };
   }
 
   // (new format)(count-list格式)
