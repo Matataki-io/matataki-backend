@@ -6,7 +6,6 @@ const moment = require('moment');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
 // const sanitize = require('sanitize-html');
-const { articleToHtml } = require('markdown-article-to-html');
 class PostController extends Controller {
 
   constructor(ctx) {
@@ -26,33 +25,25 @@ class PostController extends Controller {
   // 发布文章
   async publish() {
     const ctx = this.ctx;
-    const { author = '', title = '', content = '', data,
+    const { author = '', title = '', data,
       fissionFactor = 2000, cover, is_original = 0, platform = 'eos',
-      tags = '', commentPayPoint = 0, shortContent = null, cc_license = null } = ctx.request.body;
+      tags = '', commentPayPoint = 0, shortContent = null, cc_license = null,
+      // 新字段，requireToken 和 requireBuy 对应老接口的 data
+      requireToken = null, requireBuy = null } = ctx.request.body;
+    const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
+
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(data.content);
     // 设置短摘要
     const short_content = shortContent || articleContent.substring(0, 300);
-    // 渲染html并上传
-    const renderedHtml = articleToHtml({
-      title,
-      author: {
-        nickname: this.user.displayName,
-        uid: ctx.user.id,
-        username: this.user.displayName,
-      },
+
+    const { metadataHash, htmlHash } = await this.service.post.uploadArticleToIpfs({
+      isEncrypt, data, title, displayName: this.user.displayName,
       description: short_content,
-      datePublished: new Date(),
-      markdown: data.content,
-    }, { minify: true });
-    // 上传的data是json对象， 需要字符串化
-    const [ metadataHash, htmlHash ] = await Promise.all([
-      this.service.post.ipfsUpload(JSON.stringify(data)),
-      this.service.post.ipfsUpload(renderedHtml),
-    ]);
+    });
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
-    ctx.logger.info('debug info', author, title, content, is_original);
+    ctx.logger.info('debug info', title, isEncrypt);
 
     if (fissionFactor > 2000) {
       ctx.body = ctx.msg.postPublishParamsError; // msg: 'fissionFactor should >= 2000',
@@ -84,6 +75,16 @@ class PostController extends Controller {
       cc_license,
     }, { metadataHash, htmlHash });
 
+    // 记录付费信息
+    if (requireToken) {
+      await this.service.post.addMineTokens(ctx.user.id, id, requireToken);
+    }
+
+    // 超过 0 元才算数，0元则无视
+    if (requireBuy && requireBuy.price > 0) {
+      await this.service.post.addPrices(ctx.user.id, id, requireBuy.price);
+    }
+
     // 添加文章到elastic search
     await this.service.search.importPost(id, ctx.user.id, title, articleContent);
 
@@ -107,7 +108,11 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { signId, author = '', title = '', content = '', data,
       fissionFactor = 2000, cover,
-      is_original = 0, tags = '', shortContent = null } = ctx.request.body;
+      is_original = 0, tags = '', shortContent = null,
+      // 新字段，requireToken 和 requireBuy 对应老接口的 data
+      requireToken = null, requireBuy = null,
+    } = ctx.request.body;
+    const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -133,23 +138,10 @@ class PostController extends Controller {
     const articleContent = await this.service.post.wash(data.content);
 
     const short_content = shortContent || articleContent.substring(0, 300);
-    // 渲染html并上传
-    const renderedHtml = articleToHtml({
-      title,
-      author: {
-        nickname: this.user.displayName,
-        uid: ctx.user.id,
-        username: this.user.displayName,
-      },
+    const { metadataHash, htmlHash } = await this.service.post.uploadArticleToIpfs({
+      isEncrypt, data, title, displayName: this.user.displayName,
       description: short_content,
-      datePublished: new Date(),
-      markdown: data.content,
-    }, { minify: true });
-    // 上传的data是json对象， 需要字符串化
-    const [ metadataHash, htmlHash ] = await Promise.all([
-      this.service.post.ipfsUpload(JSON.stringify(data)),
-      this.service.post.ipfsUpload(renderedHtml),
-    ]);
+    });
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
     ctx.logger.info('debug info', signId, author, title, content, is_original);
@@ -204,6 +196,18 @@ class PostController extends Controller {
         await conn.rollback();
         ctx.body = ctx.msg.failure;
         return;
+      }
+
+      // 记录付费信息
+      if (requireToken) {
+        await this.service.post.addMineTokens(ctx.user.id, signId, requireToken);
+      }
+
+      // 超过 0 元才算数，0元则无视
+      if (requireBuy && requireBuy.price > 0) {
+        await this.service.post.addPrices(ctx.user.id, signId, requireBuy.price);
+      } else {
+        await this.service.post.delPrices(ctx.user.id, signId);
       }
 
       // await updateTimeMachine;
@@ -720,9 +724,14 @@ class PostController extends Controller {
     const catchRequest = await this.service.post.ipfsCatch(hash);
 
     if (catchRequest) {
+      let data = JSON.parse(catchRequest.toString());
+      if (data.iv) {
+        // 是加密的数据，开始解密
+        data = JSON.parse(this.service.cryptography.decrypt(data));
+      }
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
-      ctx.body.data = JSON.parse(catchRequest.toString());
+      ctx.body.data = data;
       return;
     }
 
@@ -751,21 +760,21 @@ class PostController extends Controller {
     ctx.body.data = await this.ctx.service.post.stats();
   }
 
-  // 持币阅读
+  // 持币阅读 - Disabled(Frank) 合并到 publish 和 edit 的 API
   async addMineTokens() {
     const ctx = this.ctx;
-    const { signId, tokens } = ctx.request.body;
-    if (!signId) {
-      ctx.body = ctx.msg.paramsError;
-      return;
-    }
+    // const { signId, tokens } = ctx.request.body;
+    // if (!signId) {
+    //   ctx.body = ctx.msg.paramsError;
+    //   return;
+    // }
 
-    const result = await ctx.service.post.addMineTokens(ctx.user.id, signId, tokens);
-    if (result === 0) {
-      ctx.body = ctx.msg.success;
-    } else {
-      ctx.body = ctx.msg.failure;
-    }
+    // const result = await ctx.service.post.addMineTokens(ctx.user.id, signId, tokens);
+    // if (result === 0) {
+    ctx.body = ctx.msg.success;
+    // } else {
+    //   ctx.body = ctx.msg.failure;
+    // }
   }
 
   async extractRefTitle() {
@@ -930,12 +939,13 @@ class PostController extends Controller {
     ctx.body.data = posts;
   }
 
-  // 设置订单价格
+  // 设置订单价格 - Disabled(Frank) 合并到 publish 和 edit 的 API
   async addPrices() {
     const ctx = this.ctx;
-    const signId = parseInt(ctx.params.id);
-    const { price } = ctx.request.body;
-    const result = await this.service.post.addPrices(ctx.user.id, signId, price);
+    // const signId = parseInt(ctx.params.id);
+    // const { price } = ctx.request.body;
+    // const result = await this.service.post.addPrices(ctx.user.id, signId, price);
+    const result = 0; // disable this
     ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
   }
 
