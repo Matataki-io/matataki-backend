@@ -31,7 +31,10 @@ module.exports = app => {
   router.post('/login/account', passport.verify, controller.auth.accountLogin);
   // 微信登录
   router.post('/login/weixin', passport.verify, controller.auth.weixinLogin);
+  // telegram登录
   router.post('/login/telegram', passport.verify, controller.auth.telegramAuth);
+  // twitter登录
+  router.post('/login/twitter', passport.verify, controller.auth.twitterAuth);
 
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
