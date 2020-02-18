@@ -771,7 +771,6 @@ class MineTokenService extends Service {
     });
 
     return {
-      sql,
       count: results[1][0].count,
       list: await this.service.post.getByPostIds(results[0].map(row => row.id)),
     };
