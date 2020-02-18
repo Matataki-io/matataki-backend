@@ -704,6 +704,77 @@ class PostService extends Service {
     });
     return { count: amount[0].count, list };
   }
+  async getByPostIds(postids = []) {
+    if (postids === null || postids.length <= 0) {
+      return {
+        count: 0,
+        list: [],
+      };
+    }
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
+      b.nickname, b.avatar, 
+      c.real_read_count AS \`read\`, c.likes,
+
+      t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
+      t7.id as token_id, t6.amount as token_amount, t7.name as token_name, t7.symbol as token_symbol, t7.decimals  as token_decimals
+
+      FROM posts a
+      LEFT JOIN users b ON a.uid = b.id 
+      LEFT JOIN post_read_count c ON a.id = c.post_id 
+
+      LEFT JOIN product_prices t5
+      ON a.id = t5.sign_id
+      LEFT JOIN post_minetokens t6
+      ON a.id = t6.sign_id
+      LEFT JOIN minetokens t7
+      ON t7.id = t6.token_id 
+
+      WHERE a.id IN (:postids)
+      ORDER BY FIELD(a.id, :postids);`;
+
+    const queryResult = await this.app.mysql.query(
+      sql,
+      { postids }
+    );
+
+    const posts = queryResult;
+
+    if (posts.length === 0) {
+      return { count: 0, list: [] };
+    }
+
+    const len = posts.length;
+    const id2posts = {};
+    for (let i = 0; i < len; i++) {
+      const row = posts[i];
+      row.tags = [];
+      id2posts[row.id] = row;
+      postids.push(row.id);
+    }
+    const tagSql = 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);';
+
+    const tagResult = await this.app.mysql.query(
+      tagSql,
+      { signid: postids }
+    );
+    const tagResultLen = tagResult.length;
+    for (let i = 0; i < tagResultLen; i++) {
+      const row = tagResult[i];
+      const id = row.sid;
+      id2posts[id].tags.push({
+        id: row.tid, name: row.name, type: row.type,
+      });
+    }
+    // Frank - 这里要展开屏蔽邮箱地址的魔法了
+    const emailMask = str => str.replace(
+      /(?<=.)[^@\n](?=[^@\n]*?@)|(?:(?<=@.)|(?!^)\G(?=[^@\n]*$)).(?=.*\.)/gm,
+      '*');
+    const list = posts.map(post => {
+      const author = emailMask(post.author);
+      return { ...post, author };
+    });
+    return list;
+  }
 
   // (new format)(count-list格式)
   async getPostByTag(page = 1, pagesize = 20, extra = null, tagid) {
@@ -1121,6 +1192,8 @@ class PostService extends Service {
     if (!user.accept) {
       return 5;
     }
+    // 记录转让文章常用候选列表
+    await this.service.history.put('post', uid);
 
     const conn = await this.app.mysql.beginTransaction();
     try {
@@ -1464,7 +1537,7 @@ class PostService extends Service {
       description,
       datePublished: new Date(),
       markdown,
-    });
+    }, { minify: true });
     // 上传的data是json对象， 需要字符串化
     const [ metadataHash, htmlHash ] = await Promise.all([
       this.ipfsUpload(metadata),

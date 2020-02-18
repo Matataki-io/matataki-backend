@@ -3614,3 +3614,56 @@ url: /search/user
 url: /search/share
 #### 搜索Fan票
 url: /search/token
+
+# ！！！拿文章数据使用getByPostIds方法，传入postids即可！！！
+
+#### 常用候选列表
+* GET /history/user?type=post
+* 响应状态码： 200
+* 参数：
+  - type，{'post'|'token'} 转让文章常用候选列表｜转赠token常用候选列表
+* 返回内容：
+```json
+{
+  "code": 0,
+  "message": "成功",
+  "data": [
+    {
+      "id": 1090,
+      "username": "66****78@qq.com",
+      "platform": "email",
+      "nickname": null,
+      "avatar": "/avatar/2019/10/07/8d8219d6ee00de0b580f435b6f68acdb.jpg",
+      "introduction": null,
+      "fans": 1,
+      "follows": 0,
+      "is_follow": false,
+      "is_fan": false
+    },
+    {
+      "id": 1045,
+      "username": "lin******080@gmail.com",
+      "platform": "email",
+      "nickname": "仙女1",
+      "avatar": "/avatar/2019/08/08/7503642ef7f9646be9b5ab3c1c7d040d.jpg",
+      "introduction": "仙女座科技官方desu",
+      "fans": 3,
+      "follows": 8,
+      "is_follow": false,
+      "is_fan": false
+    },
+    {
+      "id": 1032,
+      "username": "shellteo",
+      "platform": "github",
+      "nickname": "张翔(zhangxiang)",
+      "avatar": "/avatar/2019/07/11/f91be2fc9d4e548299e2b664d8a8a1f2.jpg",
+      "introduction": null,
+      "fans": 1,
+      "follows": 0,
+      "is_follow": false,
+      "is_fan": false
+    }
+  ]
+}
+```

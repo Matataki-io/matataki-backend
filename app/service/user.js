@@ -708,15 +708,10 @@ class UserService extends Service {
       order = parseInt(order);
     }
 
-    let sql = `SELECT pid, title, short_content, cover, require_holdtokens, p.create_time, p.status,
-        p.uid, nickname, avatar, real_read_count AS \`read\`, likes,
-        t.id AS tagId, t.name AS tagName, t.type AS tagType
+    let sql = `SELECT pid
       FROM post_bookmarks b
       JOIN posts p ON p.id = pid
-      JOIN post_read_count r ON r.post_id = p.id
       JOIN users u ON u.id = p.uid
-      LEFT JOIN post_tag pt ON pt.sid = p.id
-      LEFT JOIN tags t ON t.id = pt.tid
       WHERE b.uid = :userId AND p.channel_id = :channel_id `;
 
     if (order === 1) {
@@ -729,9 +724,10 @@ class UserService extends Service {
       return false;
     }
 
-    sql += `, t.id
-      LIMIT :offset, :limit;
-      SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId;`;
+    sql += ` LIMIT :offset, :limit;
+      SELECT count(1) AS count FROM post_bookmarks b
+      JOIN posts p ON p.id = pid
+      WHERE b.uid = :userId AND p.channel_id = :channel_id;`;
 
     const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,
@@ -740,41 +736,11 @@ class UserService extends Service {
       channel_id,
     });
     const { count } = result[1][0];
-    const rows = result[0];
-    const posts = [];
 
-    let latestRow = null;
-
-    for (const { pid, title, short_content, cover, require_holdtokens, create_time, status, uid, nickname, avatar, read, likes, tagId, tagName, tagType } of rows) {
-      if (!latestRow || latestRow.id !== pid) {
-        latestRow = {
-          id: pid,
-          title,
-          short_content,
-          cover,
-          require_holdtokens,
-          create_time,
-          status,
-          uid,
-          nickname,
-          avatar,
-          read,
-          likes,
-          tags: [],
-        };
-        posts.push(latestRow);
-      }
-
-      if (tagId !== null) {
-        latestRow.tags.push({
-          id: tagId,
-          name: tagName,
-          type: tagType,
-        });
-      }
-    }
-
-    return { count, list: posts };
+    return {
+      count,
+      list: await this.service.post.getByPostIds(result[0].map(row => row.pid)),
+    };
   }
   async getBookmarkStats(userId) {
     if (userId === null) {
