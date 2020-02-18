@@ -1192,6 +1192,8 @@ class PostService extends Service {
     if (!user.accept) {
       return 5;
     }
+    // 记录转让文章常用候选列表
+    await this.service.history.put('post', uid);
 
     const conn = await this.app.mysql.beginTransaction();
     try {
