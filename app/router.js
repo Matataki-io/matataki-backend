@@ -58,11 +58,6 @@ module.exports = app => {
   // 通过文章ID获取 IPFS 信息
   router.get('/p/:id/ipfs', passport.verify, controller.post.getIpfsById);
 
-  // 文章哈希上链相关
-  router.get('/p/:id/timeMachine/getLatestIpfsHash', passport.verify, controller.timemachine.getLatestIpfsHash);
-  router.get('/p/:id/timeMachine/getArticleRivisionHistory/:size', passport.verify, controller.timemachine.getArticleRivisionHistory);
-  router.get('/p/:id/timeMachine/getCurrentRevisionId', passport.verify, controller.timemachine.getCurrentRevisionCount);
-
   // 按照打赏金额排序的文章列表(新, 可按照币种排序)
   router.get('/posts/amountRanking', passport.verify, controller.post.getAmountRanking);
   // 按照打赏次数排序的文章列表(新)
