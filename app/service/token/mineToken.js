@@ -723,7 +723,7 @@ class MineTokenService extends Service {
 
     return {
       count: results[1][0].count,
-      list: await this.service.post.getPostList(results[0].map(row => row.id), { short_content: true }),
+      list: await this.service.post.getByPostIds(results[0].map(row => row.id)),
     };
   }
 }
