@@ -725,7 +725,9 @@ class UserService extends Service {
     }
 
     sql += ` LIMIT :offset, :limit;
-      SELECT count(1) AS count FROM post_bookmarks WHERE uid = :userId AND p.channel_id = :channel_id;`;
+      SELECT count(1) AS count FROM post_bookmarks 
+      JOIN posts p ON p.id = pid
+      WHERE uid = :userId AND p.channel_id = :channel_id;`;
 
     const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,
