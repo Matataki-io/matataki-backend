@@ -3614,3 +3614,5 @@ url: /search/user
 url: /search/share
 #### 搜索Fan票
 url: /search/token
+
+# ！！！拿文章数据使用getByPostIds方法，传入postids即可！！！
