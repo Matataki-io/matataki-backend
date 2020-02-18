@@ -8,6 +8,7 @@ const configFile = require('../../../config/config.default');
 
 const config = configFile({ name: 'Fake EggAppInfo just for config ' });
 
+
 class Token {
   constructor(type = 20, address) {
     const { infura, runningNetwork } = config.ethereum;
@@ -139,6 +140,18 @@ class Token {
     return this.sendTransaction(burner, encodeABI, {
       gasLimit: 150000,
     });
+  }
+
+  _approve(from, spender, value) {
+    const encodeABI = this.contract.methods.approve(spender, value).encodeABI();
+    return this.sendTransaction(from, encodeABI, {
+      gasLimit: 75000,
+    });
+  }
+
+  async getAllowance(owner, spender) {
+    const result = await this.contract.methods.allowance(owner, spender).call();
+    return result;
   }
 }
 
