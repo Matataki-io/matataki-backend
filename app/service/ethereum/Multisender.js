@@ -3,7 +3,7 @@ const Web3Service = require('./web3');
 // const BigNumber = require('bignumber.js');
 const ABI = require('./abi/MultiSend.json');
 const MAX_OF_UINT256 = `0x${Array(64).fill('F').join('')}`;
-const senderAddress = '0xf758ab9a44e0a5b41899259ac6e3ccb0901efb6f';
+const senderAddress = '0x0C01d1A41F21863c194C8e948054f8e3A433c424';
 const Token = require('./Token');
 
 
@@ -19,7 +19,7 @@ class MultiSendService extends Web3Service {
     // const value = amounts.reduce(
     //   (accumulator, currentValue) => accumulator.plus(currentValue),
     //   new BigNumber(0));
-    const contract = new this.web3.eth.Contract(ABI.abi, senderAddress);
+    const contract = new this.web3.eth.Contract(ABI, senderAddress);
     const encodeABI = contract.methods.multisendToken(token, recipients, amounts).encodeABI();
     return this.sendTransaction(sender, encodeABI, {
       to: senderAddress,
