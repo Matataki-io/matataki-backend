@@ -15,7 +15,7 @@ const txStatusCode = {
 class SyncMinetokenTransaction extends Subscription {
   static get schedule() {
     return {
-      interval: '5m',
+      interval: '30s',
       type: 'all',
       immediate: true,
     };
@@ -25,7 +25,7 @@ class SyncMinetokenTransaction extends Subscription {
     this.logger.info('Running SyncMinetokenTransaction at: ', new Date().toLocaleString());
     const { mysql } = this.ctx.app;
     const txsToBeMonitored = await mysql.query(
-      'select * from assets_minetokens_log where on_chain_tx_status=? and tx_hash is not null',
+      'select DISTINCT tx_hash from assets_minetokens_log where on_chain_tx_status=? and tx_hash is not null',
       [ txStatusCode.PENDING ]
     );
     if (!txsToBeMonitored || txsToBeMonitored.length === 0) {
