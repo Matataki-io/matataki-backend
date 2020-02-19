@@ -10,7 +10,7 @@ const consts = require('./consts');
 const ecc = require('eosjs-ecc');
 const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
-const OAuth = require('OAuth')
+const OAuth = require('oauth');
 const { createHash, createHmac } = require('crypto');
 
 class AuthService extends Service {
