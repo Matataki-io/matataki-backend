@@ -351,6 +351,42 @@ class MineTokenService extends Service {
     }
   }
 
+
+  // 链上交易已完成，同步到数据库
+  async _syncTransfer(tokenId, from, to, value, ip, type = '', transactionHash) {
+    if (from === to) {
+      return false;
+    }
+
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      const amount = parseInt(value);
+      // 减少from的token
+      const result = await conn.query('UPDATE assets_minetokens SET amount = amount - ? WHERE uid = ? AND token_id = ? AND amount >= ?;',
+        [ amount, from, tokenId, amount ]);
+      // 减少from的token失败回滚
+      if (result.affectedRows <= 0) {
+        await conn.rollback();
+      }
+
+      // 增加to的token
+      await conn.query('INSERT INTO assets_minetokens(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+        [ to, tokenId, amount, amount ]);
+
+      // 记录日志
+      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
+        [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash ]);
+
+      await conn.commit();
+      return transactionHash;
+    } catch (e) {
+      await conn.rollback();
+      this.logger.error('MineTokenService.transferFrom exception. %j', e);
+      return false;
+    }
+  }
+
   async burn(userId, value) {
     // todo
     return false;
