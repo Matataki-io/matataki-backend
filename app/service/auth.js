@@ -107,8 +107,8 @@ class AuthService extends Service {
       const oauth = new OAuth.OAuth(
         'https://api.twitter.com/oauth/request_token',
         'https://api.twitter.com/oauth/access_token',
-        'psCq7zJc8a9UyNOX5etVSuKVh',
-        'VwVsagnGTFjI00Csc4bQ5czHJBN82xegPycH4hFCxAHfpWJCxl',
+        this.app.config.twitter.appkey,
+        this.app.config.twitter.appsecret,
         '1.0A',
         null,
         'HMAC-SHA1'
