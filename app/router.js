@@ -412,6 +412,10 @@ module.exports = app => {
   router.post('/_internal_bot/minetoken/:id/transferFrom', passport.apiAuthorize, controller.internalApi.telegram.transferFrom);
   router.get('/_internal_bot/minetoken/:userId/:symbol/balance', passport.apiVerify, controller.internalApi.telegram.getUserTokenDetail);
   router.get('/_internal_bot/minetokens', passport.apiVerify, controller.internalApi.telegram.getAllMinetokens);
+  // 机器人的批量转账相关
+  router.get('/_internal_bot/minetokens/:tokenId/getAllowance/:fromUid', passport.apiVerify, controller.internalApi.token.getAllowance);
+  router.post('/_internal_bot/minetokens/:tokenId/batchTransfer', passport.apiAuthorize, controller.internalApi.token.batchTransfer);
+  router.post('/_internal_bot/minetokens/:tokenId/approveTheMax/:fromUid', passport.apiAuthorize, controller.internalApi.token.approveTheMax);
 
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
