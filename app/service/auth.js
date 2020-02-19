@@ -10,6 +10,7 @@ const consts = require('./consts');
 const ecc = require('eosjs-ecc');
 const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
+const OAuth = require('OAuth')
 const { createHash, createHmac } = require('crypto');
 
 class AuthService extends Service {
@@ -98,6 +99,38 @@ class AuthService extends Service {
     return hmac === hash;
   }
 
+  // twitter号登录，验证token和secret
+  // 方法见https://webapplog.com/node-js-oauth1-0-and-oauth2-0-twitter-api-v1-1-examples/
+  async twitter_auth(oauth_token, oauth_token_secret) {
+    let tokendata = null;
+    try {
+      const oauth = new OAuth.OAuth(
+        'https://api.twitter.com/oauth/request_token',
+        'https://api.twitter.com/oauth/access_token',
+        this.app.config.twitter.appkey,
+        this.app.config.twitter.appsecret,
+        '1.0A',
+        null,
+        'HMAC-SHA1'
+      )
+      const userdata = await new Promise((resolve, reject) => oauth.get(
+        'https://api.twitter.com/1.1/account/verify_credentials.json?id=23424977',
+        oauth_token,
+        oauth_token_secret,
+        function (e, data, res) {
+          if (e) {
+            reject(e)
+          }
+          resolve(JSON.parse(data))
+        })
+      )
+      tokendata = userdata;
+    } catch (err) {
+      this.logger.error('AuthService:: verifyCode failed: err: %j', err);
+      return null;
+    }
+    return tokendata;
+  }
 
   // github账号登录，验证access_token, 暂时是不verify state的
   async verifyCode(code) {
@@ -213,6 +246,36 @@ class AuthService extends Service {
     }
   }
 
+  // twitter账号登录，创建或登录用户, 发放jwt token
+  async saveTwitterUser(username, nickname, avatarUrl, ip = '', referral = 0, platform = 'twitter') {
+    // 注释方面直接参考上面的saveUser
+    try {
+      let currentUser = await this.service.account.binding.get2({ username, platform });
+      if (currentUser === null) {
+        await this.insertUser(username, '', platform, 'ss', ip, '', referral);
+        if (nickname === null) {
+          nickname = username;
+        }
+        const duplicatedNickname = await this.service.account.binding.get2({ nickname });
+        if (duplicatedNickname !== null) {
+          nickname = `${platform}_${nickname}`;
+        }
+        const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);
+        await this.app.mysql.update('users',
+          { nickname, avatar },
+          { where: { username, platform } }
+        );
+        currentUser = await this.service.account.binding.get2({ username, platform });
+      }
+      await this.insertLoginLog(currentUser.id, ip);
+      const jwttoken = this.jwtSign(currentUser);
+      return jwttoken;
+    } catch (err) {
+      this.logger.error('AuthService:: getUserinfo failed: %j', err);
+      return null;
+    }
+  }
+  
   // 验证用户账号是否存在， todo，添加platform信息
   async verifyUser(username) {
     /* const user = await this.app.mysql.query(
@@ -232,7 +295,7 @@ class AuthService extends Service {
   async sendResetpasswordCaptchaMail(email) {
     return this.sendCaptchaMail(email, consts.mailTemplate.resetPassword);
   }
-
+  
   // 发送邮箱验证码
   async sendCaptchaMail(email, type = consts.mailTemplate.registered) {
 
