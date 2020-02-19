@@ -20,8 +20,8 @@ class TokenApiController extends Controller {
     const recipientPublicKey = recipientWallets.map(w => w.public_key);
 
     try {
-      const { transactionHash } = await this.service.ethereum.multisender.sendToken(
-        contract_address, fromWallet.private_key, recipientPublicKey, amounts
+      const { transactionHash } = await this.service.ethereum.multisender.delegateSendToken(
+        contract_address, fromWallet.public_key, recipientPublicKey, amounts
       );
       // Update DB
       for (let i = 0; i < recipients.length; i++) {
