@@ -23,12 +23,15 @@ class TokenApiController extends Controller {
       const { transactionHash } = await this.service.ethereum.multisender.delegateSendToken(
         contract_address, fromWallet.public_key, recipientPublicKey, amounts
       );
+      this.logger.info('TokenApiController::batchTransfer', transactionHash);
       // Update DB
+      const dbConnection = await this.app.mysql.beginTransaction();
       for (let i = 0; i < recipients.length; i++) {
         await this.service.token.mineToken._syncTransfer(
           tokenId, sender, recipients[i], amounts[i], this.clientIP,
-          consts.mineTokenTransferTypes.transfer, transactionHash);
+          consts.mineTokenTransferTypes.transfer, transactionHash, dbConnection);
       }
+      await dbConnection.commit();
       ctx.body = ctx.msg.success;
       ctx.body.data = { transactionHash };
     } catch (error) {
