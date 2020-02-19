@@ -655,7 +655,7 @@ class MineTokenService extends Service {
 
     if (typeof filter === 'string') filter = parseInt(filter);
     if (typeof page === 'string') page = parseInt(page);
-    if (typeof pagesize === "string") pagesize = parseInt(pagesize);
+    if (typeof pagesize === 'string') pagesize = parseInt(pagesize);
 
     let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
     let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
@@ -691,7 +691,7 @@ class MineTokenService extends Service {
 
     return {
       count: results[1][0].count,
-      list: await this.service.post.getPostList(results[0].map(row => row.id)),
+      list: await this.service.post.getByPostIds(results[0].map(row => row.id)),
     };
   }
   async getRelatedWithOnlyCreator(tokenId, filter = 0, sort = 'popular-desc', page = 1, pagesize = 10, onlyCreator = false, channel_id = 1) {

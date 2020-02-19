@@ -155,7 +155,7 @@ class MineTokenController extends Controller {
 
     let result;
 
-    if (typeof onlyCreator === "number" || typeof onlyCreator === "string") {
+    if (typeof onlyCreator === 'number' || typeof onlyCreator === 'string') {
       result = await ctx.service.token.mineToken.getRelatedWithOnlyCreator(tokenId, filter, sort, page, pagesize, Boolean(Number(onlyCreator)), channel_id);
     } else {
       result = await ctx.service.token.mineToken.getRelated(tokenId, filter, sort, page, pagesize);
