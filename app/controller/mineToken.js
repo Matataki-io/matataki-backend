@@ -139,7 +139,7 @@ class MineTokenController extends Controller {
   // 用户需要针对特定 token 进行授权，我们的代理转账合约针对才能他的token进行批量转账
   async approveTokenToBatch() {
     const { ctx } = this;
-    const { tokenId } = ctx.body;
+    const { tokenId } = ctx.params;
     const [ token, fromWallet ] = await Promise.all([
       this.service.token.mineToken.get(tokenId),
       this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
@@ -168,13 +168,22 @@ class MineTokenController extends Controller {
   // 批量转账
   async batchTransfer() {
     const ctx = this.ctx;
-    const { tokenId, targets } = ctx.request.body;
+    const { tokenId } = ctx.params;
+    const { targets } = ctx.request.body;
     const filteredTargets = targets.filter(i => i.to && i.amount);
     if (filteredTargets.length !== targets.length) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.data = {
         message: '`to` and `amount` field is missing, please check the data.',
+      };
+      return;
+    }
+    if (targets.length > 64) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = {
+        message: 'too large, the length of targets should be below 64.',
       };
       return;
     }

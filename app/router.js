@@ -247,9 +247,9 @@ module.exports = app => {
   router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
   router.post('/minetoken/mint', passport.authorize, controller.mineToken.mint);
   router.post('/minetoken/transfer', passport.authorize, controller.mineToken.transfer);
-  router.post('/minetoken/batchTransfer', passport.authorize, controller.mineToken.batchTransfer);
-  router.get('/minetoken/:tokenId/getBatchAllowance', passport.authorize, controller.mineToken.getBatchAllowance);
-  router.post('/minetoken/approveBatch', passport.authorize, controller.mineToken.approveTokenToBatch);
+  router.post('/minetoken/:tokenId/batchTransfer', passport.authorize, controller.mineToken.batchTransfer);
+  router.get('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.getBatchAllowance);
+  router.post('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.approveTokenToBatch);
 
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
