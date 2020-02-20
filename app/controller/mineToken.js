@@ -136,10 +136,30 @@ class MineTokenController extends Controller {
     } : ctx.msg.failure;
   }
 
+  // 用户需要针对特定 token 进行授权，我们的代理转账合约针对才能他的token进行批量转账
+  async approveTokenToBatch() {
+    const { ctx } = this;
+    const { tokenId } = ctx.body;
+    const { contract_address } = await this.service.token.mineToken.get(tokenId);
+    const fromWallet = await this.service.account.hosting.isHosting(ctx.user.id, 'ETH');
+    const result = await this.service.ethereum.multisender.approveTheMax(contract_address, fromWallet.private_key);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = { result };
+  }
+
   // 批量转账
   async batchTransfer() {
     const ctx = this.ctx;
     const { tokenId, targets } = ctx.request.body;
+    const filteredTargets = targets.filter(i => i.to && i.amount);
+    if (filteredTargets.length !== targets.length) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = {
+        message: '`to` and `amount` field is missing, please check the data.',
+      };
+      return;
+    }
     try {
       const result = await ctx.service.token.mineToken.batchTransfer(tokenId, ctx.user.id, targets);
       ctx.body = {
