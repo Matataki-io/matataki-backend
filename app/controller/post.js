@@ -997,6 +997,29 @@ class PostController extends Controller {
     ctx.status = result ? 204 : 404;
     ctx.body = result ? ctx.msg.success : ctx.msg.postNotBookmarked;
   }
+
+  // 仅供开发人员使用的隐藏API
+  async _rawCatchPost() {
+    const { ctx } = this;
+    const { hash } = ctx.params;
+
+    // 从ipfs获取内容
+    const catchRequest = await this.service.post.ipfsCatch(hash);
+
+    if (catchRequest) {
+      let data = JSON.parse(catchRequest.toString());
+      if (data.iv) {
+        // 是加密的数据，开始解密
+        data = JSON.parse(this.service.cryptography.decrypt(data));
+      }
+      ctx.body = ctx.msg.success;
+      // 字符串转为json对象
+      ctx.body.data = data;
+      return;
+    }
+
+    ctx.body = ctx.msg.ipfsCatchFailed;
+  }
 }
 
 module.exports = PostController;
