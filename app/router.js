@@ -423,6 +423,8 @@ module.exports = app => {
   router.get('/_internal_bot/minetokens/:tokenId/getAllowance/:fromUid', passport.apiVerify, controller.internalApi.token.getAllowance);
   router.post('/_internal_bot/minetokens/:tokenId/batchTransfer', passport.apiAuthorize, controller.internalApi.token.batchTransfer);
   router.post('/_internal_bot/minetokens/:tokenId/approveTheMax/:fromUid', passport.apiAuthorize, controller.internalApi.token.approveTheMax);
+  // 开发用
+  router.get('/_internal/ipfs/:hash', passport.apiVerify, controller.post._rawCatchPost);
 
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
