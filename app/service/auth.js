@@ -99,9 +99,51 @@ class AuthService extends Service {
     return hmac === hash;
   }
 
+  // twitter号验证，获取oauth_token_secret
+  // 详情见https://developer.twitter.com/en/docs/basics/authentication/guides/log-in-with-twitter
+  async twitter_auth(oauth_token, oauth_verifier){
+    function randomString(len) {
+      len = len || 32
+      const $chars = 'abcdefhijkmnprstwxyz2345678'
+      const maxPos = $chars.length
+      let pwd = ''
+      for (let i = 0; i < len; i++) {
+        pwd += $chars.charAt(Math.floor(Math.random() * maxPos))
+      }
+      return pwd
+    }
+    const timestamp = parseInt(Date.parse(new Date())) / 1000
+    const ranstr = randomString(12)
+    const httpmethod = 'GET'
+    let twitterurl = 'http://api.twitter.com/oauth/access_token'
+    const params = 'oauth_consumer_key=' + this.app.config.twitter.appkey +
+    '&oauth_nonce=' + ranstr +
+    '&oauth_signature_method=' + 'HMAC-SHA1' +
+    '&oauth_timestamp=' + timestamp +
+    '&oauth_token=' + oauth_token +
+    '&oauth_verifier=' + oauth_verifier +
+    '&oauth_version=' + '1.0'
+    const signtext = httpmethod + '&' + encodeURIComponent(twitterurl) + '&' + encodeURIComponent(params)
+    const signkey = encodeURIComponent(this.app.config.twitter.appkey) + '&' + encodeURIComponent(this.app.config.twitter.appsecret)
+    const sign = encodeURIComponent(createHmac('sha1', signkey).update(signtext).digest().toString('base64'))
+    twitterurl = 'https://api.twitter.com/oauth/access_token'
+    const requesturl = twitterurl + '?' + params +
+    '&oauth_signature=' + sign
+    const data = (await axios({
+      method: 'get',
+      url: requesturl
+    })).data
+    const token = {}
+    const dataarr = data.split('&')
+    for (const index in dataarr) {
+      token[dataarr[index].split('=')[0]] = dataarr[index].split('=')[1]
+    }
+    return token
+  }
+  
   // twitter号登录，验证token和secret
   // 方法见https://webapplog.com/node-js-oauth1-0-and-oauth2-0-twitter-api-v1-1-examples/
-  async twitter_auth(oauth_token, oauth_token_secret) {
+  async twitter_login(oauth_token, oauth_token_secret) {
     let tokendata = null;
     try {
       const oauth = new OAuth.OAuth(
