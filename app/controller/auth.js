@@ -206,21 +206,17 @@ class AuthController extends Controller {
 
   async twitterAuth() {
     const ctx = this.ctx;
-    const { oauth_token, oauth_token_secret } = ctx.request.body;
-    // console.log(ctx.request.body);
-    const authResult = await this.service.auth.twitter_auth(oauth_token, oauth_token_secret);
-    // console.log(authResult);
-    if (!authResult) {
+    const { oauth_token, oauth_verifier } = ctx.request.body;
+    const authtokens = await this.service.auth.twitter_auth(oauth_token, oauth_verifier);
+    const loginResult = await this.service.auth.twitter_login(authtokens.oauth_token, authtokens.oauth_token_secret);
+    if (!loginResult) {
       ctx.body = ctx.msg.failure;
       return;
     }
     const { screen_name,
       name,
-      // username,
       profile_image_url,
-      // auth_date,
-      // hash
-    } = authResult;
+    } = loginResult;
     const jwttoken = await this.service.auth.saveTwitterUser(screen_name, name, profile_image_url, this.clientIP, 0, 'twitter');
     if (jwttoken === null) {
       ctx.body = ctx.msg.generateTokenError;
