@@ -140,9 +140,13 @@ class MineTokenController extends Controller {
   async approveTokenToBatch() {
     const { ctx } = this;
     const { tokenId } = ctx.body;
-    const { contract_address } = await this.service.token.mineToken.get(tokenId);
-    const fromWallet = await this.service.account.hosting.isHosting(ctx.user.id, 'ETH');
-    const result = await this.service.ethereum.multisender.approveTheMax(contract_address, fromWallet.private_key);
+    const [ token, fromWallet ] = await Promise.all([
+      this.service.token.mineToken.get(tokenId),
+      this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
+    ]);
+    const result = await this.service.ethereum.multisender.approveTheMax(
+      token.contract_address, fromWallet.private_key
+    );
     ctx.body = ctx.msg.success;
     ctx.body.data = { result };
   }

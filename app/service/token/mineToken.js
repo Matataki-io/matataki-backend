@@ -360,14 +360,16 @@ class MineTokenService extends Service {
   async batchTransfer(tokenId, sender, targets) {
     const recipients = targets.map(i => i.to);
     const amounts = targets.map(i => i.amount);
-    const { contract_address } = await this.service.token.mineToken.get(tokenId);
-    const fromWallet = await this.service.account.hosting.isHosting(sender, 'ETH');
+    const [ token, fromWallet ] = await Promise.all([
+      this.service.token.mineToken.get(tokenId),
+      this.service.account.hosting.isHosting(sender, 'ETH'),
+    ]);
     const recipientWallets = await Promise.all(
       recipients.map(id => this.service.account.hosting.isHosting(id, 'ETH'))
     );
     const recipientPublicKey = recipientWallets.map(w => w.public_key);
     const { transactionHash } = await this.service.ethereum.multisender.delegateSendToken(
-      contract_address, fromWallet.public_key, recipientPublicKey, amounts
+      token.contract_address, fromWallet.public_key, recipientPublicKey, amounts
     );
     // Update DB
     const dbConnection = await this.app.mysql.beginTransaction();
