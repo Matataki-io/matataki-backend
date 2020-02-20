@@ -3090,7 +3090,8 @@ symbol-desc：字母倒序
     "github": "zzz",
 		"telegram": "aaa",
 		"twitter": "bbb",
-		"facebook": "ccc"
+    "facebook": "ccc",
+    "email": "ddd"
 	}
 }
 ```
@@ -3144,6 +3145,10 @@ symbol-desc：字母倒序
 		{
 			"type": "facebook",
 			"value": "ccc"
+		},
+		{
+			"type": "email",
+			"value": "ddd"
 		}
 	]
 }

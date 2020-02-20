@@ -265,16 +265,13 @@ class UserService extends Service {
     return result;
   }
 
-  async setProfile(userid, email, nickname, introduction, accept) {
+  async setProfile(userid, nickname, introduction, accept) {
 
     if (userid === null) {
       return false;
     }
 
     const row = {};
-    if (email !== null) {
-      row.email = email;
-    }
 
     if (nickname) {
       const nicknameCheck = /^[\u4e00-\u9fa5a-zA-Z0-9]{1,12}$/;
@@ -633,9 +630,9 @@ class UserService extends Service {
         websiteId++;
       }
 
-      const { wechat = null, qq = null, weibo = null, github = null, telegram = null, twitter = null, facebook = null } = socialAccounts;
+      const { wechat = null, qq = null, weibo = null, github = null, telegram = null, twitter = null, facebook = null, email = null } = socialAccounts;
 
-      await conn.query(`INSERT INTO user_social_accounts VALUES(?, nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''))
+      await conn.query(`INSERT INTO user_social_accounts VALUES(?, nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''))
         ON DUPLICATE KEY UPDATE
           wechat = VALUES(wechat),
           qq = VALUES(qq),
@@ -643,7 +640,8 @@ class UserService extends Service {
           github = VALUES(github),
           telegram = VALUES(telegram),
           twitter = VALUES(twitter),
-          facebook = VALUES(facebook);`, [
+          facebook = VALUES(facebook),
+          email = VALUES(email);`, [
         userId,
         wechat,
         qq,
@@ -652,6 +650,7 @@ class UserService extends Service {
         telegram,
         twitter,
         facebook,
+        email
       ]);
 
       await conn.commit();
@@ -682,7 +681,7 @@ class UserService extends Service {
 
     const socialAccounts = [];
 
-    const socialAccountResult = (await this.app.mysql.query('SELECT wechat, qq, weibo, github, telegram, twitter, facebook FROM user_social_accounts WHERE uid = ?;', [ userId ]))[0];
+    const socialAccountResult = (await this.app.mysql.query('SELECT wechat, qq, weibo, github, telegram, twitter, facebook, email FROM user_social_accounts WHERE uid = ?;', [ userId ]))[0];
     if (socialAccountResult) {
       for (const [ type, value ] of Object.entries(socialAccountResult)) {
         if (!value) {

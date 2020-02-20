@@ -193,12 +193,12 @@ class UserController extends Controller {
     ctx.body = ctx.msg.success;
   }
 
-  // 将设置用户邮箱、昵称、个性签名合而为一
+  // 将设置用户昵称、个性签名合而为一
   async setProfile() {
     const ctx = this.ctx;
-    const { email = null, nickname = null, introduction = null, accept = null } = ctx.request.body;
+    const { nickname = null, introduction = null, accept = null } = ctx.request.body;
 
-    const setResult = await this.service.user.setProfile(ctx.user.id, email, nickname, introduction, accept);
+    const setResult = await this.service.user.setProfile(ctx.user.id, nickname, introduction, accept);
     if (setResult === true) {
       ctx.body = ctx.msg.success;
       return;
