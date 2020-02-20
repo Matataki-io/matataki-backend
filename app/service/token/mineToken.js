@@ -351,6 +351,35 @@ class MineTokenService extends Service {
     }
   }
 
+  /**
+   * batchTransfer, 批量转账
+   * @param {number} tokenId 饭票的ID
+   * @param {number} sender 发送方的UID
+   * @param {Array<Target>} targets 收币方详情，必须有 `to` 和 `amount` 字段
+   */
+  async batchTransfer(tokenId, sender, targets) {
+    const recipients = targets.map(i => i.to);
+    const amounts = targets.map(i => i.amount);
+    const { contract_address } = await this.service.token.mineToken.get(tokenId);
+    const fromWallet = await this.service.account.hosting.isHosting(sender, 'ETH');
+    const recipientWallets = await Promise.all(
+      recipients.map(id => this.service.account.hosting.isHosting(id, 'ETH'))
+    );
+    const recipientPublicKey = recipientWallets.map(w => w.public_key);
+    const { transactionHash } = await this.service.ethereum.multisender.delegateSendToken(
+      contract_address, fromWallet.public_key, recipientPublicKey, amounts
+    );
+    // Update DB
+    const dbConnection = await this.app.mysql.beginTransaction();
+    for (let i = 0; i < recipients.length; i++) {
+      await this._syncTransfer(
+        tokenId, sender, recipients[i], amounts[i], this.clientIP,
+        consts.mineTokenTransferTypes.transfer, transactionHash, dbConnection);
+    }
+    await dbConnection.commit();
+    return transactionHash;
+  }
+
 
   // 链上交易已完成，同步到数据库
   async _syncTransfer(tokenId, from, to, value, ip, type = '', transactionHash, conn) {

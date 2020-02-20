@@ -247,6 +247,7 @@ module.exports = app => {
   router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
   router.post('/minetoken/mint', passport.authorize, controller.mineToken.mint);
   router.post('/minetoken/transfer', passport.authorize, controller.mineToken.transfer);
+  router.post('/minetoken/batchTransfer', passport.authorize, controller.mineToken.batchTransfer);
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
   // 查询任意用户的token余额

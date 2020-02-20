@@ -136,6 +136,24 @@ class MineTokenController extends Controller {
     } : ctx.msg.failure;
   }
 
+  // 批量转账
+  async batchTransfer() {
+    const ctx = this.ctx;
+    const { tokenId, targets } = ctx.request.body;
+    try {
+      const result = await ctx.service.token.mineToken.batchTransfer(tokenId, ctx.user.id, targets);
+      ctx.body = {
+        ...ctx.msg.success,
+        data: { tx_hash: result },
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = { error };
+    }
+
+  }
+
   // 查询当前用户token余额
   async getBalance() {
     const { ctx } = this;
