@@ -136,6 +136,71 @@ class MineTokenController extends Controller {
     } : ctx.msg.failure;
   }
 
+  // 用户需要针对特定 token 进行授权，我们的代理转账合约针对才能他的token进行批量转账
+  async approveTokenToBatch() {
+    const { ctx } = this;
+    const { tokenId } = ctx.params;
+    const [ token, fromWallet ] = await Promise.all([
+      this.service.token.mineToken.get(tokenId),
+      this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
+    ]);
+    const result = await this.service.ethereum.multisender.approveTheMax(
+      token.contract_address, fromWallet.private_key
+    );
+    ctx.body = ctx.msg.success;
+    ctx.body.data = { result };
+  }
+
+  async getBatchAllowance() {
+    const { ctx } = this;
+    const { tokenId } = ctx.params;
+    const [ token, fromWallet ] = await Promise.all([
+      this.service.token.mineToken.get(tokenId),
+      this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
+    ]);
+    const result = await this.service.ethereum.multisender.getAllowance(
+      token.contract_address, fromWallet.public_key
+    );
+    ctx.body = ctx.msg.success;
+    ctx.body.data = { result };
+  }
+
+  // 批量转账
+  async batchTransfer() {
+    const ctx = this.ctx;
+    const { tokenId } = ctx.params;
+    const { targets } = ctx.request.body;
+    const filteredTargets = targets.filter(i => i.to && i.amount);
+    if (filteredTargets.length !== targets.length) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = {
+        message: '`to` and `amount` field is missing, please check the data.',
+      };
+      return;
+    }
+    if (targets.length > 64) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = {
+        message: 'too large, the length of targets should be below 64.',
+      };
+      return;
+    }
+    try {
+      const result = await ctx.service.token.mineToken.batchTransfer(tokenId, ctx.user.id, targets);
+      ctx.body = {
+        ...ctx.msg.success,
+        data: { tx_hash: result },
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = { error };
+    }
+
+  }
+
   // 查询当前用户token余额
   async getBalance() {
     const { ctx } = this;
