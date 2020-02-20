@@ -147,6 +147,20 @@ class MineTokenController extends Controller {
     ctx.body.data = { result };
   }
 
+  async getBatchAllowance() {
+    const { ctx } = this;
+    const { tokenId } = ctx.params;
+    const [ token, fromWallet ] = await Promise.all([
+      this.service.token.mineToken.get(tokenId),
+      this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
+    ]);
+    const result = await this.service.ethereum.multisender.getAllowance(
+      token.contract_address, fromWallet.public_key
+    );
+    ctx.body = ctx.msg.success;
+    ctx.body.data = { result };
+  }
+
   // 批量转账
   async batchTransfer() {
     const ctx = this.ctx;
