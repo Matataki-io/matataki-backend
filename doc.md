@@ -2232,7 +2232,10 @@ tokenId=5
 #### 获取用户的持仓token列表
 * GET /token/tokenlist
 * 响应状态码： 200
-* 参数：page || 1, pagesize || 10
+* 参数：
+  * page: 1
+  * pagesize: 10
+  * order: 0 - 时间降序 / 1 - 持仓量升序 / 2 - 持仓量降序
 * 请求头：x-access-token
 * 返回值：
 ```
