@@ -504,7 +504,14 @@ class MineTokenService extends Service {
     return this.app.mysql.select('minetokens');
   }
 
-  async getHoldLiquidity(userId, page = 1, pagesize = 10) {
+  async getHoldLiquidity(userId, page = 1, pagesize = 10, order = 0) {
+    const orderList = [
+      't1.create_time DESC',
+      't1.liquidity_balance ASC',
+      't1.liquidity_balance DESC',
+    ]
+    const orderString = orderList[order] || orderList[0]
+  
     const sql = `
       SELECT t1.token_id, t1.liquidity_balance, t1.create_time,
         t2.total_supply,
@@ -515,6 +522,7 @@ class MineTokenService extends Service {
       JOIN minetokens AS t3 ON t1.token_id = t3.id
       JOIN users as t4 ON t3.uid = t4.id
       WHERE t1.uid = :userId
+      ORDER BY ${ orderString }
       LIMIT :offset, :limit;
       SELECT count(1) AS count FROM exchange_balances WHERE uid = :userId;`;
     const result = await this.app.mysql.query(sql, {

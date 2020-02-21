@@ -103,12 +103,19 @@ class ExchangeService extends Service {
     return result;
   }
   // 用户持有的币
-  async getTokenListByUser(id, page = 1, pagesize = 20) {
+  async getTokenListByUser(id, page = 1, pagesize = 20, order = 0) {
+    const orderList = [
+      'b.create_time DESC',
+      'a.amount ASC',
+      'a.amount DESC',
+    ]
+    const orderString = orderList[order] || orderList[0]
+
     const sql = 'SELECT a.token_id, a.amount, b.symbol, b.name, b.decimals, b.logo, b.uid, u.username, u.nickname, u.avatar '
       + 'FROM assets_minetokens AS a '
       + 'LEFT JOIN minetokens AS b ON a.token_id = b.id '
       + 'LEFT JOIN users u ON b.uid = u.id '
-      + 'WHERE a.uid = :id AND a.amount > 0 ORDER BY b.create_time DESC LIMIT :offset, :limit;'
+      + `WHERE a.uid = :id AND a.amount > 0 ORDER BY ${ orderString } LIMIT :offset, :limit;`
       + 'SELECT count(1) as count FROM assets_minetokens WHERE uid = :id AND amount > 0;';
     const result = await this.app.mysql.query(sql, {
       id,

@@ -38,11 +38,11 @@ class TokenController extends Controller {
   // 查询当前用户持仓token list
   async tokenList() {
     const ctx = this.ctx;
-    const { pagesize = 10, page = 1 } = this.ctx.query;
+    const { pagesize = 10, page = 1, order = 0 } = this.ctx.query;
     // 用户id
     const user_id = ctx.user.id;
     // token list
-    const result = await ctx.service.exchange.getTokenListByUser(user_id, parseInt(page), parseInt(pagesize));
+    const result = await ctx.service.exchange.getTokenListByUser(user_id, parseInt(page), parseInt(pagesize), parseInt(order));
     ctx.body = {
       ...ctx.msg.success,
       data: result,
@@ -223,9 +223,9 @@ class TokenController extends Controller {
   // 持有的流动金list
   async getHoldLiquidity() {
     const { ctx } = this;
-    const { pagesize = 10, page = 1 } = ctx.query;
+    const { pagesize = 10, page = 1, order = 0 } = ctx.query;
     const userId = ctx.user.id;
-    const result = await ctx.service.token.mineToken.getHoldLiquidity(userId, parseInt(page), parseInt(pagesize));
+    const result = await ctx.service.token.mineToken.getHoldLiquidity(userId, parseInt(page), parseInt(pagesize), parseInt(order));
     ctx.body = {
       ...ctx.msg.success,
       data: {
