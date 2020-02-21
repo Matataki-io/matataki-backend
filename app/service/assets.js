@@ -27,6 +27,8 @@ class AssetsService extends Service {
     if (from === to) {
       return false;
     }
+    const checkToUser = await this.service.user.get(to);
+    if (!checkToUser) return false;
 
     // 有可能在其他事务中调用该方法，如果conn是传进来的，不要此commit和rollback
     let isOutConn = false;

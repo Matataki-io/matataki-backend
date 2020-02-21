@@ -706,10 +706,7 @@ class PostService extends Service {
   }
   async getByPostIds(postids = []) {
     if (postids === null || postids.length <= 0) {
-      return {
-        count: 0,
-        list: [],
-      };
+      return [];
     }
     const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
       b.nickname, b.avatar, 
