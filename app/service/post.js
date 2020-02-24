@@ -1534,7 +1534,7 @@ class PostService extends Service {
       description,
       datePublished: new Date(),
       markdown,
-    }, { minify: true });
+    });
     // 上传的data是json对象， 需要字符串化
     const [ metadataHash, htmlHash ] = await Promise.all([
       this.ipfsUpload(metadata),
