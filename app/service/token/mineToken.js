@@ -303,6 +303,7 @@ class MineTokenService extends Service {
 
   async transferFrom(tokenId, from, to, value, ip, type = '', conn) {
     if (from === to) {
+      this.logger.error('mineToken.transferFrom failed: from === to', { from, to });
       return false;
     }
 
@@ -326,6 +327,7 @@ class MineTokenService extends Service {
         if (!isOutConn) {
           await conn.rollback();
         }
+        this.logger.error('mineToken.transferFrom UPDATE assets_minetokens failed: ', result);
         return false;
       }
 
