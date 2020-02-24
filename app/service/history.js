@@ -15,9 +15,13 @@ class HistoryService extends Service {
    * @memberof HistoryService
    */
   async put(key, value) {
-    const { ctx } = this;
-    const uid = ctx.user.id;
-    this.app.redis.zincrby(`histroy:user:${uid}:${this.getKey(key)}`, 1, value);
+    try {
+      const { ctx } = this;
+      const uid = ctx.user.id;
+      this.app.redis.zincrby(`histroy:user:${uid}:${this.getKey(key)}`, 1, value);
+    } catch (error) {
+      this.logger.error('history.put exception. %j', error);
+    }
   }
 
   /**
