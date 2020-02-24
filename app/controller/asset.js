@@ -17,6 +17,8 @@ class AssetController extends Controller {
     const ctx = this.ctx;
     const { symbol = 'cny', to, amount } = this.ctx.request.body;
     // amount 客户端*精度，10^decimals
+    // 记录转赠cny常用候选列表
+    await this.ctx.service.history.put('token', to);
     const result = await ctx.service.assets.transferFrom(symbol, ctx.user.id, to, amount);
     ctx.body = result ? ctx.msg.success : ctx.msg.failure;
   }

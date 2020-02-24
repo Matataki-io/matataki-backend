@@ -354,8 +354,6 @@ class MineTokenService extends Service {
       if (!isOutConn) {
         await conn.commit();
       }
-      // 记录转赠fan票常用候选列表
-      await this.ctx.service.history.put('token', to);
       return transactionHash;
     } catch (e) {
       if (!isOutConn) {
