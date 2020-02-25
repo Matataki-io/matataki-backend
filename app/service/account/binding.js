@@ -297,7 +297,7 @@ class AccountBindingService extends Service {
         error: '你已发行Fan票',
       }, {
         type: 'posts',
-        error: '你有文章暂未转移',
+        error: '你有文章或分享暂未转移',
       }, {
         type: 'drafts',
         error: '你有草稿暂未转移',
