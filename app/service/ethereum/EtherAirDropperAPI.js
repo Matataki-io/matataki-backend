@@ -1,6 +1,7 @@
 'use strict';
 const Web3Service = require('./web3');
 const BigNumber = require('bignumber.js');
+const { splitEvery, flatten } = require('ramda');
 const GetBalancesABI = require('./abi/GetBalances.json');
 const axios = require('axios');
 
@@ -26,12 +27,8 @@ class EtherAirDropService extends Web3Service {
       where last_login_time >= DATE(NOW()) - INTERVAL 7 DAY or platform = 'cny'
     )`);
     const addresses = ethAccounts.map(acc => acc.public_key);
-    const { data } = await axios({
-      url: 'https://us-central1-ether-air-dropper.cloudfunctions.net/getBalanceOfWallets',
-      method: 'POST',
-      data: { addresses },
-    });
-    const needAirdropList = data.wallets.filter(
+    const wallets = await this.getBalances(addresses);
+    const needAirdropList = wallets.filter(
       ({ balance }) => new BigNumber(balance).lt(lowestLimit)
     ).map(({ address }) => address);
     return needAirdropList;
@@ -50,6 +47,17 @@ class EtherAirDropService extends Web3Service {
     return wallets;
   }
 
+  /**
+   * getBalances，查询多个钱包的余额，每200个地址为一次查询调用
+   * @param {Array<string>} addresses 要查询的地址
+   */
+  async getBalances(addresses) {
+    const queues = splitEvery(200)(addresses);
+    const results = await Promise.all(
+      queues.map(addrsInQueue => this._getBalances(addrsInQueue))
+    );
+    return flatten(results);
+  }
 
 }
 

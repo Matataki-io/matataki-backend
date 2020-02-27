@@ -10,11 +10,10 @@ class KeepWalletBalance extends Subscription {
   }
 
   async subscribe() {
-    this.logger.info('Running KeepWalletBalance', new Date().toLocaleString());
     const { web3 } = this.service.ethereum.web3;
-    const needAirdropList = await this.service.ethereum.etherAirDropperAPI.findNoEtherUser(
-      web3.utils.toWei('0.002', 'ether')
-    );
+    const lowestBalanceLimit = web3.utils.toWei('0.002', 'ether');
+    const needAirdropList = await this.service.ethereum
+      .etherAirDropperAPI.findNoEtherUser(lowestBalanceLimit);
     this.logger.info('KeepWalletBalance::needAirdropList', needAirdropList);
     if (needAirdropList.length !== 0) {
       const { data } = await this.service.ethereum.etherAirDropperAPI.requestAirDrop(
