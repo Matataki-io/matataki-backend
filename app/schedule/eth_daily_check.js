@@ -1,9 +1,9 @@
 const { Subscription } = require('egg');
 
-class KeepWalletBalance extends Subscription {
+class KeepWalletBalanceDaily extends Subscription {
   static get schedule() {
     return {
-      interval: '1m',
+      cron: '0 0 2 * * *',
       type: 'all',
       immediate: true,
     };
@@ -13,15 +13,16 @@ class KeepWalletBalance extends Subscription {
     const { web3 } = this.service.ethereum.web3;
     const lowestBalanceLimit = web3.utils.toWei('0.002', 'ether');
     const needAirdropList = await this.service.ethereum
-      .etherAirDropperAPI.getActiveUnderBalanceWallet(lowestBalanceLimit);
-    this.logger.info('KeepWalletBalance::needAirdropList', needAirdropList);
+      .etherAirDropperAPI.getUnderBalanceWallet(lowestBalanceLimit);
+    this.logger.info('KeepWalletBalanceDaily::needAirdropList', needAirdropList);
     if (needAirdropList.length !== 0) {
       const { data } = await this.service.ethereum.etherAirDropperAPI.requestAirDrop(
         needAirdropList,
         Array(needAirdropList.length).fill(web3.utils.toWei('0.005', 'ether')));
-      this.logger.info('Multisend Result', data);
+      await this.service.serverchan.sendNotification(
+        '每日空投报告', JSON.stringify(data));
     }
   }
 }
 
-module.exports = KeepWalletBalance;
+module.exports = KeepWalletBalanceDaily;
