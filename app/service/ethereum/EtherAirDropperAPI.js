@@ -1,6 +1,7 @@
 'use strict';
 const Web3Service = require('./web3');
 const BigNumber = require('bignumber.js');
+const GetBalancesABI = require('./abi/GetBalances.json');
 const axios = require('axios');
 
 class EtherAirDropService extends Web3Service {
@@ -35,6 +36,20 @@ class EtherAirDropService extends Web3Service {
     ).map(({ address }) => address);
     return needAirdropList;
   }
+
+  /**
+   * _getBalances，查询多个钱包的余额，一次限额200个地址
+   * @param {Array<string>} addresses 要查询的地址
+   */
+  async _getBalances(addresses) {
+    const contract = new this.web3.eth.Contract(GetBalancesABI, '0x0383928647c7f4ceb5141761E4e733c9f348963e');
+    const balances = await contract.methods.getBalancesOfEth(addresses).call();
+    const wallets = addresses.map((address, i) => {
+      return { address, balance: balances[i] };
+    });
+    return wallets;
+  }
+
 
 }
 
