@@ -441,7 +441,7 @@ class MineTokenService extends Service {
 
   async getTokenLogs(tokenId, page = 1, pagesize = 20) {
     const sql
-      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type,
+      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type, t.tx_hash,
         m.name, m.symbol, m.decimals,
         u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar,
         u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar
@@ -472,7 +472,7 @@ class MineTokenService extends Service {
   // 查看用户的token日志
   async getUserLogs(tokenId, userId, page = 1, pagesize = 20) {
     const sql
-      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type,
+      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type, t.tx_hash,
         m.name, m.symbol, m.decimals,
         u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar,
         u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar
@@ -544,12 +544,14 @@ class MineTokenService extends Service {
 
   async getLiquidityLogs(tokenId, userId = null, page = 1, pagesize = 10) {
     let sql = `
-      SELECT t1.id, t1.uid, t1.token_id,t1.cny_amount,t1.token_amount,t1.liquidity,t1.create_time,
-      t2.name,t2.symbol,t2.decimals,t2.total_supply,t2.logo,
-      t3.username, t3.nickname
+      SELECT t1.id, t1.uid, t1.token_id, t1.cny_amount, t1.token_amount, t1.liquidity, t1.create_time,
+      t3.name, t3.symbol, t3.decimals, t3.total_supply, t3.logo,
+      t4.username, t4.nickname,
+      t2.tx_hash
       FROM exchange_liquidity_logs AS t1
-      JOIN minetokens AS t2 ON t1.token_id = t2.id
-      JOIN users as t3 ON t2.uid = t3.id
+      JOIN assets_minetokens_log t2 USING (token_id, create_time)
+      JOIN minetokens AS t3 ON t1.token_id = t3.id
+      JOIN users as t4 ON t3.uid = t4.id
       `;
     let params = {
       tokenId,
@@ -592,11 +594,12 @@ class MineTokenService extends Service {
 
   async getPurchaseLog(tokenId, userId = null, page = 1, pagesize = 100) {
     let sql = `
-      SELECT t1.*,
+      SELECT t1.*, t2.tx_hash,
       CASE WHEN t1.sold_token_id = :tokenId
       THEN 'sell' ELSE 'buy'
       END 'direction'
       FROM exchange_purchase_logs AS t1
+      JOIN assets_minetokens_log t2 ON t1.create_time = t2.create_time AND token_id = :tokenId
       WHERE (t1.sold_token_id = :tokenId OR t1.bought_token_id = :tokenId)`;
     let params = {
       tokenId,
@@ -689,8 +692,8 @@ class MineTokenService extends Service {
 
   async getLiquidityTransactions(tokenId, page = 1, pagesize = 10) {
     const sql = `
-      SELECT t1.token_id, t1.create_time, t1.liquidity,
-        t2.from_uid, t2.to_uid,
+      SELECT t1.token_id, t1.create_time, t1.liquidity, t1.token_amount, t1.cny_amount,
+        t2.from_uid, t2.to_uid, t2.tx_hash,
         u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar,
         u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar
       FROM exchange_liquidity_logs t1
