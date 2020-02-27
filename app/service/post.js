@@ -1521,6 +1521,7 @@ class PostService extends Service {
     title, description, displayName, data, isEncrypt = false }) {
     let markdown = data.content;
     let metadata = JSON.stringify(data);
+    description = await this.wash(description);
     // 如果需要加密，则替换渲染HTML文章内容
     if (isEncrypt) {
       markdown = `${description}
