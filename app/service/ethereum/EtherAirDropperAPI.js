@@ -1,7 +1,7 @@
 'use strict';
 const Web3Service = require('./web3');
 const BigNumber = require('bignumber.js');
-const { splitEvery, flatten } = require('ramda');
+const { splitEvery, flatten, compose, map, filter } = require('ramda');
 const GetBalancesABI = require('./abi/GetBalances.json');
 const axios = require('axios');
 
@@ -19,19 +19,31 @@ class EtherAirDropService extends Web3Service {
     });
   }
 
-  async findNoEtherUser(lowestLimit = this.web3.utils.toWei('0.001', 'ether')) {
+  async getUnderBalanceWalletWithCmd(queryCommands, lowestLimit) {
     const { mysql } = this.app;
-    const ethAccounts = await mysql.query(`
-    select * from account_hosting where blockchain = 'eth' and uid in (
-    select id from users 
-      where last_login_time >= DATE(NOW()) - INTERVAL 7 DAY or platform = 'cny'
-    )`);
+    const ethAccounts = await mysql.query(queryCommands);
     const addresses = ethAccounts.map(acc => acc.public_key);
     const wallets = await this.getBalances(addresses);
-    const needAirdropList = wallets.filter(
-      ({ balance }) => new BigNumber(balance).lt(lowestLimit)
-    ).map(({ address }) => address);
+    const needAirdropList = compose(
+      map(({ address }) => address),
+      filter(({ balance }) => new BigNumber(balance).lt(lowestLimit))
+    )(wallets);
     return needAirdropList;
+  }
+
+  async getActiveUnderBalanceWallet(lowestLimit = this.web3.utils.toWei('0.001', 'ether')) {
+    return this.getUnderBalanceWalletWithCmd(`
+      select * from account_hosting 
+      where blockchain = 'eth' and uid in (
+        select id from users 
+          where last_login_time >= DATE(NOW()) - INTERVAL 7 DAY or platform = 'cny'
+        )`, lowestLimit);
+  }
+
+  getUnderBalanceWallet(lowestLimit = this.web3.utils.toWei('0.001', 'ether')) {
+    return this.getUnderBalanceWalletWithCmd(`
+      select * from account_hosting 
+      where blockchain = 'eth'`, lowestLimit);
   }
 
   /**
