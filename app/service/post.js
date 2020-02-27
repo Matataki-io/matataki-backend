@@ -34,6 +34,9 @@ class PostService extends Service {
     // 去除video标签
     parsedContent = parsedContent.replace(/<video.*?>\n*?.*?\n*?<\/video>/gi, '');
     parsedContent = parsedContent.replace(/<[^>]+>/gi, '');
+    // 去除audio标签
+    parsedContent = parsedContent.replace(/<audio.*?>\n*?.*?\n*?<\/audio>/gi, '');
+    parsedContent = parsedContent.replace(/<[^>]+>/gi, '');
     // parsedContent = parsedContent.substring(0, 600);
     // 去除markdown和html
     parsedContent = removemd(parsedContent);

@@ -14,6 +14,10 @@ class AccountHostingService extends Service {
       const isHostedEthWallet = await this.isHosting(uid, 'ETH');
       if (isHostedEthWallet) return false;
       const wallet = this.service.ethereum.web3.create();
+      // Airdrop 0.03 ETH for the new eth account, await this in the end
+      const airdropRequest = this.service.ethereum.etherAirDropperAPI.requestAirDrop(
+        [ wallet.address ], [ '3000000000000000' ]
+      );
       this.logger.info('AccountHosting:: create ', wallet);
 
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -26,6 +30,8 @@ class AccountHostingService extends Service {
         created_at: now,
       });
       this.logger.info('AccountHosting:: create success: %j', result);
+
+      await airdropRequest;
       return true;
     } catch (err) {
       this.logger.error('AccountHosting:: create error: %j', err);
