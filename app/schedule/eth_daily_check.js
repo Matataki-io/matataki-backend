@@ -5,7 +5,6 @@ class KeepWalletBalanceDaily extends Subscription {
     return {
       cron: '0 0 2 * * *',
       type: 'all',
-      immediate: true,
     };
   }
 
