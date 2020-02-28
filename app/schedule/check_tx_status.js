@@ -17,7 +17,7 @@ class SyncMinetokenTransaction extends Subscription {
     return {
       interval: '1m',
       type: 'all',
-      disable: true,
+      immediate: true,
     };
   }
 
