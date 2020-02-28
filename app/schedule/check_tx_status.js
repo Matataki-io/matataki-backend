@@ -15,13 +15,14 @@ const txStatusCode = {
 class SyncMinetokenTransaction extends Subscription {
   static get schedule() {
     return {
-      interval: '30s',
+      interval: '1m',
       type: 'all',
       immediate: true,
     };
   }
 
   async subscribe() {
+    if (this.ctx.app.config.isDebug) return;
     this.logger.info('Running SyncMinetokenTransaction at: ', new Date().toLocaleString());
     const { mysql } = this.ctx.app;
     const txsToBeMonitored = await mysql.query(

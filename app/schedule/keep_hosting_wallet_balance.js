@@ -5,11 +5,11 @@ class KeepWalletBalance extends Subscription {
     return {
       interval: '1m',
       type: 'all',
-      immediate: true,
     };
   }
 
   async subscribe() {
+    if (this.ctx.app.config.isDebug) return;
     const { web3 } = this.service.ethereum.web3;
     const lowestBalanceLimit = web3.utils.toWei('0.002', 'ether');
     const needAirdropList = await this.service.ethereum

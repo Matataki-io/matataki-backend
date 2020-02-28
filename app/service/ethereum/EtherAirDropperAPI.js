@@ -6,6 +6,11 @@ const GetBalancesABI = require('./abi/GetBalances.json');
 const axios = require('axios');
 
 class EtherAirDropService extends Web3Service {
+  /**
+   * 请求远程 API 空投
+   * @param {string[]} targets 收款人名单
+   * @param {string[]} amounts 金额名单
+   */
   async requestAirDrop(targets, amounts) {
     // 没有目标就不发请求了
     if (targets.length === 0) { return null; }
@@ -19,6 +24,11 @@ class EtherAirDropService extends Web3Service {
     });
   }
 
+  /**
+   * 通过命令获取多个钱包余额
+   * @param {string} queryCommands 查询托管帐户的 SQL 指令
+   * @param {string|number} lowestLimit 最低余额限额，超过限额即无视
+   */
   async getUnderBalanceWalletWithCmd(queryCommands, lowestLimit) {
     const { mysql } = this.app;
     const ethAccounts = await mysql.query(queryCommands);
@@ -31,6 +41,10 @@ class EtherAirDropService extends Web3Service {
     return needAirdropList;
   }
 
+  /**
+   * 获取活跃用户（7天之内登录过或exchange帐户）的钱包余额
+   * @param {string|number} lowestLimit 最低余额限额，超过限额即无视
+   */
   async getActiveUnderBalanceWallet(lowestLimit = this.web3.utils.toWei('0.001', 'ether')) {
     return this.getUnderBalanceWalletWithCmd(`
       select * from account_hosting 
@@ -40,6 +54,10 @@ class EtherAirDropService extends Web3Service {
         )`, lowestLimit);
   }
 
+  /**
+   * 获取所有用户的钱包余额
+   * @param {string|number} lowestLimit 最低余额限额，超过限额即无视
+   */
   getUnderBalanceWallet(lowestLimit = this.web3.utils.toWei('0.001', 'ether')) {
     return this.getUnderBalanceWalletWithCmd(`
       select * from account_hosting 
