@@ -174,15 +174,18 @@ class ExchangeService extends Service {
     // 超时，需要退还做市商的钱
     const timestamp = Math.floor(Date.now() / 1000);
     if (deadline < timestamp) {
+      this.logger.error('ExchangeService.addLiquidity error deadline < timestamp. %j', { deadline, timestamp });
       return -1;
     }
 
     // 如果交易对不存在，首先创建交易对
-    await this.create(tokenId);
+    const createResult = await this.create(tokenId);
+    this.logger.info('ExchangeService.addLiquidity error create exchange result. %j', createResult);
 
     // 锁定交易对，悲观锁
     const exchangeResult = await conn.query('SELECT token_id, total_supply, exchange_uid FROM exchanges WHERE token_id=? FOR UPDATE;', [ tokenId ]);
     if (!exchangeResult || exchangeResult.length <= 0) {
+      this.logger.error('ExchangeService.addLiquidity error !exchangeResult. %j', exchangeResult);
       return -1;
     }
     const exchange = exchangeResult[0];
@@ -202,6 +205,12 @@ class ExchangeService extends Service {
 
       // 不满足token最大值和份额最小值条件
       if (max_tokens < token_amount || liquidity_minted < min_liquidity) {
+        this.logger.error('ExchangeService.addLiquidity error max_tokens < token_amount || liquidity_minted < min_liquidity. %j', {
+          max_tokens,
+          token_amount,
+          liquidity_minted,
+          min_liquidity,
+        });
         return -1;
       }
 
@@ -209,6 +218,7 @@ class ExchangeService extends Service {
       const transferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, token_amount, '', consts.mineTokenTransferTypes.exchange_addliquidity, conn);
       // 转移资产失败
       if (!transferResult) {
+        this.logger.error('ExchangeService.addLiquidity error if transferResult. %j', transferResult);
         return -1;
       }
 
@@ -216,6 +226,7 @@ class ExchangeService extends Service {
       const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, exchange.exchange_uid, cny_amount, conn);
       // 转移cny失败
       if (!cnyTransferResult) {
+        this.logger.error('ExchangeService.addLiquidity error if cnyTransferResult. %j', cnyTransferResult);
         return -1;
       }
 
@@ -238,6 +249,7 @@ class ExchangeService extends Service {
       const transferResult = await this.service.token.mineToken.transferFrom(tokenId, userId, exchange.exchange_uid, token_amount, '', consts.mineTokenTransferTypes.exchange_addliquidity, conn);
       // 转移资产失败
       if (!transferResult) {
+        this.logger.error('ExchangeService.addLiquidity error else transferResult. %j', transferResult);
         return -1;
       }
 
@@ -245,6 +257,7 @@ class ExchangeService extends Service {
       const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, exchange.exchange_uid, cny_amount, conn);
       // 转移资产失败
       if (!cnyTransferResult) {
+        this.logger.error('ExchangeService.addLiquidity error else cnyTransferResult. %j', cnyTransferResult);
         return -1;
       }
 
