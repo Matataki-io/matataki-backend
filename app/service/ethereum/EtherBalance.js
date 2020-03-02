@@ -5,7 +5,7 @@ const { splitEvery, flatten, compose, map, filter } = require('ramda');
 const GetBalancesABI = require('./abi/GetBalances.json');
 const axios = require('axios');
 
-class EtherAirDropService extends Web3Service {
+class EtherBalanceService extends Web3Service {
   /**
    * 请求远程 API 空投
    * @param {string[]} targets 收款人名单
@@ -91,4 +91,4 @@ class EtherAirDropService extends Web3Service {
 
 }
 
-module.exports = EtherAirDropService;
+module.exports = EtherBalanceService;
