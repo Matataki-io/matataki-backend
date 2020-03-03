@@ -452,5 +452,8 @@ module.exports = app => {
 
   // router.put('/history/user', passport.authorize, controller.history.update);
   router.get('/history/user', passport.authorize, controller.history.index);
+
+  // 用户持仓token list
+  router.get('/_daothon_/tokenlist', passport.verify, controller.daothon.tokenList);
 };
 

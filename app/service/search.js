@@ -281,6 +281,7 @@ class SearchService extends Service {
 
   // todo：增加一种方式直接传入user对象
   async importUser(userid) {
+    this.logger.info('searchService importUser uid', userid);
     const user = await this.app.mysql.query(
       'SELECT id, username, nickname, platform FROM users WHERE id = ?;',
       [ userid ]

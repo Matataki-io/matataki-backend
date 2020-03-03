@@ -10,6 +10,7 @@ class KeepWalletBalance extends Subscription {
   }
 
   async subscribe() {
+    if (this.ctx.app.config.isDebug) return;
     this.logger.info('Running KeepWalletBalance', new Date().toLocaleString());
     const { web3 } = this.service.ethereum.web3;
     const needAirdropList = await this.service.ethereum.etherAirDropperAPI.findNoEtherUser(
