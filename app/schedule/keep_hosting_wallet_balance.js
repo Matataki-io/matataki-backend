@@ -5,23 +5,21 @@ class KeepWalletBalance extends Subscription {
     return {
       interval: '1m',
       type: 'all',
-      immediate: true,
     };
   }
 
   async subscribe() {
     if (this.ctx.app.config.isDebug) return;
-    this.logger.info('Running KeepWalletBalance', new Date().toLocaleString());
     const { web3 } = this.service.ethereum.web3;
-    const needAirdropList = await this.service.ethereum.etherAirDropperAPI.findNoEtherUser(
-      web3.utils.toWei('0.002', 'ether')
-    );
+    const lowestBalanceLimit = web3.utils.toWei('0.002', 'ether');
+    const needAirdropList = await this.service.ethereum
+      .etherBalance.getActiveUnderBalanceWallet(lowestBalanceLimit);
     this.logger.info('KeepWalletBalance::needAirdropList', needAirdropList);
     if (needAirdropList.length !== 0) {
-      const { data } = await this.service.ethereum.etherAirDropperAPI.requestAirDrop(
+      const txHash = await this.service.ethereum.etherAirdrop.batchAirdropEther(
         needAirdropList,
         Array(needAirdropList.length).fill(web3.utils.toWei('0.005', 'ether')));
-      this.logger.info('Multisend Result', data);
+      this.logger.info('Multisend Result', txHash);
     }
   }
 }

@@ -425,7 +425,9 @@ module.exports = app => {
   router.post('/_internal_bot/minetokens/:tokenId/approveTheMax/:fromUid', passport.apiAuthorize, controller.internalApi.token.approveTheMax);
   // 开发用
   router.get('/_internal/ipfs/:hash', passport.apiVerify, controller.post._rawCatchPost);
-
+  // 开发用
+  router.get('/_internal/getWallet', passport.apiVerify, controller.dev.getActiveUnderBalanceWallet);
+  router.post('/_internal/justAirdrop', passport.apiVerify, controller.dev.justAirDrop);
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
   router.post('/account/unbinding', passport.authorize, controller.account.binding.unbinding);

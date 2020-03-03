@@ -34,6 +34,12 @@ class PostService extends Service {
     // 去除video标签
     parsedContent = parsedContent.replace(/<video.*?>\n*?.*?\n*?<\/video>/gi, '');
     parsedContent = parsedContent.replace(/<[^>]+>/gi, '');
+    // 去除audio标签
+    parsedContent = parsedContent.replace(/<audio.*?>\n*?.*?\n*?<\/audio>/gi, '');
+    parsedContent = parsedContent.replace(/<[^>]+>/gi, '');
+    // 去除source标签
+    parsedContent = parsedContent.replace(/<source.*?>\n*?.*?\n*?<\/source>/gi, '');
+    parsedContent = parsedContent.replace(/<[^>]+>/gi, '');
     // parsedContent = parsedContent.substring(0, 600);
     // 去除markdown和html
     parsedContent = removemd(parsedContent);
@@ -1515,6 +1521,7 @@ class PostService extends Service {
     title, description, displayName, data, isEncrypt = false }) {
     let markdown = data.content;
     let metadata = JSON.stringify(data);
+    description = await this.wash(description);
     // 如果需要加密，则替换渲染HTML文章内容
     if (isEncrypt) {
       markdown = `${description}

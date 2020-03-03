@@ -15,7 +15,7 @@ const txStatusCode = {
 class SyncMinetokenTransaction extends Subscription {
   static get schedule() {
     return {
-      interval: '30s',
+      interval: '1m',
       type: 'all',
       immediate: true,
     };
