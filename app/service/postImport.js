@@ -226,6 +226,10 @@ class PostImportService extends Service {
     const { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
     // Parser 处理， 转化为markdown， 因平台而异
     const $ = cheerio.load(rawPage.data);
+    // 不删掉 fill 图片会走样
+    $('div.image-container-fill').each(function() {
+      $(this).remove();
+    });
     const mediaContent = $('article');
     const _imgElement = mediaContent.find('img').toArray();
     let coverLocation = null;
