@@ -457,5 +457,17 @@ module.exports = app => {
 
   // 用户持仓token list
   router.get('/_daothon_/tokenlist', passport.verify, controller.daothon.tokenList);
+  // DAO
+  router.get('/dao/user/job', passport.verify, controller.dao.job.index);
+  router.post('/dao/user/job', passport.authorize, controller.dao.job.create);
+  router.put('/dao/user/job', passport.authorize, controller.dao.job.update);
+  router.delete('/dao/user/job', passport.authorize, controller.dao.job.destroy);
+  router.get('/dao/job/options', passport.verify, controller.dao.job.options);
+
+  router.get('/dao/user/skill', passport.verify, controller.dao.skill.index);
+  router.post('/dao/user/skill', passport.authorize, controller.dao.skill.create);
+  router.put('/dao/user/skill', passport.authorize, controller.dao.skill.update);
+  router.delete('/dao/user/skill', passport.authorize, controller.dao.skill.destroy);
+  router.get('/dao/skill/options', passport.verify, controller.dao.skill.options);
 };
 
