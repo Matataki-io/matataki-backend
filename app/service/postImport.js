@@ -407,26 +407,34 @@ class PostImportService extends Service {
       const parsedTitleImage = $('img.TitleImage');
       const parsedImages = $('img', parsedContent);
       const parsedLinkCards = $('a.LinkCard');
-      let coverLocation = null;
-      if (parsedTitleImage) {
-        const originSrc = parsedTitleImage.attr('src');
-        coverLocation = await this.uploadArticleImage(originSrc,
-          this.generateFileName('zhihu', originSrc));
-      }
+      let uploadedImgs = [];
       for (const image of parsedImages.toArray()) {
         const originSrc = $(image).attr('data-original');
         const uploadUrl = originSrc ? 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
           this.generateFileName('zhihu', originSrc)) : null;
         $(image).attr('src', uploadUrl ? uploadUrl : '');
+        uploadedImgs.push(uploadUrl);
       }
-
+      // 防止 null 混进了里面
+      uploadedImgs = uploadedImgs.filter(it => it !== null);
+      let coverLocation = null;
+      if (parsedTitleImage && parsedTitleImage.attr('src')) {
+        const originSrc = parsedTitleImage.attr('src');
+        coverLocation = await this.uploadArticleImage(originSrc,
+          this.generateFileName('zhihu', originSrc));
+      } else if (uploadedImgs.length !== 0) {
+        coverLocation = uploadedImgs[0].replace('https://ssimg.frontenduse.top', '');
+      } else {
+        // Blank Cover if no pic in the post
+        coverLocation = '/article/2020/03/04/7f6be16b0253c196b986e3baaaf2287a.png';
+      }
       for (const linkCard of parsedLinkCards.toArray()) {
         $(linkCard).attr('target', 'linebreak'); // hack
       }
       turndownService.addRule('linkCard', {
         filter: 'a',
         replacement: (content, node) =>
-          `[${content}](${node.href}) ${node.target==='linebreak' ? '\n\n' : ''}`,
+          `[${content}](${node.href}) ${node.target === 'linebreak' ? '\n\n' : ''}`,
       });
       turndownService.remove('noscript');
       const articleContent = turndownService.turndown(parsedContent.html());
