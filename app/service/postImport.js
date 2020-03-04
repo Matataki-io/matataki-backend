@@ -225,29 +225,29 @@ class PostImportService extends Service {
     }
     const { title } = await this.service.metadata.GetFromRawPage(rawPage, url);
     // Parser 处理， 转化为markdown， 因平台而异
-    const parsedPage = htmlparser.parse(rawPage.data);
-    const parsedContent = parsedPage.querySelector('article');
-    const turndownService = new turndown();
-    const parsedCoverList = parsedPage.querySelectorAll('article img');
+    const $ = cheerio.load(rawPage.data);
+    const mediaContent = $('article');
+    const _imgElement = mediaContent.find('img').toArray();
     let coverLocation = null;
-    for (let i = 0; i < parsedCoverList.length; i++) {
-      parsedCoverList[i].rawAttrs = parsedCoverList[i].rawAttrs.replace('data-original-src', 'src');
-      let originalSrc = parsedCoverList[i].rawAttributes.src;
+    for (let i = 0; i < _imgElement.length; i++) {
+      _imgElement[i].attribs.src = _imgElement[i].attribs['data-original-src'];
+      let originalSrc = _imgElement[i].attribs.src;
       if (originalSrc.indexOf('http') === -1) originalSrc = 'https:' + originalSrc;
       const parsedCoverUpload = './uploads/today_jianshu_' + Date.now() + '.jpg';
       const imgUpUrl = await this.uploadArticleImage(originalSrc, parsedCoverUpload);
       if (i === 0) coverLocation = imgUpUrl;
       if (imgUpUrl) {
-        parsedCoverList[i].rawAttrs = parsedCoverList[i].rawAttrs.replace(
-          /[https:]?\/\/upload-images\.jianshu\.io\/upload_images\/[a-z0-9_=&\.\-]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
+        _imgElement[i].attribs.src = _imgElement[i].attribs
+          .src.replace(/[https:]?\/\/upload-images\.jianshu\.io\/upload_images\/[a-z0-9_=&\.\-]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
+        _imgElement[i].attribs['data-original-src'] = _imgElement[i]
+          .attribs['data-original-src'].replace(/[https:]?\/\/upload-images\.jianshu\.io\/upload_images\/[a-z0-9_=&\.\-]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
       }
     }
-    const articleContent = turndownService.turndown(parsedContent.toString());
 
     const articleObj = {
       title,
       cover: coverLocation,
-      content: articleContent,
+      content: mediaContent.html(),
     };
 
     return articleObj;
