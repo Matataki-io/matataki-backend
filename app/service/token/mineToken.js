@@ -847,6 +847,15 @@ class MineTokenService extends Service {
       list: await this.service.post.getByPostIds(results[0].map(row => row.id)),
     };
   }
+  async countMember() {
+    const res = await this.app.redis.zrange('token:member', 0, -1, 'WITHSCORES');
+    const result = {};
+    const len = res.length;
+    for (let i = 0; i < len; i += 2) {
+      result[res[i]] = res[i + 1];
+    }
+    return result;
+  }
 }
 
 module.exports = MineTokenService;

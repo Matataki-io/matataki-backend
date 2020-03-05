@@ -13,6 +13,7 @@ class Bootstrapper {
     await this.app.redis.del('post:score:filter:1');
     await this.app.redis.del('post:score:filter:3');
     await this.app.runSchedule('calculate_hot_score');
+    await this.app.runSchedule('count_token_member');
 
     const schemaVersionKey = 'schema_version';
     const cacheSchemaVersion = 2;
