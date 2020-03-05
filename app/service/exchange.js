@@ -108,22 +108,24 @@ class ExchangeService extends Service {
       'b.create_time DESC',
       'a.amount ASC',
       'a.amount DESC',
-    ]
-    const orderString = orderList[order] || orderList[0]
+    ];
+    const orderString = orderList[order] || orderList[0];
 
     const sql = 'SELECT a.token_id, a.amount, b.symbol, b.name, b.decimals, b.logo, b.uid, u.username, u.nickname, u.avatar '
       + 'FROM assets_minetokens AS a '
       + 'LEFT JOIN minetokens AS b ON a.token_id = b.id '
       + 'LEFT JOIN users u ON b.uid = u.id '
-      + `WHERE a.uid = :id AND a.amount > 0 ORDER BY ${ orderString } LIMIT :offset, :limit;`
+      + `WHERE a.uid = :id AND a.amount > 0 ORDER BY ${orderString} LIMIT :offset, :limit;`
       + 'SELECT count(1) as count FROM assets_minetokens WHERE uid = :id AND amount > 0;';
     const result = await this.app.mysql.query(sql, {
       id,
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
+    const memberObj = await this.service.token.mineToken.countMember();
 
     _.each(result[0], row => {
+      row.member = memberObj[row.id] || '0';
       row.username = this.service.user.maskEmailAddress(row.username);
     });
 
@@ -307,8 +309,10 @@ class ExchangeService extends Service {
     }
 
     const result = await this.app.mysql.query(sql, parameters);
+    const memberObj = await this.service.token.mineToken.countMember();
 
     _.each(result[0], row => {
+      row.member = memberObj[row.id] || '0';
       row.username = this.service.user.maskEmailAddress(row.username);
     });
 
