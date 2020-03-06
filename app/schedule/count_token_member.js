@@ -11,7 +11,7 @@ class PostScore extends Subscription {
   }
 
   async subscribe() {
-    // if (this.ctx.app.config.isDebug) return;
+    if (this.ctx.app.config.isDebug) return;
     this.logger.info('Running:schedule count_token');
     const res = await this.app.mysql.query(
       `SELECT token_id, COUNT(1) as count
