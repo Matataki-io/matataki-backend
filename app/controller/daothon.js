@@ -14,6 +14,19 @@ class DaothonController extends Controller {
       data: result,
     };
   }
+  async userAddress() {
+    const ctx = this.ctx;
+    const { uid = 0 } = ctx.query;
+    const res = await this.app.mysql.get('account_hosting', { uid });
+    if (!res) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: res.public_key,
+    };
+  }
 }
 
 module.exports = DaothonController;

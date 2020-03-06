@@ -457,6 +457,7 @@ module.exports = app => {
 
   // 用户持仓token list
   router.get('/_daothon_/tokenlist', passport.verify, controller.daothon.tokenList);
+  router.get('/_daothon_/useraddress', passport.verify, controller.daothon.userAddress);
   // DAO
   router.get('/dao/user/job', passport.verify, controller.dao.job.index);
   router.post('/dao/user/job', passport.authorize, controller.dao.job.create);
