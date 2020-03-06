@@ -293,7 +293,7 @@ class UserService extends Service {
     }
 
     if (introduction !== null) {
-      if (introduction.length > 20) {
+      if (introduction.length > 200) {
         return introductionLengthInvalid;
       }
       row.introduction = introduction;
