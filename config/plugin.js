@@ -39,4 +39,8 @@ module.exports = {
     enable: true,
     package: 'egg-tenpay',
   },
+  alinode: {
+    enable: true,
+    package: 'egg-alinode',
+  },
 };
