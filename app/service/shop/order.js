@@ -123,7 +123,7 @@ class OrderService extends Service {
 
     // 减库存数量
     const resultStockQuantity = await conn.query(
-      'UPDATE product_prices SET stock_quantity = stock_quantity - ? WHERE sign_id = ? AND stock_quantity >= ?;',
+      'UPDATE product_prices SET stock_quantity = stock_quantity - ? WHERE sign_id = ? AND stock_quantity >= ? AND category = 0;',
       [ payment.num, payment.signid, payment.num ]
     );
 
@@ -178,7 +178,7 @@ class OrderService extends Service {
     const countsql = 'SELECT COUNT(*) AS count ';
     const listsql = 'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, o.price, o.amount, r.title, p.category_id, p.cover ';
     const wheresql = 'FROM orders o '
-      + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.platform = o.platform '
+      + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.platform = o.platform AND r.category = 0 '
       + 'INNER JOIN posts p ON p.id = o.signid '
       + 'WHERE o.uid = :userid AND o.status = 1 ';
     const ordersql = 'ORDER BY o.create_time DESC LIMIT :start, :end ';

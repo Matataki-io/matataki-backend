@@ -301,7 +301,7 @@ class PostService extends Service {
   // 获取商品价格
   async getPrices(signId) {
     const prices = await this.app.mysql.select('product_prices', {
-      where: { sign_id: signId, status: 1 },
+      where: { sign_id: signId, status: 1, category: 0 },
       columns: [ 'platform', 'symbol', 'price', 'decimals', 'stock_quantity' ],
     });
 
@@ -534,7 +534,7 @@ class PostService extends Service {
       LEFT JOIN post_read_count c ON a.id = c.post_id 
 
       LEFT JOIN product_prices t5
-      ON a.id = t5.sign_id
+      ON a.id = t5.sign_id AND t5.category = 0
       LEFT JOIN post_minetokens t6
       ON a.id = t6.sign_id
       LEFT JOIN minetokens t7
@@ -656,7 +656,7 @@ class PostService extends Service {
       LEFT JOIN users b ON a.uid = b.id 
       LEFT JOIN post_read_count c ON a.id = c.post_id 
       LEFT JOIN product_prices t5
-      ON a.id = t5.sign_id
+      ON a.id = t5.sign_id AND t5.category = 0
       LEFT JOIN post_minetokens t6
       ON a.id = t6.sign_id
       LEFT JOIN minetokens t7
@@ -726,7 +726,7 @@ class PostService extends Service {
       LEFT JOIN post_read_count c ON a.id = c.post_id 
 
       LEFT JOIN product_prices t5
-      ON a.id = t5.sign_id
+      ON a.id = t5.sign_id AND t5.category = 0
       LEFT JOIN post_minetokens t6
       ON a.id = t6.sign_id
       LEFT JOIN minetokens t7
@@ -1103,7 +1103,7 @@ class PostService extends Service {
     const statsQuery = await this.app.mysql.query(
       'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue, likes'
       + ' FROM post_read_count WHERE post_id IN (:signid);'
-      + 'SELECT sign_id, symbol, price, decimals FROM product_prices WHERE sign_id IN (:signid);'
+      + 'SELECT sign_id, symbol, price, decimals FROM product_prices WHERE sign_id IN (:signid) AND category = 0;'
       + 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);',
       { signid: signids }
     );
@@ -1356,6 +1356,53 @@ class PostService extends Service {
     }
   }
 
+  // 添加持币编辑
+  async addEditMineTokens(current_uid, id, tokens) {
+    const post = await this.get(id);
+    if (!post) {
+      return -1;
+    }
+
+    if (post.uid !== current_uid) {
+      return -2;
+    }
+
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      await conn.query('DELETE FROM edit_minetokens WHERE sign_id = ?;', [id]);
+      let require = 0;
+      for (const token of tokens) {
+        if (token.amount > 0) {
+          require = 1;
+          await conn.insert('edit_minetokens', {
+            sign_id: id,
+            token_id: token.tokenId,
+            amount: token.amount,
+            create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+          });
+        }
+      }
+
+      await conn.update('posts',
+        {
+          editor_require_holdtokens: require,
+        },
+        {
+          where: {
+            id,
+          },
+        });
+
+      await conn.commit();
+
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.ctx.logger.error(e);
+      return -3;
+    }
+  }
+
   // 获取阅读文章需要持有的tokens
   async getMineTokens(signId) {
     const tokens = await this.app.mysql.query('SELECT t.id, p.amount, t.name, t.symbol, t.decimals, t.logo FROM post_minetokens p INNER JOIN minetokens t ON p.token_id = t.id WHERE p.sign_id = ?;',
@@ -1402,7 +1449,7 @@ class PostService extends Service {
   }
 
   // todo：拆分出来
-  async addPrices(userId, signId, price) {
+  async addPrices(userId, signId, price, category = 0) {
     const post = await this.get(signId);
     if (!post) {
       return -1;
@@ -1414,7 +1461,7 @@ class PostService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM product_prices WHERE sign_id = ?;', [ signId ]);
+      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [ signId, category ]);
       // 默认CNY定价
       await conn.insert('product_prices', {
         sign_id: signId,
@@ -1426,6 +1473,7 @@ class PostService extends Service {
         price,
         decimals: 4,
         status: 1,
+        category
       });
 
       await conn.update('posts',
@@ -1453,7 +1501,7 @@ class PostService extends Service {
     }
   }
 
-  async delPrices(userId, signId) {
+  async delPrices(userId, signId, category = 0) {
     const post = await this.get(signId);
     if (!post) {
       return -1;
@@ -1465,7 +1513,7 @@ class PostService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM product_prices WHERE sign_id = ?;', [ signId ]);
+      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [signId, category]);
 
       await conn.update('posts',
         {

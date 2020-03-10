@@ -29,7 +29,9 @@ class PostController extends Controller {
       fissionFactor = 2000, cover, is_original = 0, platform = 'eos',
       tags = '', commentPayPoint = 0, shortContent = null, cc_license = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
-      requireToken = null, requireBuy = null } = ctx.request.body;
+      requireToken = null, requireBuy = null,
+      // 持币编辑相关字段
+      editRequireToken = null, editRequireBuy = null } = ctx.request.body;
     const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 只清洗文章文本的标识
@@ -82,7 +84,17 @@ class PostController extends Controller {
 
     // 超过 0 元才算数，0元则无视
     if (requireBuy && requireBuy.price > 0) {
-      await this.service.post.addPrices(ctx.user.id, id, requireBuy.price);
+      await this.service.post.addPrices(ctx.user.id, id, requireBuy.price, 0);
+    }
+
+    // 记录持币编辑信息
+    if (editRequireToken) {
+      await this.service.post.addEditMineTokens(ctx.user.id, id, editRequireToken)
+    }
+
+    // 记录购买编辑权限信息
+    if (editRequireBuy && editRequireBuy.price > 0) {
+      await this.service.post.addPrices(ctx.user.id, id, editRequireBuy.price, 1);
     }
 
     // 添加文章到elastic search
@@ -111,6 +123,8 @@ class PostController extends Controller {
       is_original = 0, tags = '', shortContent = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
       requireToken = null, requireBuy = null,
+      // 持币编辑相关字段
+      editRequireToken = null, editRequireBuy = null
     } = ctx.request.body;
     const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
@@ -134,6 +148,7 @@ class PostController extends Controller {
       ctx.body = ctx.msg.notYourPost;
       return;
     }
+
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(data.content);
 
@@ -205,9 +220,23 @@ class PostController extends Controller {
 
       // 超过 0 元才算数，0元则无视
       if (requireBuy && requireBuy.price > 0) {
-        await this.service.post.addPrices(ctx.user.id, signId, requireBuy.price);
+        await this.service.post.addPrices(ctx.user.id, signId, requireBuy.price, 0);
       } else {
-        await this.service.post.delPrices(ctx.user.id, signId);
+        await this.service.post.delPrices(ctx.user.id, signId, 0);
+      }
+
+      if (post.uid === ctx.user.id) {
+        // 记录持币编辑信息
+        if (editRequireToken) {
+          await this.service.post.addEditMineTokens(ctx.user.id, signId, editRequireToken)
+        }
+
+        // 记录购买编辑权限信息
+        if (editRequireBuy && editRequireBuy.price > 0) {
+          await this.service.post.addPrices(ctx.user.id, signId, editRequireBuy.price, 1);
+        } else {
+          await this.service.post.delPrices(ctx.user.id, signId, 1);
+        }
       }
 
       // await updateTimeMachine;
@@ -951,7 +980,7 @@ class PostController extends Controller {
   async delPrices() {
     const ctx = this.ctx;
     const signId = parseInt(ctx.params.id);
-    const result = await this.service.post.delPrices(ctx.user.id, signId);
+    const result = await this.service.post.delPrices(ctx.user.id, signId, 0);
     ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
   }
 

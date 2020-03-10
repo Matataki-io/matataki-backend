@@ -28,7 +28,7 @@ class MailService extends Service {
     const product = await this.app.mysql.query(
       'SELECT u.username, u.email, o.num, o.amount, o.symbol, o.create_time FROM orders o INNER JOIN users u ON o.uid = u.id WHERE o.id = :orderid;'
       + 'SELECT s.digital_copy, p.title FROM product_stock_keys s INNER JOIN orders o ON o.id = s.order_id AND o.id = :orderid '
-      + 'INNER JOIN product_prices p ON s.sign_id = p.sign_id AND p.platform = o.platform;'
+      + 'INNER JOIN product_prices p ON s.sign_id = p.sign_id AND p.platform = o.platform AND p.category = 0;'
       + 'SELECT p.category_id FROM posts p INNER JOIN orders o ON p.id = o.signid WHERE o.id = :orderid;',
       { orderid }
     );

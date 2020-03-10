@@ -223,7 +223,7 @@ class ShareService extends Service {
       LEFT JOIN post_read_count t4
       ON t1.ref_sign_id = t4.post_id
       LEFT JOIN product_prices t5
-      ON t1.ref_sign_id = t5.sign_id
+      ON t1.ref_sign_id = t5.sign_id AND t5.category = 0
       LEFT JOIN post_minetokens t6
       ON t1.ref_sign_id = t6.sign_id
       LEFT JOIN minetokens t7
@@ -244,7 +244,7 @@ class ShareService extends Service {
       LEFT JOIN post_read_count t4
       ON t1.sign_id = t4.post_id
       LEFT JOIN product_prices t5
-      ON t1.sign_id = t5.sign_id
+      ON t1.sign_id = t5.sign_id AND t5.category = 0
       LEFT JOIN post_minetokens t6
       ON t1.sign_id = t6.sign_id
       LEFT JOIN minetokens t7
