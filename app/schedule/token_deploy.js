@@ -31,14 +31,12 @@ class TokenDeploy extends Subscription {
         return null;
       }
       // 出合约地址了，即部署成功，更新数据库信息
-      // const updateLogResult = mysql.update('assets_minetokens_log', { type: 'issued' }, {
-      //   where: { token_id, type: 'issue' },
-      // });"
       const updateLogResult = mysql.query(`update assets_minetokens_log set type="issued" where token_id=${token_id} AND type = "issue"`);
       const updateMinetokensResult = mysql.update('minetokens', { status: 1, contract_address: receipt.contractAddress }, {
         where: { id: token_id },
       });
-      return Promise.all([ updateLogResult, updateMinetokensResult ]);
+      const syncToBotBackend = this.service.tokenCircle.api.addTokenContractAddress(token_id, receipt.contractAddress);
+      return Promise.all([ updateLogResult, updateMinetokensResult, syncToBotBackend ]);
     }));
   }
 
