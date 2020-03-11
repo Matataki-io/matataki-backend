@@ -43,4 +43,12 @@ module.exports = {
     enable: true,
     package: 'egg-alinode',
   },
+  passport:{
+    enable: true,
+    package: 'egg-passport',
+  },
+  passportTwitter:{
+    enable: true,
+    package: 'egg-passport-twitter',
+  }
 };
