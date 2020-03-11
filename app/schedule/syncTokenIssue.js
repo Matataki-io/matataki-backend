@@ -5,7 +5,7 @@ class SyncTokenIssue extends Subscription {
   static get schedule() {
     return {
       interval: '3m',
-      type: 'all',
+      type: 'worker',
       immediate: true,
     };
   }

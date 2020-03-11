@@ -4,7 +4,7 @@ class KeepWalletBalanceDaily extends Subscription {
   static get schedule() {
     return {
       cron: '0 0 2 * * *',
-      type: 'all',
+      type: 'worker',
     };
   }
 
