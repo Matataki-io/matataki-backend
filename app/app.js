@@ -2,10 +2,10 @@
 
 module.exports = app => {
     app.passport.verify(async (ctx,user) => {
-        const { screen_name,
+        const { displayName,
             name,
-            profile_image_url,
+            photo,
           } = user;
-        return await ctx.service.auth.saveTwitterUser(screen_name, name, profile_image_url, ctx.clientIP, 0, 'twitter');
+        return await ctx.service.auth.saveTwitterUser(displayName, name, photo, ctx.clientIP, 0, 'twitter');
     });
 };
