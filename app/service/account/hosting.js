@@ -18,7 +18,6 @@ class AccountHostingService extends Service {
       const airdropRequest = this.service.ethereum.etherBalance.requestAirDrop(
         [ wallet.address ], [ '3000000000000000' ]
       );
-      const syncToBotBackend = this.service.tokenCircle.api.addUserWalletAddress(uid, wallet.address);
       this.logger.info('AccountHosting:: create ', wallet);
 
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -32,8 +31,8 @@ class AccountHostingService extends Service {
       });
       this.logger.info('AccountHosting:: create success: %j', result);
 
-      await Promise.all([ airdropRequest, syncToBotBackend ]);
-      return true;
+      await airdropRequest;
+      return wallet.address;
     } catch (err) {
       this.logger.error('AccountHosting:: create error: %j', err);
       return false;

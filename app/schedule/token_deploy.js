@@ -3,7 +3,7 @@ const { Subscription } = require('egg');
 class TokenDeploy extends Subscription {
   static get schedule() {
     return {
-      interval: '1m',
+      interval: '30s',
       type: 'worker',
       immediate: true,
     };
@@ -35,7 +35,7 @@ class TokenDeploy extends Subscription {
       const updateMinetokensResult = mysql.update('minetokens', { status: 1, contract_address: receipt.contractAddress }, {
         where: { id: token_id },
       });
-      const syncToBotBackend = this.service.tokenCircle.api.addTokenContractAddress(token_id, receipt.contractAddress);
+      const syncToBotBackend = this.service.tokenCircle.api.updateTokenContractAddress(token_id, receipt.contractAddress);
       return Promise.all([ updateLogResult, updateMinetokensResult, syncToBotBackend ]);
     }));
   }
