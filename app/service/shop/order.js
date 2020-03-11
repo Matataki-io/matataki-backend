@@ -94,7 +94,7 @@ class OrderService extends Service {
 
 
   async getByUserId(userId, signId) {
-    return await this.app.mysql.get('orders', { uid: userId, signid: signId, status: 1 });
+    return await this.app.mysql.get('orders', { uid: userId, signid: signId, status: 1, category: 0 });
   }
 
   async get(userId, tradeNo) {
@@ -291,9 +291,9 @@ class OrderService extends Service {
   }
 
   // 查询用户是否已经购买
-  async isBuy(signId, userId) {
+  async isBuy(signId, userId, category = 0) {
     // 查询订单
-    const buy = await this.app.mysql.get('orders', { signid: signId, uid: userId, status: 9 });
+    const buy = await this.app.mysql.get('orders', { signid: signId, uid: userId, status: 9, category });
     if (buy) {
       return true;
     }

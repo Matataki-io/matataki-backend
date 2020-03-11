@@ -117,6 +117,8 @@ class PostService extends Service {
       post = await this.getPostProfile(post);
     }
     post.tokens = await this.getMineTokens(post.id);
+    // 持币编辑
+    post.editTokens = await this.getEditMineTokens(id);
     post.username = this.service.user.maskEmailAddress(post.username);
     return post;
   }
@@ -174,6 +176,8 @@ class PostService extends Service {
     let post = posts[0];
     post = await this.getPostProfile(post);
     post.tokens = await this.getMineTokens(id);
+    // 持币编辑
+    post.editTokens = await this.getEditMineTokens(id);
     post.username = this.service.user.maskEmailAddress(post.username);
     return post;
   }
@@ -192,6 +196,8 @@ class PostService extends Service {
     let post = posts[0];
     post = await this.getPostProfile(post);
     post.tokens = await this.getMineTokens(id);
+    // 持币编辑
+    post.editTokens = await this.getEditMineTokens(id);
     post.username = this.service.user.maskEmailAddress(post.username);
     return post;
   }
@@ -199,7 +205,9 @@ class PostService extends Service {
   // 获取文章阅读数等属性
   async getPostProfile(post) {
     // 如果是商品，返回价格
-    post.prices = await this.getPrices(post.id);
+    post.prices = await this.getPrices(post.id, 0);
+    // 检查付费编辑价格
+    post.editPrices = await this.getPrices(post.id, 1);
 
     // 阅读次数
     const count = await this.app.mysql.query(
@@ -299,9 +307,9 @@ class PostService extends Service {
   }
 
   // 获取商品价格
-  async getPrices(signId) {
+  async getPrices(signId, category = 0) {
     const prices = await this.app.mysql.select('product_prices', {
-      where: { sign_id: signId, status: 1, category: 0 },
+      where: { sign_id: signId, status: 1, category },
       columns: [ 'platform', 'symbol', 'price', 'decimals', 'stock_quantity' ],
     });
 
@@ -1410,12 +1418,27 @@ class PostService extends Service {
     return tokens;
   }
 
+  // 获取编辑文章需要持有的tokens
+  async getEditMineTokens(signId) {
+    const tokens = await this.app.mysql.query('SELECT t.id, p.amount, t.name, t.symbol, t.decimals, t.logo FROM edit_minetokens p INNER JOIN minetokens t ON p.token_id = t.id WHERE p.sign_id = ?;',
+      [signId]);
+    return tokens;
+  }
+
   // 获取用户持币情况
   // id：文章的Id
   async getHoldMineTokens(signId, userId) {
-    const tokens = await this.getMineTokens(signId);
+    let tokens = await this.getMineTokens(signId);
     if (tokens === null || tokens.length === 0) {
       return null;
+    }
+    const editTokens = await this.getEditMineTokens(signId);
+
+    // 吧持币编辑的的数据去重后加到一起
+    for (var i = 0; i < editTokens.length; i++) {
+      if (tokens.findIndex(mineToken => mineToken.id === editTokens[i].id) == -1) {
+        tokens.push(editTokens[i]);
+      }
     }
 
     const mytokens = [];
