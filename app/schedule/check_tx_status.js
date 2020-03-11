@@ -16,12 +16,14 @@ class SyncMinetokenTransaction extends Subscription {
   static get schedule() {
     return {
       interval: '1m',
-      type: 'all',
+      type: 'worker',
       immediate: true,
     };
   }
 
   async subscribe() {
+    // 先暂时关掉
+    return;
     if (this.ctx.app.config.isDebug) return;
     this.logger.info('Running SyncMinetokenTransaction at: ', new Date().toLocaleString());
     const { mysql } = this.ctx.app;
