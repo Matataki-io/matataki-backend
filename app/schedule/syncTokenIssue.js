@@ -11,6 +11,8 @@ class SyncTokenIssue extends Subscription {
   }
 
   async subscribe() {
+    // 先暂时关掉
+    return;
     if (this.ctx.app.config.isDebug) return;
     const { mysql } = this.app;
     const failIssueTxs = await mysql.query(`
