@@ -34,7 +34,7 @@ class TokenCircleApiService extends Service {
   }
 
   /**
-   * 添加 tokenId 到 token 合约地址的映射（在机器人饭票circle的后端里）
+   * 添加 userId 到 托管钱包地址的映射（在机器人饭票circle的后端里）
    * 未来如果要API扩充数据，可能改为 addUserProfile
    * @param {number|string} uid Matataki User / Wallet Hosting ID
    * @param {string} address ethereum address of the user wallet
@@ -43,6 +43,16 @@ class TokenCircleApiService extends Service {
     return this.client.put(`/user/${uid}`, {
       walletAddress: address,
     });
+  }
+
+  /**
+   * 更新部分数据
+   * 未来如果要API扩充数据，可能改为 addUserProfile
+   * @param {number|string} uid Matataki User / Wallet Hosting ID
+   * @param {object} partialPayload object 对象，需要包含更新的字段
+   */
+  updateUser(uid, partialPayload) {
+    return this.client.patch(`/user/${uid}`, partialPayload);
   }
 
 }
