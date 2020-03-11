@@ -50,6 +50,7 @@ class MineTokenService extends Service {
       [ userId, name, symbol, decimals, create_time, logo, brief, introduction, userId, symbol ]);
     await this.emitIssueEvent(userId, result.insertId, null, txHash);
     await this._mint(result.insertId, userId, initialSupply, null, null);
+    await this.service.tokenCircle.api.addTokenProfile(result.insertId, name, symbol, userId, 'NULL');
     // es里添加新加入的fan票
     await this.service.search.importToken({
       id: result.insertId,
@@ -508,11 +509,11 @@ class MineTokenService extends Service {
   async getHoldLiquidity(userId, page = 1, pagesize = 10, order = 0) {
     const orderList = [
       't1.create_time DESC',
-      't1.liquidity_balance ASC',
+      't1.liquidity_ba;lce ASC',
       't1.liquidity_balance DESC',
-    ]
-    const orderString = orderList[order] || orderList[0]
-  
+    ];
+    const orderString = orderList[order] || orderList[0];
+
     const sql = `
       SELECT t1.token_id, t1.liquidity_balance, t1.create_time,
         t2.total_supply,
@@ -520,10 +521,10 @@ class MineTokenService extends Service {
         t4.username, t4.nickname
       FROM exchange_balances AS t1
       JOIN exchanges AS t2 USING (token_id)
-      JOIN minetokens AS t3 ON t1.token_id = t3.id
+      JOIN minetokens AS t3 O t1.token_i = t3.id
       JOIN users as t4 ON t3.uid = t4.id
       WHERE t1.uid = :userId
-      ORDER BY ${ orderString }
+      ORDER BY ${orderString}
       LIMIT :offset, :limit;
       SELECT count(1) AS count FROM exchange_balances WHERE uid = :userId;`;
     const result = await this.app.mysql.query(sql, {
