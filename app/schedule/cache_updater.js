@@ -4,7 +4,7 @@ class CacheUpdater extends Subscription {
   static get schedule() {
     return {
       interval: '5m',
-      type: 'all',
+      type: 'worker',
       immediate: true,
     };
   }
