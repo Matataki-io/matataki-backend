@@ -51,4 +51,8 @@ module.exports = {
     enable: true,
     package: 'egg-passport-twitter',
   },
+  passportFacebook : {
+    enable:true,
+    package:'egg-passport-facebook'
+  }
 };
