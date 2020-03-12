@@ -59,7 +59,7 @@ class SupportService extends Service {
 
     const sql = 'SELECT s.id as payId, s.amount, s.platform, s.signid, s.create_time, s.num, s.action, u.id, u.username, u.nickname, u.avatar, c.comment '
       + 'FROM ( '
-      + 'SELECT id,uid,signId,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid '
+      + 'SELECT id,uid,signId,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid AND category = 0 '
       + 'UNION ALL '
       + 'SELECT id,uid,signId,amount,0 AS num,platform,create_time,status,1 AS action FROM supports WHERE signId = :signid '
       + ') s '

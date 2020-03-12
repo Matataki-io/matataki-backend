@@ -35,7 +35,7 @@ class PayContextService extends Service {
       if (payment.action === consts.payActions.support) {
         updateResult = await conn.query('UPDATE supports SET status=1 WHERE id=? AND status=0;', [ payment.id ]);
       } else {
-        updateResult = await conn.query('UPDATE orders SET status=1 WHERE id=? AND status=0;', [ payment.id ]);
+        updateResult = await conn.query('UPDATE orders SET status=1 WHERE id=? AND status=0 AND category = 0;', [ payment.id ]);
       }
       if (updateResult.affectedRows !== 1) {
         conn.rollback();

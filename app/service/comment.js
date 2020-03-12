@@ -68,7 +68,7 @@ class CommentService extends Service {
       // tudo：会有性能问题，需要优化，comments表增加status字段，增加其它展示信息，避免查询orders、supports、assets_points_log表
       sql = 'SELECT s.id, s.amount, s.platform, s.signid, s.create_time, s.num, s.action, s.uid, u.username, u.nickname, u.avatar, c.comment '
         + 'FROM ( '
-        + 'SELECT id,uid,signid,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid '
+        + 'SELECT id,uid,signid,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid AND category = 0 '
         + 'UNION ALL '
         + 'SELECT id,uid,signid,amount,0 AS num,platform,create_time,status,1 AS action FROM supports WHERE signId = :signid '
         // + 'UNION ALL '
@@ -79,7 +79,7 @@ class CommentService extends Service {
         + 'WHERE s.status = 1 ORDER BY s.create_time DESC LIMIT :start, :end;'
         + 'SELECT count(1) as count '
         + 'FROM ( '
-        + 'SELECT id,uid,signid,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid '
+        + 'SELECT id,uid,signid,amount,num,platform,create_time,status,2 AS action FROM orders WHERE signId = :signid AND category = 0 '
         + 'UNION ALL '
         + 'SELECT id,uid,signid,amount,0 AS num,platform,create_time,status,1 AS action FROM supports WHERE signId = :signid '
         // + 'UNION ALL '

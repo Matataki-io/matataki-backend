@@ -118,7 +118,7 @@ class PostService extends Service {
     }
     post.tokens = await this.getMineTokens(post.id);
     // 持币编辑
-    post.editTokens = await this.getEditMineTokens(id);
+    post.editTokens = await this.getEditMineTokens(post.id);
     post.username = this.service.user.maskEmailAddress(post.username);
     return post;
   }

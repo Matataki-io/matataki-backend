@@ -30,7 +30,7 @@ class VerifyOrder extends Subscription {
 
     const expire = moment().subtract(12, 'hours').format('YYYY-MM-DD HH:mm:ss');
 
-    const results = await this.app.mysql.query(`select * from orders where status=0 and create_time>'${expire}' limit 10`);
+    const results = await this.app.mysql.query(`select * from orders where status=0 and create_time>'${expire}' and category = 0 limit 10`);
     // this.logger.info(results);
     // console.log(results);
     if (results.length === 0) { return; }
