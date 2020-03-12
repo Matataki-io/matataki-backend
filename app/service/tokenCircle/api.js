@@ -25,10 +25,19 @@ class TokenCircleApiService extends Service {
    * 添加 tokenId 到 token 合约地址的映射（在机器人饭票circle的后端里）
    * 未来如果要API扩充数据，可能改为 addTokenProfile
    * @param {number|string} tokenId Matataki Hosting Token(FanPiao) ID
-   * @param {string} address ethereum address of the token contract
+   * @param {string} name 代币名
+   * @param {string} symbol 代币符号
+   * @param {number} issuer 发行者UID
+   * @param {number} contractAddress 合约地址
    */
-  addTokenContractAddress(tokenId, address) {
+  addTokenProfile(tokenId, name, symbol, issuer, contractAddress) {
     return this.client.put(`/token/${tokenId}`, {
+      name, symbol, issuer, contractAddress,
+    });
+  }
+
+  updateTokenContractAddress(tokenId, address) {
+    return this.client.patch(`/token/${tokenId}`, {
       contractAddress: address,
     });
   }
@@ -37,10 +46,12 @@ class TokenCircleApiService extends Service {
    * 添加 userId 到 托管钱包地址的映射（在机器人饭票circle的后端里）
    * 未来如果要API扩充数据，可能改为 addUserProfile
    * @param {number|string} uid Matataki User / Wallet Hosting ID
+   * @param {string} username Matataki 用户名
    * @param {string} address ethereum address of the user wallet
    */
-  addUserWalletAddress(uid, address) {
+  addUserProfile(uid, username, address) {
     return this.client.put(`/user/${uid}`, {
+      username,
       walletAddress: address,
     });
   }

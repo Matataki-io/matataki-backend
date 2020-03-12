@@ -101,46 +101,47 @@ class AuthService extends Service {
 
   // twitter号验证，获取oauth_token_secret
   // 详情见https://developer.twitter.com/en/docs/basics/authentication/guides/log-in-with-twitter
-  async twitter_auth(oauth_token, oauth_verifier){
+  async twitter_auth(oauth_token, oauth_verifier) {
     function randomString(len) {
-      len = len || 32
-      const $chars = 'abcdefhijkmnprstwxyz2345678'
-      const maxPos = $chars.length
-      let pwd = ''
+      len = len || 32;
+      const $chars = 'abcdefhijkmnprstwxyz2345678';
+      const maxPos = $chars.length;
+      let pwd = '';
       for (let i = 0; i < len; i++) {
-        pwd += $chars.charAt(Math.floor(Math.random() * maxPos))
+        pwd += $chars.charAt(Math.floor(Math.random() * maxPos));
       }
-      return pwd
+      return pwd;
     }
-    const timestamp = parseInt(Date.parse(new Date())) / 1000
-    const ranstr = randomString(12)
-    const httpmethod = 'GET'
-    let twitterurl = 'http://api.twitter.com/oauth/access_token'
-    const params = 'oauth_consumer_key=' + this.app.config.twitter.appkey +
-    '&oauth_nonce=' + ranstr +
-    '&oauth_signature_method=' + 'HMAC-SHA1' +
-    '&oauth_timestamp=' + timestamp +
-    '&oauth_token=' + oauth_token +
-    '&oauth_verifier=' + oauth_verifier +
-    '&oauth_version=' + '1.0'
-    const signtext = httpmethod + '&' + encodeURIComponent(twitterurl) + '&' + encodeURIComponent(params)
-    const signkey = encodeURIComponent(this.app.config.twitter.appkey) + '&' + encodeURIComponent(this.app.config.twitter.appsecret)
-    const sign = encodeURIComponent(createHmac('sha1', signkey).update(signtext).digest().toString('base64'))
-    twitterurl = 'https://api.twitter.com/oauth/access_token'
-    const requesturl = twitterurl + '?' + params +
-    '&oauth_signature=' + sign
+    const timestamp = parseInt(Date.parse(new Date())) / 1000;
+    const ranstr = randomString(12);
+    const httpmethod = 'GET';
+    let twitterurl = 'http://api.twitter.com/oauth/access_token';
+    const params = 'oauth_consumer_key=' + this.app.config.twitter.appkey
+    + '&oauth_nonce=' + ranstr
+    + '&oauth_signature_method=' + 'HMAC-SHA1'
+    + '&oauth_timestamp=' + timestamp
+    + '&oauth_token=' + oauth_token
+    + '&oauth_verifier=' + oauth_verifier
+    + '&oauth_version=' + '1.0';
+    const signtext = httpmethod + '&' + encodeURIComponent(twitterurl) + '&' + encodeURIComponent(params);
+    const signkey = encodeURIComponent(this.app.config.twitter.appkey) + '&' + encodeURIComponent(this.app.config.twitter.appsecret);
+    const sign = encodeURIComponent(createHmac('sha1', signkey).update(signtext).digest()
+      .toString('base64'));
+    twitterurl = 'https://api.twitter.com/oauth/access_token';
+    const requesturl = twitterurl + '?' + params
+    + '&oauth_signature=' + sign;
     const data = (await axios({
       method: 'get',
-      url: requesturl
-    })).data
-    const token = {}
-    const dataarr = data.split('&')
+      url: requesturl,
+    })).data;
+    const token = {};
+    const dataarr = data.split('&');
     for (const index in dataarr) {
-      token[dataarr[index].split('=')[0]] = dataarr[index].split('=')[1]
+      token[dataarr[index].split('=')[0]] = dataarr[index].split('=')[1];
     }
-    return token
+    return token;
   }
-  
+
   // twitter号登录，验证token和secret
   // 方法见https://webapplog.com/node-js-oauth1-0-and-oauth2-0-twitter-api-v1-1-examples/
   async twitter_login(oauth_token, oauth_token_secret) {
@@ -154,18 +155,18 @@ class AuthService extends Service {
         '1.0A',
         null,
         'HMAC-SHA1'
-      )
+      );
       const userdata = await new Promise((resolve, reject) => oauth.get(
         'https://api.twitter.com/1.1/account/verify_credentials.json?id=23424977',
         oauth_token,
         oauth_token_secret,
-        function (e, data, res) {
+        function(e, data, res) {
           if (e) {
-            reject(e)
+            reject(e);
           }
-          resolve(JSON.parse(data))
+          resolve(JSON.parse(data));
         })
-      )
+      );
       tokendata = userdata;
     } catch (err) {
       this.logger.error('AuthService:: verifyCode failed: err: %j', err);
@@ -262,6 +263,11 @@ class AuthService extends Service {
         );
 
         currentUser = await this.service.account.binding.get2({ username, platform });
+        if (platform === 'telegram') { // update telegramUid
+          await this.service.tokenCircle.api.updateUser(
+            currentUser.id, { telegramUid: username }
+          );
+        }
         // currentUser = await this.app.mysql.get('users', { username, platform });
       }
 
@@ -317,7 +323,7 @@ class AuthService extends Service {
       return null;
     }
   }
-  
+
   // 验证用户账号是否存在， todo，添加platform信息
   async verifyUser(username) {
     /* const user = await this.app.mysql.query(
@@ -337,7 +343,7 @@ class AuthService extends Service {
   async sendResetpasswordCaptchaMail(email) {
     return this.sendCaptchaMail(email, consts.mailTemplate.resetPassword);
   }
-  
+
   // 发送邮箱验证码
   async sendCaptchaMail(email, type = consts.mailTemplate.registered) {
 
@@ -584,7 +590,11 @@ class AuthService extends Service {
       }
 
       // 检测用户有没有托管的以太坊私钥，没有就生成
-      await this.service.account.hosting.create(createAccount.insertId);
+      const wallet = await this.service.account.hosting.create(createAccount.insertId);
+
+      await this.service.tokenCircle.api.addUserProfile(
+        createAccount.insertId, username, wallet
+      );
 
       // 插入ES
       await this.service.search.importUser(createAccount.insertId);
