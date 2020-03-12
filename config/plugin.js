@@ -43,7 +43,7 @@ module.exports = {
     enable: true,
     package: 'egg-alinode',
   },
-  passport: {
+  /* passport: {
     enable: true,
     package: 'egg-passport',
   },
@@ -51,4 +51,8 @@ module.exports = {
     enable: true,
     package: 'egg-passport-twitter',
   },
+  passportFacebook: {
+    enable: true,
+    package: 'egg-passport-facebook',
+  }, */
 };
