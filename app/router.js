@@ -5,7 +5,7 @@ const passport = require('./passport');
  */
 module.exports = app => {
   const { router, controller } = app;
-
+  app.passport.mount('facebook');
   //app.get('/passport/twitter',app.passport.authenticate('twitter',{}));
   //app.get('/passport/twitter/callback',app.passport.authenticate('twitter',{}))
 

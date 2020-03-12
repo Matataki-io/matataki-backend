@@ -23,7 +23,8 @@ module.exports = app => {
         const { displayName,
             name,
             photo,
+            provider
           } = user;
-        return await ctx.service.auth.saveTwitterUser(displayName, name, photo, ctx.clientIP, 0, 'twitter');
+        return await ctx.service.auth.saveTwitterUser(displayName, name, photo, ctx.clientIP, 0, provider);
     });
 };
