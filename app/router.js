@@ -6,8 +6,8 @@ const passport = require('./passport');
 module.exports = app => {
   const { router, controller } = app;
 
-  app.get('/passport/twitter',app.passport.authenticate('twitter',{}));
-  app.get('/passport/twitter/callback',app.passport.authenticate('twitter',{}))
+  //app.get('/passport/twitter',app.passport.authenticate('twitter',{}));
+  //app.get('/passport/twitter/callback',app.passport.authenticate('twitter',{}))
 
   // geetest校验中间件
   const geetestVerify = app.middleware.geetest();
