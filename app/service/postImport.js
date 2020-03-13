@@ -94,7 +94,7 @@ class PostImportService extends Service {
         url,method : 'GET',
         });
       const originSrc = data.url_info[0].url;
-      $(video).after(`<video controls="" autoplay="" name="media">
+      $(video).after(`<video controls="" name="media">
       <source src="${originSrc}" type="video/mp4"></video>`);
       $(video).remove();
     }catch (err){
