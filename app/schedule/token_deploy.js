@@ -3,7 +3,7 @@ const { Subscription } = require('egg');
 class TokenDeploy extends Subscription {
   static get schedule() {
     return {
-      interval: '30s',
+      interval: '1m',
       type: 'worker',
       immediate: true,
     };
