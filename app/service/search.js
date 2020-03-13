@@ -286,6 +286,7 @@ class SearchService extends Service {
       'SELECT id, username, nickname, platform FROM users WHERE id = ?;',
       [ userid ]
     );
+    this.logger.info('searchService importUser user', user);
     if (user.length === 0) {
       return null;
     }
