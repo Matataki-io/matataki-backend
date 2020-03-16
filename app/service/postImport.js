@@ -84,6 +84,23 @@ class PostImportService extends Service {
       }
       _imgElement[index].attribs.src = _imgElement[index].attribs['data-src'];
     }
+    // 处理视频
+    const videos = $('iframe',mediaContent);
+    for (const video of videos.toArray()){
+      try {
+      const vid = $(video).attr('data-mpvid');
+      const url = `https://mp.weixin.qq.com/mp/videoplayer?action=get_mp_video_play_url&preview=0&__biz=&mid=&idx=&vid=${vid}&uin=&key=&pass_ticket=&wxtoken=&appmsg_token=&x5=0&f=json`;
+      const {data} = await axios({
+        url,method : 'GET',
+        });
+      const originSrc = data.url_info[0].url;
+      $(video).after(`<video controls width="100%" name="media">
+      <source src="${originSrc}" type="video/mp4"></video>`);
+      $(video).remove();
+    }catch (err){
+      this.logger.error('PostImportService:: handleWechat: error while processing video:', err);
+    }
+    }
     let parsedContent = '';
     parsedContent = pretty($('div.rich_media_content').html());
 
