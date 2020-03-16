@@ -509,7 +509,7 @@ class MineTokenService extends Service {
   async getHoldLiquidity(userId, page = 1, pagesize = 10, order = 0) {
     const orderList = [
       't1.create_time DESC',
-      't1.liquidity_ba;lce ASC',
+      't1.liquidity_balance ASC',
       't1.liquidity_balance DESC',
     ];
     const orderString = orderList[order] || orderList[0];
@@ -521,7 +521,7 @@ class MineTokenService extends Service {
         t4.username, t4.nickname
       FROM exchange_balances AS t1
       JOIN exchanges AS t2 USING (token_id)
-      JOIN minetokens AS t3 O t1.token_i = t3.id
+      JOIN minetokens AS t3 ON t1.token_id = t3.id
       JOIN users as t4 ON t3.uid = t4.id
       WHERE t1.uid = :userId
       ORDER BY ${orderString}
