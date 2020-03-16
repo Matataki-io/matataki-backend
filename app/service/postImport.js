@@ -60,7 +60,7 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: handleWechat: error:', err);
       return null;
     }
-    const $ = cheerio.load(rawPage.data);
+    const $ = cheerio.load(rawPage.data,{decodeEntities : false});
     const mediaContent = $('div.rich_media_content');
 
     // 把图片上传至本站， 并替换链接
