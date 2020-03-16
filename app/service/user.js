@@ -274,7 +274,7 @@ class UserService extends Service {
     const row = {};
 
     if (nickname) {
-      const nicknameCheck = /^[\u4e00-\u9fa5a-zA-Z0-9]{1,12}$/;
+      const nicknameCheck = /^[\u4e00-\u9fa5a-zA-Z0-9]{1,50}$/;
       if (!nicknameCheck.test(nickname)) {
         return nicknameInvalid;
       }
@@ -650,7 +650,7 @@ class UserService extends Service {
         telegram,
         twitter,
         facebook,
-        email
+        email,
       ]);
 
       await conn.commit();
