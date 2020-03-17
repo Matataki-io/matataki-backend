@@ -93,6 +93,8 @@ module.exports = app => {
   router.delete('/post/:id', passport.authorize, controller.post.delete2);
   // 编辑时获取我的文章
   router.get('/mypost/:id', passport.authorize, controller.post.mypost);
+  // 获取可编辑的文章内容（检查我的文章，以及获取了编辑权限的文章）
+  router.get('/canEditPost/:id', passport.authorize, controller.post.getCanEditPost);
   // 文章阅读事件上报
   router.post('/post/show/:hash', passport.verify, controller.post.show);
   // router.post('/post/show/:id', passport.verify, controller.post.show);

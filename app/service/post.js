@@ -1592,7 +1592,7 @@ class PostService extends Service {
   }
 
   async uploadArticleToIpfs({
-    title, description, displayName, data, isEncrypt = false }) {
+    title, description, displayName, data, isEncrypt = false, uid }) {
     let markdown = data.content;
     let metadata = JSON.stringify(data);
     description = await this.wash(description);
@@ -1609,7 +1609,7 @@ class PostService extends Service {
       title,
       author: {
         nickname: displayName,
-        uid: this.ctx.user.id,
+        uid: uid || this.ctx.user.id,
         username: displayName,
       },
       description,

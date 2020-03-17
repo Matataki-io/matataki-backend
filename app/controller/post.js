@@ -144,18 +144,50 @@ class PostController extends Controller {
       return;
     }
 
-    if (post.uid !== ctx.user.id) {
-      ctx.body = ctx.msg.notYourPost;
-      return;
+    const isAuthor = post.uid === ctx.user.id;
+    // 如果不是作者本人的话，检查是否有编辑权限
+    if (!isAuthor) {
+      const editTokens = await this.service.post.getEditMineTokens(signId);
+      // 是否需要持有token才能编辑文章
+      const needTokens = editTokens && editTokens.length > 0;
+
+      // 付费编辑暂时留空
+      const needPay = false;
+
+      // 如果文章没有设置持币编辑、付费编辑则不允许其他用户编辑
+      if (!(needTokens || needPay)) {
+        ctx.body = ctx.msg.notYourPost;
+        return;
+      }
+
+      // 检查用户的token数量是否满足要求，不满足则无法编辑
+      if (needTokens) {
+        for (const token of editTokens) {
+          const amount = await this.service.token.mineToken.balanceOf(ctx.user.id, token.id);
+          if (token.amount > amount) {
+            ctx.body = ctx.msg.notYourPost;
+            return;
+          }
+        }
+      }
     }
 
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(data.content);
 
+    // 获取作者的昵称
+    let displayName = ''
+    if (isAuthor) displayName = this.user.displayName;
+    else {
+      const user = await this.service.user.get(post.uid);
+      displayName = user.nickname;
+    }
+
     const short_content = shortContent || articleContent.substring(0, 300);
     const { metadataHash, htmlHash } = await this.service.post.uploadArticleToIpfs({
-      isEncrypt, data, title, displayName: this.user.displayName,
+      isEncrypt, data, title, displayName,
       description: short_content,
+      uid: post.uid
     });
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
@@ -589,6 +621,52 @@ class PostController extends Controller {
     if (!post) {
       ctx.body = ctx.msg.postNotFound;
       return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = post;
+  }
+
+  // 获取有编辑权限的文章内容
+  async getCanEditPost() {
+    const ctx = this.ctx;
+    const id = ctx.params.id;
+
+    const post = await this.service.post.getById(id);
+
+    if (!post) {
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+
+    // 如果文章是自己发表的则直接返回数据
+    if (post.uid === ctx.user.id) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = post;
+      return;
+    }
+
+    // 是否需要持有token才能编辑文章
+    const needTokens = post.editTokens && post.editTokens.length > 0;
+
+    // 付费编辑暂时留空
+    const needPay = false;
+
+    // 如果文章没有设置持币编辑、付费编辑则不允许其他用户获取内容
+    if (!(needTokens || needPay)) {
+      ctx.body = ctx.msg.postNoPermission;
+      return;
+    }
+
+    // 检查用户的token数量是否满足要求，不满足则直接返回失败
+    if (needTokens) {
+      for (const token of post.editTokens) {
+        const amount = await this.service.token.mineToken.balanceOf(ctx.user.id, token.id);
+        if (token.amount > amount) {
+          ctx.body = ctx.msg.postNoPermission;
+          return;
+        }
+      }
     }
 
     ctx.body = ctx.msg.success;
