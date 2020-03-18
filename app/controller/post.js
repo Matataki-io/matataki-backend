@@ -126,7 +126,6 @@ class PostController extends Controller {
       // 持币编辑相关字段
       editRequireToken = null, editRequireBuy = null
     } = ctx.request.body;
-    const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 编辑的时候，signId需要带上
     if (!signId) {
@@ -144,6 +143,7 @@ class PostController extends Controller {
       return;
     }
 
+    let isEncrypt;
     const isAuthor = post.uid === ctx.user.id;
     // 如果不是作者本人的话，检查是否有编辑权限
     if (!isAuthor) {
@@ -170,7 +170,10 @@ class PostController extends Controller {
           }
         }
       }
+      // 这里判断是否为付费文章，用于决定ipfs是否加密，如果不是作者的则不采用api传入的值。
+      isEncrypt = Boolean(post.require_holdtokens > 0 || post.require_buy > 0)
     }
+    else isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(data.content);
@@ -223,9 +226,9 @@ class PostController extends Controller {
           updateRow.cover = cover;
         }
 
-        if (is_original) {
-          updateRow.is_original = is_original;
-        }
+        // if (is_original) {
+        //   updateRow.is_original = is_original;
+        // }
 
         // console.log("cover!!!", cover , typeof cover);
 
@@ -245,19 +248,18 @@ class PostController extends Controller {
         return;
       }
 
-      // 记录付费信息
-      if (requireToken) {
-        await this.service.post.addMineTokens(ctx.user.id, signId, requireToken);
-      }
+      if (isAuthor) {
+        // 记录付费信息
+        if (requireToken) {
+          await this.service.post.addMineTokens(ctx.user.id, signId, requireToken);
+        }
 
-      // 超过 0 元才算数，0元则无视
-      if (requireBuy && requireBuy.price > 0) {
-        await this.service.post.addPrices(ctx.user.id, signId, requireBuy.price, 0);
-      } else {
-        await this.service.post.delPrices(ctx.user.id, signId, 0);
-      }
-
-      if (post.uid === ctx.user.id) {
+        // 超过 0 元才算数，0元则无视
+        if (requireBuy && requireBuy.price > 0) {
+          await this.service.post.addPrices(ctx.user.id, signId, requireBuy.price, 0);
+        } else {
+          await this.service.post.delPrices(ctx.user.id, signId, 0);
+        }
         // 记录持币编辑信息
         if (editRequireToken) {
           await this.service.post.addEditMineTokens(ctx.user.id, signId, editRequireToken)
