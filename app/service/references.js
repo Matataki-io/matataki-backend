@@ -122,7 +122,7 @@ class ReferencesService extends Service {
     }
   }
   async addReference(uid, signId, url, title, summary) {
-    if (!await this.hasReferencePermission(uid, signId)) {
+    if (!await this.hasEditPermission(uid, signId)) {
       return -1;
     }
 
@@ -183,7 +183,7 @@ class ReferencesService extends Service {
     }
   }
   async deleteReferenceNode(uid, signId, number) {
-    if (!await this.hasReferencePermission(uid, signId)) {
+    if (!await this.hasEditPermission(uid, signId)) {
       return -1;
     }
 
@@ -241,6 +241,38 @@ class ReferencesService extends Service {
     }
     if (post.uid !== current_uid) {
       return false;
+    }
+    return true;
+  }
+
+  // 检查用户是否有编辑权限
+  async hasEditPermission(current_uid, signId) {
+    const post = await this.service.post.get(signId);
+    if (!post) {
+      return false;
+    }
+    if (post.uid !== current_uid) {
+      const editTokens = await this.service.post.getEditMineTokens(signId);
+      // 是否需要持有token才能编辑文章
+      const needTokens = editTokens && editTokens.length > 0;
+
+      // 付费编辑暂时留空
+      const needPay = false;
+
+      // 如果文章没有设置持币编辑、付费编辑则不允许其他用户编辑
+      if (!(needTokens || needPay)) {
+        return false;
+      }
+
+      // 检查用户的token数量是否满足要求，不满足则无法编辑
+      if (needTokens) {
+        for (const token of editTokens) {
+          const amount = await this.service.token.mineToken.balanceOf(current_uid, token.id);
+          if (token.amount > amount) {
+            return false;
+          }
+        }
+      }
     }
     return true;
   }
