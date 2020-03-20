@@ -23,7 +23,7 @@ class AccountBindingService extends Service {
       this.logger.info('Service: AccountBinding:: Account Existence');
       return false;
     }
-    if (platform === 'telegram') await this.service.tokenCircle.updateUser(uid, { telegramUid: account });
+    if (platform === 'telegram') await this.service.tokenCircle.api.addTelegramUid(uid, account);
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
     let result = null;
     if (tran) {
@@ -110,10 +110,10 @@ class AccountBindingService extends Service {
       const del2 = await tran.delete('users', {
         id: uid,
       });
+
       // 影响行数都是1的话，直接提交，否则回滚
       if (del1.affectedRows === 1 && del2.affectedRows === 1) {
         await tran.commit();
-        if (platform === 'telegram') await this.service.tokenCircle.updateUser(uid, { telegramUid: null });
         return 0;
       }
       await tran.rollback();
@@ -124,6 +124,13 @@ class AccountBindingService extends Service {
     const result = await this.app.mysql.delete('user_accounts', {
       id: userAccount.id,
     });
+    this.logger.info('which plat', platform);
+    this.logger.info('is tg:', platform === 'telegram');
+    if (platform === 'telegram') {
+      this.logger.info('deleting telegram uid');
+      const res = await this.service.tokenCircle.api.deleteTelegramUid(uid);
+      this.logger.info('res', res);
+    }
     this.logger.info('Service: AccountBinding:: del success: %j', result);
     return 0;
   }

@@ -66,6 +66,14 @@ class TokenCircleApiService extends Service {
     return this.client.patch(`/user/${uid}`, partialPayload);
   }
 
+  addTelegramUid(uid, telegramUid) {
+    return this.client.put(`/user/${uid}/telegramUid/${telegramUid}`);
+  }
+
+  deleteTelegramUid(uid) {
+    return this.client.delete(`/user/${uid}/telegramUid`);
+  }
+
 }
 
 module.exports = TokenCircleApiService;
