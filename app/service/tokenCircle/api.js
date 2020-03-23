@@ -67,7 +67,7 @@ class TokenCircleApiService extends Service {
   }
 
   addTelegramUid(uid, telegramUid) {
-    return this.client.put(`/user/${uid}/telegramUid/${telegramUid}`);
+    return this.client.put(`/user/${uid}/telegramUid`, { telegramUid });
   }
 
   deleteTelegramUid(uid) {
