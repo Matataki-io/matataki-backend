@@ -36,12 +36,6 @@ class TokenCircleApiService extends Service {
     });
   }
 
-  updateTokenContractAddress(tokenId, address) {
-    return this.client.patch(`/token/${tokenId}`, {
-      contractAddress: address,
-    });
-  }
-
   /**
    * 添加 userId 到 托管钱包地址的映射（在机器人饭票circle的后端里）
    * 未来如果要API扩充数据，可能改为 addUserProfile
@@ -74,6 +68,14 @@ class TokenCircleApiService extends Service {
     return this.client.delete(`/user/${uid}/telegramUid`);
   }
 
+  /**
+   * setTokenContract
+   * @param {number} tokenId ID of Matataki Token
+   * @param {string} contractAddress Ethereum Contract address of the token
+   */
+  setTokenContract(tokenId, contractAddress) {
+    return this.client.put(`/token/${tokenId}/contractAddress`, { contractAddress });
+  }
 }
 
 module.exports = TokenCircleApiService;
