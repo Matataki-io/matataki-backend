@@ -68,8 +68,13 @@ class TokenCircleApiService extends Service {
     return this.client.delete(`/user/${uid}/telegramUid`);
   }
 
-  setTokenContract(uid, contractAddress) {
-    return this.client.put(`/token/${uid}/contractAddress`, { contractAddress });
+  /**
+   * setTokenContract
+   * @param {number} tokenId ID of Matataki Token
+   * @param {string} contractAddress Ethereum Contract address of the token
+   */
+  setTokenContract(tokenId, contractAddress) {
+    return this.client.put(`/token/${tokenId}/contractAddress`, { contractAddress });
   }
 }
 
