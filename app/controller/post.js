@@ -1,5 +1,5 @@
 'use strict';
-import {parse,execute} from './md_parser/parser';
+const { parse, execute } = require('./md_parser/parser');
 const Controller = require('../core/base_controller');
 const moment = require('moment');
 // const ONT = require('ontology-ts-sdk');
