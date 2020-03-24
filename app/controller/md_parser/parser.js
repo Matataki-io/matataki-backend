@@ -168,7 +168,7 @@ function execute(ast, { userId, balanceOf }) {
       const hold = attrMines(ast[α].attributes.hold);
       const innerText = ast[α].innerText;
       const elseText = hide ? '' : ast[α].elseText;
-      β += holdMines(userId, mines, balanceOf) ? innerText : elseText;
+      β += holdMines(userId, hold, balanceOf) ? innerText : elseText;
     }
     α++;
     continue;
