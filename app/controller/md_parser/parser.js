@@ -148,12 +148,14 @@ function attrMines(val) {
 
 function holdMines(user, mines, balanceOf) {
   let α = 0;
+  console.log(mines[α]);
   while (α < mines.length) {
     if (balanceOf(user, mines[α].token) < mines[α].amount) return false;
     α++;
   }
   return true;
 }
+
 function execute(ast, { userId, balanceOf }) {
   let α = 0,
     β = '';
@@ -180,3 +182,9 @@ module.exports = {
   parse,
   execute,
 };
+
+/*console.log(execute(parse('[read hold="LINK 1"]test [/read]'),
+{userId:111,balanceOf:(id,token) => 10000}));
+console.log(execute(parse('[read hold="LINK 1"]test [/read]'),
+{userId:111,balanceOf:(id,token) => 1}));
+*/
