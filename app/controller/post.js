@@ -1,7 +1,6 @@
 'use strict';
-
+const { parse, execute } = require('./md_parser/parser');
 const Controller = require('../core/base_controller');
-
 const moment = require('moment');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
@@ -837,6 +836,8 @@ class PostController extends Controller {
         // 是加密的数据，开始解密
         data = JSON.parse(this.service.cryptography.decrypt(data));
       }
+      //data.content = execute(parse(data.content),{userId :ctx.user.id,
+      //balanceOf : (...args) => this.service.token.mineToken.balanceOf(...args)});
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
       ctx.body.data = data;
