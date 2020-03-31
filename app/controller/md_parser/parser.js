@@ -146,17 +146,17 @@ function attrMines(val) {
   return β;
 }
 
-function holdMines(user, mines, balanceOf) {
+async function holdMines(user, mines, balanceOf) {
   let α = 0;
-  console.log(mines[α]);
   while (α < mines.length) {
-    if (balanceOf(user, mines[α].token) < mines[α].amount) return false;
+    const money = await balanceOf(user, mines[α].token);
+    if (money < mines[α].amount) return false;
     α++;
   }
   return true;
 }
 
-function execute(ast, { userId, balanceOf }) {
+async function execute(ast, { userId, balanceOf }) {
   let α = 0,
     β = '';
   while (α < ast.length) {
@@ -170,7 +170,7 @@ function execute(ast, { userId, balanceOf }) {
       const hold = attrMines(ast[α].attributes.hold);
       const innerText = ast[α].innerText;
       const elseText = hide ? '' : ast[α].elseText;
-      β += holdMines(userId, hold, balanceOf) ? innerText : elseText;
+      β += await holdMines(userId, hold, balanceOf) ? innerText : elseText;
     }
     α++;
     continue;
@@ -182,9 +182,10 @@ module.exports = {
   parse,
   execute,
 };
-
-/*console.log(execute(parse('[read hold="LINK 1"]test [/read]'),
+/*
+console.log(execute(parse('[read hold="LINK 1"]test [else] 2[/read]'),
 {userId:111,balanceOf:(id,token) => 10000}));
-console.log(execute(parse('[read hold="LINK 1"]test [/read]'),
+console.log(execute(parse('[read hold="LINK 1"]test [else] 2[/read]'),
 {userId:111,balanceOf:(id,token) => 1}));
+
 */
