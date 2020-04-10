@@ -40,12 +40,12 @@ class TokenCircleApiService extends Service {
    * 添加 userId 到 托管钱包地址的映射（在机器人饭票circle的后端里）
    * 未来如果要API扩充数据，可能改为 addUserProfile
    * @param {number|string} uid Matataki User / Wallet Hosting ID
-   * @param {string} username Matataki 用户名
+   * @param {string} name Matataki 用户名
    * @param {string} address ethereum address of the user wallet
    */
-  addUserProfile(uid, username, address) {
+  addUserProfile(uid, name, address) {
     return this.client.put(`/user/${uid}`, {
-      username,
+      name,
       walletAddress: address,
     });
   }
