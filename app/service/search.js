@@ -243,13 +243,27 @@ class SearchService extends Service {
     }
 
     const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
+    this.logger.error('SearchService:: importPost: data %j', {
+      id: postid,
+      index: this.config.elasticsearch.indexPosts,
+      body: {
+        id: postid,
+        create_time: moment(),
+        // uid: author[0].id,
+        // username: author[0].username,
+        // nickname: author[0].nickname,
+        title,
+        content,
+        channel_id: 1,
+      },
+    });
     try {
       await elaClient.index({
         id: postid,
         index: this.config.elasticsearch.indexPosts,
         body: {
           id: postid,
-          create_time: moment(),
+          create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
           // uid: author[0].id,
           // username: author[0].username,
           // nickname: author[0].nickname,

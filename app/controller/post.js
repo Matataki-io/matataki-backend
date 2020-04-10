@@ -88,7 +88,7 @@ class PostController extends Controller {
 
     // 记录持币编辑信息
     if (editRequireToken) {
-      await this.service.post.addEditMineTokens(ctx.user.id, id, editRequireToken)
+      await this.service.post.addEditMineTokens(ctx.user.id, id, editRequireToken);
     }
 
     // 记录购买编辑权限信息
