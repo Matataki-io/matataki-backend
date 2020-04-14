@@ -836,7 +836,9 @@ class PostController extends Controller {
       }
       data.content = await execute(parse(data.content), {
         userId: ctx.user.id,
-        balanceOf: (...args) => this.service.token.mineToken.balanceOf(...args)
+        balanceOf: (user,symbol) => 
+        this.service.token.mineToken.balanceOf(user,
+          this.service.token.mineToken.getToken({symbol}))
       });
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
