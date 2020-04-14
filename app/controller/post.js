@@ -836,7 +836,7 @@ class PostController extends Controller {
       }
       data.content = await execute(parse(data.content), {
         userId: ctx.user.id,
-        balanceOf: (user,symbol) => 
+        balanceOf: async (user,symbol) => 
         this.service.token.mineToken.balanceOf(user,
           await this.service.token.mineToken.getToken({symbol}))
       });
