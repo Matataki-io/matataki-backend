@@ -1123,12 +1123,14 @@ class PostController extends Controller {
         // 是加密的数据，开始解密
         data = JSON.parse(this.service.cryptography.decrypt(data));
       }
+
       data.content = await execute(parse(data.content), {
         userId: ctx.user.id,
         balanceOf: async (user,symbol) => 
         this.service.token.mineToken.balanceOf(user,
           (await this.service.token.mineToken.getToken({symbol})).id)
       });
+      
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
       ctx.body.data = data;
