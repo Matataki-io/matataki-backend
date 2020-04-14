@@ -158,7 +158,7 @@ async function holdMines(user, mines, balanceOf) {
 
 
 async function showBalance(user,mines,balanceOf) {
-  let α = `${userId} have `;
+  let α = `${user} have `;
   α += await balanceOf(user,mines[0].token);
   α += mines[0].token;
   return α;
