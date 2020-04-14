@@ -156,6 +156,14 @@ async function holdMines(user, mines, balanceOf) {
   return true;
 }
 
+
+async function showBalance(user,mines,balanceOf) {
+  let α = "you have ";
+  α += await balanceOf(user,mines[0].token);
+  α += mines[0].token;
+  return α;
+}
+
 async function execute(ast, { userId, balanceOf }) {
   let α = 0,
     β = '';
@@ -169,7 +177,7 @@ async function execute(ast, { userId, balanceOf }) {
       const hide = attrBoolean(ast[α].attributes.hide, false);
       const hold = attrMines(ast[α].attributes.hold);
       const innerText = ast[α].innerText;
-      const elseText = hide ? '' : ast[α].elseText;
+      const elseText = await showBalance(userId,hold,balanceOf);
       β += await holdMines(userId, hold, balanceOf) ? innerText : elseText;
     }
     α++;
