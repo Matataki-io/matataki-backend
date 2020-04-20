@@ -101,7 +101,6 @@ function parse(text) {
       β.push({
         block: 'read',
         innerText: tokenized[α + 1].value,
-        elseText: "You don't have enough fan tickets to see this.",
         attributes: parseReadOpen(tokenized[α]),
       });
       α += 3;
@@ -178,7 +177,7 @@ async function execute(ast, { userId, balanceOf }) {
       const hide = attrBoolean(ast[α].attributes.hide, false);
       const hold = attrMines(ast[α].attributes.hold);
       const innerText = ast[α].innerText;
-      const elseText = hide? '' : ast[α].elseText;
+      const elseText = hide? '' : markHold(hold,ast[α].elseText);
       β += await holdMines(userId, hold, balanceOf) ? innerText : elseText;
     }
     α++;
@@ -187,6 +186,11 @@ async function execute(ast, { userId, balanceOf }) {
   return β;
 }
 
+function markHold(hold,elseText) {
+  return elseText ? elseText : 
+  (`You don't have enough tickets to see this. (` +
+    hold.map(({token,amount}) => `${amount/10000} ${token}`).join(' ') + `)`)
+}
 module.exports = {
   parse,
   execute,
