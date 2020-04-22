@@ -1,5 +1,4 @@
 'use strict';
-const { parse, execute } = require('./md_parser/parser');
 const Controller = require('../core/base_controller');
 const moment = require('moment');
 // const ONT = require('ontology-ts-sdk');
@@ -36,7 +35,7 @@ class PostController extends Controller {
     // 只清洗文章文本的标识
     const articleContent = await this.service.post.wash(data.content);
     // 设置短摘要
-    const short_content = shortContent || articleContent.substring(0, 300);
+    const short_content = shortContent || await this.service.extmarkdown.shortContent(articleContent);
 
     const { metadataHash, htmlHash } = await this.service.post.uploadArticleToIpfs({
       isEncrypt, data, title, displayName: this.user.displayName,
@@ -185,7 +184,7 @@ class PostController extends Controller {
       displayName = user.nickname;
     }
 
-    const short_content = shortContent || articleContent.substring(0, 300);
+    const short_content = shortContent || await this.service.extmarkdown.shortContent(articleContent);
     const { metadataHash, htmlHash } = await this.service.post.uploadArticleToIpfs({
       isEncrypt, data, title, displayName,
       description: short_content,
@@ -834,12 +833,8 @@ class PostController extends Controller {
         // 是加密的数据，开始解密
         data = JSON.parse(this.service.cryptography.decrypt(data));
       }
-      data.content = await execute(parse(data.content), {
-        userId: ctx.user.id,
-        balanceOf: async (user,symbol) => 
-        this.service.token.mineToken.balanceOf(user,
-          (await this.service.token.mineToken.getToken({symbol})).id)
-      });
+      data.content = await this.service.extmarkdown.transform(data.content,
+        {userId : ctx.user.id});
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
       ctx.body.data = data;
@@ -1124,12 +1119,8 @@ class PostController extends Controller {
         data = JSON.parse(this.service.cryptography.decrypt(data));
       }
 
-      data.content = await execute(parse(data.content), {
-        userId: ctx.user.id,
-        balanceOf: async (user,symbol) => 
-        this.service.token.mineToken.balanceOf(user,
-          (await this.service.token.mineToken.getToken({symbol})).id)
-      });
+      data.content = await this.service.extmarkdown.transform(data.content,
+        {userId : ctx.user.id});
       
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
