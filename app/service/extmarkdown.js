@@ -216,7 +216,7 @@ class ExtMarkdown extends Service {
                 α++; continue;
             }
             if (parsed[α].block == 'read') {
-                const hide = attrBoolean(ast[α].attributes.hide, false);
+                const hide = attrBoolean(parsed[α].attributes.hide, false);
                 const holdCond = parsed[α].attributes.hold ?
                     parsed[α].attributes.hold : '';
                 const hold = attrMines(parsed[α].attributes.hold);
