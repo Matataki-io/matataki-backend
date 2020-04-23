@@ -197,7 +197,7 @@ function markHold(hold, elseText) {
 
 class ExtMarkdown extends Service {
     transform(content, { userId }) {
-        return execute(this.fromIpfs(content), {
+        return execute(parse(content), {
             userId,
             balanceOf: async (user, symbol) =>
                 this.service.token.mineToken.balanceOf(user,
