@@ -197,15 +197,55 @@ function markHold(hold, elseText) {
 
 class ExtMarkdown extends Service {
     transform(content, { userId }) {
-        return execute(parse(content), {
+        return execute(this.fromIpfs(content), {
             userId,
             balanceOf: async (user, symbol) =>
                 this.service.token.mineToken.balanceOf(user,
                     (await this.service.token.mineToken.getToken({ symbol })).id)
         });
     }
-    async shortContent(content){
-        return (await this.transform(content,{userId:null})).substring(0,300);
+    async shortContent(content) {
+        return (await this.transform(content, { userId: null })).substring(0, 300);
+    }
+    toIpfs(content) {
+        const parsed = parse(content);
+        let α = 0, β = '';
+        while (α < parsed.length) {
+            if (parsed[α].block == 'text') {
+                β += parsed[α].value;
+                α++; continue;
+            }
+            if (parsed[α].block == 'read') {
+                const holdCond = parsed[α].attributes.hold ?
+                    parsed[α].attributes.hold : '';
+                const hold = attrMines(parsed[α].attributes.hold);
+                const elseText = hide ? '' : markHold(hold, parsed[α].elseText);
+                β += `[read hold="${holdCond}" hide="${parsed[α].attributes.hide}"]`
+                    + JSON.stringify(this.service.cryptography.encrypt(parsed[α].innerText))
+                    + `[else]` + elseText + `[/read]`;
+                α++; continue;
+            }
+
+        }
+        return β;
+    }
+
+    fromIpfs(content) {
+        const parsed = parse(content);
+        let α = 0;
+        while (α < parsed.length) {
+            if (parsed[α].block == 'text') {
+                α++; continue;
+            }
+            if (parsed[α].block == 'read') {
+                const innerText = this.service.cryptography.decrypt(
+                    JSON.parse(parsed[α].innerText));
+                parsed[α].innerText = innerText;
+                α++; continue;
+            }
+
+        }
+        return parsed;
     }
 }
 
