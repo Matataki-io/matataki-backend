@@ -239,8 +239,13 @@ class ExtMarkdown extends Service {
                 α++; continue;
             }
             if (parsed[α].block == 'read') {
-                const innerText = this.service.cryptography.decrypt(
+                let innerText;
+                try{
+                innerText = this.service.cryptography.decrypt(
                     JSON.parse(parsed[α].innerText));
+                }catch(err){
+                    α++; continue;
+                }
                 parsed[α].innerText = innerText;
                 α++; continue;
             }
