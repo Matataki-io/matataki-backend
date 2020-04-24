@@ -33,7 +33,8 @@ class PostController extends Controller {
     const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 只清洗文章文本的标识
-    const articleContent = this.service.extmarkdown.toIpfs(await this.service.post.wash(data.content));
+    data.content = this.serivce.extmarkdown.toIpfs(data.content);
+    const articleContent = await this.service.post.wash(data.content);
     // 设置短摘要
     const short_content = shortContent || await this.service.extmarkdown.shortContent(articleContent);
 
@@ -174,8 +175,9 @@ class PostController extends Controller {
     else isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 只清洗文章文本的标识
-    const articleContent = this.service.extmarkdown.toIpfs(await this.service.post.wash(data.content));
-
+    data.content =this.service.extmarkdown.toIpfs(data.content);
+    const articleContent = await this.service.post.wash(data.content);
+    
     // 获取作者的昵称
     let displayName = ''
     if (isAuthor) displayName = this.user.displayName;
