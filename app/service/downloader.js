@@ -28,11 +28,22 @@ class DownloaderService extends Service {
     const posts = await this.app.mysql.select('posts', {
       where: { uid, channel_id: 1, status: 0 },
     });
+    const id2Obj = await this.getRefs(posts);
+
+    const website = this.config.env === 'test' ? 'https://wwwtest.smartsignature.io/p' : 'https://www.matataki.io/p';
     for (const item of posts) {
+      const _refMdStr = id2Obj[item.id.toString()];
+      const refMdStr = _refMdStr ? ` ## 已引用 ${_refMdStr} ` : '';
       if (item.hash !== null && item !== '') {
         const data = await this.getIpfsData(uid, item.hash);
         if (data) {
-          zip.file(`${item.title}-${item.id}.md`, data.content);
+          zip.file(`${item.title}-${item.id}.md`, `
+# 标题： ${item.title}
+- 作者： ${item.author}
+          ${data.content}
+- 原文地址：${website}/${item.id}
+- IPFS： ${item.hash}
+${refMdStr}`);
         }
       }
     }
@@ -53,6 +64,28 @@ class DownloaderService extends Service {
           reject(error);
         });
     });
+  }
+  async getRefs(posts) {
+    // ids数组
+    const idsArr = [];
+    for (const item of posts) {
+      idsArr.push(item.id);
+    }
+    this.logger.info('service downloader getRefs idsArr: ', idsArr);
+    const refs = await this.app.mysql.query('SELECT * FROM post_references WHERE sign_id IN (?) AND status = 0;', [ idsArr ]);
+    // ids 对象
+    const idsObj = {};
+    for (const item of refs) {
+      // 不存在就新建数组
+      if (!idsObj[item.sign_id]) {
+        idsObj[item.sign_id] = '';
+      }
+      idsObj[item.sign_id] += `
+- [${item.title}](${item.url})
+      `;
+    }
+    this.logger.info('service downloader getRefs idsObj: ', idsObj);
+    return idsObj;
   }
 }
 
