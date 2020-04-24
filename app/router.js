@@ -476,6 +476,6 @@ module.exports = app => {
   router.put('/dao/user/skill', passport.authorize, controller.dao.skill.update);
   router.delete('/dao/user/skill', passport.authorize, controller.dao.skill.destroy);
   router.get('/dao/skill/options', passport.verify, controller.dao.skill.options);
-  router.get('/dev/down/:uid/posts', passport.verify, controller.downloader.down);
+  router.get('/dev/down/posts', passport.verify, controller.downloader.down);
 };
 
