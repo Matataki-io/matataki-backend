@@ -191,7 +191,7 @@ async function execute(ast, { userId, balanceOf }) {
 
 function markHold(hold, elseText) {
     return elseText ? elseText :
-        (`You don't have enough tickets to see this. (` +
+        (`持有足够Fan票后解锁本段内容 (` +
             hold.map(({ token, amount }) => `${amount / 10000} ${token}`).join(' ') + `)`)
 }
 
