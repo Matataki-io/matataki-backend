@@ -129,7 +129,7 @@ function parse(text) {
 
 function attrBoolean(val, def) {
     return val
-        ? val === 'false' || val === '0' || val === 'null'
+        ? val === 'false' || val === '0' || val === 'null' || val === 'undefined'
             ? false
             : true
         : def;
@@ -221,7 +221,7 @@ class ExtMarkdown extends Service {
                     parsed[α].attributes.hold : '';
                 const hold = attrMines(parsed[α].attributes.hold);
                 const elseText = hide ? '' : markHold(hold, parsed[α].elseText);
-                β += `[read hold="${holdCond}" hide="${parsed[α].attributes.hide}"]`
+                β += `[read hold="${holdCond}" hide="${hide}"]`
                     + JSON.stringify(this.service.cryptography.encrypt(parsed[α].innerText))
                     + `[else]` + elseText + `[/read]`;
                 α++; continue;
