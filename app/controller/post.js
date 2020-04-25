@@ -33,7 +33,7 @@ class PostController extends Controller {
     const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 只清洗文章文本的标识
-    data.content = this.serivce.extmarkdown.toIpfs(data.content);
+    data.content = this.service.extmarkdown.toIpfs(data.content);
     const articleContent = await this.service.post.wash(data.content);
     // 设置短摘要
     const short_content = shortContent || await this.service.extmarkdown.shortContent(articleContent);
