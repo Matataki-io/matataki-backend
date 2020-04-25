@@ -40,6 +40,7 @@ class DownloaderService extends Service {
           zip.file(`${item.title}-${item.id}.md`, `
 # 标题： ${item.title}
 - 作者： ${item.author}
+
           ${data.content}
 - 原文地址：${website}/${item.id}
 - IPFS： ${item.hash}
