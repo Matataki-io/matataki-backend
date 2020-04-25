@@ -28,3 +28,5 @@ cmd.sh
 scripts/config.local.json
 scripts/article-cart/config.*.json
 scripts/oss-copy/config.local.json
+uploads/
+posts-zip/*.zip

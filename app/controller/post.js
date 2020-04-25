@@ -1,5 +1,4 @@
 'use strict';
-const { parse, execute } = require('./md_parser/parser');
 const Controller = require('../core/base_controller');
 const moment = require('moment');
 // const ONT = require('ontology-ts-sdk');
@@ -10,9 +9,9 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
 
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
+      return query.replace(/\:(\w+)/g, function (txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -34,9 +33,10 @@ class PostController extends Controller {
     const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 只清洗文章文本的标识
+    data.content = this.serivce.extmarkdown.toIpfs(data.content);
     const articleContent = await this.service.post.wash(data.content);
     // 设置短摘要
-    const short_content = shortContent || articleContent.substring(0, 300);
+    const short_content = shortContent || await this.service.extmarkdown.shortContent(articleContent);
 
     const { metadataHash, htmlHash } = await this.service.post.uploadArticleToIpfs({
       isEncrypt, data, title, displayName: this.user.displayName,
@@ -88,7 +88,7 @@ class PostController extends Controller {
 
     // 记录持币编辑信息
     if (editRequireToken) {
-      await this.service.post.addEditMineTokens(ctx.user.id, id, editRequireToken)
+      await this.service.post.addEditMineTokens(ctx.user.id, id, editRequireToken);
     }
 
     // 记录购买编辑权限信息
@@ -175,8 +175,9 @@ class PostController extends Controller {
     else isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 只清洗文章文本的标识
+    data.content =this.service.extmarkdown.toIpfs(data.content);
     const articleContent = await this.service.post.wash(data.content);
-
+    
     // 获取作者的昵称
     let displayName = ''
     if (isAuthor) displayName = this.user.displayName;
@@ -185,7 +186,7 @@ class PostController extends Controller {
       displayName = user.nickname;
     }
 
-    const short_content = shortContent || articleContent.substring(0, 300);
+    const short_content = shortContent || await this.service.extmarkdown.shortContent(articleContent);
     const { metadataHash, htmlHash } = await this.service.post.uploadArticleToIpfs({
       isEncrypt, data, title, displayName,
       description: short_content,
@@ -536,7 +537,7 @@ class PostController extends Controller {
       const result = await this.app.mysql.query(
         'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count) VALUES (?, ?, 0, 0, 0, 0)'
         + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
-        [ post.id, 1 ]
+        [post.id, 1]
       );
 
       const updateSuccess = (result.affectedRows !== 0);
@@ -818,7 +819,6 @@ class PostController extends Controller {
     const hash = ctx.params.hash;
 
     const post = await this.service.post.getByHash(hash, false);
-
     if (post.uid !== ctx.user.id) {
       const permission = await this.hasPermission(post, ctx.user.id);
       if (!permission) {
@@ -826,7 +826,6 @@ class PostController extends Controller {
         return;
       }
     }
-
     // 从ipfs获取内容
     const catchRequest = await this.service.post.ipfsCatch(hash);
 
@@ -836,8 +835,8 @@ class PostController extends Controller {
         // 是加密的数据，开始解密
         data = JSON.parse(this.service.cryptography.decrypt(data));
       }
-      //data.content = execute(parse(data.content),{userId :ctx.user.id,
-      //balanceOf : (...args) => this.service.token.mineToken.balanceOf(...args)});
+      data.content = await this.service.extmarkdown.transform(data.content,
+        {userId : ctx.user.id});
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
       ctx.body.data = data;
@@ -1121,6 +1120,10 @@ class PostController extends Controller {
         // 是加密的数据，开始解密
         data = JSON.parse(this.service.cryptography.decrypt(data));
       }
+
+      data.content = await this.service.extmarkdown.transform(data.content,
+        {userId : ctx.user.id});
+      
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
       ctx.body.data = data;

@@ -119,6 +119,17 @@ async function catcherPost(start = 0, end = null) {
       parsedContent = await wash(articleRawContent.data.data.content);
     }
     console.log(parsedContent.substring(0, 100));
+    console.log({
+      id: currentId,
+      index: config.indexPosts,
+      body: {
+        id: currentId,
+        create_time: articleDetailQuery[0][0].create_time,
+        title: articleDetailQuery[0][0].title,
+        channel_id: articleDetailQuery[0][0].channel_id,
+        content: parsedContent,
+      },
+    });
 
     // 插入文章失败， 请重启脚本
     await elaClient.index({
