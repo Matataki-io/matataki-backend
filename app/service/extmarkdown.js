@@ -118,7 +118,6 @@ function parse(text) {
             continue;
         }
         β.push(tokenized[α]);
-
         α++;
     }
     return β;
@@ -174,10 +173,11 @@ async function execute(ast, { userId, balanceOf }) {
             const innerText = ast[α].innerText;
             const elseText = hide ? '' : markHold(hold, ast[α].elseText);
             β += userId && await holdMines(userId, hold, balanceOf) ? innerText : elseText;
+            α++;
+            continue;
         }
         β += ast[α].value;
         α++;
-        continue;
     }
     return β;
 }
