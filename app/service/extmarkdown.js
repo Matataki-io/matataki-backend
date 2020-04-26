@@ -172,7 +172,9 @@ async function execute(ast, { userId, balanceOf }) {
             const hold = attrMines(ast[α].attributes.hold);
             const innerText = ast[α].innerText;
             const elseText = hide ? '' : markHold(hold, ast[α].elseText);
-            β += userId && await holdMines(userId, hold, balanceOf) ? innerText : elseText;
+            β += userId && await holdMines(userId, hold, balanceOf) ? 
+                render(innerText,ast[α].attributes.hold) : render(elseText,
+                    ast[α].attributes.hold);
             α++;
             continue;
         }
@@ -188,6 +190,9 @@ function markHold(hold, elseText) {
             hold.map(({ token, amount }) => `${amount / 10000} ${token}`).join(' ') + `)\n`)
 }
 
+function render(t,hold){
+    return `<extmarkdown hold="${hold}">${t}</extmarkdown>`;
+}
 class ExtMarkdown extends Service {
     transform(content, { userId }) {
         return execute(this.fromIpfs(content), {
@@ -210,7 +215,7 @@ class ExtMarkdown extends Service {
                     parsed[α].attributes.hold : '';
                 const hold = attrMines(parsed[α].attributes.hold);
                 const elseText = hide ? '\n' : markHold(hold, parsed[α].elseText);
-                β += `[read hold="${holdCond}" hide="${hide}"]`
+                β += `[read hold="${holdCond}"]`
                     + JSON.stringify(this.service.cryptography.encrypt(parsed[α].innerText))
                     + `\n[else]` + elseText + `[/read]`;
                 α++; continue;
@@ -260,7 +265,7 @@ class ExtMarkdown extends Service {
                         JSON.parse(parsed[α].innerText));
                 } catch (err) {
                 }
-                β += `[read hold="${holdCond}" hide="${hide}"]`
+                β += `[read hold="${holdCond}"]`
                     + innerText
                     + `[else]` + elseText + `[/read]`;
                 α++; continue;
