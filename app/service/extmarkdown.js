@@ -260,9 +260,9 @@ class ExtMarkdown extends Service {
                         JSON.parse(parsed[α].innerText));
                 } catch (err) {
                 }
-                β += `\n[read hold="${holdCond}" hide="${hide}"]`
+                β += `[read hold="${holdCond}" hide="${hide}"]`
                     + innerText
-                    + `\n[else]` + elseText + `\n[/read]`;
+                    + `[else]` + elseText + `[/read]`;
                 α++; continue;
             }
             β += parsed[α].value;
