@@ -95,11 +95,7 @@ function parse(text) {
     let α = 0,
         β = [];
     while (α < tokenized.length) {
-        if (look(tokenized, α, 'text')) {
-            β.push(tokenized[α]);
-            α++;
-            continue;
-        }
+        
         if (lookseq(tokenized, α, 'readOpen', 'text', 'readClose')) {
             β.push({
                 block: 'read',
@@ -121,6 +117,7 @@ function parse(text) {
             α += 5;
             continue;
         }
+        β.push(tokenized[α]);
 
         α++;
     }
@@ -171,11 +168,6 @@ async function execute(ast, { userId, balanceOf }) {
     let α = 0,
         β = '';
     while (α < ast.length) {
-        if (ast[α].block === 'text') {
-            β += ast[α].value;
-            α++;
-            continue;
-        }
         if (ast[α].block === 'read') {
             const hide = attrBoolean(ast[α].attributes.hide, false);
             const hold = attrMines(ast[α].attributes.hold);
@@ -183,6 +175,7 @@ async function execute(ast, { userId, balanceOf }) {
             const elseText = hide ? '' : markHold(hold, ast[α].elseText);
             β += userId && await holdMines(userId, hold, balanceOf) ? innerText : elseText;
         }
+        β += ast[α].value;
         α++;
         continue;
     }
@@ -211,10 +204,6 @@ class ExtMarkdown extends Service {
         const parsed = parse(content);
         let α = 0, β = '';
         while (α < parsed.length) {
-            if (parsed[α].block == 'text') {
-                β += parsed[α].value;
-                α++; continue;
-            }
             if (parsed[α].block == 'read') {
                 const hide = attrBoolean(parsed[α].attributes.hide, false);
                 const holdCond = parsed[α].attributes.hold ?
@@ -226,7 +215,8 @@ class ExtMarkdown extends Service {
                     + `\n[else]` + elseText + `\n[/read]`;
                 α++; continue;
             }
-
+            β += parsed[α].value;
+            α++;
         }
         return β;
     }
