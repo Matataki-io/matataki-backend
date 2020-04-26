@@ -4,23 +4,23 @@ const Service = require('egg').Service;
 
 const tokenizeRules = [
     {
-        regexp: /[^\[]+/g,
+        regexp: /[^\[]+/mg,
         block: 'text',
     },
     {
-        regexp: /\[read[^\]]+\](?!\()/g,
+        regexp: /^\[read[^\]]+\](?!\()/mg,
         block: 'readOpen',
     },
     {
-        regexp: /\[\/read\](?!\()/g,
+        regexp: /^\[\/read\](?!\()/mg,
         block: 'readClose',
     },
     {
-        regexp: /\[else\](?!\()/g,
+        regexp: /^\[else\](?!\()/mg,
         block: 'else',
     },
     {
-        regexp: /\[/g,
+        regexp: /\[/mg,
         block: 'text',
     },
 ];
@@ -95,11 +95,7 @@ function parse(text) {
     let α = 0,
         β = [];
     while (α < tokenized.length) {
-        if (look(tokenized, α, 'text')) {
-            β.push(tokenized[α]);
-            α++;
-            continue;
-        }
+
         if (lookseq(tokenized, α, 'readOpen', 'text', 'readClose')) {
             β.push({
                 block: 'read',
@@ -121,7 +117,7 @@ function parse(text) {
             α += 5;
             continue;
         }
-
+        β.push(tokenized[α]);
         α++;
     }
     return β;
@@ -171,20 +167,19 @@ async function execute(ast, { userId, balanceOf }) {
     let α = 0,
         β = '';
     while (α < ast.length) {
-        if (ast[α].block === 'text') {
-            β += ast[α].value;
-            α++;
-            continue;
-        }
         if (ast[α].block === 'read') {
             const hide = attrBoolean(ast[α].attributes.hide, false);
             const hold = attrMines(ast[α].attributes.hold);
             const innerText = ast[α].innerText;
             const elseText = hide ? '' : markHold(hold, ast[α].elseText);
-            β += userId && await holdMines(userId, hold, balanceOf) ? innerText : elseText;
+            β += userId && await holdMines(userId, hold, balanceOf) ? 
+                render(innerText,ast[α].attributes.hold) : render(elseText,
+                    ast[α].attributes.hold);
+            α++;
+            continue;
         }
+        β += ast[α].value;
         α++;
-        continue;
     }
     return β;
 }
@@ -192,7 +187,11 @@ async function execute(ast, { userId, balanceOf }) {
 function markHold(hold, elseText) {
     return elseText ? elseText :
         (`持有足够Fan票后解锁本段内容 (` +
-            hold.map(({ token, amount }) => `${amount / 10000} ${token}`).join(' ') + `)`)
+            hold.map(({ token, amount }) => `${amount / 10000} ${token}`).join(' ') + `)\n`)
+}
+
+function render(t,hold){
+    return `<div class="unlock-prompt" hold="${hold}">${t}</div>`;
 }
 
 class ExtMarkdown extends Service {
@@ -211,22 +210,19 @@ class ExtMarkdown extends Service {
         const parsed = parse(content);
         let α = 0, β = '';
         while (α < parsed.length) {
-            if (parsed[α].block == 'text') {
-                β += parsed[α].value;
-                α++; continue;
-            }
             if (parsed[α].block == 'read') {
                 const hide = attrBoolean(parsed[α].attributes.hide, false);
                 const holdCond = parsed[α].attributes.hold ?
                     parsed[α].attributes.hold : '';
                 const hold = attrMines(parsed[α].attributes.hold);
-                const elseText = hide ? '' : markHold(hold, parsed[α].elseText);
-                β += `[read hold="${holdCond}" hide="${hide}"]`
+                const elseText = hide ? '\n' : markHold(hold, parsed[α].elseText);
+                β += `[read hold="${holdCond}"]`
                     + JSON.stringify(this.service.cryptography.encrypt(parsed[α].innerText))
-                    + `[else]` + elseText + `[/read]`;
+                    + `\n[else]` + elseText + `[/read]`;
                 α++; continue;
             }
-
+            β += parsed[α].value;
+            α++;
         }
         return β;
     }
@@ -240,18 +236,45 @@ class ExtMarkdown extends Service {
             }
             if (parsed[α].block == 'read') {
                 let innerText;
-                try{
-                innerText = this.service.cryptography.decrypt(
-                    JSON.parse(parsed[α].innerText));
-                }catch(err){
+                try {
+                    innerText = this.service.cryptography.decrypt(
+                        JSON.parse(parsed[α].innerText));
+                } catch (err) {
                     α++; continue;
                 }
                 parsed[α].innerText = innerText;
                 α++; continue;
             }
-
+            α++;
         }
         return parsed;
+    }
+
+    toEdit(content) {
+        const parsed = parse(content);
+        let α = 0, β = '';
+        while (α < parsed.length) {
+            if (parsed[α].block == 'read') {
+                const hide = attrBoolean(parsed[α].attributes.hide, false);
+                const holdCond = parsed[α].attributes.hold ?
+                    parsed[α].attributes.hold : '';
+                const hold = attrMines(parsed[α].attributes.hold);
+                const elseText = hide ? '\n' : markHold(hold, parsed[α].elseText);
+                let innerText = parsed[α].innerText;
+                try {
+                    innerText = this.service.cryptography.decrypt(
+                        JSON.parse(parsed[α].innerText));
+                } catch (err) {
+                }
+                β += `[read hold="${holdCond}"]`
+                    + innerText
+                    + `[else]` + elseText + `[/read]`;
+                α++; continue;
+            }
+            β += parsed[α].value;
+            α++;
+        }
+        return β;
     }
 }
 
