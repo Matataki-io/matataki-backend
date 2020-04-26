@@ -191,7 +191,7 @@ function markHold(hold, elseText) {
 }
 
 function render(t,hold){
-    return `<p class="unlock-prompt" hold="${hold}">${t}</p>`;
+    return `<div class="unlock-prompt" hold="${hold}">${t}</div>`;
 }
 
 class ExtMarkdown extends Service {
