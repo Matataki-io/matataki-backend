@@ -836,7 +836,7 @@ class PostController extends Controller {
         data = JSON.parse(this.service.cryptography.decrypt(data));
       }
       //data.content = await this.service.extmarkdown.transform(data.content,
-      //  {userId : ctx.user.id});
+      //  {userId : ctx.user.id}); 
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
       ctx.body.data = data;
