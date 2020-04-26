@@ -4,23 +4,23 @@ const Service = require('egg').Service;
 
 const tokenizeRules = [
     {
-        regexp: /[^\[]+/g,
+        regexp: /[^\[]+/mg,
         block: 'text',
     },
     {
-        regexp: /\[read[^\]]+\](?!\()/g,
+        regexp: /^\[read[^\]]+\](?!\()/mg,
         block: 'readOpen',
     },
     {
-        regexp: /\[\/read\](?!\()/g,
+        regexp: /^\[\/read\](?!\()/mg,
         block: 'readClose',
     },
     {
-        regexp: /\[else\](?!\()/g,
+        regexp: /^\[else\](?!\()/mg,
         block: 'else',
     },
     {
-        regexp: /\[/g,
+        regexp: /\[/mg,
         block: 'text',
     },
 ];
