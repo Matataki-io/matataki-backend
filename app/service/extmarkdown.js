@@ -243,6 +243,27 @@ class ExtMarkdown extends Service {
         }
         return parsed;
     }
+
+    toEdit(content){
+        const parsed = parse(content);
+        let α = 0, β = '';
+        while (α < parsed.length) {
+            if (parsed[α].block == 'read') {
+                const hide = attrBoolean(parsed[α].attributes.hide, false);
+                const holdCond = parsed[α].attributes.hold ?
+                    parsed[α].attributes.hold : '';
+                const hold = attrMines(parsed[α].attributes.hold);
+                const elseText = hide ? '' : markHold(hold, parsed[α].elseText);
+                β += `\n[read hold="${holdCond}" hide="${hide}"]`
+                    + parsed[α].innerText
+                    + `\n[else]` + elseText + `\n[/read]`;
+                α++; continue;
+            }
+            β += parsed[α].value;
+            α++;
+        }
+        return β;
+    }
 }
 
 module.exports = ExtMarkdown;
