@@ -95,7 +95,7 @@ function parse(text) {
     let α = 0,
         β = [];
     while (α < tokenized.length) {
-        
+
         if (lookseq(tokenized, α, 'readOpen', 'text', 'readClose')) {
             β.push({
                 block: 'read',
@@ -230,10 +230,10 @@ class ExtMarkdown extends Service {
             }
             if (parsed[α].block == 'read') {
                 let innerText;
-                try{
-                innerText = this.service.cryptography.decrypt(
-                    JSON.parse(parsed[α].innerText));
-                }catch(err){
+                try {
+                    innerText = this.service.cryptography.decrypt(
+                        JSON.parse(parsed[α].innerText));
+                } catch (err) {
                     α++; continue;
                 }
                 parsed[α].innerText = innerText;
@@ -244,7 +244,7 @@ class ExtMarkdown extends Service {
         return parsed;
     }
 
-    toEdit(content){
+    toEdit(content) {
         const parsed = parse(content);
         let α = 0, β = '';
         while (α < parsed.length) {
@@ -254,8 +254,14 @@ class ExtMarkdown extends Service {
                     parsed[α].attributes.hold : '';
                 const hold = attrMines(parsed[α].attributes.hold);
                 const elseText = hide ? '' : markHold(hold, parsed[α].elseText);
+                let innerText = parsed[α].innerText;
+                try {
+                    innerText = this.service.cryptography.decrypt(
+                        JSON.parse(parsed[α].innerText));
+                } catch (err) {
+                }
                 β += `\n[read hold="${holdCond}" hide="${hide}"]`
-                    + parsed[α].innerText
+                    + innerText
                     + `\n[else]` + elseText + `\n[/read]`;
                 α++; continue;
             }
