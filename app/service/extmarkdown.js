@@ -239,7 +239,7 @@ class ExtMarkdown extends Service {
                 parsed[α].innerText = innerText;
                 α++; continue;
             }
-
+            α++;
         }
         return parsed;
     }
