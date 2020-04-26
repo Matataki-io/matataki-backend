@@ -262,7 +262,7 @@ class ExtMarkdown extends Service {
                 }
                 β += `[read hold="${holdCond}" hide="${hide}"]`
                     + innerText
-                    + `\n[else]` + elseText + `[/read]`;
+                    + `[else]` + elseText + `[/read]`;
                 α++; continue;
             }
             β += parsed[α].value;
