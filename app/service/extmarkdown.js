@@ -191,8 +191,9 @@ function markHold(hold, elseText) {
 }
 
 function render(t,hold){
-    return `<extmarkdown hold="${hold}">${t}</extmarkdown>`;
+    return `<p class="unlock-prompt" hold="${hold}">${t}</p>`;
 }
+
 class ExtMarkdown extends Service {
     transform(content, { userId }) {
         return execute(this.fromIpfs(content), {
