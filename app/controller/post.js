@@ -836,7 +836,7 @@ class PostController extends Controller {
         data = JSON.parse(this.service.cryptography.decrypt(data));
       }
       if(ctx.query.edit){
-        data.content = this.service.extmarkdown.toEdit(data.content);
+        //data.content = this.service.extmarkdown.toEdit(data.content);
       }else{
         data.content = await this.service.extmarkdown.transform(data.content,
         {userId : ctx.user.id}); 
