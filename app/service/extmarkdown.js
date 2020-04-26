@@ -185,7 +185,7 @@ async function execute(ast, { userId, balanceOf }) {
 function markHold(hold, elseText) {
     return elseText ? elseText :
         (`持有足够Fan票后解锁本段内容 (` +
-            hold.map(({ token, amount }) => `${amount / 10000} ${token}`).join(' ') + `)`)
+            hold.map(({ token, amount }) => `${amount / 10000} ${token}`).join(' ') + `)\n`)
 }
 
 class ExtMarkdown extends Service {
