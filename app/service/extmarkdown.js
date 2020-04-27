@@ -198,7 +198,7 @@ async function execute(ast, { userId, balanceOf }) {
 }
 
 function markHold(hold, elseText) {
-    return elseText ? elseText : ''
+    return elseText ? elseText : 'Hidden content\n'
         // (`持有足够Fan票后解锁本段内容 (` +
         //     hold.map(({ token, amount }) => `${amount / 10000} ${token}`).join(' ') + `)\n`)
 }
