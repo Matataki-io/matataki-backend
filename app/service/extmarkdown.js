@@ -154,6 +154,18 @@ async function holdMines(user, mines, balanceOf) {
     return true;
 }
 
+async function getHoldMines(user, mines, balanceOf) {
+    let α = 0;
+    let minesString = '';
+    while (α < mines.length) {
+        const money = await balanceOf(user, mines[α].token);
+        if(α !== 0) minesString += `, `
+        minesString += `${mines[α].token} ${(money || 0) / 10000}`;
+        α++;
+    }
+    return minesString;
+}
+
 /*
 async function showBalance(user,mines,balanceOf) {
   let α = `${user} have `;
@@ -171,10 +183,11 @@ async function execute(ast, { userId, balanceOf }) {
             const hide = attrBoolean(ast[α].attributes.hide, false);
             const hold = attrMines(ast[α].attributes.hold);
             const innerText = ast[α].innerText;
+            const minesString = userId ? await getHoldMines(userId, hold, balanceOf) : '';
             const elseText = hide ? '' : markHold(hold, ast[α].elseText);
             β += userId && await holdMines(userId, hold, balanceOf) ? 
-                render(innerText,ast[α].attributes.hold) : render(elseText,
-                    ast[α].attributes.hold);
+                render(innerText,ast[α].attributes.hold, minesString, true) : render(elseText,
+                    ast[α].attributes.hold, minesString, false);
             α++;
             continue;
         }
@@ -185,13 +198,14 @@ async function execute(ast, { userId, balanceOf }) {
 }
 
 function markHold(hold, elseText) {
-    return elseText ? elseText :
-        (`持有足够Fan票后解锁本段内容 (` +
-            hold.map(({ token, amount }) => `${amount / 10000} ${token}`).join(' ') + `)\n`)
+    return elseText ? elseText : ''
+        // (`持有足够Fan票后解锁本段内容 (` +
+        //     hold.map(({ token, amount }) => `${amount / 10000} ${token}`).join(' ') + `)\n`)
 }
 
-function render(t,hold){
-    return `<div class="unlock-prompt" hold="${hold}">${t}</div>`;
+function render(t,hold, minesString, unlocked) {
+    const divClass = unlocked ? 'unlock-content' : 'unlock-prompt'
+    return `<div class="${divClass}" need="${hold}" hold="${minesString}"  >\n${t}</div>`;
 }
 
 class ExtMarkdown extends Service {
