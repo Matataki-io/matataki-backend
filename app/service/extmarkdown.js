@@ -257,7 +257,7 @@ class ExtMarkdown extends Service {
                 const holdCond = parsed[α].attributes.hold ?
                     parsed[α].attributes.hold : '';
                 const hold = attrMines(parsed[α].attributes.hold);
-                const elseText = hide ? '\n' : markHold(hold, parsed[α].elseText);
+                const elseText = hide ? '\n' : markHold(parsed[α].elseText);
                 β += `[read hold="${holdCond}"]`
                     + JSON.stringify(this.service.cryptography.encrypt(parsed[α].innerText))
                     + `\n[else]` + elseText + `[/read]`;
@@ -301,7 +301,7 @@ class ExtMarkdown extends Service {
                 const holdCond = parsed[α].attributes.hold ?
                     parsed[α].attributes.hold : '';
                 const hold = attrMines(parsed[α].attributes.hold);
-                const elseText = hide ? '\n' : markHold(hold, parsed[α].elseText);
+                const elseText = hide ? '\n' : markHold(parsed[α].elseText);
                 let innerText = parsed[α].innerText;
                 try {
                     innerText = this.service.cryptography.decrypt(
