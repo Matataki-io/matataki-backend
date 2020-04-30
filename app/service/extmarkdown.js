@@ -131,6 +131,7 @@ function attrBoolean(val, def) {
         : def;
 }
 
+/** 将字符串解码成Fan票列表 */
 function attrMines(val) {
     const reg = /([A-Z]+)\s*(\d*\.?\d*)/g;
     let β = [];
@@ -144,11 +145,52 @@ function attrMines(val) {
     return β;
 }
 
-async function holdMines(user, mines, balanceOf) {
+/** 将Fan票列表编码成字符串 */
+function encodeMinesSting(list) {
+    let minesString = '';
+    for(let i = 0; i < list.length; i++) {
+        if(i !== 0) minesString += ', '
+        minesString += `${list[i].token} ${(list[i].amount || 0) / 10000}`;
+    }
+    return minesString;
+}
+
+/** 根据Fan票列表获取详细信息 */
+async function getTokenInfo(hold, getToken) {
     let α = 0;
+    while (α < hold.length) {
+        const token = await getToken(hold[α].token);
+        if(token) {
+            hold[α] = {
+                id: token.id,
+                symbol: hold[α].token,
+                amount: hold[α].amount,
+                name: token.name,
+                logo: token.logo
+            }
+        }
+        α++;
+    }
+    return hold;
+}
+
+/** 根据Fan票列表获取用户相应的余额 */
+async function getHoldMines(user, mines, balanceOf) {
+    let α = 0;
+    let userHold = [];
     while (α < mines.length) {
-        const money = await balanceOf(user, mines[α].token);
-        if (money < mines[α].amount) return false;
+        const amount = await balanceOf(user, mines[α].id) || 0;
+        userHold.push({token: mines[α].token, amount});
+        α++;
+    }
+    return userHold;
+}
+
+/** 比较条件列表与余额列表，给出是否满足解锁条件 */
+function meetTheUnlockConditions(userHold, hold) {
+    let α = 0;
+    while (α < hold.length) {
+        if (userHold[α].amount < hold[α].amount) return false;
         α++;
     }
     return true;
@@ -163,18 +205,18 @@ async function showBalance(user,mines,balanceOf) {
 }
 */
 
-async function execute(ast, { userId, balanceOf }) {
+async function execute(ast, { userId, balanceOf, getToken }) {
     let α = 0,
         β = '';
     while (α < ast.length) {
         if (ast[α].block === 'read') {
             const hide = attrBoolean(ast[α].attributes.hide, false);
-            const hold = attrMines(ast[α].attributes.hold);
+            const hold = await getTokenInfo(attrMines(ast[α].attributes.hold), getToken);
             const innerText = ast[α].innerText;
-            const elseText = hide ? '' : markHold(hold, ast[α].elseText);
-            β += userId && await holdMines(userId, hold, balanceOf) ? 
-                render(innerText,ast[α].attributes.hold) : render(elseText,
-                    ast[α].attributes.hold);
+            const userHold = userId ? await getHoldMines(userId, hold, balanceOf) : [];
+            const elseText = hide ? '' : markHold(ast[α].elseText);
+            β += userId && meetTheUnlockConditions(userHold, hold) ?
+                render(innerText, hold, userHold, true) : render(elseText, hold, userHold, false);
             α++;
             continue;
         }
@@ -184,23 +226,23 @@ async function execute(ast, { userId, balanceOf }) {
     return β;
 }
 
-function markHold(hold, elseText) {
-    return elseText ? elseText :
-        (`持有足够Fan票后解锁本段内容 (` +
-            hold.map(({ token, amount }) => `${amount / 10000} ${token}`).join(' ') + `)\n`)
+function markHold(elseText) {
+    return elseText ? elseText : 'Hidden content\n'
+        // (`持有足够Fan票后解锁本段内容 (` +
+        //     hold.map(({ token, amount }) => `${amount / 10000} ${token}`).join(' ') + `)\n`)
 }
 
-function render(t,hold){
-    return `<div class="unlock-prompt" hold="${hold}">${t}</div>`;
+function render(t,hold, userHold, unlocked) {
+    const divClass = unlocked ? 'unlock-content' : 'unlock-prompt'
+    return `<div class="${divClass}" data-need='${JSON.stringify(hold)}' data-hold='${JSON.stringify(userHold)}'>\n${t}</div>`;
 }
 
 class ExtMarkdown extends Service {
     transform(content, { userId }) {
         return execute(this.fromIpfs(content), {
             userId,
-            balanceOf: async (user, symbol) =>
-                this.service.token.mineToken.balanceOf(user,
-                    (await this.service.token.mineToken.getToken({ symbol })).id)
+            balanceOf: async (user, id) => this.service.token.mineToken.balanceOf(user, id),
+            getToken: async (symbol) => this.service.token.mineToken.getToken({ symbol })
         });
     }
     async shortContent(content) {
@@ -215,7 +257,7 @@ class ExtMarkdown extends Service {
                 const holdCond = parsed[α].attributes.hold ?
                     parsed[α].attributes.hold : '';
                 const hold = attrMines(parsed[α].attributes.hold);
-                const elseText = hide ? '\n' : markHold(hold, parsed[α].elseText);
+                const elseText = hide ? '\n' : markHold(parsed[α].elseText);
                 β += `[read hold="${holdCond}"]`
                     + JSON.stringify(this.service.cryptography.encrypt(parsed[α].innerText))
                     + `\n[else]` + elseText + `[/read]`;
@@ -259,7 +301,7 @@ class ExtMarkdown extends Service {
                 const holdCond = parsed[α].attributes.hold ?
                     parsed[α].attributes.hold : '';
                 const hold = attrMines(parsed[α].attributes.hold);
-                const elseText = hide ? '\n' : markHold(hold, parsed[α].elseText);
+                const elseText = hide ? '\n' : markHold(parsed[α].elseText);
                 let innerText = parsed[α].innerText;
                 try {
                     innerText = this.service.cryptography.decrypt(
