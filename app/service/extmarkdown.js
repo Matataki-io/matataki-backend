@@ -214,9 +214,18 @@ async function execute(ast, { userId, balanceOf, getToken }) {
             const hold = await getTokenInfo(attrMines(ast[α].attributes.hold), getToken);
             const innerText = ast[α].innerText;
             const userHold = userId ? await getHoldMines(userId, hold, balanceOf) : [];
-            const elseText = hide ? '' : markHold(ast[α].elseText);
-            β += userId && meetTheUnlockConditions(userHold, hold) ?
-                render(innerText, hold, userHold, true) : render(elseText, hold, userHold, false);
+            if(userId && meetTheUnlockConditions(userHold, hold)) {
+                // 隐藏内容
+                β += render(innerText, hold, userHold, true);
+            }
+            else {
+                // 预览内容，设为隐藏时不显示。
+                if(!hide) {
+                    const elseText = markHold(ast[α].elseText);
+                    β += render(elseText, hold, userHold, false);
+                }
+                else β += '';
+            }
             α++;
             continue;
         }
@@ -258,7 +267,7 @@ class ExtMarkdown extends Service {
                     parsed[α].attributes.hold : '';
                 const hold = attrMines(parsed[α].attributes.hold);
                 const elseText = hide ? '\n' : markHold(parsed[α].elseText);
-                β += `[read hold="${holdCond}"]`
+                β += `[read hold="${holdCond}"` + (hide? ` hide="true"` : '') + ']'
                     + JSON.stringify(this.service.cryptography.encrypt(parsed[α].innerText))
                     + `\n[else]` + elseText + `[/read]`;
                 α++; continue;
@@ -308,7 +317,7 @@ class ExtMarkdown extends Service {
                         JSON.parse(parsed[α].innerText));
                 } catch (err) {
                 }
-                β += `[read hold="${holdCond}"]`
+                β += `[read hold="${holdCond}"` + (hide? ` hide="true"` : '') + ']'
                     + innerText
                     + `[else]` + elseText + `[/read]`;
                 α++; continue;
