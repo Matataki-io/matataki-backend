@@ -20,14 +20,17 @@ class CommentService extends Service {
   }
 
   // 付费评论
-  async payPointCreate(userId, username, signId, comment, ip) {
-    const result = await this.service.mining.comment(userId, signId, ip);
-    // 积分扣除成功
-    if (result < 0) {
-      return result;
-    }
+  async payPointCreate(userId, username, signId, comment) { // 注释了 ip参数
+    // 评论功能不需要消耗积分
 
-    await this.create(userId, username, signId, comment, consts.commentTypes.point, result);
+    // const result = await this.service.mining.comment(userId, signId, ip);
+    // // 积分扣除成功
+    // if (result < 0) {
+    //   return result;
+    // }
+
+    // await this.create(userId, username, signId, comment, consts.commentTypes.point, result);
+    await this.create(userId, username, signId, comment, consts.commentTypes.point, 0);
     return 0;
   }
 
