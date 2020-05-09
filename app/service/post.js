@@ -41,6 +41,8 @@ class PostService extends Service {
     parsedContent = parsedContent.replace(/<source.*?>\n*?.*?\n*?<\/source>/gi, '');
     parsedContent = parsedContent.replace(/<[^>]+>/gi, '');
     // parsedContent = parsedContent.substring(0, 600);
+    // 去除[read]加密语法
+    parsedContent = this.service.extmarkdown.removeReadTags(parsedContent);
     // 去除markdown和html
     parsedContent = removemd(parsedContent);
     // 去除空格

@@ -327,6 +327,22 @@ class ExtMarkdown extends Service {
         }
         return β;
     }
+
+    // 去除read标签，只保留else中的内容。用于shortContent
+    removeReadTags(content) {
+        const ast = parse(content)
+        let α = 0,
+            β = '';
+        while (α < ast.length) {
+            if (ast[α].block === 'read') 
+                β += ast[α].elseText ? ast[α].elseText : '';
+            else
+                β += ast[α].value;
+            α++;
+        }
+        return β;
+    }
+    
 }
 
 module.exports = ExtMarkdown;
