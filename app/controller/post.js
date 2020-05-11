@@ -647,6 +647,7 @@ class PostController extends Controller {
     // }
     const records = await this.app.mysql.select('post_ipfs', {
       where: { articleId: id },
+      orders: [[ 'id', 'desc' ]],
     });
     ctx.body = records.length === 0 ? ctx.msg.failure : ctx.msg.success;
     ctx.body.data = records;
