@@ -5,41 +5,63 @@ const moment = require('moment');
 const md5 = require('crypto-js/md5');
 // const sanitize = require('sanitize-html');
 class PostController extends Controller {
-
   constructor(ctx) {
     super(ctx);
 
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function (txt, key) {
-        if (values.hasOwnProperty(key)) {
-          return this.escape(values[key]);
-        }
-        return txt;
-      }.bind(this));
+      return query.replace(
+        /\:(\w+)/g,
+        function(txt, key) {
+          if (values.hasOwnProperty(key)) {
+            return this.escape(values[key]);
+          }
+          return txt;
+        }.bind(this)
+      );
     };
   }
 
   // 发布文章
   async publish() {
     const ctx = this.ctx;
-    const { author = '', title = '', data,
-      fissionFactor = 2000, cover, is_original = 0, platform = 'eos',
-      tags = '', commentPayPoint = 0, shortContent = null, cc_license = null,
+    const {
+      author = '',
+      title = '',
+      data,
+      fissionFactor = 2000,
+      cover,
+      is_original = 0,
+      platform = 'eos',
+      tags = '',
+      commentPayPoint = 0,
+      shortContent = null,
+      cc_license = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
-      requireToken = null, requireBuy = null,
+      requireToken = null,
+      requireBuy = null,
       // 持币编辑相关字段
-      editRequireToken = null, editRequireBuy = null } = ctx.request.body;
+      editRequireToken = null,
+      editRequireBuy = null,
+    } = ctx.request.body;
     const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
     const articleContent = await this.service.post.wash(data.content);
     // 设置短摘要
-    const short_content = shortContent || await this.service.extmarkdown.shortContent(articleContent);
+    const short_content
+      = shortContent
+      || (await this.service.extmarkdown.shortContent(articleContent));
 
-    const { metadataHash, htmlHash } = await this.service.post.uploadArticleToIpfs({
-      isEncrypt, data, title, displayName: this.user.displayName,
+    const {
+      metadataHash,
+      htmlHash,
+    } = await this.service.post.uploadArticleToIpfs({
+      isEncrypt,
+      data,
+      title,
+      displayName: this.user.displayName,
       description: short_content,
     });
     // 无 hash 则上传失败
@@ -58,23 +80,26 @@ class PostController extends Controller {
       return;
     }
 
-    const id = await ctx.service.post.publish({
-      author,
-      username: ctx.user.username,
-      title,
-      hash: metadataHash,
-      is_original,
-      fission_factor: fissionFactor,
-      create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-      cover, // 封面url
-      platform,
-      uid: ctx.user.id,
-      is_recommend: 0,
-      category_id: 0,
-      short_content,
-      comment_pay_point,
-      cc_license,
-    }, { metadataHash, htmlHash });
+    const id = await ctx.service.post.publish(
+      {
+        author,
+        username: ctx.user.username,
+        title,
+        hash: metadataHash,
+        is_original,
+        fission_factor: fissionFactor,
+        create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        cover, // 封面url
+        platform,
+        uid: ctx.user.id,
+        is_recommend: 0,
+        category_id: 0,
+        short_content,
+        comment_pay_point,
+        cc_license,
+      },
+      { metadataHash, htmlHash }
+    );
 
     // 记录付费信息
     if (requireToken) {
@@ -88,20 +113,36 @@ class PostController extends Controller {
 
     // 记录持币编辑信息
     if (editRequireToken) {
-      await this.service.post.addEditMineTokens(ctx.user.id, id, editRequireToken);
+      await this.service.post.addEditMineTokens(
+        ctx.user.id,
+        id,
+        editRequireToken
+      );
     }
 
     // 记录购买编辑权限信息
     if (editRequireBuy && editRequireBuy.price > 0) {
-      await this.service.post.addPrices(ctx.user.id, id, editRequireBuy.price, 1);
+      await this.service.post.addPrices(
+        ctx.user.id,
+        id,
+        editRequireBuy.price,
+        1
+      );
     }
 
     // 添加文章到elastic search
-    await this.service.search.importPost(id, ctx.user.id, title, articleContent);
+    await this.service.search.importPost(
+      id,
+      ctx.user.id,
+      title,
+      articleContent
+    );
 
     if (tags) {
       let tag_arr = tags.split(',');
-      tag_arr = tag_arr.filter(x => { return x !== ''; });
+      tag_arr = tag_arr.filter(x => {
+        return x !== '';
+      });
       await ctx.service.post.create_tags(id, tag_arr);
     }
 
@@ -117,13 +158,23 @@ class PostController extends Controller {
   /* 目前没有判断ipfs hash是否是现在用户上传的文章，所以可能会伪造一个已有的hash */
   async edit() {
     const ctx = this.ctx;
-    const { signId, author = '', title = '', content = '', data,
-      fissionFactor = 2000, cover,
-      is_original = 0, tags = '', shortContent = null,
+    const {
+      signId,
+      author = '',
+      title = '',
+      content = '',
+      data,
+      fissionFactor = 2000,
+      cover,
+      is_original = 0,
+      tags = '',
+      shortContent = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
-      requireToken = null, requireBuy = null,
+      requireToken = null,
+      requireBuy = null,
       // 持币编辑相关字段
-      editRequireToken = null, editRequireBuy = null
+      editRequireToken = null,
+      editRequireBuy = null,
     } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
@@ -162,7 +213,10 @@ class PostController extends Controller {
       // 检查用户的token数量是否满足要求，不满足则无法编辑
       if (needTokens) {
         for (const token of editTokens) {
-          const amount = await this.service.token.mineToken.balanceOf(ctx.user.id, token.id);
+          const amount = await this.service.token.mineToken.balanceOf(
+            ctx.user.id,
+            token.id
+          );
           if (token.amount > amount) {
             ctx.body = ctx.msg.notYourPost;
             return;
@@ -170,27 +224,34 @@ class PostController extends Controller {
         }
       }
       // 这里判断是否为付费文章，用于决定ipfs是否加密，如果不是作者的则不采用api传入的值。
-      isEncrypt = Boolean(post.require_holdtokens > 0 || post.require_buy > 0)
-    }
-    else isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
+      isEncrypt = Boolean(post.require_holdtokens > 0 || post.require_buy > 0);
+    } else isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
     // 只清洗文章文本的标识
-    data.content =this.service.extmarkdown.toIpfs(data.content);
+    data.content = this.service.extmarkdown.toIpfs(data.content);
     const articleContent = await this.service.post.wash(data.content);
-    
+
     // 获取作者的昵称
-    let displayName = ''
+    let displayName = '';
     if (isAuthor) displayName = this.user.displayName;
     else {
       const user = await this.service.user.get(post.uid);
       displayName = user.nickname;
     }
 
-    const short_content = shortContent || await this.service.extmarkdown.shortContent(articleContent);
-    const { metadataHash, htmlHash } = await this.service.post.uploadArticleToIpfs({
-      isEncrypt, data, title, displayName,
+    const short_content
+      = shortContent
+      || (await this.service.extmarkdown.shortContent(articleContent));
+    const {
+      metadataHash,
+      htmlHash,
+    } = await this.service.post.uploadArticleToIpfs({
+      isEncrypt,
+      data,
+      title,
+      displayName,
       description: short_content,
-      uid: post.uid
+      uid: post.uid,
     });
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
@@ -234,10 +295,16 @@ class PostController extends Controller {
 
         // 修改 post 的 hash, title
         await conn.update('posts', updateRow, { where: { id: signId } });
-        await conn.insert('post_ipfs', { articleId: signId, metadataHash, htmlHash });
+        await conn.insert('post_ipfs', {
+          articleId: signId,
+          metadataHash,
+          htmlHash,
+        });
 
         let tag_arr = tags.split(',');
-        tag_arr = tag_arr.filter(x => { return x !== ''; });
+        tag_arr = tag_arr.filter(x => {
+          return x !== '';
+        });
         await ctx.service.post.create_tags(signId, tag_arr, true);
 
         await conn.commit();
@@ -251,30 +318,53 @@ class PostController extends Controller {
       if (isAuthor) {
         // 记录付费信息
         if (requireToken) {
-          await this.service.post.addMineTokens(ctx.user.id, signId, requireToken);
+          await this.service.post.addMineTokens(
+            ctx.user.id,
+            signId,
+            requireToken
+          );
         }
 
         // 超过 0 元才算数，0元则无视
         if (requireBuy && requireBuy.price > 0) {
-          await this.service.post.addPrices(ctx.user.id, signId, requireBuy.price, 0);
+          await this.service.post.addPrices(
+            ctx.user.id,
+            signId,
+            requireBuy.price,
+            0
+          );
         } else {
           await this.service.post.delPrices(ctx.user.id, signId, 0);
         }
         // 记录持币编辑信息
         if (editRequireToken) {
-          await this.service.post.addEditMineTokens(ctx.user.id, signId, editRequireToken)
+          await this.service.post.addEditMineTokens(
+            ctx.user.id,
+            signId,
+            editRequireToken
+          );
         }
 
         // 记录购买编辑权限信息
         if (editRequireBuy && editRequireBuy.price > 0) {
-          await this.service.post.addPrices(ctx.user.id, signId, editRequireBuy.price, 1);
+          await this.service.post.addPrices(
+            ctx.user.id,
+            signId,
+            editRequireBuy.price,
+            1
+          );
         } else {
           await this.service.post.delPrices(ctx.user.id, signId, 1);
         }
       }
 
       // await updateTimeMachine;
-      await this.service.search.importPost(signId, ctx.user.id, elaTitle, articleContent);
+      await this.service.search.importPost(
+        signId,
+        ctx.user.id,
+        elaTitle,
+        articleContent
+      );
 
       ctx.body = ctx.msg.success;
       ctx.body.data = signId;
@@ -282,7 +372,6 @@ class PostController extends Controller {
       ctx.logger.error(err);
       ctx.body = ctx.msg.failure;
     }
-
   }
 
   // 获取关注作者的文章列表
@@ -296,9 +385,22 @@ class PostController extends Controller {
       return;
     }
 
-    const { page = 1, pagesize = 20, channel = null, extra = null, filter = 0 } = this.ctx.query;
+    const {
+      page = 1,
+      pagesize = 20,
+      channel = null,
+      extra = null,
+      filter = 0,
+    } = this.ctx.query;
 
-    const postData = await this.service.post.followedPosts(page, pagesize, userid, channel, extra, filter);
+    const postData = await this.service.post.followedPosts(
+      page,
+      pagesize,
+      userid,
+      channel,
+      extra,
+      filter
+    );
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -318,12 +420,23 @@ class PostController extends Controller {
   async getScoreRanking() {
     const ctx = this.ctx;
 
-    let { page = 1, pagesize = 20, channel = 1, author = null, extra = null, filter = 7 } = this.ctx.query;
+    let {
+      page = 1,
+      pagesize = 20,
+      channel = 1,
+      author = null,
+      extra = null,
+      filter = 7,
+    } = this.ctx.query;
 
     if (typeof channel === 'string') channel = parseInt(channel);
     if (typeof filter === 'string') filter = parseInt(filter);
 
-    const postData = await this.service.post.scoreRankSlow(page, pagesize, channel);
+    const postData = await this.service.post.scoreRankSlow(
+      page,
+      pagesize,
+      channel
+    );
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -343,12 +456,25 @@ class PostController extends Controller {
   async getTimeRanking() {
     const ctx = this.ctx;
 
-    let { page = 1, pagesize = 20, channel = 1, author = null, extra = null, filter = 7 } = this.ctx.query;
+    let {
+      page = 1,
+      pagesize = 20,
+      channel = 1,
+      author = null,
+      extra = null,
+      filter = 7,
+    } = this.ctx.query;
 
     if (typeof channel === 'string') channel = parseInt(channel);
     if (typeof filter === 'string') filter = parseInt(filter);
 
-    const postData = await this.service.post.timeRankSlow(page, pagesize, author, channel, filter);
+    const postData = await this.service.post.timeRankSlow(
+      page,
+      pagesize,
+      author,
+      channel,
+      filter
+    );
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -368,9 +494,19 @@ class PostController extends Controller {
   async getSupportsRanking() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20, channel = null, extra = null } = this.ctx.query;
+    const {
+      page = 1,
+      pagesize = 20,
+      channel = null,
+      extra = null,
+    } = this.ctx.query;
 
-    const postData = await this.service.post.supportRank(page, pagesize, channel, extra);
+    const postData = await this.service.post.supportRank(
+      page,
+      pagesize,
+      channel,
+      extra
+    );
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -389,9 +525,19 @@ class PostController extends Controller {
   // 获取按照赞赏数量排序的文章列表(新)
   async getAmountRanking() {
     const ctx = this.ctx;
-    const { page = 1, pagesize = 20, symbol = 'EOS', channel = null } = this.ctx.query;
+    const {
+      page = 1,
+      pagesize = 20,
+      symbol = 'EOS',
+      channel = null,
+    } = this.ctx.query;
 
-    const postData = await this.service.post.amountRank(page, pagesize, symbol, channel);
+    const postData = await this.service.post.amountRank(
+      page,
+      pagesize,
+      symbol,
+      channel
+    );
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -411,9 +557,19 @@ class PostController extends Controller {
   // 用户赞赏过的文章列表(新)
   async getSupported() {
     const ctx = this.ctx;
-    const { page = 1, pagesize = 20, user = null, channel = null } = this.ctx.query;
+    const {
+      page = 1,
+      pagesize = 20,
+      user = null,
+      channel = null,
+    } = this.ctx.query;
 
-    const postData = await this.service.post.supportedPosts(page, pagesize, user, channel);
+    const postData = await this.service.post.supportedPosts(
+      page,
+      pagesize,
+      user,
+      channel
+    );
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -451,7 +607,12 @@ class PostController extends Controller {
 
     const { page = 1, pagesize = 20, extra = null, tagid } = this.ctx.query;
 
-    const postData = await this.service.post.getPostByTag(page, pagesize, extra, tagid);
+    const postData = await this.service.post.getPostByTag(
+      page,
+      pagesize,
+      extra,
+      tagid
+    );
 
     this.ctx.body = ctx.msg.success;
     this.ctx.body.data = postData;
@@ -484,7 +645,10 @@ class PostController extends Controller {
     //     return;
     //   }
     // }
-    const records = await this.app.mysql.select('post_ipfs', { where: { articleId: id } });
+    const records = await this.app.mysql.select('post_ipfs', {
+      where: { articleId: id },
+      orders: [[ 'id', 'desc' ]],
+    });
     ctx.body = records.length === 0 ? ctx.msg.failure : ctx.msg.success;
     ctx.body.data = records;
   }
@@ -517,7 +681,6 @@ class PostController extends Controller {
 
     ctx.body = ctx.msg.success;
     ctx.body.data = post;
-
   }
 
   // 文章阅读事件上报 todo，待整合
@@ -536,11 +699,11 @@ class PostController extends Controller {
 
       const result = await this.app.mysql.query(
         'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count) VALUES (?, ?, 0, 0, 0, 0)'
-        + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
-        [post.id, 1]
+          + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
+        [ post.id, 1 ]
       );
 
-      const updateSuccess = (result.affectedRows !== 0);
+      const updateSuccess = result.affectedRows !== 0;
 
       if (updateSuccess) {
         ctx.body = ctx.msg.success;
@@ -552,7 +715,6 @@ class PostController extends Controller {
       ctx.body = ctx.msg.failure;
     }
   }
-
 
   async delete2() {
     const { ctx } = this;
@@ -663,7 +825,10 @@ class PostController extends Controller {
     // 检查用户的token数量是否满足要求，不满足则直接返回失败
     if (needTokens) {
       for (const token of post.editTokens) {
-        const amount = await this.service.token.mineToken.balanceOf(ctx.user.id, token.id);
+        const amount = await this.service.token.mineToken.balanceOf(
+          ctx.user.id,
+          token.id
+        );
         if (token.amount > amount) {
           ctx.body = ctx.msg.postNoPermission;
           return;
@@ -690,7 +855,11 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const { uid, signid } = ctx.request.body;
 
-    const success = await this.service.post.transferOwner(uid, signid, ctx.user.id);
+    const success = await this.service.post.transferOwner(
+      uid,
+      signid,
+      ctx.user.id
+    );
 
     if (success === 2) {
       ctx.body = ctx.msg.postNotFound;
@@ -724,45 +893,71 @@ class PostController extends Controller {
     }
     const makeResponse = res => {
       if (res) {
-        this.logger.info('PostController:: importer: Import article succeed..', url);
+        this.logger.info(
+          'PostController:: importer: Import article succeed..',
+          url
+        );
         ctx.body = ctx.msg.success;
         ctx.body.data = res;
         return true;
       }
       return 1;
     };
-    const makeMatch = async (matchRule, handler) => (
-      url.match(matchRule) ? makeResponse(await handler(url)) : false);
+    const makeMatch = async (matchRule, handler) =>
+      (url.match(matchRule) ? makeResponse(await handler(url)) : false);
     // true = succeed
     // false = unspported platform
     // 1 = import failed
-    const wechatMatch = makeMatch(/https:\/\/mp\.weixin\.qq\.com\/s[?\/]{1}[_\-=&#a-zA-Z0-9]{1,200}/,
-      x => this.service.postImport.handleWechat(x));
-    const chainnewsMatch = makeMatch(/https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/,
-      x => this.service.postImport.handleChainnews(x));
-    const orangeMatch = makeMatch(/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/,
-      x => this.service.postImport.handleOrange(x));
-    const jianshuMatch = makeMatch(/https:\/\/(www\.)?jianshu\.com\/p\/[\w]{12}/,
-      x => this.service.postImport.handleJianShu(x));
-    const gaojinMatch = makeMatch(/https:\/\/(www\.)?igaojin\.me/,
-      x => this.service.postImport.handleJianShu(x));
-    const mattersMatch = makeMatch(/https:\/\/(www\.)?matters\.news\/.+/,
-      x => this.service.postImport.handleMatters(x));
-    const zhihuMatch = makeMatch(/https:\/\/zhuanlan\.zhihu\.com\/p\/\d+/,
-      x => this.service.postImport.handleZhihu(x));
+    const wechatMatch = makeMatch(
+      /https:\/\/mp\.weixin\.qq\.com\/s[?\/]{1}[_\-=&#a-zA-Z0-9]{1,200}/,
+      x => this.service.postImport.handleWechat(x)
+    );
+    const chainnewsMatch = makeMatch(
+      /https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/,
+      x => this.service.postImport.handleChainnews(x)
+    );
+    const orangeMatch = makeMatch(/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/, x =>
+      this.service.postImport.handleOrange(x)
+    );
+    const jianshuMatch = makeMatch(
+      /https:\/\/(www\.)?jianshu\.com\/p\/[\w]{12}/,
+      x => this.service.postImport.handleJianShu(x)
+    );
+    const gaojinMatch = makeMatch(/https:\/\/(www\.)?igaojin\.me/, x =>
+      this.service.postImport.handleJianShu(x)
+    );
+    const mattersMatch = makeMatch(/https:\/\/(www\.)?matters\.news\/.+/, x =>
+      this.service.postImport.handleMatters(x)
+    );
+    const zhihuMatch = makeMatch(
+      /https:\/\/zhuanlan\.zhihu\.com\/p\/\d+/,
+      x => this.service.postImport.handleZhihu(x)
+    );
     // 微博PC端文章
-    const weiboMatch = makeMatch(/https:\/\/(www\.)?weibo\.com\/ttarticle\/p\/show.+/,
-      x => this.service.postImport.handleWeibo(x));
-    const archiveMatch = makeMatch(/https?:\/\/(www\.)?archive\.is\/.+/,
-      x => this.service.postImport.handleArchive(x));
+    const weiboMatch = makeMatch(
+      /https:\/\/(www\.)?weibo\.com\/ttarticle\/p\/show.+/,
+      x => this.service.postImport.handleWeibo(x)
+    );
+    const archiveMatch = makeMatch(/https?:\/\/(www\.)?archive\.is\/.+/, x =>
+      this.service.postImport.handleArchive(x)
+    );
 
-    const result = await wechatMatch || await chainnewsMatch
-      || await orangeMatch || await jianshuMatch || await gaojinMatch
-      || await mattersMatch || await zhihuMatch || await weiboMatch
-      || await archiveMatch;
+    const result
+      = (await wechatMatch)
+      || (await chainnewsMatch)
+      || (await orangeMatch)
+      || (await jianshuMatch)
+      || (await gaojinMatch)
+      || (await mattersMatch)
+      || (await zhihuMatch)
+      || (await weiboMatch)
+      || (await archiveMatch);
 
     if (result === 1) {
-      this.logger.info('PostController:: importer: Import article failed..', url);
+      this.logger.info(
+        'PostController:: importer: Import article failed..',
+        url
+      );
       ctx.body = ctx.msg.failure;
       return;
     } else if (result === false) {
@@ -777,16 +972,21 @@ class PostController extends Controller {
     const filetype = file.filename.split('.');
 
     // 文件上OSS的路径
-    const filename = '/image/'
+    const filename
+      = '/image/'
       + moment().format('YYYY/MM/DD/')
       + md5(file.filepath).toString()
-      + '.' + filetype[filetype.length - 1];
+      + '.'
+      + filetype[filetype.length - 1];
 
     // // 文件在本地的缓存路径
     // const filelocation = 'uploads/' + path.basename(file.filename);
 
     // filepath需要再改
-    const uploadStatus = await this.service.post.uploadImage(filename, file.filepath);
+    const uploadStatus = await this.service.post.uploadImage(
+      filename,
+      file.filepath
+    );
 
     if (uploadStatus !== 0) {
       ctx.body = ctx.msg.failure;
@@ -803,7 +1003,9 @@ class PostController extends Controller {
 
     this.logger.info('upload ipfs data', data);
     // 上传的data是json对象， 需要字符串化
-    const uploadRequest = await this.service.post.ipfsUpload(JSON.stringify(data));
+    const uploadRequest = await this.service.post.ipfsUpload(
+      JSON.stringify(data)
+    );
 
     if (uploadRequest) {
       ctx.body = ctx.msg.success;
@@ -835,11 +1037,12 @@ class PostController extends Controller {
         // 是加密的数据，开始解密
         data = JSON.parse(this.service.cryptography.decrypt(data));
       }
-      if(ctx.query.edit){
+      if (ctx.query.edit) {
         data.content = this.service.extmarkdown.toEdit(data.content);
-      }else{
-        data.content = await this.service.extmarkdown.transform(data.content,
-        {userId : ctx.user.id}); 
+      } else {
+        data.content = await this.service.extmarkdown.transform(data.content, {
+          userId: ctx.user.id,
+        });
       }
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
@@ -907,7 +1110,13 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const signId = parseInt(ctx.params.id);
     const { url, title, summary } = ctx.request.body;
-    const result = await ctx.service.references.addReference(ctx.user.id, signId, url, title, summary);
+    const result = await ctx.service.references.addReference(
+      ctx.user.id,
+      signId,
+      url,
+      title,
+      summary
+    );
 
     ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
   }
@@ -917,7 +1126,11 @@ class PostController extends Controller {
     const signId = parseInt(ctx.params.id);
     const number = parseInt(ctx.params.number);
 
-    const result = await ctx.service.references.deleteReferenceNode(ctx.user.id, signId, number);
+    const result = await ctx.service.references.deleteReferenceNode(
+      ctx.user.id,
+      signId,
+      number
+    );
 
     ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
   }
@@ -927,7 +1140,11 @@ class PostController extends Controller {
     const signId = parseInt(ctx.params.id);
     const number = parseInt(ctx.params.number);
 
-    const ref = await ctx.service.references.getReference(ctx.user.id, signId, number);
+    const ref = await ctx.service.references.getReference(
+      ctx.user.id,
+      signId,
+      number
+    );
 
     if (ref === null) {
       ctx.body = ctx.msg.paramsError;
@@ -942,7 +1159,13 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const draftId = parseInt(ctx.params.id);
     const { url, title, summary } = ctx.request.body;
-    const result = await ctx.service.references.addDraftReference(ctx.user.id, draftId, url, title, summary);
+    const result = await ctx.service.references.addDraftReference(
+      ctx.user.id,
+      draftId,
+      url,
+      title,
+      summary
+    );
 
     ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
   }
@@ -952,7 +1175,11 @@ class PostController extends Controller {
     const draftId = parseInt(ctx.params.id);
     const number = parseInt(ctx.params.number);
 
-    const result = await ctx.service.references.deleteDraftReferenceNode(ctx.user.id, draftId, number);
+    const result = await ctx.service.references.deleteDraftReferenceNode(
+      ctx.user.id,
+      draftId,
+      number
+    );
 
     ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
   }
@@ -962,7 +1189,11 @@ class PostController extends Controller {
     const draftId = parseInt(ctx.params.id);
     const number = parseInt(ctx.params.number);
 
-    const ref = await ctx.service.references.getDraftReference(ctx.user.id, draftId, number);
+    const ref = await ctx.service.references.getDraftReference(
+      ctx.user.id,
+      draftId,
+      number
+    );
 
     if (ref === null) {
       ctx.body = ctx.msg.paramsError;
@@ -977,7 +1208,11 @@ class PostController extends Controller {
     const ctx = this.ctx;
     const draftId = parseInt(ctx.params.id);
     const { signId } = ctx.request.body;
-    const result = await ctx.service.references.publish(ctx.user.id, draftId, signId);
+    const result = await ctx.service.references.publish(
+      ctx.user.id,
+      draftId,
+      signId
+    );
 
     ctx.body = result === 0 ? ctx.msg.success : ctx.msg.failure;
   }
@@ -994,7 +1229,11 @@ class PostController extends Controller {
       return;
     }
 
-    const references = await this.service.references.getReferences(signId, parseInt(page), parseInt(pagesize));
+    const references = await this.service.references.getReferences(
+      signId,
+      parseInt(page),
+      parseInt(pagesize)
+    );
 
     if (references === null) {
       ctx.body = ctx.msg.paramsError;
@@ -1017,7 +1256,11 @@ class PostController extends Controller {
       return;
     }
 
-    const references = await this.service.references.getDraftReferences(signId, parseInt(page), parseInt(pagesize));
+    const references = await this.service.references.getDraftReferences(
+      signId,
+      parseInt(page),
+      parseInt(pagesize)
+    );
 
     if (references === null) {
       ctx.body = ctx.msg.paramsError;
@@ -1040,7 +1283,11 @@ class PostController extends Controller {
       return;
     }
 
-    const posts = await this.service.references.getPosts(signId, parseInt(page), parseInt(pagesize));
+    const posts = await this.service.references.getPosts(
+      signId,
+      parseInt(page),
+      parseInt(pagesize)
+    );
 
     if (posts === null) {
       ctx.body = ctx.msg.paramsError;
@@ -1124,11 +1371,12 @@ class PostController extends Controller {
         // 是加密的数据，开始解密
         data = JSON.parse(this.service.cryptography.decrypt(data));
       }
-      if(ctx.query.edit){
+      if (ctx.query.edit) {
         data.content = this.service.extmarkdown.toEdit(data.content);
-      }else{
-        data.content = await this.service.extmarkdown.transform(data.content,
-        {userId : ctx.user.id}); 
+      } else {
+        data.content = await this.service.extmarkdown.transform(data.content, {
+          userId: ctx.user.id,
+        });
       }
       ctx.body = ctx.msg.success;
       // 字符串转为json对象
