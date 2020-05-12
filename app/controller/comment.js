@@ -37,6 +37,10 @@ class CommentController extends Controller {
       ctx.body = ctx.msg.failure;
       return;
     }
+    // 为评论行为创建一个事件通知
+    const { uid } = await this.service.post.get(signId);
+    this.service.notify.event.sendEvent(ctx.user.id, [uid], 'comment', signId, 'article', comment);
+
     ctx.body = ctx.msg.success;
   }
 }
