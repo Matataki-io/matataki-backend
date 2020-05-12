@@ -483,5 +483,10 @@ module.exports = app => {
   router.delete('/dao/user/skill', passport.authorize, controller.dao.skill.destroy);
   router.get('/dao/skill/options', passport.verify, controller.dao.skill.options);
   router.get('/dev/down/posts', passport.verify, controller.downloader.down);
+
+  // 获取消息列表
+  router.get('/notify/event', passport.authorize, controller.notify.getUserEvents);
+  // 标记已读
+  router.put('/notify/event', passport.authorize, controller.notify.haveRead);
 };
 
