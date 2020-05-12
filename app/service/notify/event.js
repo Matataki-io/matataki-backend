@@ -4,7 +4,7 @@ const moment = require('moment');
 
 // 表
 const EVENT_TABLE = 'notify_event';
-const EVENT_RECIPIENT_TABLE = 'notify_event_have_read';
+const EVENT_RECIPIENT_TABLE = 'notify_event_recipients';
 
 /** 行为类型 */
 const ACTION_TYPES = [
