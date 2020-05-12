@@ -4,7 +4,7 @@ const Service = require('egg').Service;
 
 const tokenizeRules = [
     {
-        regexp: /[^\[]+/mg,
+        regexp: /[^\[`]+/mg,
         block: 'text',
     },
     {
@@ -20,7 +20,11 @@ const tokenizeRules = [
         block: 'else',
     },
     {
-        regexp: /\[/mg,
+        regexp: /^```/mg,
+        block: 'code'
+    },
+    {
+        regexp: /(\[|`)/mg,
         block: 'text',
     },
 ];
@@ -50,6 +54,7 @@ function tokenize(text) {
 function look(tokens, n, type) {
     return tokens[n] && tokens[n].block === type;
 }
+
 function lookseq(tokens, n, ...types) {
     let α = 0;
     while (α < types.length) {
@@ -90,13 +95,51 @@ function parseReadOpen(readOpen) {
     return β;
 }
 
-function parse(text) {
-    let tokenized = mergeTextBlocks(tokenize(text));
-    let α = 0,
-        β = [];
-    while (α < tokenized.length) {
+/* 处理位于ReadOpen和ReadClose之间的东西,比如code block */
+function formalizeRead(tokens){
+    //Γ表示是否处于Readtag中
+    let α = 0,β = [],acc='',Γ = false;
+    while(α < tokens.length){
+        if(look(tokens,α,'readOpen')){
+            Γ = true;
+            β.push(tokens[α]);
+            α++; continue;
+        }
+        if(look(tokens,α,'readClose')){
+            Γ = true;
+            β.push({block:'text',value:acc});
+            acc = '';
+            β.push(tokens[α]);
+            α++; continue;
+        }
+        if(look(tokens,α,'else')){
+            β.push({block:'text',value:acc});
+            acc = '';
+            β.push(tokens[α]);
+            α++; continue;
+        }
+        if(Γ){
+            acc += tokens[α].value;
+            α++; continue;
+        }
+        β.push(tokens[α]);
+        α++; continue;
+    }
+    return β;
+}
 
-        if (lookseq(tokenized, α, 'readOpen', 'text', 'readClose')) {
+function parse(text) {
+    let tokenized = formalizeRead(mergeTextBlocks(tokenize(text)));
+    let α = 0,
+        β = [],
+        Γ = false; //Γ表示是否处于code块内
+    while (α < tokenized.length) {
+        if (look(tokenized,α,'code')){
+            Γ = !Γ; //翻转标志位
+            β.push(tokenized[α]);
+            α ++; continue;
+        }
+        if (lookseq(tokenized, α, 'readOpen', 'text', 'readClose')&&!Γ) {
             β.push({
                 block: 'read',
                 innerText: tokenized[α + 1].value,
@@ -106,7 +149,7 @@ function parse(text) {
             continue;
         }
         if (
-            lookseq(tokenized, α, 'readOpen', 'text', 'else', 'text', 'readClose')
+            lookseq(tokenized, α, 'readOpen', 'text', 'else', 'text', 'readClose')&&!Γ
         ) {
             β.push({
                 block: 'read',
@@ -330,7 +373,7 @@ class ExtMarkdown extends Service {
 
     // 去除read标签，只保留else中的内容。用于shortContent
     removeReadTags(content) {
-        const ast = parse(content)
+        const ast = parse(content);
         let α = 0,
             β = '';
         while (α < ast.length) {
