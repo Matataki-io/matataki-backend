@@ -124,6 +124,12 @@ module.exports = app => {
   // 转移草稿拥有权
   router.post('/draft/transferOwner', passport.authorize, controller.drafts.transferOwner);
 
+  // 设置允许查看的草稿
+  router.post('/preview', passport.authorize, controller.drafts.previewSetId);
+  // 获取查看草稿的内容
+  router.get('/preview/:id', passport.verify, controller.drafts.previewDraft);
+
+
   // -------------------------------- 用户系统 --------------------------------
   // 获取用户个人主页的统计信息, 请注意和 获取用户信息 方法 的冲突可能
   router.get('/user/stats', passport.authorize, controller.user.getUserDetails);
