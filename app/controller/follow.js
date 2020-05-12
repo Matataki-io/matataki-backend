@@ -28,6 +28,8 @@ class FollowController extends Controller {
       ctx.body = ctx.msg.userNotExist;
       return;
     }
+    // 为关注行为创建一个事件通知
+    this.service.notify.event.sendEvent(ctx.user.id, [uid], 'follow', uid, 'user');
 
     ctx.body = ctx.msg.success;
   }
@@ -56,6 +58,8 @@ class FollowController extends Controller {
       ctx.body = ctx.msg.userNotExist;
       return;
     }
+    // 为取消关注行为创建一个事件通知
+    this.service.notify.event.sendEvent(ctx.user.id, [uid], 'unfollow', uid, 'user');
 
     ctx.body = ctx.msg.success;
   }

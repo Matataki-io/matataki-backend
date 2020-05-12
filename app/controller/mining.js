@@ -19,6 +19,10 @@ class LikeController extends Controller {
     const result = await this.service.mining.like(ctx.user.id, ctx.params.id, time, ctx.ip);
     if (result === 0) {
       const points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
+      // 为喜欢行为创建一个事件通知
+      const { uid } = await this.service.post.get(ctx.params.id);
+      this.service.notify.event.sendEvent(ctx.user.id, [uid], 'like', ctx.params.id, 'article');
+
       ctx.body = ctx.msg.success;
       ctx.body.data = points;
     } else {
