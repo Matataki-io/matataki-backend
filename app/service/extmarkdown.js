@@ -106,7 +106,7 @@ function formalizeRead(tokens){
             α++; continue;
         }
         if(look(tokens,α,'readClose')){
-            Γ = true;
+            Γ = false;
             β.push({block:'text',value:acc});
             acc = '';
             β.push(tokens[α]);
