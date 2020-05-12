@@ -1,0 +1,55 @@
+version: "3"
+services:
+  ipfs:
+    restart: always
+    image: ipfs/go-ipfs
+    volumes:
+      - ~/ipfs-data-volumes:/data/ipfs
+    networks:
+      - testnet
+
+  redis:
+    image: redis:latest
+    restart : always
+    networks: 
+      - testnet
+  test:
+    restart: always
+    build: ..
+    # command: npm run serve
+    command: npm run dev
+    volumes:
+      - ./config.default.js:/usr/src/app/config/config.default.js
+      - ./apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
+    networks:
+      - testnet
+    depends_on: 
+      - redis
+      - ipfs
+  nginx:
+    restart: always
+    image: nginx
+    networks:
+      - testnet
+    ports:
+      - 80:80
+    depends_on: 
+      - test
+      - fe
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+  fe:
+    restart: always
+    build: ../../Matataki-FE
+    environment: 
+      - NODE_ENV=development
+    command: npm run dev
+    volumes: 
+      - ./env.js:/code/env.js
+    networks: 
+      - testnet
+networks:
+  testnet:
+    driver: bridge
+
+
