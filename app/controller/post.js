@@ -637,11 +637,14 @@ class PostController extends Controller {
   async getIpfsById() {
     const { ctx } = this;
     const { id } = ctx.params;
-    const records = await this.app.mysql.select('post_ipfs', {
-      where: { articleId: id },
-      columns: [ 'id', 'htmlHash', 'createdAt', 'isMetadataEncrypted' ], // 要查询的表字段
-      orders: [[ 'id', 'desc' ]],
-    });
+    const post = await this.service.post.get(id);
+    let isFullHistory = !post.ipfs_hide;
+    const user = ctx.user;
+    if (!isFullHistory && user.isAuthenticated) {
+      // owner still able to see the whole history for sure
+      isFullHistory = user.id === post.uid;
+    }
+    const records = await this.service.post.getArticlesHistory(id, isFullHistory);
     ctx.body = records.length === 0 ? ctx.msg.failure : ctx.msg.success;
     ctx.body.data = records;
   }
