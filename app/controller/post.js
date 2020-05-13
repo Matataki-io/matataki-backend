@@ -637,18 +637,14 @@ class PostController extends Controller {
   async getIpfsById() {
     const { ctx } = this;
     const { id } = ctx.params;
-    // const post = await this.service.post.getById(id);
-    // if (post.uid !== ctx.user.id) {
-    //   const permission = await this.hasPermission(post, ctx.user.id);
-    //   if (!permission) {
-    //     ctx.body = ctx.msg.postNoPermission;
-    //     return;
-    //   }
-    // }
-    const records = await this.app.mysql.select('post_ipfs', {
-      where: { articleId: id },
-      orders: [[ 'id', 'desc' ]],
-    });
+    const post = await this.service.post.get(id);
+    let isFullHistory = !post.ipfs_hide;
+    const user = ctx.user;
+    if (!isFullHistory && user.isAuthenticated) {
+      // owner still able to see the whole history for sure
+      isFullHistory = user.id === post.uid;
+    }
+    const records = await this.service.post.getArticlesHistory(id, isFullHistory);
     ctx.body = records.length === 0 ? ctx.msg.failure : ctx.msg.success;
     ctx.body.data = records;
   }
