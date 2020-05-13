@@ -1440,7 +1440,7 @@ class PostService extends Service {
 
   // 获取编辑文章需要持有的tokens
   async getEditMineTokens(signId) {
-    const tokens = await this.app.mysql.query('SELECT t.id, p.amount, t.name, t.symbol, t.decimals, t.logo FROM edit_minetokens p INNER JOIN min;etokens t ON p.token_id = t.id WHERE p.sign_id = ?;',
+    const tokens = await this.app.mysql.query('SELECT t.id, p.amount, t.name, t.symbol, t.decimals, t.logo FROM edit_minetokens p INNER JOIN minetokens t ON p.token_id = t.id WHERE p.sign_id = ?;',
       [ signId ]);
     return tokens;
   }
