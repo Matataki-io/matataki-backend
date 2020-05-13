@@ -129,7 +129,9 @@ class PostService extends Service {
   async get(id) {
     const posts = await this.app.mysql.select('posts', {
       where: { id },
-      columns: [ 'id', 'hash', 'cover', 'uid', 'title', 'short_content', 'status', 'create_time', 'comment_pay_point', 'channel_id', 'require_buy' ], // todo：需要再增加
+      columns: [ 'id', 'hash', 'cover', 'uid', 'title', 'short_content',
+        'status', 'create_time', 'comment_pay_point', 'channel_id',
+        'require_buy', 'ipfs_hide' ], // todo：需要再增加
     });
     if (posts && posts.length > 0) {
       return posts[0];
@@ -720,6 +722,22 @@ class PostService extends Service {
     });
     return { count: amount[0].count, list };
   }
+
+  /**
+   * 获取文章修改历史
+   * @param {number} articleId 文章ID
+   * @param {boolean} isFullHistory 是否获取全部历史，false 则返回最新一条
+   * @return {Array} 历史记录，若 `isFullHistory` 为 false 则是长度为1的数组
+   */
+  async getArticlesHistory(articleId, isFullHistory = true) {
+    const records = await this.app.mysql.select('post_ipfs', {
+      where: { articleId },
+      columns: [ 'id', 'htmlHash', 'createdAt', 'isMetadataEncrypted' ], // 要查询的表字段
+      orders: [[ 'id', 'desc' ]],
+    });
+    return isFullHistory ? records : records.slice(0, 1);
+  }
+
   async getByPostIds(postids = []) {
     if (postids === null || postids.length <= 0) {
       return [];
@@ -1379,7 +1397,7 @@ class PostService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM edit_minetokens WHERE sign_id = ?;', [id]);
+      await conn.query('DELETE FROM edit_minetokens WHERE sign_id = ?;', [ id ]);
       let require = 0;
       for (const token of tokens) {
         if (token.amount > 0) {
@@ -1423,7 +1441,7 @@ class PostService extends Service {
   // 获取编辑文章需要持有的tokens
   async getEditMineTokens(signId) {
     const tokens = await this.app.mysql.query('SELECT t.id, p.amount, t.name, t.symbol, t.decimals, t.logo FROM edit_minetokens p INNER JOIN minetokens t ON p.token_id = t.id WHERE p.sign_id = ?;',
-      [signId]);
+      [ signId ]);
     return tokens;
   }
 
@@ -1433,13 +1451,13 @@ class PostService extends Service {
     let tokens = [];
     const readTokens = await this.getMineTokens(signId);
     if (readTokens !== null) {
-      tokens = readTokens
+      tokens = readTokens;
     }
     const editTokens = await this.getEditMineTokens(signId);
 
     // 吧持币编辑的的数据去重后加到一起
-    for (var i = 0; i < editTokens.length; i++) {
-      if (tokens.findIndex(mineToken => mineToken.id === editTokens[i].id) == -1) {
+    for (let i = 0; i < editTokens.length; i++) {
+      if (tokens.findIndex(mineToken => mineToken.id === editTokens[i].id) === -1) {
         tokens.push(editTokens[i]);
       }
     }
@@ -1487,7 +1505,7 @@ class PostService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [ signId, category ]);
+      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [ , signId, category ]);
       // 默认CNY定价
       await conn.insert('product_prices', {
         sign_id: signId,
@@ -1499,7 +1517,7 @@ class PostService extends Service {
         price,
         decimals: 4,
         status: 1,
-        category
+        category,
       });
       if (category !== 1) {
         await conn.update('posts',
@@ -1541,7 +1559,7 @@ class PostService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [signId, category]);
+      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [ signId, category ]);
 
       await conn.update('posts',
         {

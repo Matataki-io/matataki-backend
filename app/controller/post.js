@@ -43,6 +43,7 @@ class PostController extends Controller {
       // 持币编辑相关字段
       editRequireToken = null,
       editRequireBuy = null,
+      ipfs_hide = false,
     } = ctx.request.body;
     const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
 
@@ -97,6 +98,7 @@ class PostController extends Controller {
         short_content,
         comment_pay_point,
         cc_license,
+        ipfs_hide,
       },
       { metadataHash, htmlHash }
     );
@@ -175,6 +177,7 @@ class PostController extends Controller {
       // 持币编辑相关字段
       editRequireToken = null,
       editRequireBuy = null,
+      ipfs_hide,
     } = ctx.request.body;
 
     // 编辑的时候，signId需要带上
@@ -286,6 +289,8 @@ class PostController extends Controller {
         if (cover !== undefined) {
           updateRow.cover = cover;
         }
+
+        if (ipfs_hide !== undefined) updateRow.ipfs_hide = ipfs_hide;
 
         // if (is_original) {
         //   updateRow.is_original = is_original;
@@ -637,18 +642,14 @@ class PostController extends Controller {
   async getIpfsById() {
     const { ctx } = this;
     const { id } = ctx.params;
-    // const post = await this.service.post.getById(id);
-    // if (post.uid !== ctx.user.id) {
-    //   const permission = await this.hasPermission(post, ctx.user.id);
-    //   if (!permission) {
-    //     ctx.body = ctx.msg.postNoPermission;
-    //     return;
-    //   }
-    // }
-    const records = await this.app.mysql.select('post_ipfs', {
-      where: { articleId: id },
-      orders: [[ 'id', 'desc' ]],
-    });
+    const post = await this.service.post.get(id);
+    let isFullHistory = !post.ipfs_hide;
+    const user = ctx.user;
+    if (!isFullHistory && user.isAuthenticated) {
+      // owner still able to see the whole history for sure
+      isFullHistory = user.id === post.uid;
+    }
+    const records = await this.service.post.getArticlesHistory(id, isFullHistory);
     ctx.body = records.length === 0 ? ctx.msg.failure : ctx.msg.success;
     ctx.body.data = records;
   }
