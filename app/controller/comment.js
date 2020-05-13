@@ -30,16 +30,16 @@ class CommentController extends Controller {
     const { signId, comment } = this.ctx.request.body;
 
     const result = await this.service.comment.payPointCreate(ctx.user.id, ctx.user.username, signId, comment, this.clientIP);
-    if (result === -1) {
+    if (result.status === -1) {
       ctx.body = ctx.msg.pointNotEnough;
       return;
-    } else if (result < 0) {
+    } else if (result.status < 0) {
       ctx.body = ctx.msg.failure;
       return;
     }
     // 为评论行为创建一个事件通知
     const { uid } = await this.service.post.get(signId);
-    this.service.notify.event.sendEvent(ctx.user.id, [uid], 'comment', signId, 'article', comment);
+    this.service.notify.event.sendEvent(ctx.user.id, [uid], 'comment', signId, 'article', result.id);
 
     ctx.body = ctx.msg.success;
   }

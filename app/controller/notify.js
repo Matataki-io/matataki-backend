@@ -10,8 +10,8 @@ class NotificationController extends Controller {
 
   async getUserEvents() {
     const ctx = this.ctx;
-    const {pageSize = 20, page = 1, unread = 1 } = ctx.query;
-    const result = await this.service.notify.event.getEventsByUid(parseInt(page), parseInt(pageSize), ctx.user.id, unread == 1);
+    const {pageSize = 20, page = 1, startId = 0} = ctx.query;
+    const result = await this.service.notify.event.getEventGgroupsByUid(parseInt(page), parseInt(pageSize), ctx.user.id, parseInt(startId));
 
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
