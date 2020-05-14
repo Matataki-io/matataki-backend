@@ -632,11 +632,12 @@ class PostService extends Service {
 
     return { count, list: await this.getPostList(ids) };
   }
-  async timeRankSlow(page = 1, pagesize = 20, author = null, channel = null, filter = 0) {
+  async timeRankSlow(page = 1, pagesize = 20, author = null, channel = null, filter = 0, showingDeleted = false) {
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
-    let wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = :channel ';
+    let wheresql = 'WHERE a.channel_id = :channel ';
+    if (!showingDeleted) wheresql += ' AND a.\`status\` = 0 ';
     if (author) wheresql += ' AND a.uid = :author ';
 
     if (typeof filter === 'string') filter = parseInt(filter);
@@ -658,7 +659,7 @@ class PostService extends Service {
       wheresql += 'AND (' + conditions.join(' OR ') + ') ';
     }
 
-    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.status, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
       b.nickname, b.avatar, 
       c.real_read_count AS \`read\`, c.likes,
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
@@ -1505,7 +1506,7 @@ class PostService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [ , signId, category ]);
+      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [ signId, category ]);
       // 默认CNY定价
       await conn.insert('product_prices', {
         sign_id: signId,
