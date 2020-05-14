@@ -64,26 +64,6 @@ function lookseq(tokens, n, ...types) {
     return true;
 }
 
-function mergeTextBlocks(tokens) {
-    let α = 0,
-        β = [];
-    while (α < tokens.length) {
-        if (!look(tokens, α, 'text')) {
-            β.push(tokens[α]);
-            α++;
-            continue;
-        }
-        if (look(β, β.length - 1, 'text')) {
-            β[β.length - 1].value += tokens[α].value;
-            α++;
-            continue;
-        }
-        β.push(tokens[α]);
-        α++;
-    }
-    return β;
-}
-
 function parseReadOpen(readOpen) {
     const reg = /(\w+)\s*=\s*"([^"]*)"/g;
     let β = {};
@@ -95,73 +75,53 @@ function parseReadOpen(readOpen) {
     return β;
 }
 
-/* 处理位于ReadOpen和ReadClose之间的东西,比如code block */
-function formalizeRead(tokens){
-    //Γ表示是否处于Readtag中
-    let α = 0,β = [],acc='',Γ = false;
-    while(α < tokens.length){
-        if(look(tokens,α,'readOpen')){
-            Γ = true;
-            β.push(tokens[α]);
-            α++; continue;
-        }
-        if(look(tokens,α,'readClose')){
-            Γ = false;
-            β.push({block:'text',value:acc});
-            acc = '';
-            β.push(tokens[α]);
-            α++; continue;
-        }
-        if(look(tokens,α,'else')){
-            β.push({block:'text',value:acc});
-            acc = '';
-            β.push(tokens[α]);
-            α++; continue;
-        }
-        if(Γ){
-            acc += tokens[α].value;
-            α++; continue;
-        }
-        β.push(tokens[α]);
-        α++; continue;
-    }
-    return β;
-}
 
 function parse(text) {
-    let tokenized = formalizeRead(mergeTextBlocks(tokenize(text)));
-    let α = 0,
-        β = [],
-        Γ = false; //Γ表示是否处于code块内
+    let tokenized = tokenize(text);
+    let α = 0, // index
+        β = [], // accumlator
+        Γ = {inRead:false,inCode:false},
+        currentRead = null;  //context
     while (α < tokenized.length) {
-        if (look(tokenized,α,'code')){
-            Γ = !Γ; //翻转标志位
-            β.push(tokenized[α]);
-            α ++; continue;
+        if(tokenized[α].block=='code'){
+            Γ.inCode = !Γ.inCode;
         }
-        if (lookseq(tokenized, α, 'readOpen', 'text', 'readClose')&&!Γ) {
-            β.push({
-                block: 'read',
-                innerText: tokenized[α + 1].value,
-                attributes: parseReadOpen(tokenized[α]),
-            });
-            α += 3;
-            continue;
+        if(tokenized[α].block=='readOpen'&&!Γ.inCode&&!Γ.inRead){
+            Γ.inRead = 'then';
+            currentRead = {block : 'read',
+            value : tokenized[α].value,
+            innerText : '',
+            attributes : parseReadOpen(tokenized[α])};
+            α++; continue;
         }
-        if (
-            lookseq(tokenized, α, 'readOpen', 'text', 'else', 'text', 'readClose')&&!Γ
-        ) {
-            β.push({
-                block: 'read',
-                innerText: tokenized[α + 1].value,
-                elseText: tokenized[α + 3].value,
-                attributes: parseReadOpen(tokenized[α]),
-            });
-            α += 5;
-            continue;
+        if(tokenized[α].block=='else'&&!Γ.inCode&&Γ.inRead=='then'){
+            Γ.inRead = 'else';
+            currentRead.value+= tokenized[α].value;
+            currentRead.elseText = '';
+            α++; continue;
+        }
+        if(tokenized[α].block=='readClose'&&!Γ.inCode&&Γ.inRead){
+            Γ.inRead = false;
+            currentRead.value+= tokenized[α].value;
+            β.push(currentRead);
+            currentRead = null;
+            α++; continue;
+        }
+        if(Γ.inRead == 'then'){
+            currentRead.value += tokenized[α].value;
+            currentRead.innerText += tokenized[α].value;
+            α++; continue;
+        }
+        if(Γ.inRead == 'else'){
+            currentRead.value += tokenized[α].value;
+            currentRead.elseText += tokenized[α].value;
+            α++; continue;
         }
         β.push(tokenized[α]);
-        α++;
+        α ++;
+    }
+    if(currentRead) {
+        β.push({block:'text',value:currentRead.value});
     }
     return β;
 }
