@@ -472,13 +472,15 @@ class PostController extends Controller {
 
     if (typeof channel === 'string') channel = parseInt(channel);
     if (typeof filter === 'string') filter = parseInt(filter);
-
+    const requestUser = ctx.user;
+    const isShowingDeleted = requestUser.isAuthenticated ? Number(author) === requestUser.id : false;
     const postData = await this.service.post.timeRankSlow(
       page,
       pagesize,
       author,
       channel,
-      filter
+      filter,
+      isShowingDeleted
     );
 
     if (postData === 2) {
