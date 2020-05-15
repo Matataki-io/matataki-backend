@@ -4,7 +4,7 @@ const Service = require('egg').Service;
 
 const tokenizeRules = [
     {
-        regexp: /[^\[]+/mg,
+        regexp: /[^\[`]+/mg,
         block: 'text',
     },
     {
@@ -20,7 +20,11 @@ const tokenizeRules = [
         block: 'else',
     },
     {
-        regexp: /\[/mg,
+        regexp: /^```/mg,
+        block: 'code'
+    },
+    {
+        regexp: /(\[|`)/mg,
         block: 'text',
     },
 ];
@@ -50,6 +54,7 @@ function tokenize(text) {
 function look(tokens, n, type) {
     return tokens[n] && tokens[n].block === type;
 }
+
 function lookseq(tokens, n, ...types) {
     let α = 0;
     while (α < types.length) {
@@ -57,26 +62,6 @@ function lookseq(tokens, n, ...types) {
         α++;
     }
     return true;
-}
-
-function mergeTextBlocks(tokens) {
-    let α = 0,
-        β = [];
-    while (α < tokens.length) {
-        if (!look(tokens, α, 'text')) {
-            β.push(tokens[α]);
-            α++;
-            continue;
-        }
-        if (look(β, β.length - 1, 'text')) {
-            β[β.length - 1].value += tokens[α].value;
-            α++;
-            continue;
-        }
-        β.push(tokens[α]);
-        α++;
-    }
-    return β;
 }
 
 function parseReadOpen(readOpen) {
@@ -90,35 +75,53 @@ function parseReadOpen(readOpen) {
     return β;
 }
 
-function parse(text) {
-    let tokenized = mergeTextBlocks(tokenize(text));
-    let α = 0,
-        β = [];
-    while (α < tokenized.length) {
 
-        if (lookseq(tokenized, α, 'readOpen', 'text', 'readClose')) {
-            β.push({
-                block: 'read',
-                innerText: tokenized[α + 1].value,
-                attributes: parseReadOpen(tokenized[α]),
-            });
-            α += 3;
-            continue;
+function parse(text) {
+    let tokenized = tokenize(text);
+    let α = 0, // index
+        β = [], // accumlator
+        Γ = {inRead:false,inCode:false},
+        currentRead = null;  //context
+    while (α < tokenized.length) {
+        if(tokenized[α].block=='code'){
+            Γ.inCode = !Γ.inCode;
         }
-        if (
-            lookseq(tokenized, α, 'readOpen', 'text', 'else', 'text', 'readClose')
-        ) {
-            β.push({
-                block: 'read',
-                innerText: tokenized[α + 1].value,
-                elseText: tokenized[α + 3].value,
-                attributes: parseReadOpen(tokenized[α]),
-            });
-            α += 5;
-            continue;
+        if(tokenized[α].block=='readOpen'&&!Γ.inCode&&!Γ.inRead){
+            Γ.inRead = 'then';
+            currentRead = {block : 'read',
+            value : tokenized[α].value,
+            innerText : '',
+            attributes : parseReadOpen(tokenized[α])};
+            α++; continue;
+        }
+        if(tokenized[α].block=='else'&&!Γ.inCode&&Γ.inRead=='then'){
+            Γ.inRead = 'else';
+            currentRead.value+= tokenized[α].value;
+            currentRead.elseText = '';
+            α++; continue;
+        }
+        if(tokenized[α].block=='readClose'&&!Γ.inCode&&Γ.inRead){
+            Γ.inRead = false;
+            currentRead.value+= tokenized[α].value;
+            β.push(currentRead);
+            currentRead = null;
+            α++; continue;
+        }
+        if(Γ.inRead == 'then'){
+            currentRead.value += tokenized[α].value;
+            currentRead.innerText += tokenized[α].value;
+            α++; continue;
+        }
+        if(Γ.inRead == 'else'){
+            currentRead.value += tokenized[α].value;
+            currentRead.elseText += tokenized[α].value;
+            α++; continue;
         }
         β.push(tokenized[α]);
-        α++;
+        α ++;
+    }
+    if(currentRead) {
+        β.push({block:'text',value:currentRead.value});
     }
     return β;
 }
@@ -327,6 +330,22 @@ class ExtMarkdown extends Service {
         }
         return β;
     }
+
+    // 去除read标签，只保留else中的内容。用于shortContent
+    removeReadTags(content) {
+        const ast = parse(content);
+        let α = 0,
+            β = '';
+        while (α < ast.length) {
+            if (ast[α].block === 'read') 
+                β += ast[α].elseText ? ast[α].elseText : '';
+            else
+                β += ast[α].value;
+            α++;
+        }
+        return β;
+    }
+    
 }
 
 module.exports = ExtMarkdown;

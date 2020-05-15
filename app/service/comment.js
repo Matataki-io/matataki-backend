@@ -30,8 +30,11 @@ class CommentService extends Service {
     // }
 
     // await this.create(userId, username, signId, comment, consts.commentTypes.point, result);
-    await this.create(userId, username, signId, comment, consts.commentTypes.point, 0);
-    return 0;
+    const result = await this.create(userId, username, signId, comment, consts.commentTypes.point, 0);
+    return {
+      status: 0,
+      id: result.insertId
+    };
   }
 
   // 创建评论
@@ -47,7 +50,7 @@ class CommentService extends Service {
       create_time: now,
     });
 
-    return result.affectedRows === 1;
+    return result
   }
 
   // 评论列表

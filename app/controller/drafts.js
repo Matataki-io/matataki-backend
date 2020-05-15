@@ -204,6 +204,39 @@ class DraftsController extends Controller {
     }
   }
 
+
+  async previewSetId() {
+    const ctx = this.ctx;
+    const { id } = ctx.request.body;
+
+    const success = await this.service.draft.previewSetId(id, ctx.user.id);
+
+    if (success) {
+      ctx.body = ctx.msg.success;
+    } else {
+      ctx.body = ctx.msg.failure;
+    }
+  }
+  async previewDraft() {
+    const ctx = this.ctx;
+    const { id } = this.ctx.params;
+
+    const result = await await this.service.draft.previewDraft(id);
+
+    if (result.code === 0) {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: result.data,
+      };
+    } else {
+      ctx.body = ctx.msg.failure;
+    }
+    if (result.message) {
+      ctx.body.message = result.message;
+    }
+  }
+
+
 }
 
 module.exports = DraftsController;
