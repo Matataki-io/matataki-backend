@@ -733,7 +733,7 @@ class PostService extends Service {
   async getArticlesHistory(articleId, isFullHistory = true) {
     const records = await this.app.mysql.select('post_ipfs', {
       where: { articleId },
-      columns: [ 'id', 'htmlHash', 'createdAt', 'isMetadataEncrypted' ], // 要查询的表字段
+      columns: [ 'id', 'htmlHash', 'createdAt' ], // 要查询的表字段
       orders: [[ 'id', 'desc' ]],
     });
     return isFullHistory ? records : records.slice(0, 1);
