@@ -160,6 +160,22 @@ class PostService extends Service {
     return post;
   }
 
+  /** 通过文章id的数组获取文章简略信息，主要用于在通知中获取文章摘要 */
+  async getByIdArray(idList) {
+    const posts = await this.app.mysql.query(
+      `SELECT p.id, p.title, p.short_content, p.cover,
+      prc.real_read_count, prc.likes
+      FROM posts p
+      LEFT JOIN post_read_count prc
+      ON p.id = prc.post_id
+      WHERE p.id IN (:idList);`,
+      { idList }
+    );
+
+    if (posts === null) return [];
+    return posts;
+  }
+
   // 根据id获取文章
   /*
   查询太多影响性能，修改计划：

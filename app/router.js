@@ -484,9 +484,10 @@ module.exports = app => {
   router.get('/dao/skill/options', passport.verify, controller.dao.skill.options);
   router.get('/dev/down/posts', passport.verify, controller.downloader.down);
 
-  // 获取消息列表
-  router.get('/notify/event', passport.authorize, controller.notify.getUserEvents);
+  // 获取汇总后的消息列表
+  router.get('/notify/event', passport.authorize, controller.notify.getEventGgroupsByUid);
+  // 获取一个区间内满足特定条件的消息列表
+  router.get('/notify/event/detail', passport.authorize, controller.notify.getEventByRegion);
   // 标记已读
   router.put('/notify/event', passport.authorize, controller.notify.haveRead);
 };
-
