@@ -1389,6 +1389,15 @@ class PostController extends Controller {
 
     ctx.body = ctx.msg.ipfsCatchFailed;
   }
+
+  async getHotestTags(){
+    const {ctx} = this.ctx;
+    const {num} = parseInt(ctx.query);
+    const arr = await this.service.post.getHotestTags(num);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = arr;
+  }
+  
 }
 
 module.exports = PostController;
