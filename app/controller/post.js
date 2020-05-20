@@ -1392,7 +1392,7 @@ class PostController extends Controller {
 
   async getHotestTags(){
     const {ctx} = this;
-    const {num} = parseInt(ctx.query);
+    const num = parseInt(ctx.query.num);
     const arr = await this.service.post.getHotestTags(num);
     ctx.body = ctx.msg.success;
     ctx.body.data = arr;
