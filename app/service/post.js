@@ -94,14 +94,15 @@ class PostService extends Service {
       }
 
       for (let i = 0; i < tag_arr.length; i++) {
-        const id = tag_arr[i];
-        const tag = await this.app.mysql.get('tags', { id });
+        const name = tag_arr[i];
+        let tag = await this.app.mysql.get('tags', { name });
         if (tag) {
-          await this.app.mysql.query('update tags set tags.num=tags.num+1 where tags.id=?',[id]);
+          await this.app.mysql.query('update tags set tags.num=tags.num+1 where tags.id=?',[tag.id]);
         } else {
-          await this.app.mysql.insert('tags',{ id , num : 1});
+          tag = await this.app.mysql.insert('tags',{ name , num : 1,
+          type : 'post',create_time: new Date().getTime()});
         }
-        await this.app.mysql.insert('post_tag', { sid, tid: id });
+        await this.app.mysql.insert('post_tag', { sid, tid: tag.id });
       }
     } catch (err) {
       this.logger.error('PostService::create_tags error: %j', err);
@@ -113,7 +114,7 @@ class PostService extends Service {
   }
   // 获取最热门的k个标签
   async getHotestTags(k){
-    return await this.app.mysql.query('select id from tags order by num desc limit ?',[k]);
+    return await this.app.mysql.query('select id,name from tags order by num desc limit ?',[k]);
   }
 
   // 根据hash获取文章
