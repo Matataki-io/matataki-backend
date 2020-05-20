@@ -113,7 +113,7 @@ class PostService extends Service {
   }
   // 获取最热门的k个标签
   async getHotestTags(k){
-    return await this.app.mysql.query('select top ? id from tags order by num desc',[k]);
+    return await this.app.mysql.query('select id from tags order by num desc limit ?',[k]);
   }
 
   // 根据hash获取文章
