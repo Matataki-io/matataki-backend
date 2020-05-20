@@ -88,19 +88,32 @@ class PostService extends Service {
     try {
       // 重置文章的标签
       if (replace) {
-        await this.app.mysql.delete('post_tag', { sid });
+        await this.app.mysql.query('update tags inner join post_tag on post_tag.tid=tags.id and post_tag.sid=? set tags.num=tags.num-1',
+        [sid]); //所有关联标签的计数-1
+        await this.app.mysql.delete('post_tag', { sid }); //删除所有关联
       }
 
       for (let i = 0; i < tag_arr.length; i++) {
         const id = tag_arr[i];
         const tag = await this.app.mysql.get('tags', { id });
         if (tag) {
-          await this.app.mysql.insert('post_tag', { sid, tid: tag.id });
+          await this.app.mysql.query('update tags set tags.num=tags.num+1 where tags.id=?',[id]);
+        } else {
+          await this.app.mysql.insert('tags',{ id , num : 1});
         }
+        await this.app.mysql.insert('post_tag', { sid, tid: id });
       }
     } catch (err) {
       this.logger.error('PostService::create_tags error: %j', err);
     }
+  }
+  // 根据tag获取包含文章id的数组
+  async getIdArrayByTag(tag){
+    return await this.app.mysql.query('select sid from post_tag where tid=?',[tag]);
+  }
+  // 获取最热门的k个标签
+  async getHotestTags(k){
+    return await this.app.mysql.query('select top ? id from tags order by num desc',[k]);
   }
 
   // 根据hash获取文章
