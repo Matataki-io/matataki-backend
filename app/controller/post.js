@@ -140,12 +140,8 @@ class PostController extends Controller {
       articleContent
     );
 
-    if (tags) {
-      let tag_arr = tags.split(',');
-      tag_arr = tag_arr.filter(x => {
-        return x !== '';
-      });
-      await ctx.service.post.create_tags(id, tag_arr);
+    if (tags.length>0) {
+      await ctx.service.post.create_tags(id, tags);
     }
 
     if (id > 0) {
@@ -306,11 +302,7 @@ class PostController extends Controller {
           htmlHash,
         });
 
-        let tag_arr = tags.split(',');
-        tag_arr = tag_arr.filter(x => {
-          return x !== '';
-        });
-        await ctx.service.post.create_tags(signId, tag_arr, true);
+        await ctx.service.post.create_tags(signId, tags, true);
 
         await conn.commit();
       } catch (err) {
