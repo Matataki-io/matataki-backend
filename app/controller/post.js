@@ -394,18 +394,24 @@ class PostController extends Controller {
       page = 1,
       pagesize = 20,
       channel = null,
-      extra = null,
-      filter = 0,
+      /* extra = null,
+      filter = 0, */
     } = this.ctx.query;
+    const postData = await this.service.post.followedPostsFast(
+      page,
+      pagesize,
+      userid,
+      channel
+    );
 
-    const postData = await this.service.post.followedPosts(
+    /* const postData = await this.service.post.followedPosts(
       page,
       pagesize,
       userid,
       channel,
       extra,
       filter
-    );
+    ); */
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
