@@ -15,9 +15,9 @@ class PostService extends Service {
 
   constructor(ctx, app) {
     super(ctx, app);
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
-      return query.replace(/\:(\w+)/g, function(txt, key) {
+      return query.replace(/\:(\w+)/g, function (txt, key) {
         if (values.hasOwnProperty(key)) {
           return this.escape(values[key]);
         }
@@ -60,7 +60,7 @@ class PostService extends Service {
         await this.app.mysql.query(
           'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count)'
           + ' VALUES(?, 0, 0, 0 ,0, 0);',
-          [ result.insertId ]
+          [result.insertId]
         );
 
         // await this.app.redis.multi()
@@ -89,7 +89,7 @@ class PostService extends Service {
       // 重置文章的标签
       if (replace) {
         await this.app.mysql.query('update tags inner join post_tag on post_tag.tid=tags.id and post_tag.sid=? set tags.num=tags.num-1',
-        [sid]); //所有关联标签的计数-1
+          [sid]); //所有关联标签的计数-1
         await this.app.mysql.delete('post_tag', { sid }); //删除所有关联
       }
 
@@ -97,10 +97,13 @@ class PostService extends Service {
         const name = tag_arr[i];
         let tag = await this.app.mysql.get('tags', { name });
         if (tag) {
-          await this.app.mysql.query('update tags set tags.num=tags.num+1 where tags.id=?',[tag.id]);
+          await this.app.mysql.query('update tags set tags.num=tags.num+1 where tags.id=?', [tag.id]);
         } else {
-          tag = await this.app.mysql.insert('tags',{ name , num : 1,
-          type : 'post',create_time: new Date().getTime()});
+          await this.app.mysql.insert('tags', {
+            name, num: 1,
+            type: 'post', create_time: new Date().getTime()
+          });
+          tag = await this.app.mysql.get('tags', { name });
         }
         await this.app.mysql.insert('post_tag', { sid, tid: tag.id });
       }
@@ -109,12 +112,16 @@ class PostService extends Service {
     }
   }
   // 根据tag获取包含文章id的数组
-  async getIdArrayByTag(tag){
-    return await this.app.mysql.query('select sid from post_tag where tid=?',[tag]);
+  async getIdArrayByTag(tag) {
+    return await this.app.mysql.query('select sid from post_tag where tid=?', [tag]);
+  }
+  async getTagsById(sid) {
+    return await this.app.mysql.query('select tags.id,tags.name from tags inner join post_tag on post_tag.sid = ? and tags.id=post_tag.tid',
+      [sid]);
   }
   // 获取最热门的k个标签
-  async getHotestTags(k){
-    return await this.app.mysql.query('select id,name from tags order by num desc limit ?',[k]);
+  async getHotestTags(k) {
+    return await this.app.mysql.query('select id,name from tags order by num desc limit ?', [k]);
   }
 
   // 根据hash获取文章
@@ -122,7 +129,7 @@ class PostService extends Service {
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
       + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy FROM posts WHERE hash = ?;',
-      [ hash ]
+      [hash]
     );
     let post = posts[0];
     if (!post) {
@@ -143,9 +150,9 @@ class PostService extends Service {
   async get(id) {
     const posts = await this.app.mysql.select('posts', {
       where: { id },
-      columns: [ 'id', 'hash', 'cover', 'uid', 'title', 'short_content',
+      columns: ['id', 'hash', 'cover', 'uid', 'title', 'short_content',
         'status', 'create_time', 'comment_pay_point', 'channel_id',
-        'require_buy', 'ipfs_hide' ], // todo：需要再增加
+        'require_buy', 'ipfs_hide'], // todo：需要再增加
     });
     if (posts && posts.length > 0) {
       return posts[0];
@@ -163,7 +170,7 @@ class PostService extends Service {
       LEFT JOIN post_read_count prc
       ON p.id = prc.post_id
       WHERE p.id = ?;`,
-      [ id ]
+      [id]
     );
 
     if (posts === null || posts.length === 0) {
@@ -200,7 +207,7 @@ class PostService extends Service {
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
       + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy, cc_license FROM posts WHERE id = ?;',
-      [ id ]
+      [id]
     );
 
     if (posts === null || posts.length === 0) {
@@ -220,7 +227,7 @@ class PostService extends Service {
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
       + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens FROM posts WHERE id = ? AND uid = ?;',
-      [ id, current_user ]
+      [id, current_user]
     );
 
     if (posts === null || posts.length === 0) {
@@ -247,7 +254,7 @@ class PostService extends Service {
     const count = await this.app.mysql.query(
       'SELECT post_id AS id, real_read_count AS num, sale_count AS sale, support_count AS ups, eos_value_count AS eosvalue, ont_value_count AS ontvalue, likes, dislikes'
       + ' FROM post_read_count WHERE post_id = ?;',
-      [ post.id ]
+      [post.id]
     );
     if (count.length) {
       post.read = count[0].num;
@@ -264,7 +271,7 @@ class PostService extends Service {
     // tags
     const tags = await this.app.mysql.query(
       'select a.id, a.name from tags a left join post_tag b on a.id = b.tid where b.sid = ? ',
-      [ post.id ]
+      [post.id]
     );
 
     post.tags = tags;
@@ -334,7 +341,7 @@ class PostService extends Service {
     }
 
     // 是否收藏
-    const { isBookmarked } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM post_bookmarks WHERE uid = ? AND pid = ?) isBookmarked;', [ userId, id ]))[0];
+    const { isBookmarked } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM post_bookmarks WHERE uid = ? AND pid = ?) isBookmarked;', [userId, id]))[0];
     post.is_bookmarked = isBookmarked;
 
     return post;
@@ -344,7 +351,7 @@ class PostService extends Service {
   async getPrices(signId, category = 0) {
     const prices = await this.app.mysql.select('product_prices', {
       where: { sign_id: signId, status: 1, category },
-      columns: [ 'platform', 'symbol', 'price', 'decimals', 'stock_quantity' ],
+      columns: ['platform', 'symbol', 'price', 'decimals', 'stock_quantity'],
     });
 
     return prices;
@@ -763,8 +770,8 @@ class PostService extends Service {
   async getArticlesHistory(articleId, isFullHistory = true) {
     const records = await this.app.mysql.select('post_ipfs', {
       where: { articleId },
-      columns: [ 'id', 'htmlHash', 'createdAt' ], // 要查询的表字段
-      orders: [[ 'id', 'desc' ]],
+      columns: ['id', 'htmlHash', 'createdAt'], // 要查询的表字段
+      orders: [['id', 'desc']],
     });
     return isFullHistory ? records : records.slice(0, 1);
   }
@@ -1369,7 +1376,7 @@ class PostService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM post_minetokens WHERE sign_id = ?;', [ id ]);
+      await conn.query('DELETE FROM post_minetokens WHERE sign_id = ?;', [id]);
       let require = 0;
       for (const token of tokens) {
         if (token.amount > 0) {
@@ -1428,7 +1435,7 @@ class PostService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM edit_minetokens WHERE sign_id = ?;', [ id ]);
+      await conn.query('DELETE FROM edit_minetokens WHERE sign_id = ?;', [id]);
       let require = 0;
       for (const token of tokens) {
         if (token.amount > 0) {
@@ -1465,14 +1472,14 @@ class PostService extends Service {
   // 获取阅读文章需要持有的tokens
   async getMineTokens(signId) {
     const tokens = await this.app.mysql.query('SELECT t.id, p.amount, t.name, t.symbol, t.decimals, t.logo FROM post_minetokens p INNER JOIN minetokens t ON p.token_id = t.id WHERE p.sign_id = ?;',
-      [ signId ]);
+      [signId]);
     return tokens;
   }
 
   // 获取编辑文章需要持有的tokens
   async getEditMineTokens(signId) {
     const tokens = await this.app.mysql.query('SELECT t.id, p.amount, t.name, t.symbol, t.decimals, t.logo FROM edit_minetokens p INNER JOIN minetokens t ON p.token_id = t.id WHERE p.sign_id = ?;',
-      [ signId ]);
+      [signId]);
     return tokens;
   }
 
@@ -1536,7 +1543,7 @@ class PostService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [ signId, category ]);
+      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [signId, category]);
       // 默认CNY定价
       await conn.insert('product_prices', {
         sign_id: signId,
@@ -1590,7 +1597,7 @@ class PostService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
-      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [ signId, category ]);
+      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [signId, category]);
 
       await conn.update('posts',
         {
@@ -1618,18 +1625,18 @@ class PostService extends Service {
   }
 
   async addBookmark(userId, postId) {
-    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM posts WHERE id = ?) existence;', [ postId ]))[0];
+    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM posts WHERE id = ?) existence;', [postId]))[0];
     if (!existence) {
       return null;
     }
 
-    const { affectedRows } = await this.app.mysql.query('INSERT IGNORE post_bookmarks VALUES(?, ?, ?);', [ userId, postId, moment().format('YYYY-MM-DD HH:mm:ss') ]);
+    const { affectedRows } = await this.app.mysql.query('INSERT IGNORE post_bookmarks VALUES(?, ?, ?);', [userId, postId, moment().format('YYYY-MM-DD HH:mm:ss')]);
 
     return affectedRows === 1;
   }
 
   async removeBookmark(userId, postId) {
-    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM posts WHERE id = ?) existence;', [ postId ]))[0];
+    const { existence } = (await this.app.mysql.query('SELECT EXISTS (SELECT 1 FROM posts WHERE id = ?) existence;', [postId]))[0];
     if (!existence) {
       return null;
     }
@@ -1668,7 +1675,7 @@ class PostService extends Service {
       markdown,
     });
     // 上传的data是json对象， 需要字符串化
-    const [ metadataHash, htmlHash ] = await Promise.all([
+    const [metadataHash, htmlHash] = await Promise.all([
       this.ipfsUpload(metadata),
       this.service.ipfs.uploadToAws(renderedHtml),
     ]);
