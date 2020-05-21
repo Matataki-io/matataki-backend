@@ -143,7 +143,7 @@ class DraftService extends Service {
 
   async previewDraftTime(id) {
     try {
-      const time = await this.app.redis.get(`preview:${id}`);
+      const time = await this.app.redis.ttl(`preview:${id}`);
       if (time) {
         return {
           code: 0,
