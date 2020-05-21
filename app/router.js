@@ -129,6 +129,8 @@ module.exports = app => {
   router.post('/preview', passport.authorize, controller.drafts.previewSetId);
   // 获取查看草稿的内容
   router.get('/preview/:id', passport.verify, controller.drafts.previewDraft);
+  // 查看草稿预览时间
+  router.get('/previewTime/:id', passport.verify, controller.drafts.previewDraftTime);
 
 
   // -------------------------------- 用户系统 --------------------------------
@@ -492,7 +494,7 @@ module.exports = app => {
   // 标记已读
   router.put('/notify/event', passport.authorize, controller.notify.haveRead);
 
-  router.get('/tags/hotest',passport.verify, controller.post.getHotestTags);
-  router.get('/tags/get_by_post',passport.verify,controller.post.getTagsById);
-  router.get('/tags/post',passport.verify,controller.post.getIdArrayByTag);
+  router.get('/tags/hotest', passport.verify, controller.post.getHotestTags);
+  router.get('/tags/get_by_post', passport.verify, controller.post.getTagsById);
+  router.get('/tags/post', passport.verify, controller.post.getIdArrayByTag);
 };

@@ -235,6 +235,24 @@ class DraftsController extends Controller {
       ctx.body.message = result.message;
     }
   }
+  async previewDraftTime() {
+    const ctx = this.ctx;
+    const { id } = this.ctx.params;
+
+    const result = await await this.service.draft.previewDraftTime(id);
+
+    if (result.code === 0) {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: result.data,
+      };
+    } else {
+      ctx.body = ctx.msg.failure;
+    }
+    if (result.message) {
+      ctx.body.message = result.message;
+    }
+  }
 
 
 }
