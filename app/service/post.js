@@ -168,7 +168,7 @@ class PostService extends Service {
   */
   async getById(id) {
     const posts = await this.app.mysql.query(
-      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
+      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, ipfs_hide,'
       + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy, cc_license FROM posts WHERE id = ?;',
       [ id ]
     );
