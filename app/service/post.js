@@ -101,7 +101,7 @@ class PostService extends Service {
         } else {
           await this.app.mysql.insert('tags', {
             name, num: 1,
-            type: 'post', create_time: new Date().getTime()
+            type: 'post', create_time: this.app.mysql.literals.now
           });
           tag = await this.app.mysql.get('tags', { name });
         }
