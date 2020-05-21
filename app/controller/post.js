@@ -1397,6 +1397,20 @@ class PostController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = arr;
   }
+  async getTagsById(){
+    const {ctx} = this;
+    const id = ctx.query.id;
+    const arr = await this.service.post.getTagsById(id);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = arr;
+  }
+  async getIdArrayByTag(){
+    const {ctx} = this;
+    const id = ctx.query.id;
+    const arr = await this.service.post.getIdArrayByTag(id);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = arr;
+  }
   
 }
 

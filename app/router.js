@@ -493,4 +493,6 @@ module.exports = app => {
   router.put('/notify/event', passport.authorize, controller.notify.haveRead);
 
   router.get('/tags/hotest',passport.verify, controller.post.getHotestTags);
+  router.get('/tags/get_by_post',passport.verify,controller.post.getTagsById);
+  router.get('/tags/post',passport.verify,controller.post.getIdArrayByTag);
 };
