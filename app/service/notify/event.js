@@ -256,6 +256,28 @@ class NotifyService extends Service {
     }
   }
 
+    /** 通过uid获取未读消息数量 */
+    async getUnreadQuantity(uid) {
+      const sql = `
+        SELECT count(1) as count FROM (
+          SELECT count(1), c1.state
+          FROM notify_event_recipients_desc c1
+          JOIN notify_event c2 ON c1.event_id = c2.id
+          WHERE c1.user_id = :uid
+          GROUP BY c2.action, c2.object_id, object_type, DATE(create_time)
+        ) a WHERE a.state = 0;
+      `;
+
+      try {
+        const result = await this.app.mysql.query(sql, { uid });
+        return result[0].count
+      }
+      catch(e) {
+        this.logger.error(e);
+        return 0
+      }
+    }
+
   /** 数组内的事件设为已读 */
   async haveReadByIdArray(uid, ids) {
     const sql = `
