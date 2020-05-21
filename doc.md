@@ -3677,3 +3677,65 @@ url: /search/token
   ]
 }
 ```
+
+
+### 获取最热的k个标签
+* GET /tags/hotest?num=3
+* 响应状态码： 200
+* 参数:
+  - num,获取最热标签的数量
+* 返回内容：
+```json
+{
+    "code": 0, 
+    "message": "成功", 
+    "data": [
+        {
+            "id": 111, 
+            "name": "娱乐", 
+            "create_time": "0000-00-00 00:00:00", 
+            "type": "post", 
+            "num": 1
+        }, 
+        {
+            "id": 113, 
+            "name": "游戏", 
+            "create_time": "2020-05-21T04:09:06.000Z", 
+            "type": "post", 
+            "num": 1
+        }
+    ]
+}
+```
+
+### 获取某篇文章的标签
+* GET /tags/get_by_post?id=12345
+* 响应状态码： 200
+* 参数:
+  - id,文章的id
+* 返回内容：
+```json
+{
+    "code": 0, 
+    "message": "成功", 
+    "data": [
+        {
+            "id": 113, 
+            "name": "游戏", 
+            "create_time": "2020-05-21T04:09:06.000Z", 
+            "type": "post", 
+            "num": 1
+        }
+    ]
+}
+```
+
+### 获取某个标签下的所有文章
+* GET /tags/post?id=1
+* 响应状态码： 200
+* 参数:
+  - id,标签的id
+* 返回内容：所有文章的id
+```json
+{"code":0,"message":"成功","data":[0,1,100470]}
+```
