@@ -11,9 +11,9 @@ class NotificationController extends Controller {
   /** 获取汇总后的消息内容 */
   async getEventGgroupsByUid() {
     const ctx = this.ctx;
-    const {pageSize = 20, page = 1, startId = 0} = ctx.query;
+    const {pageSize: pagesize = 20, page = 1, startId = 0} = ctx.query;
     // 获取汇总后的消息列表
-    const eventList = await this.service.notify.event.getEventGgroupsByUid(parseInt(page), parseInt(pageSize), ctx.user.id, parseInt(startId));
+    const eventList = await this.service.notify.event.getEventGgroupsByUid(parseInt(page), parseInt(pagesize), ctx.user.id, parseInt(startId));
 
     // 汇总消息中所需信息的数据库索引
     let userIdSet = new Set();
@@ -46,12 +46,12 @@ class NotificationController extends Controller {
   /** 获取一个区间内满足特定条件的消息列表 */
   async getEventByRegion() {
     const ctx = this.ctx;
-    const {pageSize = 20, page = 1, startId, endId, action, objectId, objectType} = ctx.query;
+    const {pagesize = 20, page = 1, startId, endId, action, objectId, objectType} = ctx.query;
 
     // 获取事件通知列表
     const eventList = await this.service.notify.event.getEventByRegion(
       parseInt(page),
-      parseInt(pageSize),
+      parseInt(pagesize),
       ctx.user.id,
       parseInt(startId),
       parseInt(endId),
@@ -84,6 +84,14 @@ class NotificationController extends Controller {
 
     ctx.body = ctx.msg.success;
     ctx.body.data = eventList;
+  }
+
+  /** 获取未读消息数量 */
+  async getUnreadQuantity() {
+    const ctx = this.ctx;
+    const result = await this.service.notify.event.getUnreadQuantity(ctx.user.id);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
   }
 
   /** 将数组中的事件设定为已读 */
