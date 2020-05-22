@@ -3680,10 +3680,11 @@ url: /search/token
 
 
 ### 获取最热的k个标签
-* GET /tags/hotest?num=3
+* GET /tags/hotest?pageSize=3&pageNum=0
 * 响应状态码： 200
 * 参数:
-  - num,获取最热标签的数量
+  - pageSize,每次从0开始
+  - pageNum,偏移量，从0开始
 * 返回内容：
 ```json
 {
@@ -3731,11 +3732,80 @@ url: /search/token
 ```
 
 ### 获取某个标签下的所有文章
-* GET /tags/post?id=1
+* GET /tags/post?id=1&pageSize=2&pageNum=0
 * 响应状态码： 200
 * 参数:
   - id,标签的id
+  - pageSize,一次返回的数量
+  - pageNum,偏移量，从0开始
 * 返回内容：所有文章的id
 ```json
-{"code":0,"message":"成功","data":[0,1,100470]}
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        {
+            "id": 1,
+            "username": "joetothemoon",
+            "author": "dd",
+            "title": "ddasdasd",
+            "short_content": "ddd",
+            "hash": "QmPtcBBEU5JdVy3yBtUfRMx7F2UDQs9V3KdqrcmGppc5VX",
+            "sign": "SIG_K1_KdWVRnpoYUh1XH1QhhyisAoqGysSLmue46r1J2pJjgSMN9944YADea3WSBnW2ify9BVsk2ipRVAXqRkaxkKernojX9Mfed",
+            "public_key": "EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C",
+            "status": 1,
+            "onchain_status": 1,
+            "create_time": "2019-03-15T15:13:09.000Z",
+            "fission_factor": 2000,
+            "cover": "",
+            "platform": "eos",
+            "is_original": null,
+            "channel_id": 1,
+            "fission_rate": 100,
+            "referral_rate": 0,
+            "uid": 170,
+            "is_recommend": 0,
+            "category_id": 0,
+            "hot_score": -814.6,
+            "comment_pay_point": 5,
+            "time_down": 1,
+            "require_holdtokens": 0,
+            "require_buy": 0,
+            "cc_license": null,
+            "editor_require_holdtokens": 0,
+            "ipfs_hide": 0
+        },
+        {
+            "id": 100482,
+            "username": "AS8aW2K4MNhPk9Wn93QQVYvYLF1QV9wNBt",
+            "author": "AS8aW2K4MNhPk9Wn93QQVYvYLF1QV9wNBt",
+            "title": "333333332",
+            "short_content": null,
+            "hash": "Qmbj7WJQMNcmWCziXFALRJ8N5a7rWCaJqyTNoLDDgL7FEf",
+            "sign": "SIG_K1_K1AgU8prp4P63FhxUKskXXRtt5B4ftqugMNfsQgjZxr59fUR7M94z8JSbEzaVboWhU4CEKeMfwEdoibwfoHojqpMCiHrdd",
+            "public_key": "EOS8BSbjn1TmusYbVf4GH2Khe31csTYssfguiTJAGtmDPsYVhAzqc",
+            "status": 0,
+            "onchain_status": 0,
+            "create_time": "2019-06-11T16:53:44.000Z",
+            "fission_factor": 2000,
+            "cover": "",
+            "platform": "ont",
+            "is_original": 0,
+            "channel_id": 1,
+            "fission_rate": 100,
+            "referral_rate": 0,
+            "uid": 234,
+            "is_recommend": 0,
+            "category_id": 0,
+            "hot_score": 3.58,
+            "comment_pay_point": 5,
+            "time_down": 0,
+            "require_holdtokens": 0,
+            "require_buy": 0,
+            "cc_license": null,
+            "editor_require_holdtokens": 0,
+            "ipfs_hide": 0
+        }
+    ]
+}
 ```
