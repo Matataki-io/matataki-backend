@@ -113,8 +113,8 @@ class PostService extends Service {
   }
   // 根据tag id获取包含文章id的数组
   async getIdArrayByTag(tag) {
-    const arr= await this.app.mysql.query('select sid from post_tag where tid=?', [tag]);
-    return arr.map(({sid}) => sid);
+    const arr= await this.app.mysql.query('select posts.* from posts inner join post_tag on post_tag.tid=? and posts.id=post_tag.sid', [tag]);
+    return arr;
   }
   // 根据文章id获取该文章的所有tag
   async getTagsById(sid) {

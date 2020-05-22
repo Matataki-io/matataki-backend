@@ -106,14 +106,7 @@ class DraftService extends Service {
           // 分配标签
           let tag_arr = draftContent.tags.split(',');
           tag_arr = tag_arr.filter(x => { return x !== ''; });
-          let tags = [];
-          if (tag_arr.length > 0) {
-            tags = await await this.app.mysql.query(
-              'select id, name from tags where id in (?) ',
-              [ tag_arr ]
-            );
-          }
-          draftContent.tags = tags;
+          draftContent.tags = tag_arr;
 
           return {
             code: 0,
