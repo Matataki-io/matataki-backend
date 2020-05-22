@@ -8,11 +8,11 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
 
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
       return query.replace(
         /\:(\w+)/g,
-        function(txt, key) {
+        function (txt, key) {
           if (values.hasOwnProperty(key)) {
             return this.escape(values[key]);
           }
@@ -140,12 +140,8 @@ class PostController extends Controller {
       articleContent
     );
 
-    if (tags) {
-      let tag_arr = tags.split(',');
-      tag_arr = tag_arr.filter(x => {
-        return x !== '';
-      });
-      await ctx.service.post.create_tags(id, tag_arr);
+    if (tags.length > 0) {
+      await ctx.service.post.create_tags(id, tags);
     }
 
     if (id > 0) {
@@ -306,11 +302,7 @@ class PostController extends Controller {
           htmlHash,
         });
 
-        let tag_arr = tags.split(',');
-        tag_arr = tag_arr.filter(x => {
-          return x !== '';
-        });
-        await ctx.service.post.create_tags(signId, tag_arr, true);
+        await ctx.service.post.create_tags(signId, tags, true);
 
         await conn.commit();
       } catch (err) {
@@ -708,8 +700,8 @@ class PostController extends Controller {
 
       const result = await this.app.mysql.query(
         'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count) VALUES (?, ?, 0, 0, 0, 0)'
-          + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
-        [ post.id, 1 ]
+        + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
+        [post.id, 1]
       );
 
       const updateSuccess = result.affectedRows !== 0;
@@ -1396,28 +1388,28 @@ class PostController extends Controller {
     ctx.body = ctx.msg.ipfsCatchFailed;
   }
 
-  async getHotestTags(){
-    const {ctx} = this;
+  async getHotestTags() {
+    const { ctx } = this;
     const num = parseInt(ctx.query.num);
     const arr = await this.service.post.getHotestTags(num);
     ctx.body = ctx.msg.success;
     ctx.body.data = arr;
   }
-  async getTagsById(){
-    const {ctx} = this;
+  async getTagsById() {
+    const { ctx } = this;
     const id = ctx.query.id;
     const arr = await this.service.post.getTagsById(id);
     ctx.body = ctx.msg.success;
     ctx.body.data = arr;
   }
-  async getIdArrayByTag(){
-    const {ctx} = this;
+  async getIdArrayByTag() {
+    const { ctx } = this;
     const id = ctx.query.id;
     const arr = await this.service.post.getIdArrayByTag(id);
     ctx.body = ctx.msg.success;
     ctx.body.data = arr;
   }
-  
+
 }
 
 module.exports = PostController;
