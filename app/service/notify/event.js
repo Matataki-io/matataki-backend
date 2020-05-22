@@ -298,6 +298,26 @@ class NotifyService extends Service {
       return false;
     }
   }
+
+  /** 全部标记为已读 */
+  async haveReadAll(uid) {
+    const sql = `
+      UPDATE ${EVENT_RECIPIENT_TABLE}
+      SET state = 1, read_time = :readTime
+      WHERE user_id = :uid AND state = 0
+    `;
+    try {
+      const result = await this.app.mysql.query(sql, {
+        uid,
+        readTime: moment().format('YYYY-MM-DD HH:mm:ss')
+      });
+      return result.affectedRows;
+    }
+    catch(e) {
+      this.logger.error(e);
+      return false;
+    }
+  }
 }
 
 module.exports = NotifyService;
