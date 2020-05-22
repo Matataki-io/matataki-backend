@@ -33,7 +33,7 @@ class DraftsController extends Controller {
   async save() {
     const ctx = this.ctx;
 
-    const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0, tags = '', commentPayPoint = 0 } = ctx.request.body;
+    const { id = '', title = '', content = '', cover, fissionFactor = 2000, is_original = 0, tags = [], commentPayPoint = 0 } = ctx.request.body;
 
     // 评论需要支付的积分
     const comment_pay_point = parseInt(commentPayPoint);
@@ -74,7 +74,7 @@ class DraftsController extends Controller {
         fission_factor: fissionFactor,
         update_time: now,
         is_original,
-        tags,
+        tags: tags.join(','),
         comment_pay_point,
       }, { where: { id } });
 
@@ -108,7 +108,7 @@ class DraftsController extends Controller {
         is_original,
         create_time: now,
         update_time: now,
-        tags,
+        tags: tags.join(','),
         comment_pay_point,
       });
 
@@ -149,14 +149,7 @@ class DraftsController extends Controller {
     // 分配标签
     let tag_arr = draft.tags.split(',');
     tag_arr = tag_arr.filter(x => { return x !== ''; });
-    let tags = [];
-    if (tag_arr.length > 0) {
-      tags = await await this.app.mysql.query(
-        'select id, name from tags where id in (?) ',
-        [ tag_arr ]
-      );
-    }
-    draft.tags = tags;
+    draft.tags = tag_arr;
 
     this.ctx.body = this.ctx.msg.success;
     this.ctx.body = draft;
@@ -222,6 +215,24 @@ class DraftsController extends Controller {
     const { id } = this.ctx.params;
 
     const result = await await this.service.draft.previewDraft(id);
+
+    if (result.code === 0) {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: result.data,
+      };
+    } else {
+      ctx.body = ctx.msg.failure;
+    }
+    if (result.message) {
+      ctx.body.message = result.message;
+    }
+  }
+  async previewDraftTime() {
+    const ctx = this.ctx;
+    const { id } = this.ctx.params;
+
+    const result = await await this.service.draft.previewDraftTime(id);
 
     if (result.code === 0) {
       ctx.body = {

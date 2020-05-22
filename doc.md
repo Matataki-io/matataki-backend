@@ -3677,3 +3677,135 @@ url: /search/token
   ]
 }
 ```
+
+
+### 获取最热的k个标签
+* GET /tags/hotest?pagesize=3&page=0
+* 响应状态码： 200
+* 参数:
+  - pagesize,返回的数量
+  - page,偏移量，从0开始
+* 返回内容：
+```json
+{
+    "code": 0, 
+    "message": "成功", 
+    "data": [
+        {
+            "id": 111, 
+            "name": "娱乐", 
+            "create_time": "0000-00-00 00:00:00", 
+            "type": "post", 
+            "num": 1
+        }, 
+        {
+            "id": 113, 
+            "name": "游戏", 
+            "create_time": "2020-05-21T04:09:06.000Z", 
+            "type": "post", 
+            "num": 1
+        }
+    ]
+}
+```
+
+### 获取某篇文章的标签
+* GET /tags/get_by_post?id=12345
+* 响应状态码： 200
+* 参数:
+  - id,文章的id
+* 返回内容：
+```json
+{
+    "code": 0, 
+    "message": "成功", 
+    "data": [
+        {
+            "id": 113, 
+            "name": "游戏", 
+            "create_time": "2020-05-21T04:09:06.000Z", 
+            "type": "post", 
+            "num": 1
+        }
+    ]
+}
+```
+
+### 获取某个标签下的所有文章
+* GET /tags/post?id=1&pagesize=2&page=0
+* 响应状态码： 200
+* 参数:
+  - id,标签的id
+  - pagesize,返回的数量
+  - page,偏移量，从0开始
+* 返回内容：所有文章的id
+```json
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        {
+            "id": 1,
+            "username": "joetothemoon",
+            "author": "dd",
+            "title": "ddasdasd",
+            "short_content": "ddd",
+            "hash": "QmPtcBBEU5JdVy3yBtUfRMx7F2UDQs9V3KdqrcmGppc5VX",
+            "sign": "SIG_K1_KdWVRnpoYUh1XH1QhhyisAoqGysSLmue46r1J2pJjgSMN9944YADea3WSBnW2ify9BVsk2ipRVAXqRkaxkKernojX9Mfed",
+            "public_key": "EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C",
+            "status": 1,
+            "onchain_status": 1,
+            "create_time": "2019-03-15T15:13:09.000Z",
+            "fission_factor": 2000,
+            "cover": "",
+            "platform": "eos",
+            "is_original": null,
+            "channel_id": 1,
+            "fission_rate": 100,
+            "referral_rate": 0,
+            "uid": 170,
+            "is_recommend": 0,
+            "category_id": 0,
+            "hot_score": -814.6,
+            "comment_pay_point": 5,
+            "time_down": 1,
+            "require_holdtokens": 0,
+            "require_buy": 0,
+            "cc_license": null,
+            "editor_require_holdtokens": 0,
+            "ipfs_hide": 0
+        },
+        {
+            "id": 100482,
+            "username": "AS8aW2K4MNhPk9Wn93QQVYvYLF1QV9wNBt",
+            "author": "AS8aW2K4MNhPk9Wn93QQVYvYLF1QV9wNBt",
+            "title": "333333332",
+            "short_content": null,
+            "hash": "Qmbj7WJQMNcmWCziXFALRJ8N5a7rWCaJqyTNoLDDgL7FEf",
+            "sign": "SIG_K1_K1AgU8prp4P63FhxUKskXXRtt5B4ftqugMNfsQgjZxr59fUR7M94z8JSbEzaVboWhU4CEKeMfwEdoibwfoHojqpMCiHrdd",
+            "public_key": "EOS8BSbjn1TmusYbVf4GH2Khe31csTYssfguiTJAGtmDPsYVhAzqc",
+            "status": 0,
+            "onchain_status": 0,
+            "create_time": "2019-06-11T16:53:44.000Z",
+            "fission_factor": 2000,
+            "cover": "",
+            "platform": "ont",
+            "is_original": 0,
+            "channel_id": 1,
+            "fission_rate": 100,
+            "referral_rate": 0,
+            "uid": 234,
+            "is_recommend": 0,
+            "category_id": 0,
+            "hot_score": 3.58,
+            "comment_pay_point": 5,
+            "time_down": 0,
+            "require_holdtokens": 0,
+            "require_buy": 0,
+            "cc_license": null,
+            "editor_require_holdtokens": 0,
+            "ipfs_hide": 0
+        }
+    ]
+}
+```

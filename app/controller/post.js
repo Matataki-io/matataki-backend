@@ -8,11 +8,11 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
 
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
       return query.replace(
         /\:(\w+)/g,
-        function(txt, key) {
+        function (txt, key) {
           if (values.hasOwnProperty(key)) {
             return this.escape(values[key]);
           }
@@ -33,7 +33,7 @@ class PostController extends Controller {
       cover,
       is_original = 0,
       platform = 'eos',
-      tags = '',
+      tags = [],
       commentPayPoint = 0,
       shortContent = null,
       cc_license = null,
@@ -140,13 +140,7 @@ class PostController extends Controller {
       articleContent
     );
 
-    if (tags) {
-      let tag_arr = tags.split(',');
-      tag_arr = tag_arr.filter(x => {
-        return x !== '';
-      });
-      await ctx.service.post.create_tags(id, tag_arr);
-    }
+    await ctx.service.post.create_tags(id, tags);
 
     if (id > 0) {
       ctx.body = ctx.msg.success;
@@ -169,7 +163,7 @@ class PostController extends Controller {
       fissionFactor = 2000,
       cover,
       is_original = 0,
-      tags = '',
+      tags = [],
       shortContent = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
       requireToken = null,
@@ -306,11 +300,7 @@ class PostController extends Controller {
           htmlHash,
         });
 
-        let tag_arr = tags.split(',');
-        tag_arr = tag_arr.filter(x => {
-          return x !== '';
-        });
-        await ctx.service.post.create_tags(signId, tag_arr, true);
+        await ctx.service.post.create_tags(signId, tags, true);
 
         await conn.commit();
       } catch (err) {
@@ -394,18 +384,24 @@ class PostController extends Controller {
       page = 1,
       pagesize = 20,
       channel = null,
-      extra = null,
-      filter = 0,
+      /* extra = null,
+      filter = 0, */
     } = this.ctx.query;
+    const postData = await this.service.post.followedPostsFast(
+      page,
+      pagesize,
+      userid,
+      channel
+    );
 
-    const postData = await this.service.post.followedPosts(
+    /* const postData = await this.service.post.followedPosts(
       page,
       pagesize,
       userid,
       channel,
       extra,
       filter
-    );
+    ); */
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
@@ -702,8 +698,8 @@ class PostController extends Controller {
 
       const result = await this.app.mysql.query(
         'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count) VALUES (?, ?, 0, 0, 0, 0)'
-          + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
-        [ post.id, 1 ]
+        + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
+        [post.id, 1]
       );
 
       const updateSuccess = result.affectedRows !== 0;
@@ -1389,6 +1385,23 @@ class PostController extends Controller {
 
     ctx.body = ctx.msg.ipfsCatchFailed;
   }
+
+  async getHotestTags() {
+    const { ctx } = this;
+    const pageSize = ctx.query.pagesize ? parseInt(ctx.query.pagesize) : 10;
+    const pageNum = ctx.query.page ? parseInt(ctx.query.page) : 1;
+    const arr = await this.service.post.getHotestTags(pageSize, (pageNum-1) * pageSize);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = arr;
+  }
+  async getTagsById() {
+    const { ctx } = this;
+    const id = ctx.query.id;
+    const arr = await this.service.post.getTagsById(id);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = arr;
+  }
+
 }
 
 module.exports = PostController;

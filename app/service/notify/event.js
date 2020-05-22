@@ -5,6 +5,7 @@ const moment = require('moment');
 // 表
 const EVENT_TABLE = 'notify_event';
 const EVENT_RECIPIENT_TABLE = 'notify_event_recipients';
+const EVENT_RECIPIENT_DESC_TABLE = 'notify_event_recipients_desc';
 
 /** 行为类型 */
 const ACTION_TYPES = [
@@ -140,34 +141,38 @@ class NotifyService extends Service {
   /** 通过uid获取聚合后的事件 */
   async getEventGgroupsByUid(page, pagesize, uid, startId) {
     const whereStart = [
-      startId ? ' And t2.id <= :startId' : '',
-      startId ? ' And c2.id <= :startId' : ''
+      startId ? ' AND t2.id <= :startId' : '',
+      startId ? ' AND c2.id <= :startId' : ''
     ]
     const sql = `
       SELECT
         t2.id,
-        MAX(t2.id) as end_id,
+        MIN(t2.id) as end_id,
         count(*) as total,
         t2.user_id,
         t2.action,
         t2.object_id,
         t2.object_type,
-        MAX(t2.remark) as remark,
-        MAX(t2.create_time) as create_time,
+        t2.remark,
+        t2.create_time,
         t1.state,
-        MAX(t1.read_time) as read_time
-      FROM ${EVENT_RECIPIENT_TABLE} t1
+        t1.read_time,
+        MIN(t2.user_id) as min_user_id,
+        MAX(t2.user_id) as max_user_id
+      FROM ${EVENT_RECIPIENT_DESC_TABLE} t1
       JOIN ${EVENT_TABLE} t2 ON t1.event_id = t2.id
       WHERE t1.user_id = :uid${whereStart[0]}
-      GROUP BY t2.action, t2.object_id, t2.object_type, t1.state, DATE(create_time)
-      ORDER BY state ASC, end_id DESC
+      GROUP BY t2.action, t2.object_id, object_type, DATE(create_time)
+      ORDER BY id DESC
       LIMIT :offset, :limit;
 
-      select count(1) as count from(SELECT count(1)
-      FROM ${EVENT_RECIPIENT_TABLE} c1
-      JOIN ${EVENT_TABLE} c2 ON c1.event_id = c2.id
-      WHERE c1.user_id = :uid${whereStart[1]}
-      GROUP BY c2.action, c2.object_id, c2.object_type, c1.state, DATE(create_time)) a;
+      SELECT count(1) as count FROM(
+        SELECT count(1)
+        FROM ${EVENT_RECIPIENT_DESC_TABLE} c1
+        JOIN ${EVENT_TABLE} c2 ON c1.event_id = c2.id
+        WHERE c1.user_id = :uid${whereStart[1]}
+        GROUP BY c2.action, c2.object_id, object_type, DATE(create_time)
+      ) a;
     `;
 
     try {
@@ -191,18 +196,119 @@ class NotifyService extends Service {
     }
   }
 
-  /** 给定一个区间，将区间内的事件设为已读（区间包括start本身，不包括end） */
-  async haveReadByRegion(uid, startId, endId) {
+  /** 获取一个区间内特定类型的事件列表 */
+  async getEventByRegion(page, pagesize, uid, startId, endId, action, objectId, objectType) {
+    const sql = `
+      SELECT
+        t2.id,
+        t2.user_id,
+        t2.action,
+        t2.object_id,
+        t2.object_type,
+        t2.remark,
+        t2.create_time,
+        t1.state,
+        t1.read_time
+      FROM ${EVENT_RECIPIENT_DESC_TABLE} t1
+      JOIN ${EVENT_TABLE} t2 ON t1.event_id = t2.id
+      WHERE t1.user_id = :uid
+        AND t2.id <= :startId
+        AND t2.id >= :endId
+        AND action = :action
+        AND object_id = :objectId
+        AND object_type = :objectType
+      ORDER BY id DESC
+      LIMIT :offset, :limit;
+
+      SELECT
+        count(1) as count
+      FROM ${EVENT_RECIPIENT_DESC_TABLE} c1
+      JOIN ${EVENT_TABLE} c2 ON c1.event_id = c2.id
+      WHERE c1.user_id = :uid
+        AND c2.id <= :startId
+        AND c2.id >= :endId
+        AND action = :action
+        AND object_id = :objectId
+        AND object_type = :objectType;
+    `;
+    try {
+      const result = await this.app.mysql.query(sql, {
+        offset: (page - 1) * pagesize,
+        limit: pagesize,
+        uid,
+        startId,
+        endId,
+        action,
+        objectId,
+        objectType
+      });
+      return {
+        count: result[1][0].count,
+        list: result[0]
+      }
+    }
+    catch(e) {
+      this.logger.error(e);
+      return {
+        count: 0,
+        list: []
+      }
+    }
+  }
+
+    /** 通过uid获取未读消息数量 */
+    async getUnreadQuantity(uid) {
+      const sql = `
+        SELECT count(1) as count FROM (
+          SELECT count(1), c1.state
+          FROM notify_event_recipients_desc c1
+          JOIN notify_event c2 ON c1.event_id = c2.id
+          WHERE c1.user_id = :uid
+          GROUP BY c2.action, c2.object_id, object_type, DATE(create_time)
+        ) a WHERE a.state = 0;
+      `;
+
+      try {
+        const result = await this.app.mysql.query(sql, { uid });
+        return result[0].count
+      }
+      catch(e) {
+        this.logger.error(e);
+        return 0
+      }
+    }
+
+  /** 数组内的事件设为已读 */
+  async haveReadByIdArray(uid, ids) {
     const sql = `
       UPDATE ${EVENT_RECIPIENT_TABLE}
       SET state = 1, read_time = :readTime
-      WHERE user_id = :uid AND state = 0 AND event_id >= :startId AND event_id < :endId
+      WHERE user_id = :uid AND state = 0 AND event_id IN(:ids)
     `;
     try {
       const result = await this.app.mysql.query(sql, {
         uid,
-        startId,
-        endId,
+        ids,
+        readTime: moment().format('YYYY-MM-DD HH:mm:ss')
+      });
+      return result.affectedRows;
+    }
+    catch(e) {
+      this.logger.error(e);
+      return false;
+    }
+  }
+
+  /** 全部标记为已读 */
+  async haveReadAll(uid) {
+    const sql = `
+      UPDATE ${EVENT_RECIPIENT_TABLE}
+      SET state = 1, read_time = :readTime
+      WHERE user_id = :uid AND state = 0
+    `;
+    try {
+      const result = await this.app.mysql.query(sql, {
+        uid,
         readTime: moment().format('YYYY-MM-DD HH:mm:ss')
       });
       return result.affectedRows;

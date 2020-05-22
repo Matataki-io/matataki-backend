@@ -65,6 +65,7 @@ module.exports = app => {
   // 通过文章ID获取 IPFS 信息
   router.get('/p/:id/ipfs', passport.verify, controller.post.getIpfsById);
 
+
   // 按照打赏金额排序的文章列表(新, 可按照币种排序)
   router.get('/posts/amountRanking', passport.verify, controller.post.getAmountRanking);
   // 按照打赏次数排序的文章列表(新)
@@ -128,6 +129,8 @@ module.exports = app => {
   router.post('/preview', passport.authorize, controller.drafts.previewSetId);
   // 获取查看草稿的内容
   router.get('/preview/:id', passport.verify, controller.drafts.previewDraft);
+  // 查看草稿预览时间
+  router.get('/previewTime/:id', passport.verify, controller.drafts.previewDraftTime);
 
 
   // -------------------------------- 用户系统 --------------------------------
@@ -484,9 +487,19 @@ module.exports = app => {
   router.get('/dao/skill/options', passport.verify, controller.dao.skill.options);
   router.get('/dev/down/posts', passport.verify, controller.downloader.down);
 
-  // 获取消息列表
-  router.get('/notify/event', passport.authorize, controller.notify.getUserEvents);
+  // 获取未读消息数量
+  router.get('/notify/event/quantity', passport.authorize, controller.notify.getUnreadQuantity);
+  // 获取汇总后的消息列表
+  router.get('/notify/event', passport.authorize, controller.notify.getEventGgroupsByUid);
+  // 获取一个区间内满足特定条件的消息列表
+  router.get('/notify/event/detail', passport.authorize, controller.notify.getEventByRegion);
   // 标记已读
   router.put('/notify/event', passport.authorize, controller.notify.haveRead);
-};
+  // 全部标记已读
+  router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
 
+  // 获取最热的一些标签
+  router.get('/tags/hotest', passport.verify, controller.post.getHotestTags);
+    // 获取一个文章的所有标签
+    router.get('/tags/get_by_post', passport.verify, controller.post.getTagsById);
+};

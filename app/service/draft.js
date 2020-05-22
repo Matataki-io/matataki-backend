@@ -106,14 +106,7 @@ class DraftService extends Service {
           // 分配标签
           let tag_arr = draftContent.tags.split(',');
           tag_arr = tag_arr.filter(x => { return x !== ''; });
-          let tags = [];
-          if (tag_arr.length > 0) {
-            tags = await await this.app.mysql.query(
-              'select id, name from tags where id in (?) ',
-              [ tag_arr ]
-            );
-          }
-          draftContent.tags = tags;
+          draftContent.tags = tag_arr;
 
           return {
             code: 0,
@@ -139,6 +132,28 @@ class DraftService extends Service {
       };
     }
 
+  }
+
+  async previewDraftTime(id) {
+    try {
+      const time = await this.app.redis.ttl(`preview:${id}`);
+      if (time) {
+        return {
+          code: 0,
+          data: time,
+        };
+      }
+      return {
+        code: -1,
+      };
+
+    } catch (e) {
+      console.log(e);
+      this.ctx.logger.error(e);
+      return {
+        code: -1,
+      };
+    }
   }
 
 }
