@@ -3680,11 +3680,11 @@ url: /search/token
 
 
 ### 获取最热的k个标签
-* GET /tags/hotest?pageSize=3&pageNum=0
+* GET /tags/hotest?pagesize=3&page=0
 * 响应状态码： 200
 * 参数:
-  - pageSize,每次从0开始
-  - pageNum,偏移量，从0开始
+  - pagesize,返回的数量
+  - page,偏移量，从0开始
 * 返回内容：
 ```json
 {
@@ -3732,12 +3732,12 @@ url: /search/token
 ```
 
 ### 获取某个标签下的所有文章
-* GET /tags/post?id=1&pageSize=2&pageNum=0
+* GET /tags/post?id=1&pagesize=2&page=0
 * 响应状态码： 200
 * 参数:
   - id,标签的id
-  - pageSize,一次返回的数量
-  - pageNum,偏移量，从0开始
+  - pagesize,返回的数量
+  - page,偏移量，从0开始
 * 返回内容：所有文章的id
 ```json
 {
