@@ -479,9 +479,7 @@ class PostService extends Service {
     if (posts.length === 0) {
       return { count: 0, list: [] };
     }
-    const emailMask = str => str.replace(
-      /(?<=.)[^@\n](?=[^@\n]*?@)|(?:(?<=@.)|(?!^)\G(?=[^@\n]*$)).(?=.*\.)/gm,
-      '*');
+    const emailMask = this.ctx.helper.emailMask;
     const list = posts.map(post => {
       const author = emailMask(post.author);
       return { ...post, author };
@@ -683,9 +681,7 @@ class PostService extends Service {
       });
     }
     // Frank - 这里要展开屏蔽邮箱地址的魔法了
-    const emailMask = str => str.replace(
-      /(?<=.)[^@\n](?=[^@\n]*?@)|(?:(?<=@.)|(?!^)\G(?=[^@\n]*$)).(?=.*\.)/gm,
-      '*');
+    const emailMask = this.ctx.helper.emailMask;
     const list = posts.map(post => {
       const author = emailMask(post.author);
       return { ...post, author };
@@ -804,9 +800,7 @@ class PostService extends Service {
       });
     }
     // Frank - 这里要展开屏蔽邮箱地址的魔法了
-    const emailMask = str => str.replace(
-      /(?<=.)[^@\n](?=[^@\n]*?@)|(?:(?<=@.)|(?!^)\G(?=[^@\n]*$)).(?=.*\.)/gm,
-      '*');
+    const emailMask = this.ctx.helper.emailMask;
     const list = posts.map(post => {
       const author = emailMask(post.author);
       return { ...post, author };
@@ -888,9 +882,7 @@ class PostService extends Service {
       });
     }
     // Frank - 这里要展开屏蔽邮箱地址的魔法了
-    const emailMask = str => str.replace(
-      /(?<=.)[^@\n](?=[^@\n]*?@)|(?:(?<=@.)|(?!^)\G(?=[^@\n]*$)).(?=.*\.)/gm,
-      '*');
+    const emailMask = this.ctx.helper.emailMask;
     const list = posts.map(post => {
       const author = emailMask(post.author);
       return { ...post, author };
