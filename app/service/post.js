@@ -112,8 +112,8 @@ class PostService extends Service {
     }
   }
   // 根据tag id获取包含文章id的数组,一次显示k个，with offset
-  async getIdArrayByTag(tag,k,offset) {
-    const arr= await this.app.mysql.query('select posts.* from posts inner join post_tag on post_tag.tid=? and posts.id=post_tag.sid limit ?,?', [tag,offset,k]);
+  async getIdArrayByTag(tag, k, offset) {
+    const arr = await this.app.mysql.query('select posts.* from posts inner join post_tag on post_tag.tid=? and posts.id=post_tag.sid limit ?,?', [tag, offset, k]);
     return arr;
   }
   // 根据文章id获取该文章的所有tag
@@ -122,8 +122,8 @@ class PostService extends Service {
       [sid]);
   }
   // 获取最热门的k个标签,with offset
-  async getHotestTags(k,offset) {
-    return await this.app.mysql.query('select * from tags order by num desc limit ?,?', [offset,k]);
+  async getHotestTags(k, offset) {
+    return await this.app.mysql.query('select * from tags order by num desc limit ?,?', [offset, k]);
   }
 
   // 根据hash获取文章
