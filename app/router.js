@@ -498,8 +498,6 @@ module.exports = app => {
 
   // 获取最热的一些标签
   router.get('/tags/hotest', passport.verify, controller.post.getHotestTags);
-  // 获取一个文章的所有标签
-  router.get('/tags/get_by_post', passport.verify, controller.post.getTagsById);
   // 获取一个标签下的所有文章
   router.get('/tags/post', passport.verify, controller.post.getIdArrayByTag);
 };

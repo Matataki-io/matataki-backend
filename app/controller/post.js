@@ -1401,15 +1401,6 @@ class PostController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = arr;
   }
-  async getIdArrayByTag() {
-    const { ctx } = this;
-    const id = ctx.query.id;
-    const pageSize = ctx.query.pagesize ? parseInt(ctx.query.pagesize) : 10;
-    const pageNum = ctx.query.page ? parseInt(ctx.query.page) : 1;
-    const arr = await this.service.post.getIdArrayByTag(id, pageSize, (pageNum-1) * pageSize);
-    ctx.body = ctx.msg.success;
-    ctx.body.data = arr;
-  }
 
 }
 
