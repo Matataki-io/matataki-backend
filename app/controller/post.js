@@ -1382,8 +1382,9 @@ class PostController extends Controller {
 
   async getHotestTags() {
     const { ctx } = this;
-    const num = parseInt(ctx.query.num);
-    const arr = await this.service.post.getHotestTags(num);
+    const pageSize = parseInt(ctx.query.pageSize);
+    const pageNum = parseInt(ctx.query.pageNum);
+    const arr = await this.service.post.getHotestTags(pageSize,pageNum*pageSize);
     ctx.body = ctx.msg.success;
     ctx.body.data = arr;
   }
@@ -1397,7 +1398,9 @@ class PostController extends Controller {
   async getIdArrayByTag() {
     const { ctx } = this;
     const id = ctx.query.id;
-    const arr = await this.service.post.getIdArrayByTag(id);
+    const pageSize = parseInt(ctx.query.pageSize);
+    const pageNum = parseInt(ctx.query.pageNum);
+    const arr = await this.service.post.getIdArrayByTag(id,pageSize,pageNum*pageSize);
     ctx.body = ctx.msg.success;
     ctx.body.data = arr;
   }
