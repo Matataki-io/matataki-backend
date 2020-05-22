@@ -33,7 +33,7 @@ class PostController extends Controller {
       cover,
       is_original = 0,
       platform = 'eos',
-      tags = '',
+      tags = [],
       commentPayPoint = 0,
       shortContent = null,
       cc_license = null,
@@ -140,9 +140,7 @@ class PostController extends Controller {
       articleContent
     );
 
-    if (tags.length > 0) {
-      await ctx.service.post.create_tags(id, tags);
-    }
+    await ctx.service.post.create_tags(id, tags);
 
     if (id > 0) {
       ctx.body = ctx.msg.success;
@@ -165,7 +163,7 @@ class PostController extends Controller {
       fissionFactor = 2000,
       cover,
       is_original = 0,
-      tags = '',
+      tags = [],
       shortContent = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
       requireToken = null,
