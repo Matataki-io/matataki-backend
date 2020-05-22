@@ -11,7 +11,7 @@ class NotificationController extends Controller {
   /** 获取汇总后的消息内容 */
   async getEventGgroupsByUid() {
     const ctx = this.ctx;
-    const {pageSize: pagesize = 20, page = 1, startId = 0} = ctx.query;
+    const {pagesize = 20, page = 1, startId = 0} = ctx.query;
     // 获取汇总后的消息列表
     const eventList = await this.service.notify.event.getEventGgroupsByUid(parseInt(page), parseInt(pagesize), ctx.user.id, parseInt(startId));
 
@@ -106,6 +106,16 @@ class NotificationController extends Controller {
     else ctx.body = ctx.msg.failure;
   }
 
+  /** 全部标记为已读 */
+  async haveReadAll() {
+    const ctx = this.ctx;
+    const result = await this.service.notify.event.haveReadAll(ctx.user.id);
+    if(result !== false) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = result;
+    }
+    else ctx.body = ctx.msg.failure;
+  }
 }
 
 module.exports = NotificationController;

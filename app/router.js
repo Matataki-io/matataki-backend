@@ -495,6 +495,8 @@ module.exports = app => {
   router.get('/notify/event/detail', passport.authorize, controller.notify.getEventByRegion);
   // 标记已读
   router.put('/notify/event', passport.authorize, controller.notify.haveRead);
+  // 全部标记已读
+  router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
 
   // 获取最热的一些标签
   router.get('/tags/hotest', passport.verify, controller.post.getHotestTags);
