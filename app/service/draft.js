@@ -134,6 +134,28 @@ class DraftService extends Service {
 
   }
 
+  async previewDraftTime(id) {
+    try {
+      const time = await this.app.redis.ttl(`preview:${id}`);
+      if (time) {
+        return {
+          code: 0,
+          data: time,
+        };
+      }
+      return {
+        code: -1,
+      };
+
+    } catch (e) {
+      console.log(e);
+      this.ctx.logger.error(e);
+      return {
+        code: -1,
+      };
+    }
+  }
+
 }
 
 module.exports = DraftService;

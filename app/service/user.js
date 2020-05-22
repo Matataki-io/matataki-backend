@@ -237,19 +237,23 @@ class UserService extends Service {
 
       ids = await this.app.redis.srandmember('user:recommend', amount);
     }
+    const users = await this.app.mysql.query('SELECT id, username, email, nickname, avatar, introduction FROM users WHERE id IN (:ids);', {
+      ids,
+    });
 
     const followKey = `user:${current_user}:follow_set`;
     const followerKey = `user:${current_user}:follower_set`;
 
-    const result = [];
+    // const result = [];
 
-    for (const id of ids) {
-      const info = await this.app.redis.hgetall(`user:${id}:info`);
+    for (const info of users) {
+      const id = info.id;
+      /* const info = await this.app.redis.hgetall(`user:${id}:info`);
 
       info.id = id;
 
       if (info.nickname === '') info.nickname = null;
-      if (info.avatar === '') info.avatar = null;
+      if (info.avatar === '') info.avatar = null; */
 
       if (current_user != null) {
         info.is_follow = await this.app.redis.sismember(followKey, id);
@@ -259,10 +263,10 @@ class UserService extends Service {
         info.is_fan = false;
       }
 
-      result.push(info);
+      // result.push(info);
     }
 
-    return result;
+    return users;
   }
 
   async setProfile(userid, nickname, introduction, accept) {

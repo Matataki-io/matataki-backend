@@ -207,7 +207,7 @@ class PostService extends Service {
   */
   async getById(id) {
     const posts = await this.app.mysql.query(
-      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
+      'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, ipfs_hide,'
       + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy, cc_license FROM posts WHERE id = ?;',
       [id]
     );
@@ -436,6 +436,60 @@ class PostService extends Service {
 
     return { count: amount[0].count, list: postList };
 
+  }
+  async followedPostsFast(page = 1, pagesize = 20, userid = null, channel = 1) {
+    const followKey = `user:${userid}:follow_set`;
+    const followIds = await this.app.redis.smembers(followKey);
+    if (followIds === null || followIds.length <= 0) {
+      return {
+        count: 0,
+        list: [],
+      };
+    }
+    const sql = `
+    SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
+    b.nickname, b.avatar, 
+    c.real_read_count AS \`read\`, c.likes,
+
+    t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
+    t7.id as token_id, t6.amount as token_amount, t7.name as token_name, t7.symbol as token_symbol, t7.decimals  as token_decimals
+
+    FROM posts a
+    LEFT JOIN users b ON a.uid = b.id 
+    LEFT JOIN post_read_count c ON a.id = c.post_id 
+
+    LEFT JOIN product_prices t5
+    ON a.id = t5.sign_id
+    LEFT JOIN post_minetokens t6
+    ON a.id = t6.sign_id
+    LEFT JOIN minetokens t7
+    ON t7.id = t6.token_id 
+
+    WHERE a.uid IN (:uids) AND a.\`status\` = 0 AND a.channel_id = :channel
+    ORDER BY a.create_time DESC
+    LIMIT :start, :end;
+
+    SELECT COUNT(*) AS count FROM posts a
+    WHERE a.uid IN (:uids) AND a.\`status\` = 0 AND a.channel_id = :channel;
+    `;
+    const queryResult = await this.app.mysql.query(
+      sql,
+      { start: (page - 1) * pagesize, end: 1 * pagesize, uids: followIds, channel }
+    );
+
+    const posts = queryResult[0];
+    const amount = queryResult[1];
+    if (posts.length === 0) {
+      return { count: 0, list: [] };
+    }
+    const emailMask = str => str.replace(
+      /(?<=.)[^@\n](?=[^@\n]*?@)|(?:(?<=@.)|(?!^)\G(?=[^@\n]*$)).(?=.*\.)/gm,
+      '*');
+    const list = posts.map(post => {
+      const author = emailMask(post.author);
+      return { ...post, author };
+    });
+    return { count: amount[0].count, list };
   }
 
   async scoreRank(page = 1, pagesize = 20, filter = 7) {
