@@ -244,7 +244,7 @@ class SearchService extends Service {
     const post = await this.app.mysql.get('posts', { id: postid });
 
     const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
-    this.logger.error('SearchService:: importPost: data %j', {
+    /* this.logger.error('SearchService:: importPost: data %j', {
       id: postid,
       index: this.config.elasticsearch.indexPosts,
       body: {
@@ -265,17 +265,17 @@ class SearchService extends Service {
         channel_id: post.channel_id,
         content,
       },
-    });
+    }); */
     try {
       await elaClient.index({
         id: postid,
         index: this.config.elasticsearch.indexPosts,
         body: {
           id: postid,
-          create_time: post.create_time,
-          title: post.title,
-          channel_id: post.channel_id,
+          create_time: moment(),
+          title,
           content,
+          channel_id: 1,
         },
       });
     } catch (err) {
