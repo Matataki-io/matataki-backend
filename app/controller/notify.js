@@ -8,18 +8,26 @@ class NotificationController extends Controller {
   * 有了具体需求之后再做正式的。
   */
 
-  /** 获取汇总后的消息内容 */
+  /** 
+   * 获取汇总后的消息内容 
+   * @startId 【可选】查询起点id （使用这个参数以避免新消息打乱分页，传入0不会生效）
+   * @actions 【可选】筛选消息类型，传入一个string数组
+   * @filterUnread 【可选】只看未读消息  0\1
+   */
   async getEventGgroupsByUid() {
     const ctx = this.ctx;
-    const {pagesize = 20, page = 1, startId = 0} = ctx.query;
+    let {pagesize = 20, page = 1, startId = 0, actions, filterUnread} = ctx.query;
+
+    actions = actions ? JSON.parse(actions) : undefined;
     // 获取汇总后的消息列表
-    const eventList = await this.service.notify.event.getEventGgroupsByUid(parseInt(page), parseInt(pagesize), ctx.user.id, parseInt(startId));
+    const eventList = await this.service.notify.event.getEventGgroupsByUid(parseInt(page), parseInt(pagesize), ctx.user.id, parseInt(startId), actions, parseInt(filterUnread));
 
     // 汇总消息中所需信息的数据库索引
     let userIdSet = new Set();
     let postIdSet = new Set();
     let commentIdSet = new Set();
     eventList.list.forEach(item => {
+      userIdSet.add(item.user_id);
       userIdSet.add(item.min_user_id);
       userIdSet.add(item.max_user_id);
       switch(item.object_type) {
