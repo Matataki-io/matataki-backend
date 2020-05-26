@@ -138,13 +138,19 @@ class NotifyService extends Service {
     }
   }
 
-  /** 通过uid获取聚合后的事件 */
-  async getEventGgroupsByUid(page, pagesize, uid, startId) {
+  /** 
+   * 通过uid获取聚合后的事件
+   * @uid 用户id
+   * @startId 【可选】查询起点id （使用这个参数以避免新消息打乱分页，传入0不会生效）
+   * @actions 【可选】筛选消息类型，传入一个string数组
+   * @filterUnread 【可选】只看未读消息
+  */
+  async getEventGgroupsByUid(page, pagesize, uid, startId, actions = ACTION_TYPES, filterUnread = false) {
     const whereStart = [
       startId ? ' AND t2.id <= :startId' : '',
       startId ? ' AND c2.id <= :startId' : ''
     ]
-    const sql = `
+    let sqlList = `
       SELECT
         t2.id,
         MIN(t2.id) as end_id,
@@ -161,25 +167,36 @@ class NotifyService extends Service {
         MAX(t2.user_id) as max_user_id
       FROM ${EVENT_RECIPIENT_DESC_TABLE} t1
       JOIN ${EVENT_TABLE} t2 ON t1.event_id = t2.id
-      WHERE t1.user_id = :uid${whereStart[0]}
+      WHERE t1.user_id = :uid AND t2.action IN(:actions)${whereStart[0]}
       GROUP BY t2.action, t2.object_id, object_type, DATE(create_time)
       ORDER BY id DESC
-      LIMIT :offset, :limit;
+      LIMIT :offset, :limit
+    `;
 
+    let sqlCount = `
       SELECT count(1) as count FROM(
-        SELECT count(1)
+        SELECT count(1), c1.state
         FROM ${EVENT_RECIPIENT_DESC_TABLE} c1
         JOIN ${EVENT_TABLE} c2 ON c1.event_id = c2.id
-        WHERE c1.user_id = :uid${whereStart[1]}
+        WHERE c1.user_id = :uid AND c2.action IN(:actions)${whereStart[1]}
         GROUP BY c2.action, c2.object_id, object_type, DATE(create_time)
-      ) a;
+      ) a
     `;
+
+    // 只看未读
+    if(filterUnread) {
+      sqlList = `SELECT * FROM (${sqlList}) a WHERE a.state = 0`;
+      sqlCount += ' WHERE a.state = 0';
+    };
+
+    const sql = `${sqlList}; ${sqlCount};`
 
     try {
       const result = await this.app.mysql.query(sql, {
         offset: (page - 1) * pagesize,
         limit: pagesize,
         uid,
+        actions,
         startId
       });
       return {
