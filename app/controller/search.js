@@ -197,6 +197,30 @@ class SearchController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
   }
+  async searchTag() {
+    const ctx = this.ctx;
+    const { word = 'smart', page = 1, pagesize = 10 } = ctx.query;
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    if (word.length > 20) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    // 记录搜索结果，type：6代表tag
+    await this.service.search.writeLog(word, 6);
+    const result = await this.service.search.serachTag(word, page, pagesize);
+
+    if (!result) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
 }
 
 module.exports = SearchController;

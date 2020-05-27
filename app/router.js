@@ -472,6 +472,7 @@ module.exports = app => {
   router.get('/search/share', passport.verify, controller.search.searchShare);
   router.get('/search/post', passport.verify, controller.search.search);
   router.get('/search/user', passport.verify, controller.search.searchUser);
+  router.get('/search/tag', passport.verify, controller.search.searchTag);
 
   // router.put('/history/user', passport.authorize, controller.history.update);
   router.get('/history/user', passport.authorize, controller.history.index);

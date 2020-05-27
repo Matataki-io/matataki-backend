@@ -105,6 +105,11 @@ class PostService extends Service {
           });
           tag = await this.app.mysql.get('tags', { name });
         }
+        // 导入es
+        await this.service.search.importTag({
+          id: tag.id,
+          name,
+        });
         await this.app.mysql.insert('post_tag', { sid, tid: tag.id });
       }
     } catch (err) {

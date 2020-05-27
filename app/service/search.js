@@ -536,6 +536,89 @@ class SearchService extends Service {
       return null;
     }
   }
+  async importTag({ id, name }) {
+    this.logger.info('SearchService:: importTag: start ', { id, name });
+
+    const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
+    try {
+      await elaClient.index({
+        id,
+        index: this.config.elasticsearch.indexTags,
+        body: {
+          id,
+          create_time: moment(),
+          name,
+        },
+      });
+    } catch (err) {
+      this.logger.error('SearchService:: importToken: error ', err);
+      return null;
+    }
+  }
+  async serachTag(keyword, page = 1, pagesize = 10) {
+    let tagQuery;
+    const elasticClient = new elastic.Client({ node: this.config.elasticsearch.host });
+    const searchProject = {
+      index: this.config.elasticsearch.indexTags,
+      from: pagesize * (page - 1),
+      size: 1 * pagesize,
+      body: {
+        query: {
+          bool: {
+            should: [
+              { match: { name: keyword } },
+            ],
+          },
+        },
+        highlight: {
+          fields: {
+            name: {},
+          },
+        },
+      },
+    };
+
+    try {
+      tagQuery = await elasticClient.search(searchProject);
+    } catch (err) {
+      this.logger.error('SearchService:: SearchUser: error: ', err);
+      return null;
+    }
+
+    // const tokenids = [];
+    const count = tagQuery.body.hits.total.value;
+    const list = tagQuery.body.hits.hits;
+    return { count, list };
+
+    /* // 生成tokenids列表
+    for (let i = 0; i < list.length; i++) {
+      tokenids.push(list[i]._source.id);
+    }
+
+    if (tokenids.length === 0) {
+      return { count: 0, list: [] };
+    }
+
+    // 获取详情
+    const tokenList = await this.app.mysql.query(
+      `SELECT id, uid, \`name\`, symbol, decimals, total_supply, create_time, logo, brief, introduction, contract_address
+      FROM minetokens
+      WHERE id IN (:tokenids)
+      ORDER BY FIELD(id, :tokenids);`,
+      { tokenids }
+    );
+
+    // 填充高亮匹配信息
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].highlight.name) tokenList[i].name = list[i].highlight.name[0];
+      if (list[i].highlight.symbol) tokenList[i].symbol = list[i].highlight.symbol[0];
+      if (list[i].highlight.brief) tokenList[i].brief = list[i].highlight.brief[0];
+      if (list[i].highlight.introduction) tokenList[i].introduction = list[i].highlight.introduction[0];
+      if (list[i].highlight.contract_address) tokenList[i].contract_address = list[i].highlight.contract_address[0];
+    } */
+
+    // return { count, list: tokenList };
+  }
 }
 
 module.exports = SearchService;
