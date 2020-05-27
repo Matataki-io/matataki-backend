@@ -111,6 +111,12 @@ module.exports = app => {
   // -------------------------------- 标签系统 --------------------------------
   // 标签列表
   router.get('/tag/tags', passport.verify, controller.tag.tags);
+  // 获取最热的一些标签
+  router.get('/tags/hotest', passport.verify, controller.post.getHotestTags);
+  // 获取最新的标签
+  router.get('/tags/latest', passport.verify, controller.post.getLatestTags);
+  // 获取一个文章的所有标签
+  router.get('/tags/get_by_post', passport.verify, controller.post.getTagsById);
 
   // -------------------------------- 草稿系统 --------------------------------
   // 获取我的草稿箱列表 (need access token)
@@ -497,9 +503,4 @@ module.exports = app => {
   router.put('/notify/event', passport.authorize, controller.notify.haveRead);
   // 全部标记已读
   router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
-
-  // 获取最热的一些标签
-  router.get('/tags/hotest', passport.verify, controller.post.getHotestTags);
-    // 获取一个文章的所有标签
-    router.get('/tags/get_by_post', passport.verify, controller.post.getTagsById);
 };
