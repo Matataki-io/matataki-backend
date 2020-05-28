@@ -581,43 +581,38 @@ class SearchService extends Service {
     try {
       tagQuery = await elasticClient.search(searchProject);
     } catch (err) {
-      this.logger.error('SearchService:: SearchUser: error: ', err);
+      this.logger.error('SearchService:: serachTag: error: ', err);
       return null;
     }
 
-    // const tokenids = [];
+    const tagIds = [];
     const count = tagQuery.body.hits.total.value;
     const list = tagQuery.body.hits.hits;
-    return { count, list };
 
-    /* // 生成tokenids列表
+    // 生成tagIds列表
     for (let i = 0; i < list.length; i++) {
-      tokenids.push(list[i]._source.id);
+      tagIds.push(list[i]._source.id);
     }
 
-    if (tokenids.length === 0) {
+    if (tagIds.length === 0) {
       return { count: 0, list: [] };
     }
 
     // 获取详情
-    const tokenList = await this.app.mysql.query(
-      `SELECT id, uid, \`name\`, symbol, decimals, total_supply, create_time, logo, brief, introduction, contract_address
-      FROM minetokens
-      WHERE id IN (:tokenids)
-      ORDER BY FIELD(id, :tokenids);`,
-      { tokenids }
+    const tagList = await this.app.mysql.query(
+      `SELECT id, \`name\`, create_time, num
+      FROM tags
+      WHERE id IN (:tagIds)
+      ORDER BY FIELD(id, :tagIds);`,
+      { tagIds }
     );
 
     // 填充高亮匹配信息
     for (let i = 0; i < list.length; i++) {
-      if (list[i].highlight.name) tokenList[i].name = list[i].highlight.name[0];
-      if (list[i].highlight.symbol) tokenList[i].symbol = list[i].highlight.symbol[0];
-      if (list[i].highlight.brief) tokenList[i].brief = list[i].highlight.brief[0];
-      if (list[i].highlight.introduction) tokenList[i].introduction = list[i].highlight.introduction[0];
-      if (list[i].highlight.contract_address) tokenList[i].contract_address = list[i].highlight.contract_address[0];
-    } */
+      if (list[i].highlight.name) tagList[i].name = list[i].highlight.name[0];
+    }
 
-    // return { count, list: tokenList };
+    return { count, list: tagList };
   }
 }
 
