@@ -608,9 +608,21 @@ class PostController extends Controller {
   async getPostByTag() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20, extra = null, tagid } = this.ctx.query;
-
-    const postData = await this.service.post.getPostByTag(
+    const { page = 1, pagesize = 20, tagid, orderBy = 'create_time', order = 'desc' } = this.ctx.query;
+    const result = await this.service.tags.postList(
+      parseInt(page),
+      parseInt(pagesize),
+      tagid,
+      orderBy,
+      order
+    );
+    if (result === -1) {
+      this.ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    this.ctx.body = ctx.msg.success;
+    this.ctx.body.data = result;
+    /* const postData = await this.service.post.getPostByTag(
       page,
       pagesize,
       extra,
@@ -618,7 +630,7 @@ class PostController extends Controller {
     );
 
     this.ctx.body = ctx.msg.success;
-    this.ctx.body.data = postData;
+    this.ctx.body.data = postData; */
   }
 
   // 查看单篇文章
