@@ -74,7 +74,7 @@ async function createTag() {
             my_tokenizer: {
               type: 'edge_ngram',
               min_gram: 1,
-              max_gram: 10,
+              max_gram: 20,
               token_chars: [ 'letter', 'digit' ],
             },
           },
@@ -90,15 +90,15 @@ async function createTag() {
           },
           name: {
             type: 'text',
-            analyzer: 'ik_max_word',
+            analyzer: 'my_analyzer',
             search_analyzer: 'ik_max_word',
-            fields: {
+            /* fields: {
               english: {
                 type: 'text',
                 analyzer: 'my_analyzer',
                 search_analyzer: 'ik_max_word',
               },
-            },
+            }, */
           },
         },
       },
