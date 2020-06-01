@@ -1397,41 +1397,6 @@ class PostController extends Controller {
 
     ctx.body = ctx.msg.ipfsCatchFailed;
   }
-
-  async getHotestTags() {
-    const { ctx } = this;
-    try {
-      const pageSize = ctx.query.pagesize ? parseInt(ctx.query.pagesize) : 20;
-      const pageNum = ctx.query.page ? parseInt(ctx.query.page) : 1;
-      const arr = await this.service.post.getHotestTags(pageSize, (pageNum - 1) * pageSize);
-      ctx.body = ctx.msg.success;
-      ctx.body.data = arr;
-    } catch (e) {
-      this.logger.error(`getHotestTags: ${e}`);
-      ctx.body = ctx.msg.failure;
-    }
-  }
-  async getLatestTags() {
-    const { ctx } = this;
-    try {
-      const pageSize = ctx.query.pagesize ? parseInt(ctx.query.pagesize) : 20;
-      const pageNum = ctx.query.page ? parseInt(ctx.query.page) : 1;
-      const arr = await this.service.post.gteLatestTags(pageSize, (pageNum - 1) * pageSize);
-      ctx.body = ctx.msg.success;
-      ctx.body.data = arr;
-    } catch (e) {
-      this.logger.error(`getLatestTags: ${e}`);
-      ctx.body = ctx.msg.failure;
-    }
-  }
-  async getTagsById() {
-    const { ctx } = this;
-    const id = ctx.query.id;
-    const arr = await this.service.post.getTagsById(id);
-    ctx.body = ctx.msg.success;
-    ctx.body.data = arr;
-  }
-
 }
 
 module.exports = PostController;

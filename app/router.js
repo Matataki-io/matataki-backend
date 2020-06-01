@@ -112,11 +112,11 @@ module.exports = app => {
   // 标签列表
   router.get('/tag/tags', passport.verify, controller.tag.tags);
   // 获取最热的一些标签
-  router.get('/tags/hotest', passport.verify, controller.post.getHotestTags);
+  router.get('/tags/hotest', passport.verify, controller.tag.getHotestTags);
   // 获取最新的标签
-  router.get('/tags/latest', passport.verify, controller.post.getLatestTags);
+  router.get('/tags/latest', passport.verify, controller.tag.getLatestTags);
   // 获取一个文章的所有标签
-  router.get('/tags/get_by_post', passport.verify, controller.post.getTagsById);
+  router.get('/tags/get_by_post', passport.verify, controller.tag.getTagsById);
 
   // -------------------------------- 草稿系统 --------------------------------
   // 获取我的草稿箱列表 (need access token)
