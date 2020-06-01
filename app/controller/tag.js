@@ -46,6 +46,38 @@ class TagController extends Controller {
       data: result,
     };
   }
+
+  async getHotestTags() {
+    const { ctx } = this;
+    const pageSize = ctx.query.pagesize ? parseInt(ctx.query.pagesize) : 20;
+    const pageNum = ctx.query.page ? parseInt(ctx.query.page) : 1;
+    const result = await this.service.tags.getTagList(pageSize, (pageNum - 1) * pageSize, 'num', 'desc');
+    if (result === -1) {
+      this.ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
+  async getLatestTags() {
+    const { ctx } = this;
+    const pageSize = ctx.query.pagesize ? parseInt(ctx.query.pagesize) : 20;
+    const pageNum = ctx.query.page ? parseInt(ctx.query.page) : 1;
+    const result = await this.service.tags.getTagList(pageSize, (pageNum - 1) * pageSize, 'create_time', 'desc');
+    if (result === -1) {
+      this.ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
+  async getTagsById() {
+    const { ctx } = this;
+    const id = ctx.query.id;
+    const arr = await this.service.post.getTagsById(id);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = arr;
+  }
 }
 
 module.exports = TagController;

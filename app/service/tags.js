@@ -70,5 +70,37 @@ class TagService extends Service {
     });
     return { count: amount[0].count, list };
   }
+  async getTagList(k, offset, orderBy, order) {
+    if (![ 'create_time', 'num' ].includes(orderBy.toLowerCase())) return -1;
+    if (![ 'desc', 'asc' ].includes(order.toLowerCase())) return -1;
+    try {
+      const wheresql = ' WHERE p.`status` = 0 AND p.channel_id = 1';
+      const orderSql = ' ORDER BY ' + orderBy + ' ' + order;
+      const queryResult = await this.app.mysql.query(`
+        SELECT COUNT(DISTINCT sid) AS num, t.id, t.name, t.create_time, t.type FROM post_tag pt
+        LEFT JOIN tags t ON pt.tid = t.id
+        LEFT JOIN posts p ON p.id = pt.sid
+        ${wheresql}
+        GROUP BY tid
+        ${orderSql}
+        LIMIT ?,?;
+
+        SELECT COUNT(tid) as count 
+        FROM (
+        SELECT tid FROM post_tag pt
+        LEFT JOIN posts p ON p.id = pt.sid
+        ${wheresql}
+        GROUP BY tid
+        ) T;`, [ offset, k ]);
+      const list = queryResult[0];
+      const count = queryResult[1];
+      return { count: count[0].count, list };
+    } catch (error) {
+      return {
+        count: 0,
+        list: [],
+      };
+    }
+  }
 }
 module.exports = TagService;
