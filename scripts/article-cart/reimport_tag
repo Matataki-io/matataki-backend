@@ -1,0 +1,3 @@
+node tags_search.js delete
+node tags_search.js create
+node tags_search.js sync

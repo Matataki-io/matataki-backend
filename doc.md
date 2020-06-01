@@ -142,11 +142,9 @@
 * 参数
 * page: 页数，默认第一页
 * pagesize: 每页的数量， 默认20
-* extra: 需要额外返回的项目， 以逗号分割， 如short_content,others,aaaabc
 * tagid: 标签的id
-
-请求示例：
-* curl http://localhost:7001/posts/getPostByTag?page=1&extra=aa,short_content&tagid=10
+* orderBy: 排序，<?create_time | hot_score>
+* order: 升降序, <?desc | asc>
 
 响应示例：
 
@@ -155,26 +153,43 @@
   "code": 0,
   "message": "成功",
   "data": [
-    {
-      "id": 100571,
-      "uid": 207,
-      "author": "fromnrttolax",
-      "title": "use-html",
-      "hash": "QmXLApxE7F4LFPTFWQbLXDBhvg23WQKdvbiasD2WckfWwe",
-      "create_time": "2019-07-23T07:37:24.000Z",
-      "cover": "/image/2019/07/23/52d7074a63456337c91a0e715add92d7.png",
-      "nickname": "fromnrttolax",
-      "avatar": "/avatar/2019/07/12/b8fea8566aa0b6341060c37410ea628b.png",
-      "read": 14,
-      "eosvalue": 0,
-      "ups": 0,
-      "ontvalue": 0,
-      "tags": [
-        5
-      ],
-      "sale": 0,
-      "require_holdtokens": 0
-    }
+    "count": 18,
+    "list": [
+        {
+            "id": 100885,
+            "uid": 1046,
+            "author": "i********@q*.com",
+            "title": "2222",
+            "status": 0,
+            "hash": "QmSnpSDxNDfSncaJ39Uw2UsbVpkTsa8eBGWnh733kQvHzc",
+            "create_time": "2019-11-08T12:01:15.000Z",
+            "cover": "/image/2019/11/08/3468837847f811f745cac5d6c83b3d9c.png",
+            "require_holdtokens": 0,
+            "require_buy": 0,
+            "short_content": "",
+            "nickname": "hi",
+            "avatar": "/avatar/2019/09/24/12a1bb40b7b336bac86003ebd01776b8.jpeg",
+            "read": 515,
+            "likes": 2,
+            "pay_platform": null,
+            "pay_symbol": null,
+            "pay_price": null,
+            "pay_decimals": null,
+            "pay_stock_quantity": null,
+            "token_id": null,
+            "token_amount": null,
+            "token_name": null,
+            "token_symbol": null,
+            "token_decimals": null,
+            "tags": [
+                {
+                    "id": 12,
+                    "name": "瞬Matataki",
+                    "type": "post"
+                }
+            ]
+        },
+    ]
   ]
 }
 ```

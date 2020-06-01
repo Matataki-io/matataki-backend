@@ -38,6 +38,10 @@ class ipfs extends Service {
       });
     });
   }
+  /**
+   * 上传的 AWS 的 IPFS 节点
+   * @param {object} file 文件
+   */
   async uploadToAws(file) {
     const { username, password } = this.config.awsIpfs;
     const fd = new FormData();
@@ -46,11 +50,32 @@ class ipfs extends Service {
       const { data } = await axios.post('https://ipfs.smartsignature.io/api/v0/add', fd, {
         auth: { username, password },
         headers: fd.getHeaders(),
+        timeout: 1000 * 10
       });
       return data.Hash;
     } catch (error) {
-      this.logger.info('uploadToAws failed', error);
+      if (error.message.indexOf('timeout') > -1) {
+        this.logger.error('uploadToAws failed', 'server down, retry with public node');
+        return this.uploadToPublic(file);
+      } else {
+        this.logger.error('uploadToAws failed', error);
+        throw error
+      }
     }
+  }
+
+  /**
+   * uploadToPublic, 上传到公共节点
+   * @param {object} file 文件对象
+   */
+  async uploadToPublic(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const { data } = await axios.post('https://ipfs.infura.io:5001/api/v0/add', fd, {
+        headers: fd.getHeaders(),
+        timeout: 1000 * 15
+      });
+    return data.Hash;
   }
 }
 

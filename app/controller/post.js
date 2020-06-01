@@ -8,11 +8,11 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
 
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
       return query.replace(
         /\:(\w+)/g,
-        function (txt, key) {
+        function(txt, key) {
           if (values.hasOwnProperty(key)) {
             return this.escape(values[key]);
           }
@@ -76,10 +76,10 @@ class PostController extends Controller {
 
     // 评论需要支付的积分
     const comment_pay_point = parseInt(commentPayPoint);
-    if (comment_pay_point > 99999 || comment_pay_point < 1) {
-      ctx.body = ctx.msg.pointCommentSettingError;
-      return;
-    }
+    // if (comment_pay_point > 99999 || comment_pay_point < 1) {
+    //   ctx.body = ctx.msg.pointCommentSettingError;
+    //   return;
+    // }
 
     const id = await ctx.service.post.publish(
       {
@@ -608,9 +608,21 @@ class PostController extends Controller {
   async getPostByTag() {
     const ctx = this.ctx;
 
-    const { page = 1, pagesize = 20, extra = null, tagid } = this.ctx.query;
-
-    const postData = await this.service.post.getPostByTag(
+    const { page = 1, pagesize = 20, tagid, orderBy = 'create_time', order = 'desc' } = this.ctx.query;
+    const result = await this.service.tags.postList(
+      parseInt(page),
+      parseInt(pagesize),
+      tagid,
+      orderBy,
+      order
+    );
+    if (result === -1) {
+      this.ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    this.ctx.body = ctx.msg.success;
+    this.ctx.body.data = result;
+    /* const postData = await this.service.post.getPostByTag(
       page,
       pagesize,
       extra,
@@ -618,7 +630,7 @@ class PostController extends Controller {
     );
 
     this.ctx.body = ctx.msg.success;
-    this.ctx.body.data = postData;
+    this.ctx.body.data = postData; */
   }
 
   // 查看单篇文章
@@ -699,7 +711,7 @@ class PostController extends Controller {
       const result = await this.app.mysql.query(
         'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count) VALUES (?, ?, 0, 0, 0, 0)'
         + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
-        [post.id, 1]
+        [ post.id, 1 ]
       );
 
       const updateSuccess = result.affectedRows !== 0;
@@ -1388,11 +1400,29 @@ class PostController extends Controller {
 
   async getHotestTags() {
     const { ctx } = this;
-    const pageSize = ctx.query.pagesize ? parseInt(ctx.query.pagesize) : 10;
-    const pageNum = ctx.query.page ? parseInt(ctx.query.page) : 1;
-    const arr = await this.service.post.getHotestTags(pageSize, (pageNum-1) * pageSize);
-    ctx.body = ctx.msg.success;
-    ctx.body.data = arr;
+    try {
+      const pageSize = ctx.query.pagesize ? parseInt(ctx.query.pagesize) : 20;
+      const pageNum = ctx.query.page ? parseInt(ctx.query.page) : 1;
+      const arr = await this.service.post.getHotestTags(pageSize, (pageNum - 1) * pageSize);
+      ctx.body = ctx.msg.success;
+      ctx.body.data = arr;
+    } catch (e) {
+      this.logger.error(`getHotestTags: ${e}`);
+      ctx.body = ctx.msg.failure;
+    }
+  }
+  async getLatestTags() {
+    const { ctx } = this;
+    try {
+      const pageSize = ctx.query.pagesize ? parseInt(ctx.query.pagesize) : 20;
+      const pageNum = ctx.query.page ? parseInt(ctx.query.page) : 1;
+      const arr = await this.service.post.gteLatestTags(pageSize, (pageNum - 1) * pageSize);
+      ctx.body = ctx.msg.success;
+      ctx.body.data = arr;
+    } catch (e) {
+      this.logger.error(`getLatestTags: ${e}`);
+      ctx.body = ctx.msg.failure;
+    }
   }
   async getTagsById() {
     const { ctx } = this;

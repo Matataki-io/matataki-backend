@@ -536,6 +536,84 @@ class SearchService extends Service {
       return null;
     }
   }
+  async importTag({ id, name }) {
+    this.logger.info('SearchService:: importTag: start ', { id, name });
+
+    const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
+    try {
+      await elaClient.index({
+        id,
+        index: this.config.elasticsearch.indexTags,
+        body: {
+          id,
+          create_time: moment(),
+          name,
+        },
+      });
+    } catch (err) {
+      this.logger.error('SearchService:: importToken: error ', err);
+      return null;
+    }
+  }
+  async serachTag(keyword, page = 1, pagesize = 10) {
+    let tagQuery;
+    const elasticClient = new elastic.Client({ node: this.config.elasticsearch.host });
+    const searchProject = {
+      index: this.config.elasticsearch.indexTags,
+      from: pagesize * (page - 1),
+      size: 1 * pagesize,
+      body: {
+        query: {
+          bool: {
+            should: [
+              { match: { name: keyword } },
+            ],
+          },
+        },
+        highlight: {
+          fields: {
+            name: {},
+          },
+        },
+      },
+    };
+
+    try {
+      tagQuery = await elasticClient.search(searchProject);
+    } catch (err) {
+      this.logger.error('SearchService:: serachTag: error: ', err);
+      return null;
+    }
+
+    const tagIds = [];
+    const count = tagQuery.body.hits.total.value;
+    const list = tagQuery.body.hits.hits;
+
+    // 生成tagIds列表
+    for (let i = 0; i < list.length; i++) {
+      tagIds.push(list[i]._source.id);
+    }
+
+    if (tagIds.length === 0) {
+      return { count: 0, list: [] };
+    }
+
+    // 获取详情
+    const tagList = await this.app.mysql.query(
+      `SELECT id, \`name\`, create_time, num
+      FROM tags
+      WHERE id IN (:tagIds)
+      ORDER BY FIELD(id, :tagIds);`,
+      { tagIds }
+    );
+
+    // 填充高亮匹配信息
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].highlight.name) tagList[i].name = list[i].highlight.name[0];
+    }
+
+    return { count, list: tagList };
+  }
 }
 
 module.exports = SearchService;
