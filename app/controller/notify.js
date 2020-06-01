@@ -3,10 +3,6 @@
 const Controller = require('../core/base_controller');
 
 class NotificationController extends Controller {
-  /*!
-  * 这两个请求的方法目前只是测试用的，并没有实际对接前端。
-  * 有了具体需求之后再做正式的。
-  */
 
   /** 
    * 获取汇总后的消息内容 
@@ -26,19 +22,26 @@ class NotificationController extends Controller {
     let userIdSet = new Set();
     let postIdSet = new Set();
     let commentIdSet = new Set();
+    let announcementIdSet = new Set();
     eventList.list.forEach(item => {
       userIdSet.add(item.user_id);
       userIdSet.add(item.min_user_id);
       userIdSet.add(item.max_user_id);
       switch(item.object_type) {
-        case 'article':
+        case 'article': // 文章
           postIdSet.add(item.object_id);
-        break
-        case 'user':
+          // 评论
+          if(item.action === 'comment') commentIdSet.add(Number(item.remark));
+        break;
+        case 'user': // 用户
           userIdSet.add(item.object_id);
-        break
+        break;
+        case 'announcement': // 公告
+          announcementIdSet.add(item.object_id);
+          // 引用文章
+          if(item.remark) postIdSet.add(item.remark);
+        break;
       }
-      if(item.action === 'comment') commentIdSet.add(Number(item.remark));
     })
 
     ctx.body = ctx.msg.success;
@@ -48,6 +51,7 @@ class NotificationController extends Controller {
       users: userIdSet.size ? await this.service.user.getUserList([...userIdSet], ctx.user.id) : [],
       posts: postIdSet.size ? await this.service.post.getByIdArray([...postIdSet]) : [],
       comments: commentIdSet.size ? await this.service.comment.getByIdArray([...commentIdSet]) : [],
+      announcements: announcementIdSet.size ? await this.service.notify.announcement.getByIdArray([...announcementIdSet]) : []
     };
   }
 
@@ -97,6 +101,9 @@ class NotificationController extends Controller {
   /** 获取未读消息数量 */
   async getUnreadQuantity() {
     const ctx = this.ctx;
+    // 初始化公告类型的通知
+    await this.service.notify.announcement.initRecipients(ctx.user.id);
+
     const result = await this.service.notify.event.getUnreadQuantity(ctx.user.id);
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
