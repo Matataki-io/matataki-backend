@@ -600,10 +600,12 @@ class SearchService extends Service {
 
     // 获取详情
     const tagList = await this.app.mysql.query(
-      `SELECT id, \`name\`, create_time, num
-      FROM tags
-      WHERE id IN (:tagIds)
-      ORDER BY FIELD(id, :tagIds);`,
+      `SELECT COUNT(DISTINCT sid) AS num, t.id, t.name, t.create_time, t.type FROM post_tag pt
+      LEFT JOIN tags t ON pt.tid = t.id
+      LEFT JOIN posts p ON p.id = pt.sid
+      WHERE p.\`status\` = 0 AND p.channel_id = 1 AND t.id IN (:tagIds)
+      GROUP BY tid
+      ORDER BY FIELD(t.id, :tagIds);`,
       { tagIds }
     );
 
