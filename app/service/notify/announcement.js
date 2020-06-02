@@ -18,8 +18,10 @@ class AnnouceService extends Service {
 
   /** 初始化用户的公告时间轴 */
   async initRecipients(uid) {
+    // 获取用户信息是为了筛掉用户注册前的公告内容
+    const users = await this.app.mysql.get('users', { id: uid });
     // 获公告消息和收件人列表的id
-    const announcementList = await this.service.notify.event.getAnnouncementStatus(uid);
+    const announcementList = await this.service.notify.event.getAnnouncementStatus(uid, users.create_time);
     // 过滤掉已经初始化收件人的公告
     const eventIds = announcementList.filter(age => !age.recipients_id).map(events => events.id);
     // 设定收件人

@@ -364,15 +364,15 @@ class NotifyService extends Service {
     }
   }
 
-  async getAnnouncementStatus(uid) {
+  async getAnnouncementStatus(uid, startTime) {
     const sql = `
       SELECT t1.id, t2.id AS recipients_id
       FROM ${EVENT_TABLE} t1
       LEFT JOIN ${EVENT_RECIPIENT_TABLE} t2 ON t1.id = t2.event_id AND t2.user_id = :uid
-      WHERE t1.action = 'annouce' AND t1.object_type = 'announcement'
+      WHERE t1.action = 'annouce' AND t1.object_type = 'announcement' AND t1.create_time > :startTime
     `;
     try {
-      const result = await this.app.mysql.query(sql, {uid});
+      const result = await this.app.mysql.query(sql, {uid, startTime});
       return result
     }
     catch(e) {
