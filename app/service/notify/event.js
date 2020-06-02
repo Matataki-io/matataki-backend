@@ -9,21 +9,26 @@ const EVENT_RECIPIENT_DESC_TABLE = 'notify_event_recipients_desc';
 
 /** 行为类型 */
 const ACTION_TYPES = [
-  'follow', //关注
   'comment', // 评论
-  'like' // 点赞
+  'like', // 点赞
+  'follow', //关注
+  'annouce' // 宣布
 ];
 
 /** 对象类型 */
 const OBJECT_TYPES = [
   'article', // 文章
-  'user' // 用户
+  'user', // 用户
+  'announcement' // 公告
 ];
-
 
 const isValidActionAndObject = (action, objectType) => ACTION_TYPES.includes(action) && OBJECT_TYPES.includes(objectType);
 
 class NotifyService extends Service {
+
+  /*********/
+  /** Set **/
+  /*********/
 
   /** 
    * 创建一个事件 
@@ -49,17 +54,17 @@ class NotifyService extends Service {
   }
 
   /** 
-   * 设定事件的接收者 
+   * 设定事件的接收者 (一个事件多个接收者)
    * @eventId 事件在数据库中的索引
    * @uids 事件接收者列表
    */
-  async setEventRecipient(eventId, uids) {
+  async setEventRecipients(eventId, uids) {
     if(!uids || uids.length < 1) return false
     try {
       let recipients = [];
       uids.forEach(uid => recipients.push({ event_id: eventId, user_id: uid}))
 
-      const result = await this.app.mysql.insert(EVENT_RECIPIENT_TABLE,recipients);
+      const result = await this.app.mysql.insert(EVENT_RECIPIENT_TABLE, recipients);
       return result.affectedRows
     }
     catch(e) {
@@ -68,6 +73,25 @@ class NotifyService extends Service {
     }
   }
 
+  /** 
+   * 设定事件的接收者 (多个事件一个接收者)
+   * @eventIds 事件在数据库中的索引列表
+   * @uid 事件接收者
+   */
+  async setEventArrayRecipient(eventIds, uid) {
+    if(!eventIds || eventIds.length < 1) return false
+    try {
+      let recipients = [];
+      eventIds.forEach(eventId => recipients.push({ event_id: eventId, user_id: uid}))
+
+      const result = await this.app.mysql.insert(EVENT_RECIPIENT_TABLE, recipients);
+      return result.affectedRows
+    }
+    catch(e) {
+      this.logger.error(e);
+      return false
+    }
+  }
 
   /** 
    * 发送一个事件 (整合了创建事件与设定接收者)
@@ -98,9 +122,54 @@ class NotifyService extends Service {
     const eventId = await this.createEvent(senderId, action, objectId, objectType, remark);
     if(!eventId) return false;
     // 设定事件的接收者
-    const result = await this.setEventRecipient(eventId, receivingIds);
+    const result = await this.setEventRecipients(eventId, receivingIds);
     return result.affectedRows > 0;
   }
+
+  /** 数组内的事件设为已读 */
+  async haveReadByIdArray(uid, ids) {
+    const sql = `
+      UPDATE ${EVENT_RECIPIENT_TABLE}
+      SET state = 1, read_time = :readTime
+      WHERE user_id = :uid AND state = 0 AND event_id IN(:ids)
+    `;
+    try {
+      const result = await this.app.mysql.query(sql, {
+        uid,
+        ids,
+        readTime: moment().format('YYYY-MM-DD HH:mm:ss')
+      });
+      return result.affectedRows;
+    }
+    catch(e) {
+      this.logger.error(e);
+      return false;
+    }
+  }
+
+  /** 全部标记为已读 */
+  async haveReadAll(uid) {
+    const sql = `
+      UPDATE ${EVENT_RECIPIENT_TABLE}
+      SET state = 1, read_time = :readTime
+      WHERE user_id = :uid AND state = 0
+    `;
+    try {
+      const result = await this.app.mysql.query(sql, {
+        uid,
+        readTime: moment().format('YYYY-MM-DD HH:mm:ss')
+      });
+      return result.affectedRows;
+    }
+    catch(e) {
+      this.logger.error(e);
+      return false;
+    }
+  }
+
+  /*********/
+  /** Get **/
+  /*********/
 
   /** 通过uid获取事件列表 */
   async getEventsByUid(page, pagesize, uid, unread = true) {
@@ -273,68 +342,45 @@ class NotifyService extends Service {
     }
   }
 
-    /** 通过uid获取未读消息数量 */
-    async getUnreadQuantity(uid) {
-      const sql = `
-        SELECT count(1) as count FROM (
-          SELECT count(1), c1.state
-          FROM notify_event_recipients_desc c1
-          JOIN notify_event c2 ON c1.event_id = c2.id
-          WHERE c1.user_id = :uid
-          GROUP BY c2.action, c2.object_id, object_type, DATE(create_time)
-        ) a WHERE a.state = 0;
-      `;
-
-      try {
-        const result = await this.app.mysql.query(sql, { uid });
-        return result[0].count
-      }
-      catch(e) {
-        this.logger.error(e);
-        return 0
-      }
-    }
-
-  /** 数组内的事件设为已读 */
-  async haveReadByIdArray(uid, ids) {
+  /** 通过uid获取未读消息数量 */
+  async getUnreadQuantity(uid) {
     const sql = `
-      UPDATE ${EVENT_RECIPIENT_TABLE}
-      SET state = 1, read_time = :readTime
-      WHERE user_id = :uid AND state = 0 AND event_id IN(:ids)
+      SELECT count(1) as count FROM (
+        SELECT count(1), c1.state
+        FROM ${EVENT_RECIPIENT_DESC_TABLE} c1
+        JOIN ${EVENT_TABLE} c2 ON c1.event_id = c2.id
+        WHERE c1.user_id = :uid
+        GROUP BY c2.action, c2.object_id, object_type, DATE(create_time)
+      ) a WHERE a.state = 0;
     `;
+
     try {
-      const result = await this.app.mysql.query(sql, {
-        uid,
-        ids,
-        readTime: moment().format('YYYY-MM-DD HH:mm:ss')
-      });
-      return result.affectedRows;
+      const result = await this.app.mysql.query(sql, { uid });
+      return result[0].count
     }
     catch(e) {
       this.logger.error(e);
-      return false;
+      return 0
     }
   }
 
-  /** 全部标记为已读 */
-  async haveReadAll(uid) {
+  async getAnnouncementStatus(uid, startTime) {
     const sql = `
-      UPDATE ${EVENT_RECIPIENT_TABLE}
-      SET state = 1, read_time = :readTime
-      WHERE user_id = :uid AND state = 0
+      SELECT t1.id, t2.id AS recipients_id
+      FROM ${EVENT_TABLE} t1
+      LEFT JOIN ${EVENT_RECIPIENT_TABLE} t2 ON t1.id = t2.event_id AND t2.user_id = :uid
+      WHERE t1.action = 'annouce' AND t1.object_type = 'announcement' AND t1.create_time > :startTime
     `;
     try {
-      const result = await this.app.mysql.query(sql, {
-        uid,
-        readTime: moment().format('YYYY-MM-DD HH:mm:ss')
-      });
-      return result.affectedRows;
+      const result = await this.app.mysql.query(sql, {uid, startTime});
+      return result
     }
     catch(e) {
       this.logger.error(e);
-      return false;
+      return false
     }
   }
+
 }
 
 module.exports = NotifyService;
