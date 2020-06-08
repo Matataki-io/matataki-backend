@@ -33,7 +33,7 @@ class CommentService extends Service {
     const result = await this.create(userId, username, signId, comment, consts.commentTypes.point, 0);
     return {
       status: 0,
-      id: result.insertId
+      id: result.insertId,
     };
   }
 
@@ -50,7 +50,49 @@ class CommentService extends Service {
       create_time: now,
     });
 
-    return result
+    return result;
+  }
+  /**
+   * 添加回复
+   * @param {*} { uid, username, sign_id, comment, reply_id }
+   * @return {*} 返回-1: 错误找不到对应回复的评论
+   * @memberof CommentService
+   */
+  async reply({ uid, username, sign_id, comment, reply_id }) {
+    const post = await this.app.mysql.get('comments', { id: reply_id });
+    if (!post) {
+      return -1;
+    }
+    let parents_id = reply_id;
+    if (post.parents_id !== null) {
+      parents_id = post.parents_id;
+    } else {
+      reply_id = null;
+    }
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    const result = await this.app.mysql.insert('comments', {
+      uid,
+      username,
+      sign_id,
+      parents_id,
+      reply_id,
+      comment,
+      type: consts.commentTypes.point,
+      ref_id: 0,
+      create_time: now,
+    });
+    return result;
+  }
+  async like(id) {
+    try {
+      await this.app.mysql.query(`
+      UPDATE comments SET like_num=like_num+1 where id = :id;
+      `, { id });
+      return 0;
+    } catch (e) {
+      this.logger.error('service.comments like error: ', e);
+      return -1;
+    }
   }
 
   // 评论列表
@@ -63,7 +105,7 @@ class CommentService extends Service {
     if (!post) {
       return null;
     }
-
+    console.log('post.channel_id', post.channel_id);
     let sql;
     if (post.channel_id === 1) {
       sql = 'SELECT c.id, c.uid, c.comment,c.create_time, u.username, u.nickname, u.avatar FROM comments c  '
@@ -126,6 +168,45 @@ class CommentService extends Service {
     );
     if (comments === null) return [];
     return comments;
+  }
+  async getComments(signid, page = 1, pagesize = 20) {
+    const sql = `
+    SELECT c.id, c.uid, c.comment, c.like_num, c.reply_id, c.create_time, u.username, u.nickname, u.avatar
+    FROM comments c
+    LEFT JOIN users u ON c.uid = u.id
+    WHERE c.sign_id = :signid AND c.type=3 AND c.parents_id IS NULL
+    ORDER BY c.create_time DESC LIMIT :start, :end;
+    SELECT count(1) as count FROM comments c WHERE c.sign_id = :signid AND c.type=3 AND c.parents_id IS NULL;
+    SELECT count(1) as allcount FROM comments c WHERE c.sign_id = :signid AND c.type=3;
+    `;
+    const result = await this.app.mysql.query(
+      sql,
+      { signid, start: (page - 1) * pagesize, end: pagesize }
+    );
+    const list = result[0];
+    const count = result[1][0].count;
+    const allcount = result[2][0].allcount;
+    const ids = [];
+    const c_obj = {};
+    for (const item of list) {
+      ids.push(item.id);
+      item.replyList = [];
+      c_obj[item.id] = item;
+    }
+    const children = await this.app.mysql.query(`
+      SELECT c.id, c.uid, c.comment, c.like_num, c.reply_id, c.create_time, c.parents_id, u.username, u.nickname, u.avatar
+      FROM comments c
+      LEFT JOIN users u ON c.uid = u.id
+      WHERE c.parents_id IN (:ids) AND c.type=3
+      ORDER BY c.create_time DESC;
+    `, { ids });
+    for (const item of children) {
+      const id = item.parents_id;
+      c_obj[id].replyList.push(item);
+    }
+    return {
+      list, count, allcount,
+    };
   }
 
 }
