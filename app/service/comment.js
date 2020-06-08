@@ -60,12 +60,14 @@ class CommentService extends Service {
    */
   async reply({ uid, username, sign_id, comment, reply_id }) {
     const post = await this.app.mysql.get('comments', { id: reply_id });
+    let reply_uid = null;
     if (!post) {
       return -1;
     }
     let parents_id = reply_id;
     if (post.parents_id !== null) {
       parents_id = post.parents_id;
+      reply_uid = post.uid;
     } else {
       reply_id = null;
     }
@@ -76,6 +78,7 @@ class CommentService extends Service {
       sign_id,
       parents_id,
       reply_id,
+      reply_uid,
       comment,
       type: consts.commentTypes.point,
       ref_id: 0,
@@ -171,7 +174,7 @@ class CommentService extends Service {
   }
   async getComments(signid, page = 1, pagesize = 20) {
     const sql = `
-    SELECT c.id, c.uid, c.comment, c.like_num, c.reply_id, c.create_time, u.username, u.nickname, u.avatar
+    SELECT c.id, c.uid, c.comment, c.like_num, c.reply_id, c.reply_uid, c.create_time, u.username, u.nickname, u.avatar
     FROM comments c
     LEFT JOIN users u ON c.uid = u.id
     WHERE c.sign_id = :signid AND c.type=3 AND c.parents_id IS NULL
@@ -194,9 +197,10 @@ class CommentService extends Service {
       c_obj[item.id] = item;
     }
     const children = await this.app.mysql.query(`
-      SELECT c.id, c.uid, c.comment, c.like_num, c.reply_id, c.create_time, c.parents_id, u.username, u.nickname, u.avatar
+      SELECT c.id, c.uid, c.comment, c.like_num, c.reply_id, c.reply_uid, c.create_time, c.parents_id, u.username, u.nickname, u.avatar, u2.nickname as reply_nickname
       FROM comments c
       LEFT JOIN users u ON c.uid = u.id
+      LEFT JOIN users u2 ON c.reply_uid = u2.id
       WHERE c.parents_id IN (:ids) AND c.type=3
       ORDER BY c.create_time DESC;
     `, { ids });
