@@ -11,13 +11,15 @@ const EVENT_RECIPIENT_DESC_TABLE = 'notify_event_recipients_desc';
 const ACTION_TYPES = [
   'follow', //关注
   'comment', // 评论
-  'like' // 点赞
+  'like', // 点赞
+  'reply',
 ];
 
 /** 对象类型 */
 const OBJECT_TYPES = [
   'article', // 文章
-  'user' // 用户
+  'user', // 用户
+  'comment',
 ];
 
 

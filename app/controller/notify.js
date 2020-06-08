@@ -26,6 +26,7 @@ class NotificationController extends Controller {
     let userIdSet = new Set();
     let postIdSet = new Set();
     let commentIdSet = new Set();
+    let replyIdSet = new Set();
     eventList.list.forEach(item => {
       userIdSet.add(item.user_id);
       userIdSet.add(item.min_user_id);
@@ -37,6 +38,10 @@ class NotificationController extends Controller {
         case 'user':
           userIdSet.add(item.object_id);
         break
+        case 'comment':
+          commentIdSet.add(item.object_id);
+          replyIdSet.add(item.remark);
+          break;
       }
       if(item.action === 'comment') commentIdSet.add(Number(item.remark));
     })
@@ -48,6 +53,7 @@ class NotificationController extends Controller {
       users: userIdSet.size ? await this.service.user.getUserList([...userIdSet], ctx.user.id) : [],
       posts: postIdSet.size ? await this.service.post.getByIdArray([...postIdSet]) : [],
       comments: commentIdSet.size ? await this.service.comment.getByIdArray([...commentIdSet]) : [],
+      reply: replyIdSet.size ? await this.service.comment.getByIdArray([...replyIdSet]) : [],
     };
   }
 
