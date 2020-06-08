@@ -233,8 +233,11 @@ module.exports = app => {
   // 评论列表
   // router.get('/comments', passport.verify, controller.comment.comments);
   router.get('/comment/comments', passport.verify, controller.comment.comments);
+  router.get('/comment/getComments', passport.verify, controller.comment.getComments);
   // 直接评论，需要支付积分
   router.post('/comment/comment', passport.authorize, controller.comment.comment);
+  router.post('/comment/reply', passport.authorize, controller.comment.reply);
+  router.put('/comment/like/:id', passport.authorize, controller.comment.like);
 
   // -------------------------------- 橙皮书 --------------------------------
   // 橙皮书合约广告人、次统计
