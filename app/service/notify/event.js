@@ -74,26 +74,6 @@ class NotifyService extends Service {
   }
 
   /** 
-   * 设定事件的接收者 (多个事件一个接收者)
-   * @eventIds 事件在数据库中的索引列表
-   * @uid 事件接收者
-   */
-  async setEventArrayRecipient(eventIds, uid) {
-    if(!eventIds || eventIds.length < 1) return false
-    try {
-      let recipients = [];
-      eventIds.forEach(eventId => recipients.push({ event_id: eventId, user_id: uid}))
-
-      const result = await this.app.mysql.insert(EVENT_RECIPIENT_TABLE, recipients);
-      return result.affectedRows
-    }
-    catch(e) {
-      this.logger.error(e);
-      return false
-    }
-  }
-
-  /** 
    * 发送一个事件 (整合了创建事件与设定接收者)
    * @senderId 产生这个事件的用户
    * @receivingIds 事件接收者的列表
@@ -361,23 +341,6 @@ class NotifyService extends Service {
     catch(e) {
       this.logger.error(e);
       return 0
-    }
-  }
-
-  async getAnnouncementStatus(uid, startTime) {
-    const sql = `
-      SELECT t1.id, t2.id AS recipients_id
-      FROM ${EVENT_TABLE} t1
-      LEFT JOIN ${EVENT_RECIPIENT_TABLE} t2 ON t1.id = t2.event_id AND t2.user_id = :uid
-      WHERE t1.action = 'annouce' AND t1.object_type = 'announcement' AND t1.create_time > :startTime
-    `;
-    try {
-      const result = await this.app.mysql.query(sql, {uid, startTime});
-      return result
-    }
-    catch(e) {
-      this.logger.error(e);
-      return false
     }
   }
 
