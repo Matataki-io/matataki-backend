@@ -471,8 +471,8 @@ class PostController extends Controller {
     const requestUser = ctx.user;
     const isShowingDeleted = requestUser.isAuthenticated ? Number(author) === requestUser.id : false;
     const postData = await this.service.post.timeRankSlow(
-      page,
-      pagesize,
+      parseInt(page),
+      parseInt(pagesize),
       author,
       channel,
       filter,
