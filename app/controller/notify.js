@@ -84,8 +84,8 @@ class NotificationController extends Controller {
       if(posts !== null && posts.length > 0) eventList.post = posts[0];
     }
     if (objectType === 'comment') {
-      const replys = await this.service.comment.getByIdArray([parseInt(objectId)]);
-      if(replys !== null && replys.length > 0) eventList.replys = replys[0];
+      const comments = await this.service.comment.getByIdArray([parseInt(objectId)]);
+      if (comments !== null && comments.length > 0) eventList.comment = comments[0];
     }
 
     // 汇总消息中所需信息的数据库索引
