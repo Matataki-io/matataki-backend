@@ -423,9 +423,7 @@ async function createUs() {
           },
           nickname: {
             type: 'text',
-            analyzer: 'my_analyzer',
-            search_analyzer: 'ik_max_word',
-            /* analyzer: 'ik_max_word',
+            analyzer: 'ik_max_word',
             search_analyzer: 'ik_max_word',
             fields: {
               english: {
@@ -433,7 +431,7 @@ async function createUs() {
                 analyzer: 'my_analyzer',
                 search_analyzer: 'ik_max_word',
               },
-            }, */
+            },
           },
           username: {
             type: 'text',
