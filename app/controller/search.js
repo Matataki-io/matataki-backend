@@ -221,6 +221,16 @@ class SearchController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
   }
+  async importTag() {
+    const ctx = this.ctx;
+    const { id, name } = ctx.request.body;
+    const result = await this.service.search.importTag({
+      id,
+      name,
+    });
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
 }
 
 module.exports = SearchController;
