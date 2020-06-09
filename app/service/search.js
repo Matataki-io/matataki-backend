@@ -588,6 +588,7 @@ class SearchService extends Service {
     const tagIds = [];
     const count = tagQuery.body.hits.total.value;
     const list = tagQuery.body.hits.hits;
+    return { count, list };
 
     // 生成tagIds列表
     for (let i = 0; i < list.length; i++) {
