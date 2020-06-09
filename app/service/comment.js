@@ -187,6 +187,13 @@ class CommentService extends Service {
       { signid, start: (page - 1) * pagesize, end: pagesize }
     );
     const list = result[0];
+    if (list.length === 0) {
+      return {
+        list: [],
+        count: 0,
+        allcount: 0,
+      };
+    }
     const count = result[1][0].count;
     const allcount = result[2][0].allcount;
     const ids = [];
@@ -202,7 +209,7 @@ class CommentService extends Service {
       LEFT JOIN users u ON c.uid = u.id
       LEFT JOIN users u2 ON c.reply_uid = u2.id
       WHERE c.parents_id IN (:ids) AND c.type=3
-      ORDER BY c.create_time DESC;
+      ORDER BY c.create_time ASC;
     `, { ids });
     for (const item of children) {
       const id = item.parents_id;
