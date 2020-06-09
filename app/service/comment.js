@@ -166,7 +166,7 @@ class CommentService extends Service {
   /** 根据id列表获取评论内容 */
   async getByIdArray(idList) {
     const comments = await this.app.mysql.query(
-      `SELECT id, comment FROM comments WHERE id IN (:idList);`,
+      `SELECT id, sign_id, comment FROM comments WHERE id IN (:idList);`,
       { idList }
     );
     if (comments === null) return [];
