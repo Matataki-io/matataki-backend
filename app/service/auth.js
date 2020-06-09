@@ -568,17 +568,20 @@ class AuthService extends Service {
         + 'VALUES (:username, :email, :now, :platform, :source, :ip, :password, :referral);',
         { username, email, ip, platform, source, password: pwd, now, referral: referral_uid }
       );
-      this.logger.info('service:: Auth: createAccount:', createAccount);
+      this.logger.info('service:: Auth: insertUser: %j', createAccount);
       const account = await this.service.account.binding.create({ uid: createAccount.insertId, account: username, password_hash: pwd, platform, is_main: 1 }, tran);
       if (!account) await tran.rollback();
       else await tran.commit();
     } catch (err) {
       await tran.rollback();
-      this.logger.error('AuthService:: insertUser: Error. %j', err);
+      this.logger.error('service:: Auth:: insertUser: Error. %j', err);
       return false;
     }
 
     if (createAccount.affectedRows === 1) {
+      // 插入ES
+      await this.service.search.importUser(createAccount.insertId);
+      this.logger.info('service:: Auth: insertUser: success');
       // 处理注册推荐积分
       if (referral_uid > 0) {
         await this.service.mining.register(createAccount.insertId, referral, ip);
@@ -595,9 +598,6 @@ class AuthService extends Service {
       await this.service.tokenCircle.api.addUserProfile(
         createAccount.insertId, username, wallet
       );
-
-      // 插入ES
-      await this.service.search.importUser(createAccount.insertId);
 
       return true;
     }
