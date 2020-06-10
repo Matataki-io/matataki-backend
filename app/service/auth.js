@@ -592,9 +592,9 @@ class AuthService extends Service {
       // 检测用户有没有托管的以太坊私钥，没有就生成
       const wallet = await this.service.account.hosting.create(createAccount.insertId);
 
-      await this.service.tokenCircle.api.addUserProfile(
-        createAccount.insertId, username, wallet
-      );
+      // await this.service.tokenCircle.api.addUserProfile(
+      //   createAccount.insertId, username, wallet
+      // );
 
       // 插入ES
       await this.service.search.importUser(createAccount.insertId);
