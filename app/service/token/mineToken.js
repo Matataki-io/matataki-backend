@@ -349,13 +349,16 @@ class MineTokenService extends Service {
         [ to, tokenId, amount, amount ]);
 
       // 记录日志
-      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
+      const logResult = await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
         [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash ]);
 
       if (!isOutConn) {
         await conn.commit();
       }
-      return transactionHash;
+      return {
+        txHash: transactionHash,
+        logId: logResult.insertId
+      }
     } catch (e) {
       if (!isOutConn) {
         await conn.rollback();

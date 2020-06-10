@@ -52,7 +52,7 @@ class AssetsService extends Service {
         return false;
       }
       // 记录log
-      await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      const fromLogResult = await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [ from, 0, '', symbol, -amount, platform,
           consts.assetTypes.transferOut, // 'sign income'
           moment().format('YYYY-MM-DD HH:mm:ss') ]
@@ -64,7 +64,7 @@ class AssetsService extends Service {
         [ to, '', symbol, amount, platform, amount ]
       );
       // 记录log
-      await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      const toLogResult = await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [ to, 0, '', symbol, amount, platform,
           consts.assetTypes.transferIn, // 'sign income'
           moment().format('YYYY-MM-DD HH:mm:ss') ]
@@ -73,7 +73,10 @@ class AssetsService extends Service {
       if (!isOutConn) {
         await conn.commit();
       }
-      return true;
+      return {
+        fromLogId: fromLogResult.insertId,
+        toLogId: toLogResult.insertId
+      };
     } catch (e) {
       if (!isOutConn) {
         await conn.rollback();

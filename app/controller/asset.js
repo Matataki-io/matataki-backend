@@ -20,7 +20,13 @@ class AssetController extends Controller {
     // 记录转赠cny常用候选列表
     await this.ctx.service.history.put('token', to);
     const result = await ctx.service.assets.transferFrom(symbol, ctx.user.id, to, amount);
-    ctx.body = result ? ctx.msg.success : ctx.msg.failure;
+    if(result) {
+      // 如果是cny转账则发送一条消息告知收款人
+      if (symbol.toLowerCase() === 'cny') ctx.service.notify.event.sendEvent(ctx.user.id, [to], 'transfer', result.toLogId, 'cnyWallet')
+
+      ctx.body = ctx.msg.success
+    }
+    else ctx.msg.failure;
   }
 }
 
