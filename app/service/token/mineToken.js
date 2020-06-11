@@ -876,6 +876,7 @@ class MineTokenService extends Service {
         t2.name,
         t2.symbol,
         t2.logo,
+        t2.brief,
         t2.decimals
       FROM
         assets_minetokens_log t1
