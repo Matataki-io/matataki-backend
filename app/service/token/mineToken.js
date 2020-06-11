@@ -880,7 +880,7 @@ class MineTokenService extends Service {
       FROM
         assets_minetokens_log t1
         JOIN minetokens t2 ON t2.id = t1.token_id
-      WHERE t1.id IN(idList);
+      WHERE t1.id IN(:idList);
     `,
       { idList }
     );

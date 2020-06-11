@@ -49,10 +49,11 @@ class NotificationController extends Controller {
           // 引用文章
           if(item.remark) postIdSet.add(item.remark);
         break;
-        case 'transfer': // 转账
-          // true: CNY转账， false: Token转账
-          if(item.object_type === 'cnyWallet') assetsLogIdSet.add(item.object_id)
-          else if(item.object_type === 'tokenWallet') minetokensLogIdSet.add(item.object_id)
+        case 'cnyWallet': // CNY转账
+          assetsLogIdSet.add(item.object_id)
+        break;
+        case 'tokenWallet': //Token转账
+          minetokensLogIdSet.add(item.object_id)
         break;
       }
     })
