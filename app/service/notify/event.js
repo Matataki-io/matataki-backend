@@ -13,7 +13,8 @@ const ACTION_TYPES = [
   'like', // 点赞
   'reply',
   'follow', //关注
-  'annouce' // 宣布
+  'annouce', // 宣布
+  'transfer'
 ];
 
 /** 对象类型 */
@@ -21,7 +22,9 @@ const OBJECT_TYPES = [
   'article', // 文章
   'user', // 用户
   'comment',
-  'announcement' // 公告
+  'announcement', // 公告
+  'tokenWallet',
+  'cnyWallet'
 ];
 
 const isValidActionAndObject = (action, objectType) => ACTION_TYPES.includes(action) && OBJECT_TYPES.includes(objectType);

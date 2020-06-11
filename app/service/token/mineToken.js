@@ -349,13 +349,16 @@ class MineTokenService extends Service {
         [ to, tokenId, amount, amount ]);
 
       // 记录日志
-      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
+      const logResult = await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
         [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash ]);
 
       if (!isOutConn) {
         await conn.commit();
       }
-      return transactionHash;
+      return {
+        txHash: transactionHash,
+        logId: logResult.insertId
+      }
     } catch (e) {
       if (!isOutConn) {
         await conn.rollback();
@@ -856,6 +859,33 @@ class MineTokenService extends Service {
       result[res[i]] = res[i + 1];
     }
     return result;
+  }
+
+  /** 根据id列表获取评论内容 */
+  async getByIdArray(idList) {
+    const logs = await this.app.mysql.query(`
+      SELECT
+        t1.id,
+        t1.token_id,
+        t1.from_uid,
+        t1.to_uid,
+        t1.amount,
+        t1.create_time,
+        t1.type,
+        t1.tx_hash,
+        t2.name,
+        t2.symbol,
+        t2.logo,
+        t2.decimals
+      FROM
+        assets_minetokens_log t1
+        JOIN minetokens t2 ON t2.id = t1.token_id
+      WHERE t1.id IN(idList);
+    `,
+      { idList }
+    );
+    if (logs === null) return [];
+    return logs;
   }
 }
 
