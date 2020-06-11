@@ -860,6 +860,33 @@ class MineTokenService extends Service {
     }
     return result;
   }
+
+  /** 根据id列表获取评论内容 */
+  async getByIdArray(idList) {
+    const logs = await this.app.mysql.query(`
+      SELECT
+        t1.id,
+        t1.token_id,
+        t1.from_uid,
+        t1.to_uid,
+        t1.amount,
+        t1.create_time,
+        t1.type,
+        t1.tx_hash,
+        t2.name,
+        t2.symbol,
+        t2.logo,
+        t2.decimals
+      FROM
+        assets_minetokens_log t1
+        JOIN minetokens t2 ON t2.id = t1.token_id
+      WHERE t1.id IN(idList);
+    `,
+      { idList }
+    );
+    if (logs === null) return [];
+    return logs;
+  }
 }
 
 module.exports = MineTokenService;

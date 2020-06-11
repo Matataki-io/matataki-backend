@@ -101,6 +101,33 @@ class AssetsService extends Service {
     return balance.amount;
   }
 
+  /** 根据id列表获取评论内容 */
+  async getByIdArray(idList) {
+    const logs = await this.app.mysql.query(`
+      SELECT
+        a.id,
+        a.contract,
+        a.symbol,
+        a.amount,
+        a.type,
+        a.create_time,
+        a.signid,
+        a.trx,
+        a.toaddress,
+        a.memo,
+        a.status,
+        b.title
+      FROM
+        assets_change_log a
+        LEFT JOIN posts b ON a.signid = b.id
+      WHERE a.id IN(:idList);
+    `,
+      { idList }
+    );
+    if (logs === null) return [];
+    return logs;
+  }
+
 }
 
 module.exports = AssetsService;
