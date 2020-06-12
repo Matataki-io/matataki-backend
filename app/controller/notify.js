@@ -35,10 +35,10 @@ class NotificationController extends Controller {
           postIdSet.add(item.object_id);
           // 评论文章
           if(item.action === 'comment') commentIdSet.add(Number(item.remark));
-        break;
+          break;
         case 'user': // 用户
           userIdSet.add(item.object_id);
-        break
+          break;
         case 'comment': // 评论
           commentIdSet.add(item.object_id);
           // 回复评论
@@ -48,13 +48,16 @@ class NotificationController extends Controller {
           announcementIdSet.add(item.object_id);
           // 引用文章
           if(item.remark) postIdSet.add(item.remark);
-        break;
+          break;
         case 'cnyWallet': // CNY转账
-          assetsLogIdSet.add(item.object_id)
-        break;
+          assetsLogIdSet.add(item.object_id);
+          break;
         case 'tokenWallet': //Token转账
-          minetokensLogIdSet.add(item.object_id)
-        break;
+          minetokensLogIdSet.add(item.object_id);
+          break;
+        case 'featuredArticles': // 推荐文章
+          postIdSet.add(item.object_id);
+          break;
       }
     })
 
