@@ -942,10 +942,15 @@ class ExchangeService extends Service {
 
   // 记录交易日志
   async addPurchaseLog(uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, ip, cny_reserve_before, token_reserve_before, conn) {
+    this.logger.info('service.exchange.addPurchaseLog params', { uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, ip, cny_reserve_before, token_reserve_before });
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    await conn.insert('exchange_purchase_logs', {
-      uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, create_time: now, ip, cny_reserve_before, token_reserve_before,
-    });
+    try {
+      await conn.insert('exchange_purchase_logs', {
+        uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, create_time: now, ip, cny_reserve_before, token_reserve_before,
+      });
+    } catch (e) {
+      this.logger.error('service.exchange.addPurchaseLog error', e);
+    }
   }
 
   // 记录流动性日志
