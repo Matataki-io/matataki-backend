@@ -503,17 +503,19 @@ class ExchangeService extends Service {
 
     // 转移token
     const transferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, recipient, tokens_bought, '', consts.mineTokenTransferTypes.exchange_purchase, conn);
+    this.logger.info('service.exchange.cnyToTokenInput transferResult:', transferResult);
     // 转移资产失败
     if (!transferResult) {
-      this.logger.info('service.exchange.cnyToTokenInput transfer failed Result:', transferResult);
+      this.logger.error('service.exchange.cnyToTokenInput transfer failed Result:', transferResult);
       return -1;
     }
 
     // 转移cny
     const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, exchange.exchange_uid, cny_sold, conn);
+    this.logger.info('service.exchange.cnyToTokenInput cnyTransferResult:', cnyTransferResult);
     // 转移资产失败
     if (!cnyTransferResult) {
-      this.logger.info('service.exchange.cnyToTokenInput cnyTransfer failed Result', cnyTransferResult);
+      this.logger.error('service.exchange.cnyToTokenInput cnyTransfer failed Result', cnyTransferResult);
       return -1;
     }
 
