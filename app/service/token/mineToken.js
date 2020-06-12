@@ -303,7 +303,7 @@ class MineTokenService extends Service {
   }
 
   async transferFrom(tokenId, from, to, value, ip, type = '', conn) {
-    this.logger.error('mineToken.transferFrom start: ', { tokenId, from, to, value, ip, type });
+    this.logger.info('mineToken.transferFrom start: ', { tokenId, from, to, value, ip, type });
     if (from === to) {
       this.logger.error('mineToken.transferFrom failed: from === to', { from, to });
       return false;
