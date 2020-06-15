@@ -547,10 +547,8 @@ class MineTokenService extends Service {
     let sql = `
       SELECT t1.id, t1.uid, t1.token_id, t1.cny_amount, t1.token_amount, t1.liquidity, t1.create_time,
       t3.name, t3.symbol, t3.decimals, t3.total_supply, t3.logo,
-      t4.username, t4.nickname,
-      t2.tx_hash
-      FROM exchange_liquidity_logs AS t1
-      JOIN assets_minetokens_log t2 USING (token_id, create_time)
+      t4.username, t4.nickname
+      FROM exchange_liquidity_logs t1
       JOIN minetokens AS t3 ON t1.token_id = t3.id
       JOIN users as t4 ON t3.uid = t4.id
       `;
@@ -595,12 +593,11 @@ class MineTokenService extends Service {
 
   async getPurchaseLog(tokenId, userId = null, page = 1, pagesize = 100) {
     let sql = `
-      SELECT t1.*, t2.tx_hash,
+      SELECT t1.*,
       CASE WHEN t1.sold_token_id = :tokenId
       THEN 'sell' ELSE 'buy'
       END 'direction'
-      FROM exchange_purchase_logs AS t1
-      JOIN assets_minetokens_log t2 ON t1.create_time = t2.create_time AND token_id = :tokenId
+      FROM exchange_purchase_logs t1
       WHERE (t1.sold_token_id = :tokenId OR t1.bought_token_id = :tokenId)`;
     let params = {
       tokenId,
