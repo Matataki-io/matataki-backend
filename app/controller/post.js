@@ -322,12 +322,13 @@ class PostController extends Controller {
 
         // 超过 0 元才算数，0元则无视
         if (requireBuy && requireBuy.price > 0) {
-          await this.service.post.addPrices(
+          const addPricesResult = await this.service.post.addPrices(
             ctx.user.id,
             signId,
             requireBuy.price,
             0
           );
+          this.logger.info('controller post edit addPrices Result:', addPricesResult);
         } else {
           await this.service.post.delPrices(ctx.user.id, signId, 0);
         }
@@ -342,13 +343,12 @@ class PostController extends Controller {
 
         // 记录购买编辑权限信息
         if (editRequireBuy && editRequireBuy.price > 0) {
-          const addPricesResult = await this.service.post.addPrices(
+          await this.service.post.addPrices(
             ctx.user.id,
             signId,
             editRequireBuy.price,
             1
           );
-          this.logger.info('controller post edit addPrices Result:', addPricesResult);
         } else {
           await this.service.post.delPrices(ctx.user.id, signId, 1);
         }
