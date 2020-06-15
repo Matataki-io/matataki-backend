@@ -23,6 +23,8 @@ class NotificationController extends Controller {
     let postIdSet = new Set();
     let commentIdSet = new Set();
     let announcementIdSet = new Set();
+    let assetsLogIdSet = new Set();
+    let minetokensLogIdSet = new Set();
     // 遍历
     eventList.list.forEach(item => {
       userIdSet.add(item.user_id);
@@ -33,10 +35,10 @@ class NotificationController extends Controller {
           postIdSet.add(item.object_id);
           // 评论文章
           if(item.action === 'comment') commentIdSet.add(Number(item.remark));
-        break;
+          break;
         case 'user': // 用户
           userIdSet.add(item.object_id);
-        break
+          break;
         case 'comment': // 评论
           commentIdSet.add(item.object_id);
           // 回复评论
@@ -46,7 +48,16 @@ class NotificationController extends Controller {
           announcementIdSet.add(item.object_id);
           // 引用文章
           if(item.remark) postIdSet.add(item.remark);
-        break;
+          break;
+        case 'cnyWallet': // CNY转账
+          assetsLogIdSet.add(item.object_id);
+          break;
+        case 'tokenWallet': //Token转账
+          minetokensLogIdSet.add(item.object_id);
+          break;
+        case 'featuredArticles': // 推荐文章
+          postIdSet.add(item.object_id);
+          break;
       }
     })
 
@@ -57,7 +68,9 @@ class NotificationController extends Controller {
       users: userIdSet.size ? await this.service.user.getUserList([...userIdSet], ctx.user.id) : [],
       posts: postIdSet.size ? await this.service.post.getByIdArray([...postIdSet]) : [],
       comments: commentIdSet.size ? await this.service.comment.getByIdArray([...commentIdSet]) : [],
-      announcements: announcementIdSet.size ? await this.service.notify.announcement.getByIdArray([...announcementIdSet]) : []
+      announcements: announcementIdSet.size ? await this.service.notify.announcement.getByIdArray([...announcementIdSet]) : [],
+      assetsLog: assetsLogIdSet.size ? await this.service.assets.getByIdArray([...assetsLogIdSet]) : [],
+      minetokensLog: minetokensLogIdSet.size ? await this.service.token.mineToken.getByIdArray([...minetokensLogIdSet]) : []
     };
   }
 

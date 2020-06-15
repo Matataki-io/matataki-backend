@@ -52,7 +52,7 @@ class AssetsService extends Service {
         return false;
       }
       // 记录log
-      await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      const fromLogResult = await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [ from, 0, '', symbol, -amount, platform,
           consts.assetTypes.transferOut, // 'sign income'
           moment().format('YYYY-MM-DD HH:mm:ss') ]
@@ -64,7 +64,7 @@ class AssetsService extends Service {
         [ to, '', symbol, amount, platform, amount ]
       );
       // 记录log
-      await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      const toLogResult = await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [ to, 0, '', symbol, amount, platform,
           consts.assetTypes.transferIn, // 'sign income'
           moment().format('YYYY-MM-DD HH:mm:ss') ]
@@ -73,7 +73,10 @@ class AssetsService extends Service {
       if (!isOutConn) {
         await conn.commit();
       }
-      return true;
+      return {
+        fromLogId: fromLogResult.insertId,
+        toLogId: toLogResult.insertId
+      };
     } catch (e) {
       if (!isOutConn) {
         await conn.rollback();
@@ -96,6 +99,33 @@ class AssetsService extends Service {
     }
 
     return balance.amount;
+  }
+
+  /** 根据id列表获取评论内容 */
+  async getByIdArray(idList) {
+    const logs = await this.app.mysql.query(`
+      SELECT
+        a.id,
+        a.contract,
+        a.symbol,
+        a.amount,
+        a.type,
+        a.create_time,
+        a.signid,
+        a.trx,
+        a.toaddress,
+        a.memo,
+        a.status,
+        b.title
+      FROM
+        assets_change_log a
+        LEFT JOIN posts b ON a.signid = b.id
+      WHERE a.id IN(:idList);
+    `,
+      { idList }
+    );
+    if (logs === null) return [];
+    return logs;
   }
 
 }

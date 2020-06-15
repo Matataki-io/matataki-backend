@@ -86,7 +86,7 @@ class TelegramController extends Controller {
     if (!result) ctx.status = 400;
     ctx.body = result ? {
       ...ctx.msg.success,
-      data: { tx_hash: result },
+      data: { tx_hash: result.txHash },
     } : ctx.msg.failure;
   }
 

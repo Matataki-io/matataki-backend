@@ -503,17 +503,19 @@ class ExchangeService extends Service {
 
     // 转移token
     const transferResult = await this.service.token.mineToken.transferFrom(tokenId, exchange.exchange_uid, recipient, tokens_bought, '', consts.mineTokenTransferTypes.exchange_purchase, conn);
+    this.logger.info('service.exchange.cnyToTokenInput transferResult:', transferResult);
     // 转移资产失败
     if (!transferResult) {
-      this.logger.info('service.exchange.cnyToTokenInput transfer failed Result:', transferResult);
+      this.logger.error('service.exchange.cnyToTokenInput transfer failed Result:', transferResult);
       return -1;
     }
 
     // 转移cny
     const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, exchange.exchange_uid, cny_sold, conn);
+    this.logger.info('service.exchange.cnyToTokenInput cnyTransferResult:', cnyTransferResult);
     // 转移资产失败
     if (!cnyTransferResult) {
-      this.logger.info('service.exchange.cnyToTokenInput cnyTransfer failed Result', cnyTransferResult);
+      this.logger.error('service.exchange.cnyToTokenInput cnyTransfer failed Result', cnyTransferResult);
       return -1;
     }
 
@@ -940,10 +942,15 @@ class ExchangeService extends Service {
 
   // 记录交易日志
   async addPurchaseLog(uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, ip, cny_reserve_before, token_reserve_before, conn) {
+    this.logger.info('service.exchange.addPurchaseLog params', { uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, ip, cny_reserve_before, token_reserve_before });
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    await conn.insert('exchange_purchase_logs', {
-      uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, create_time: now, ip, cny_reserve_before, token_reserve_before,
-    });
+    try {
+      await conn.insert('exchange_purchase_logs', {
+        uid, sold_token_id, sold_amount, bought_token_id, bought_amount, recipient, create_time: now, ip, cny_reserve_before, token_reserve_before,
+      });
+    } catch (e) {
+      this.logger.error('service.exchange.addPurchaseLog error', e);
+    }
   }
 
   // 记录流动性日志
