@@ -1670,17 +1670,19 @@ class PostService extends Service {
     try {
       await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [ signId, category ]);
 
-      this.logger.info('service post delPrices start...');
-      const updateResult = await conn.update('posts',
-        {
-          require_buy: 0,
-        },
-        {
-          where: {
-            id: signId,
+      if (category !== 1) {
+        this.logger.info('service post delPrices start...');
+        const updateResult = await conn.update('posts',
+          {
+            require_buy: 0,
           },
-        });
-      this.logger.info('service post addPrices result:', updateResult);
+          {
+            where: {
+              id: signId,
+            },
+          });
+        this.logger.info('service post addPrices result:', updateResult);
+      }
 
       await conn.commit();
 
