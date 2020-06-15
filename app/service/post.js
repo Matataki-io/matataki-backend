@@ -1627,7 +1627,8 @@ class PostService extends Service {
         category,
       });
       if (category !== 1) {
-        await conn.update('posts',
+        this.logger.info('service post addPrices start...');
+        const updateResult = await conn.update('posts',
           {
             require_buy: 1,
           },
@@ -1637,6 +1638,7 @@ class PostService extends Service {
             },
           }
         );
+        this.logger.info('service post addPrices result:', updateResult);
       }
 
       await conn.commit();
@@ -1668,15 +1670,19 @@ class PostService extends Service {
     try {
       await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [ signId, category ]);
 
-      await conn.update('posts',
-        {
-          require_buy: 0,
-        },
-        {
-          where: {
-            id: signId,
+      if (category !== 1) {
+        this.logger.info('service post delPrices start...');
+        const updateResult = await conn.update('posts',
+          {
+            require_buy: 0,
           },
-        });
+          {
+            where: {
+              id: signId,
+            },
+          });
+        this.logger.info('service post addPrices result:', updateResult);
+      }
 
       await conn.commit();
 
