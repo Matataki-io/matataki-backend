@@ -1627,8 +1627,8 @@ class PostService extends Service {
         category,
       });
       if (category !== 1) {
-        this.logger.info('service post addPrices');
-        await conn.update('posts',
+        this.logger.info('service post addPrices start...');
+        const updateResult = await conn.update('posts',
           {
             require_buy: 1,
           },
@@ -1638,6 +1638,7 @@ class PostService extends Service {
             },
           }
         );
+        this.logger.info('service post addPrices result:', updateResult);
       }
 
       await conn.commit();
