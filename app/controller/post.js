@@ -283,6 +283,9 @@ class PostController extends Controller {
         if (cover !== undefined) {
           updateRow.cover = cover;
         }
+        if (requireBuy) {
+          updateRow.require_buy = 1;
+        }
 
         if (ipfs_hide !== undefined) updateRow.ipfs_hide = ipfs_hide;
 
