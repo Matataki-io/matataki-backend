@@ -1627,6 +1627,7 @@ class PostService extends Service {
         category,
       });
       if (category !== 1) {
+        this.logger.info('service post addPrices');
         await conn.update('posts',
           {
             require_buy: 1,

@@ -283,9 +283,6 @@ class PostController extends Controller {
         if (cover !== undefined) {
           updateRow.cover = cover;
         }
-        if (requireBuy) {
-          updateRow.require_buy = 1;
-        }
 
         if (ipfs_hide !== undefined) updateRow.ipfs_hide = ipfs_hide;
 
@@ -345,12 +342,13 @@ class PostController extends Controller {
 
         // 记录购买编辑权限信息
         if (editRequireBuy && editRequireBuy.price > 0) {
-          await this.service.post.addPrices(
+          const addPricesResult = await this.service.post.addPrices(
             ctx.user.id,
             signId,
             editRequireBuy.price,
             1
           );
+          this.logger.info('controller post edit addPrices Result:', addPricesResult);
         } else {
           await this.service.post.delPrices(ctx.user.id, signId, 1);
         }
