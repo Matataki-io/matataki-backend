@@ -1,5 +1,6 @@
 'use strict';
 const Service = require('egg').Service;
+const moment = require('moment');
 
 const ANNOUNCEMENT_TABLE = 'announcement';
 const EVENT_TABLE = 'notify_event';
@@ -19,18 +20,21 @@ class AnnouceService extends Service {
   }
 
   /** 初始化用户的公告时间轴 */
-  async initRecipients(uid) {
+  async initRecipients(uid, mode) {
+    const isNewUser = mode === 'informNewUser'
+    const filter = isNewUser ? 'informNewUser' : 'informInstant'
+
     // 事务
     return await this.app.mysql.beginTransactionScope(async conn => {
       // 获取用户信息是为了筛掉用户注册前的公告内容
-      const users = await conn.get('users', { id: uid });
+      const { create_time: createTime } = await conn.get('users', { id: uid });
       // 获取公告消息和收件人列表的id
-      const announcementList = await getAnnouncementStatus(conn, uid, users.create_time);
+      const announcementList = await getAnnouncementStatus(conn, uid, createTime, filter);
       // 过滤掉已经初始化收件人的公告
       const eventIds = announcementList.filter(age => !age.recipients_id).map(events => events.id);
       // 设定收件人
       if(eventIds.length === 0) return 0;
-      return await setEventArrayRecipient(conn, eventIds, uid);
+      return await setEventArrayRecipient(conn, eventIds, uid, isNewUser);
     }, this.ctx);
   }
 
@@ -39,12 +43,22 @@ class AnnouceService extends Service {
 module.exports = AnnouceService;
 
 /** 获取公告消息和收件人列表的id */
-async function getAnnouncementStatus(conn, uid, startTime) {
+async function getAnnouncementStatus(conn, uid, startTime, filter = 'informInstant') {
+  const filterSql = {
+    informInstant: ' AND t2.inform_instant = 1 AND t1.create_time > :startTime',
+    informNewUser: ' AND t2.inform_new_user = 1 AND (t2.expire_time > :startTime OR t2.expire_time IS NULL)'
+  }[filter];
+  if(!filterSql) throw new Error(`Wrong filter, filter: ${filter}`)
+
   const sql = `
-    SELECT t1.id, t2.id AS recipients_id
+    SELECT
+      t1.id,
+      t3.id AS recipients_id,
+      t2.inform_instant, t2.inform_new_user, t2.expire_time
     FROM ${EVENT_TABLE} t1
-    LEFT JOIN ${EVENT_RECIPIENT_TABLE} t2 ON t1.id = t2.event_id AND t2.user_id = :uid
-    WHERE t1.action = 'annouce' AND t1.object_type = 'announcement' AND t1.create_time > :startTime
+    JOIN ${ANNOUNCEMENT_TABLE} t2 ON t2.id = t1.object_id
+    LEFT JOIN ${EVENT_RECIPIENT_TABLE} t3 ON t1.id = t3.event_id AND t3.user_id = :uid
+    WHERE t1.action = 'annouce' AND t1.object_type = 'announcement'${filterSql};
   `;
 
   const result = await conn.query(sql, {uid, startTime});
@@ -56,10 +70,14 @@ async function getAnnouncementStatus(conn, uid, startTime) {
  * @eventIds 事件在数据库中的索引列表
  * @uid 事件接收者
  */
-async function setEventArrayRecipient(conn, eventIds, uid) {
+async function setEventArrayRecipient(conn, eventIds, uid, useNotifyTime) {
   if(!eventIds || eventIds.length < 1) return false
   let recipients = [];
-  eventIds.forEach(eventId => recipients.push({ event_id: eventId, user_id: uid}))
+  eventIds.forEach(eventId => recipients.push({
+    event_id: eventId,
+    user_id: uid,
+    notify_time: useNotifyTime ? moment().format('YYYY-MM-DD HH:mm:ss') : null
+  }))
 
   const result = await conn.insert(EVENT_RECIPIENT_TABLE, recipients);
   return result.affectedRows
