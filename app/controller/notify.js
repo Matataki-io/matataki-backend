@@ -125,7 +125,7 @@ class NotificationController extends Controller {
   async getUnreadQuantity() {
     const ctx = this.ctx;
     // 初始化公告类型的通知
-    await this.service.notify.announcement.initRecipients(ctx.user.id);
+    await this.service.notify.announcement.initRecipients(ctx.user.id, 'informInstant');
 
     const result = await this.service.notify.event.getUnreadQuantity(ctx.user.id);
     ctx.body = ctx.msg.success;

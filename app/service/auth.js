@@ -599,6 +599,9 @@ class AuthService extends Service {
         createAccount.insertId, username, wallet
       );
 
+      // 初始化新用户公告
+      await this.service.notify.announcement.initRecipients(createAccount.insertId, 'informNewUser');
+
       return true;
     }
     return false;
