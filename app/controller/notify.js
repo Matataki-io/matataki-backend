@@ -22,8 +22,10 @@ class NotificationController extends Controller {
     let userIdSet = new Set();
     let postIdSet = new Set();
     let commentIdSet = new Set();
-    let replyIdSet = new Set();
     let announcementIdSet = new Set();
+    let assetsLogIdSet = new Set();
+    let minetokensLogIdSet = new Set();
+    // 遍历
     eventList.list.forEach(item => {
       userIdSet.add(item.user_id);
       userIdSet.add(item.min_user_id);
@@ -31,21 +33,31 @@ class NotificationController extends Controller {
       switch(item.object_type) {
         case 'article': // 文章
           postIdSet.add(item.object_id);
-          // 评论
+          // 评论文章
           if(item.action === 'comment') commentIdSet.add(Number(item.remark));
-        break;
+          break;
         case 'user': // 用户
           userIdSet.add(item.object_id);
-        break
-        case 'comment':
+          break;
+        case 'comment': // 评论
           commentIdSet.add(item.object_id);
-          replyIdSet.add(item.remark);
+          // 回复评论
+          if (item.action === 'reply') commentIdSet.add(item.remark);
           break;
         case 'announcement': // 公告
           announcementIdSet.add(item.object_id);
           // 引用文章
           if(item.remark) postIdSet.add(item.remark);
-        break;
+          break;
+        case 'cnyWallet': // CNY转账
+          assetsLogIdSet.add(item.object_id);
+          break;
+        case 'tokenWallet': //Token转账
+          minetokensLogIdSet.add(item.object_id);
+          break;
+        case 'featuredArticles': // 推荐文章
+          postIdSet.add(item.object_id);
+          break;
       }
     })
 
@@ -56,8 +68,9 @@ class NotificationController extends Controller {
       users: userIdSet.size ? await this.service.user.getUserList([...userIdSet], ctx.user.id) : [],
       posts: postIdSet.size ? await this.service.post.getByIdArray([...postIdSet]) : [],
       comments: commentIdSet.size ? await this.service.comment.getByIdArray([...commentIdSet]) : [],
-      reply: replyIdSet.size ? await this.service.comment.getByIdArray([...replyIdSet]) : [],
-      announcements: announcementIdSet.size ? await this.service.notify.announcement.getByIdArray([...announcementIdSet]) : []
+      announcements: announcementIdSet.size ? await this.service.notify.announcement.getByIdArray([...announcementIdSet]) : [],
+      assetsLog: assetsLogIdSet.size ? await this.service.assets.getByIdArray([...assetsLogIdSet]) : [],
+      minetokensLog: minetokensLogIdSet.size ? await this.service.token.mineToken.getByIdArray([...minetokensLogIdSet]) : []
     };
   }
 
@@ -84,28 +97,24 @@ class NotificationController extends Controller {
       if(posts !== null && posts.length > 0) eventList.post = posts[0];
     }
     if (objectType === 'comment') {
-      const replys = await this.service.comment.getByIdArray([parseInt(objectId)]);
-      if(replys !== null && replys.length > 0) eventList.replys = replys[0];
+      const comments = await this.service.comment.getByIdArray([parseInt(objectId)]);
+      if (comments !== null && comments.length > 0) eventList.comment = comments[0];
     }
 
     // 汇总消息中所需信息的数据库索引
     let userIdSet = new Set();
     let commentIdSet = new Set();
-    let replyIdSet = new Set();
     eventList.list.forEach(item => {
       userIdSet.add(item.user_id);
-      if(item.action === 'comment') commentIdSet.add(Number(item.remark));
-      if(item.action === 'reply') replyIdSet.add(Number(item.remark));
+      if (item.action === 'comment' || item.action === 'reply') commentIdSet.add(Number(item.remark));
     })
     // 获取消息中所需的信息
     const users = userIdSet.size ? await this.service.user.getUserList([...userIdSet], ctx.user.id) : [];
     const comments = commentIdSet.size ? await this.service.comment.getByIdArray([...commentIdSet]) : [];
-    const replys = replyIdSet.size ? await this.service.comment.getByIdArray([...replyIdSet]) : [];
     // 拼接数据
     eventList.list.forEach(item => {
       item.user = users.find(user => user.id === item.user_id)
       item.comment = comments.find(comment => comment.id === item.remark)
-      item.reply = replys.find(reply => reply.id === item.remark)
     })
 
     ctx.body = ctx.msg.success;
@@ -116,7 +125,7 @@ class NotificationController extends Controller {
   async getUnreadQuantity() {
     const ctx = this.ctx;
     // 初始化公告类型的通知
-    await this.service.notify.announcement.initRecipients(ctx.user.id);
+    await this.service.notify.announcement.initRecipients(ctx.user.id, 'informInstant');
 
     const result = await this.service.notify.event.getUnreadQuantity(ctx.user.id);
     ctx.body = ctx.msg.success;

@@ -166,7 +166,7 @@ class CommentService extends Service {
   /** 根据id列表获取评论内容 */
   async getByIdArray(idList) {
     const comments = await this.app.mysql.query(
-      `SELECT id, comment FROM comments WHERE id IN (:idList);`,
+      `SELECT id, sign_id, comment FROM comments WHERE id IN (:idList);`,
       { idList }
     );
     if (comments === null) return [];
@@ -218,6 +218,55 @@ class CommentService extends Service {
     return {
       list, count, allcount,
     };
+  }
+
+  /**
+   * 通过评论id获取评论在对应文章评论区的排列序号
+   * @param {Number} id
+   */
+  async getCommentIndexById(id) {
+    const sql = `
+      SET @mycnt = 0;
+
+      SELECT
+        t1.rownum,
+        t1.id AS parents_id
+      FROM
+        (
+        SELECT
+          t2.id,
+          ( @mycnt := @mycnt + 1 ) AS rownum
+        FROM
+          (
+          SELECT
+            id,
+            create_time
+          FROM
+            comments
+          WHERE
+            sign_id IN ( SELECT pid FROM ( SELECT sign_id AS pid FROM comments WHERE id = :id ) c1 )
+            AND parents_id IS NULL
+          ) AS t2
+        ORDER BY
+          t2.create_time DESC
+        ) AS t1
+      WHERE
+        t1.id = :id
+        OR t1.id IN ( SELECT cid FROM ( SELECT parents_id AS cid FROM comments WHERE id = :id ) c2 );
+    `
+    try {
+      const result = await this.app.mysql.query(sql, { id });
+      if(result[1].length > 0) {
+        return result[1][0]
+      }
+      else {
+        return false
+      }
+    }
+    catch(e) {
+      this.logger.error(e);
+      return false
+    }
   }
 
 }

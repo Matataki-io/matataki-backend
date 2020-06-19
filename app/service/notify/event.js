@@ -13,7 +13,8 @@ const ACTION_TYPES = [
   'like', // 点赞
   'reply',
   'follow', //关注
-  'annouce' // 宣布
+  'annouce', // 宣布
+  'transfer'
 ];
 
 /** 对象类型 */
@@ -21,7 +22,9 @@ const OBJECT_TYPES = [
   'article', // 文章
   'user', // 用户
   'comment',
-  'announcement' // 公告
+  'announcement', // 公告
+  'tokenWallet',
+  'cnyWallet'
 ];
 
 const isValidActionAndObject = (action, objectType) => ACTION_TYPES.includes(action) && OBJECT_TYPES.includes(objectType);
@@ -64,7 +67,7 @@ class NotifyService extends Service {
     if(!uids || uids.length < 1) return false
     try {
       let recipients = [];
-      uids.forEach(uid => recipients.push({ event_id: eventId, user_id: uid}))
+      uids.forEach(uid => recipients.push({ event_id: eventId, user_id: uid }))
 
       const result = await this.app.mysql.insert(EVENT_RECIPIENT_TABLE, recipients);
       return result.affectedRows
@@ -153,42 +156,6 @@ class NotifyService extends Service {
   /** Get **/
   /*********/
 
-  /** 通过uid获取事件列表 */
-  async getEventsByUid(page, pagesize, uid, unread = true) {
-    const sql = `
-      SELECT t2.*, t1.state, t1.read_time
-      FROM ${EVENT_RECIPIENT_TABLE} t1
-      JOIN ${EVENT_TABLE} t2 ON t1.event_id = t2.id
-      WHERE t1.user_id = :uid And t1.state = :state
-      LIMIT :offset, :limit;
-
-      SELECT count(1) as count
-      FROM ${EVENT_RECIPIENT_TABLE} c1
-      JOIN ${EVENT_TABLE} c2 ON c1.event_id = c2.id
-      WHERE c1.user_id = :uid AND c1.state = :state;
-    `;
-
-    try {
-      const result = await this.app.mysql.query(sql, {
-        offset: (page - 1) * pagesize,
-        limit: pagesize,
-        uid,
-        state: unread ? 0 : 1
-      });
-      return {
-        count: result[1][0].count,
-        list: result[0]
-      }
-    }
-    catch(e) {
-      this.logger.error(e);
-      return {
-        count: 0,
-        list: [],
-      }
-    }
-  }
-
   /** 
    * 通过uid获取聚合后的事件
    * @uid 用户id
@@ -213,6 +180,7 @@ class NotifyService extends Service {
         t2.remark,
         t2.create_time,
         t1.state,
+        t1.notify_time,
         t1.read_time,
         MIN(t2.user_id) as min_user_id,
         MAX(t2.user_id) as max_user_id
@@ -276,6 +244,7 @@ class NotifyService extends Service {
         t2.remark,
         t2.create_time,
         t1.state,
+        t1.notify_time,
         t1.read_time
       FROM ${EVENT_RECIPIENT_DESC_TABLE} t1
       JOIN ${EVENT_TABLE} t2 ON t1.event_id = t2.id

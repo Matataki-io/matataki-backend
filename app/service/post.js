@@ -468,7 +468,7 @@ class PostService extends Service {
       };
     }
     const sql = `
-    SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
+    SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
     b.nickname, b.avatar, 
     c.real_read_count AS \`read\`, c.likes,
 
@@ -646,7 +646,7 @@ class PostService extends Service {
         list: [],
       };
     }
-    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
       b.nickname, b.avatar, 
       c.real_read_count AS \`read\`, c.likes,
 
@@ -769,7 +769,7 @@ class PostService extends Service {
       wheresql += 'AND (' + conditions.join(' OR ') + ') ';
     }
 
-    const sql = `SELECT a.id, a.uid, a.author, a.title, a.status, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.status, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
       b.nickname, b.avatar, 
       c.real_read_count AS \`read\`, c.likes,
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
@@ -851,7 +851,7 @@ class PostService extends Service {
     if (postids === null || postids.length <= 0) {
       return [];
     }
-    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
       b.nickname, b.avatar, 
       c.real_read_count AS \`read\`, c.likes,
 
@@ -1214,7 +1214,7 @@ class PostService extends Service {
       }
     }
 
-    sqlcode += ' a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, b.nickname, b.avatar FROM posts a';
+    sqlcode += ' a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.is_recommend, b.nickname, b.avatar FROM posts a';
     sqlcode += ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (:signids) AND a.status = 0 ORDER BY FIELD(a.id, :signids);';
     postList = await this.app.mysql.query(
       sqlcode,
