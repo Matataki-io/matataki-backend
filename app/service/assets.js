@@ -101,7 +101,7 @@ class AssetsService extends Service {
     return balance.amount;
   }
 
-  /** 根据id列表获取评论内容 */
+  /** 根据id列表获取转账内容 */
   async getByIdArray(idList) {
     const logs = await this.app.mysql.query(`
       SELECT
