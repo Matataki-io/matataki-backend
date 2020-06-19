@@ -127,11 +127,11 @@ class MineTokenController extends Controller {
   // 转账
   async transfer() {
     const ctx = this.ctx;
-    const { tokenId, to, amount } = this.ctx.request.body;
+    const { tokenId, to, amount, memo = null } = this.ctx.request.body;
     // 记录转赠fan票常用候选列表
     await this.ctx.service.history.put('token', to);
     // amount 客户端*精度，10^decimals
-    const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP, consts.mineTokenTransferTypes.transfer);
+    const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, memo, this.clientIP, consts.mineTokenTransferTypes.transfer);
     ctx.body = result ? {
       ...ctx.msg.success,
       data: { tx_hash: result },
