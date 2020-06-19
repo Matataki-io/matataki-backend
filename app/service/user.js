@@ -83,6 +83,7 @@ class UserService extends Service {
     let avatar = '';
     let introduction = '';
     let banner = '';
+    let create_time;
 
     const user = await this.service.account.binding.get2({ id });
     // const user = await this.app.mysql.get('users', { id });
@@ -91,6 +92,7 @@ class UserService extends Service {
       nickname = user.nickname || '';
       introduction = user.introduction || '';
       banner = user.banner || '';
+      create_time = user.create_time;
     } else {
       return null;
     }
@@ -104,7 +106,8 @@ class UserService extends Service {
       follows: follows[0].follows,
       fans: fans[0].fans,
       is_follow,
-      status: user.status,
+      create_time,
+      status: user.status
     };
 
     ctx.logger.info('debug info', result);

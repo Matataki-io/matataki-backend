@@ -278,7 +278,7 @@ class AccountBindingService extends Service {
     const users = await this.app.mysql.query(`
       SELECT ua.uid as id, ua.account as username, ua.platform, ua.password_hash,
       u.email, u.nickname, u.avatar, u.create_time, u.introduction, u.accept, u.source,
-      u.reg_ip, u.last_login_time, u.is_recommend, u.referral_uid, u.last_login_ip, u.level, u.status, u.banner
+      u.reg_ip, u.last_login_time, u.is_recommend, u.referral_uid, u.last_login_ip, u.level, u.status, u.banner, u.create_time
       FROM users as u
       LEFT JOIN user_accounts as ua
       ON ua.uid = u.id
