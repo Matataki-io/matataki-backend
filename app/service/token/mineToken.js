@@ -858,7 +858,7 @@ class MineTokenService extends Service {
     return result;
   }
 
-  /** 根据id列表获取评论内容 */
+  /** 根据id列表获取转账记录 */
   async getByIdArray(idList) {
     const logs = await this.app.mysql.query(`
       SELECT
@@ -870,6 +870,7 @@ class MineTokenService extends Service {
         t1.create_time,
         t1.type,
         t1.tx_hash,
+        t1.memo,
         t2.name,
         t2.symbol,
         t2.logo,
