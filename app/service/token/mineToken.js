@@ -345,7 +345,7 @@ class MineTokenService extends Service {
       }
 
       // 增加to的token
-      await conn.query('INSERT INTO assets_minetokens(uid, token_id, amount) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+      await conn.query('INSERT INTO assets_minetokens(uid, token_id, amount, memo) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
         [ to, tokenId, amount, amount, memo ]);
 
       // 记录日志
