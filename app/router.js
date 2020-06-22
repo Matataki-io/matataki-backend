@@ -264,6 +264,7 @@ module.exports = app => {
   router.post('/posts/:id/dislike', passport.authorize, controller.mining.dislike);
   // 阅读新内容30秒，增加阅读新内容积分
   router.post('/posts/:id/readnew', passport.authorize, controller.mining.readnew);
+  router.post('/posts/:id/reward', passport.authorize, controller.mineToken.rewardArticle);
 
   // -------------------------------- 搜索相关 --------------------------------
   // 推荐搜索词语
