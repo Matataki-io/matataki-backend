@@ -301,6 +301,28 @@ class MineTokenService extends Service {
   async getHostingWallet(uid) {
     return this.service.account.hosting.isHosting(uid, 'ETH');
   }
+  async getRewardArticle(type, pid, page = 1, pagesize = 10) {
+    const result = await this.app.mysql.query(`
+      SELECT t1.from_uid, t1.to_uid, t1.token_id, t1.amount, t1.create_time, t1.tx_hash, t1.memo, t1.post_id,
+      t2.username, t2.nickname, t2.avatar,
+      t3.name as token_name, t3.symbol, t3.decimals, t3.logo as token_logo, t3.contract_address
+      FROM assets_minetokens_log t1
+      LEFT JOIN users t2 ON t1.from_uid = t2.id
+      LEFT JOIN minetokens t3 ON t1.token_id = t3.id
+      WHERE type = :type AND post_id = :pid
+      ORDER BY create_time DESC LIMIT :offset, :limit;
+      SELECT count(1) AS count FROM assets_minetokens_log WHERE type = :type AND post_id = :pid;
+    `, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      pid,
+      type,
+    });
+    return {
+      list: result[0],
+      count: result[1][0].count,
+    };
+  }
 
   async transferFrom(tokenId, from, to, value, memo = null, ip, type = '', conn, pid = null) {
     this.logger.info('mineToken.transferFrom start: ', { tokenId, from, to, value, ip, type });

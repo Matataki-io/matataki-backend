@@ -265,6 +265,7 @@ module.exports = app => {
   // 阅读新内容30秒，增加阅读新内容积分
   router.post('/posts/:id/readnew', passport.authorize, controller.mining.readnew);
   router.post('/posts/:id/reward', passport.authorize, controller.mineToken.rewardArticle);
+  router.get('/posts/:id/reward', passport.verify, controller.mineToken.getRewardArticle);
 
   // -------------------------------- 搜索相关 --------------------------------
   // 推荐搜索词语
