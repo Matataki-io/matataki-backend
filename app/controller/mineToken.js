@@ -139,6 +139,22 @@ class MineTokenController extends Controller {
       ctx.body = { ...ctx.msg.success, data: { tx_hash: result.txHash } };
     } else ctx.msg.failure;
   }
+  async rewardArticle() {
+    const ctx = this.ctx;
+    const { tokenId, to, amount, memo = null } = ctx.request.body;
+    const pid = ctx.params.id;
+    // 记录转赠fan票常用候选列表
+    await this.ctx.service.history.put('token', to);
+    // amount 客户端*精度，10^decimals
+    const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, memo, this.clientIP, consts.mineTokenTransferTypes.reward_article, null, pid);
+    if (result) {
+      // 发送转账消息
+      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', result.logId, 'tokenWallet');
+
+      ctx.body = { ...ctx.msg.success, data: { tx_hash: result.txHash } };
+    } else ctx.msg.failure;
+
+  }
 
   // 用户需要针对特定 token 进行授权，我们的代理转账合约针对才能他的token进行批量转账
   async approveTokenToBatch() {

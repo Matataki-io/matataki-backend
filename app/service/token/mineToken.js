@@ -302,7 +302,7 @@ class MineTokenService extends Service {
     return this.service.account.hosting.isHosting(uid, 'ETH');
   }
 
-  async transferFrom(tokenId, from, to, value, memo = null, ip, type = '', conn) {
+  async transferFrom(tokenId, from, to, value, memo = null, ip, type = '', conn, pid = null) {
     this.logger.info('mineToken.transferFrom start: ', { tokenId, from, to, value, ip, type });
     if (from === to) {
       this.logger.error('mineToken.transferFrom failed: from === to', { from, to });
@@ -349,8 +349,8 @@ class MineTokenService extends Service {
         [ to, tokenId, amount, memo, amount ]);
 
       // 记录日志
-      const logResult = await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, memo, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?,?);',
-        [ from, to, tokenId, amount, memo, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash ]);
+      const logResult = await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, memo, create_time, ip, type, tx_hash, post_id) VALUES(?,?,?,?,?,?,?,?,?,?);',
+        [ from, to, tokenId, amount, memo, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash, pid ]);
 
       if (!isOutConn) {
         await conn.commit();
