@@ -161,7 +161,7 @@ class MineTokenController extends Controller {
     const pid = ctx.params.id;
     const type = consts.mineTokenTransferTypes.reward_article;
 
-    const result = await ctx.service.token.mineToken.getRewardArticle(type, pid, page, pagesize);
+    const result = await ctx.service.token.mineToken.getRewardArticle(type, pid, parseInt(page), parseInt(pagesize));
     ctx.body = {
       ...ctx.msg.success,
       data: result,
