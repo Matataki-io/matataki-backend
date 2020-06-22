@@ -238,6 +238,8 @@ module.exports = app => {
   router.post('/comment/comment', passport.authorize, controller.comment.comment);
   router.post('/comment/reply', passport.authorize, controller.comment.reply);
   router.put('/comment/like/:id', passport.authorize, controller.comment.like);
+  // 删除评论
+  router.delete('/comment/delete/:id', passport.authorize, controller.comment.delete);
   // 通过评论id获取评论在对应文章评论区的排列序号
   router.get('/comment/index/:id', passport.verify, controller.comment.getCommentIndexById);
 

@@ -115,6 +115,15 @@ class CommentController extends Controller {
     }
     else ctx.body = ctx.msg.notFountComment;
   }
+
+  /** 删除评论 */
+  async delete() {
+    const ctx = this.ctx;
+    const { id } = ctx.params;
+    if (!id) ctx.msg.paramsError;
+    const result = await this.service.comment.delete(parseInt(id), ctx.user.id);
+    ctx.body = result ? ctx.msg.success : ctx.msg.failure;
+  }
 }
 
 module.exports = CommentController;

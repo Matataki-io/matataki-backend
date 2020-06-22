@@ -98,6 +98,17 @@ class CommentService extends Service {
     }
   }
 
+  async delete(id, uid) {
+    try {
+      const { affectedRows } = await this.app.mysql.delete('comments', { id, uid });
+      return affectedRows === 1
+    }
+    catch (e) {
+      this.logger.error('service.comments delete error: ', e);
+      return false
+    }
+  }
+
   // 评论列表
   async commentList(signid, page = 1, pagesize = 20) {
     if (!signid) {
