@@ -155,6 +155,18 @@ class MineTokenController extends Controller {
     } else ctx.msg.failure;
 
   }
+  async getRewardArticle() {
+    const ctx = this.ctx;
+    const { page = 1, pagesize = 10 } = ctx.query;
+    const pid = ctx.params.id;
+    const type = consts.mineTokenTransferTypes.reward_article;
+
+    const result = await ctx.service.token.mineToken.getRewardArticle(type, pid, page, pagesize);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
 
   // 用户需要针对特定 token 进行授权，我们的代理转账合约针对才能他的token进行批量转账
   async approveTokenToBatch() {
