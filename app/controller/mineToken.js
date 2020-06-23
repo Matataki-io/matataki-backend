@@ -159,7 +159,7 @@ class MineTokenController extends Controller {
     // end: 添加评论
     if (transferResult) {
       // 发送打赏文章消息
-      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', signId, 'article', result.logId);
+      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', signId, 'article', transferResult.logId);
       ctx.body = {
         ...ctx.msg.success,
         data: {
