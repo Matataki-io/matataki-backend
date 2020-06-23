@@ -146,12 +146,27 @@ class MineTokenController extends Controller {
     // 记录转赠fan票常用候选列表
     await this.ctx.service.history.put('token', to);
     // amount 客户端*精度，10^decimals
-    const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, memo, this.clientIP, consts.mineTokenTransferTypes.reward_article, null, pid);
-    if (result) {
-      // 发送转账消息
-      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', result.logId, 'tokenWallet');
+    const transferResult = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, memo, this.clientIP, consts.mineTokenTransferTypes.reward_article, null, pid);
 
-      ctx.body = { ...ctx.msg.success, data: { tx_hash: result.txHash } };
+    // start: 添加评论
+    const userId = ctx.user.id;
+    const username = ctx.user.username;
+    const signId = pid;
+    const comment = memo;
+    const commentType = consts.commentTypes.reward;
+    const refId = transferResult.logId;
+    const commentResult = await ctx.service.comment.create(userId, username, signId, comment, commentType, refId);
+    // end: 添加评论
+    if (transferResult) {
+      // 发送转账消息
+      // ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', result.logId, 'tokenWallet');
+      ctx.body = {
+        ...ctx.msg.success,
+        data: {
+          ...transferResult,
+          commentId: commentResult.insertId,
+        },
+      };
     } else ctx.msg.failure;
 
   }

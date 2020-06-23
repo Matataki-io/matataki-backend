@@ -35,6 +35,7 @@ module.exports = {
     support: 1,
     order: 2,
     point: 3,
+    reward: 4,
   },
 
   // 积分系统
