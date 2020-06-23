@@ -158,8 +158,8 @@ class MineTokenController extends Controller {
     const commentResult = await ctx.service.comment.create(userId, username, signId, comment, commentType, refId);
     // end: 添加评论
     if (transferResult) {
-      // 发送转账消息
-      // ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', result.logId, 'tokenWallet');
+      // 发送打赏文章消息
+      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', signId, 'article', result.logId);
       ctx.body = {
         ...ctx.msg.success,
         data: {

@@ -33,8 +33,9 @@ class NotificationController extends Controller {
       switch(item.object_type) {
         case 'article': // 文章
           postIdSet.add(item.object_id);
-          // 评论文章
+          // comment:评论文章, transfer:打赏文章
           if(item.action === 'comment') commentIdSet.add(Number(item.remark));
+          else if(item.action === 'transfer') minetokensLogIdSet.add(Number(item.remark));
           break;
         case 'user': // 用户
           userIdSet.add(item.object_id);
@@ -104,17 +105,26 @@ class NotificationController extends Controller {
     // 汇总消息中所需信息的数据库索引
     let userIdSet = new Set();
     let commentIdSet = new Set();
+    let minetokensLogIdSet = new Set();
     eventList.list.forEach(item => {
       userIdSet.add(item.user_id);
-      if (item.action === 'comment' || item.action === 'reply') commentIdSet.add(Number(item.remark));
+
+      if (item.action === 'comment' || item.action === 'reply') // 评论或回复
+        commentIdSet.add(Number(item.remark));
+      else if (item.action === 'transfer' && objectType === 'article') // 打赏文章
+        minetokensLogIdSet.add(Number(item.remark));
     })
     // 获取消息中所需的信息
     const users = userIdSet.size ? await this.service.user.getUserList([...userIdSet], ctx.user.id) : [];
     const comments = commentIdSet.size ? await this.service.comment.getByIdArray([...commentIdSet]) : [];
+    const minetokensLog = minetokensLogIdSet.size ? await this.service.token.mineToken.getByIdArray([...minetokensLogIdSet]) : [];
     // 拼接数据
     eventList.list.forEach(item => {
       item.user = users.find(user => user.id === item.user_id)
-      item.comment = comments.find(comment => comment.id === item.remark)
+      if (item.action === 'comment' || item.action === 'reply')
+        item.comment = comments.find(comment => comment.id === item.remark)
+      else if (item.action === 'transfer' && objectType === 'article')
+        item.minetokensLog = minetokensLog.find(minetokenLog => minetokenLog.id === item.remark)
     })
 
     ctx.body = ctx.msg.success;
