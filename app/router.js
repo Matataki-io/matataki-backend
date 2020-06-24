@@ -238,6 +238,10 @@ module.exports = app => {
   router.post('/comment/comment', passport.authorize, controller.comment.comment);
   router.post('/comment/reply', passport.authorize, controller.comment.reply);
   router.put('/comment/like/:id', passport.authorize, controller.comment.like);
+  // 删除评论
+  router.delete('/comment/delete/:id', passport.authorize, controller.comment.delete);
+  // 通过评论id获取评论在对应文章评论区的排列序号
+  router.get('/comment/index/:id', passport.verify, controller.comment.getCommentIndexById);
 
   // -------------------------------- 橙皮书 --------------------------------
   // 橙皮书合约广告人、次统计
@@ -260,6 +264,8 @@ module.exports = app => {
   router.post('/posts/:id/dislike', passport.authorize, controller.mining.dislike);
   // 阅读新内容30秒，增加阅读新内容积分
   router.post('/posts/:id/readnew', passport.authorize, controller.mining.readnew);
+  router.post('/posts/:id/reward', passport.authorize, controller.mineToken.rewardArticle);
+  router.get('/posts/:id/reward', passport.verify, controller.mineToken.getRewardArticle);
 
   // -------------------------------- 搜索相关 --------------------------------
   // 推荐搜索词语

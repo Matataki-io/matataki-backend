@@ -35,6 +35,7 @@ module.exports = {
     support: 1,
     order: 2,
     point: 3,
+    reward: 4,
   },
 
   // 积分系统
@@ -91,6 +92,7 @@ module.exports = {
     exchange_purchase: 'exchange_purchase',
     exchange_addliquidity: 'exchange_addliquidity',
     exchange_removeliquidity: 'exchange_removeliquidity',
+    reward_article: 'reward_article',
   },
 
   socialTypes1: {

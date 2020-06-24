@@ -127,18 +127,60 @@ class MineTokenController extends Controller {
   // 转账
   async transfer() {
     const ctx = this.ctx;
-    const { tokenId, to, amount } = this.ctx.request.body;
+    const { tokenId, to, amount, memo = null } = this.ctx.request.body;
     // 记录转赠fan票常用候选列表
     await this.ctx.service.history.put('token', to);
     // amount 客户端*精度，10^decimals
-    const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP, consts.mineTokenTransferTypes.transfer);
-    if(result) {
+    const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, memo, this.clientIP, consts.mineTokenTransferTypes.transfer);
+    if (result) {
       // 发送转账消息
-      ctx.service.notify.event.sendEvent(ctx.user.id, [to], 'transfer', result.logId, 'tokenWallet')
+      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', result.logId, 'tokenWallet');
 
-      ctx.body = { ...ctx.msg.success, data: { tx_hash: result.txHash } }
-    }
-    else ctx.msg.failure;
+      ctx.body = { ...ctx.msg.success, data: { tx_hash: result.txHash } };
+    } else ctx.msg.failure;
+  }
+  async rewardArticle() {
+    const ctx = this.ctx;
+    const { tokenId, to, amount, memo = null } = ctx.request.body;
+    const pid = ctx.params.id;
+    // 记录转赠fan票常用候选列表
+    await this.ctx.service.history.put('token', to);
+    // amount 客户端*精度，10^decimals
+    const transferResult = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, memo, this.clientIP, consts.mineTokenTransferTypes.reward_article, null, pid);
+
+    // start: 添加评论
+    const userId = ctx.user.id;
+    const username = ctx.user.username;
+    const signId = pid;
+    const comment = memo;
+    const commentType = consts.commentTypes.reward;
+    const refId = transferResult.logId;
+    const commentResult = await ctx.service.comment.create(userId, username, signId, comment, commentType, refId);
+    // end: 添加评论
+    if (transferResult) {
+      // 发送打赏文章消息
+      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', signId, 'article', transferResult.logId);
+      ctx.body = {
+        ...ctx.msg.success,
+        data: {
+          ...transferResult,
+          commentId: commentResult.insertId,
+        },
+      };
+    } else ctx.msg.failure;
+
+  }
+  async getRewardArticle() {
+    const ctx = this.ctx;
+    const { page = 1, pagesize = 10 } = ctx.query;
+    const pid = ctx.params.id;
+    const type = consts.mineTokenTransferTypes.reward_article;
+
+    const result = await ctx.service.token.mineToken.getRewardArticle(type, pid, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
   }
 
   // 用户需要针对特定 token 进行授权，我们的代理转账合约针对才能他的token进行批量转账

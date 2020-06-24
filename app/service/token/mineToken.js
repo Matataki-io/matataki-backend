@@ -301,8 +301,30 @@ class MineTokenService extends Service {
   async getHostingWallet(uid) {
     return this.service.account.hosting.isHosting(uid, 'ETH');
   }
+  async getRewardArticle(type, pid, page = 1, pagesize = 10) {
+    const result = await this.app.mysql.query(`
+      SELECT t1.from_uid, t1.to_uid, t1.token_id, t1.amount, t1.create_time, t1.tx_hash, t1.memo, t1.post_id,
+      t2.username, t2.nickname, t2.avatar,
+      t3.name as token_name, t3.symbol, t3.decimals, t3.logo as token_logo, t3.contract_address
+      FROM assets_minetokens_log t1
+      LEFT JOIN users t2 ON t1.from_uid = t2.id
+      LEFT JOIN minetokens t3 ON t1.token_id = t3.id
+      WHERE type = :type AND post_id = :pid
+      ORDER BY create_time DESC LIMIT :offset, :limit;
+      SELECT count(1) AS count FROM assets_minetokens_log WHERE type = :type AND post_id = :pid;
+    `, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      pid,
+      type,
+    });
+    return {
+      list: result[0],
+      count: result[1][0].count,
+    };
+  }
 
-  async transferFrom(tokenId, from, to, value, ip, type = '', conn) {
+  async transferFrom(tokenId, from, to, value, memo = null, ip, type = '', conn, pid = null) {
     this.logger.info('mineToken.transferFrom start: ', { tokenId, from, to, value, ip, type });
     if (from === to) {
       this.logger.error('mineToken.transferFrom failed: from === to', { from, to });
@@ -345,20 +367,20 @@ class MineTokenService extends Service {
       }
 
       // 增加to的token
-      await conn.query('INSERT INTO assets_minetokens(uid, token_id, amount) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
-        [ to, tokenId, amount, amount ]);
+      await conn.query('INSERT INTO assets_minetokens(uid, token_id, amount, memo) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
+        [ to, tokenId, amount, memo, amount ]);
 
       // 记录日志
-      const logResult = await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
-        [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash ]);
+      const logResult = await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, memo, create_time, ip, type, tx_hash, post_id) VALUES(?,?,?,?,?,?,?,?,?,?);',
+        [ from, to, tokenId, amount, memo, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash, pid ]);
 
       if (!isOutConn) {
         await conn.commit();
       }
       return {
         txHash: transactionHash,
-        logId: logResult.insertId
-      }
+        logId: logResult.insertId,
+      };
     } catch (e) {
       if (!isOutConn) {
         await conn.rollback();
@@ -858,7 +880,7 @@ class MineTokenService extends Service {
     return result;
   }
 
-  /** 根据id列表获取评论内容 */
+  /** 根据id列表获取转账记录 */
   async getByIdArray(idList) {
     const logs = await this.app.mysql.query(`
       SELECT
@@ -870,6 +892,7 @@ class MineTokenService extends Service {
         t1.create_time,
         t1.type,
         t1.tx_hash,
+        t1.memo,
         t2.name,
         t2.symbol,
         t2.logo,

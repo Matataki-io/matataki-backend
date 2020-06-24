@@ -103,6 +103,27 @@ class CommentController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = comments;
   }
+
+  async getCommentIndexById() {
+    const ctx = this.ctx;
+    const { id } = ctx.params;
+    if(!id) ctx.msg.paramsError;
+    const result = await this.service.comment.getCommentIndexById(parseInt(id));
+    if(result) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = result;
+    }
+    else ctx.body = ctx.msg.notFountComment;
+  }
+
+  /** 删除评论 */
+  async delete() {
+    const ctx = this.ctx;
+    const { id } = ctx.params;
+    if (!id) ctx.msg.paramsError;
+    const result = await this.service.comment.delete(parseInt(id), ctx.user.id);
+    ctx.body = result ? ctx.msg.success : ctx.msg.failure;
+  }
 }
 
 module.exports = CommentController;
