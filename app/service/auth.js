@@ -4,6 +4,7 @@ const Service = require('egg').Service;
 const md5 = require('crypto-js/md5');
 const sha256 = require('crypto-js/sha256');
 const axios = require('axios');
+const qs = require('qs');
 const moment = require('moment');
 const jwt = require('jwt-simple');
 const consts = require('./consts');
@@ -99,47 +100,42 @@ class AuthService extends Service {
     return hmac === hash;
   }
 
+  twitter_prepare() {
+    const oauth = new OAuth.OAuth(
+      'https://api.twitter.com/oauth/request_token',
+      'https://api.twitter.com/oauth/access_token',
+      this.app.config.twitter.appkey,
+      this.app.config.twitter.appsecret,
+      '1.0',
+      this.app.config.twitter.callbackUrl,
+      'HMAC-SHA1'
+    );
+
+    return new Promise((resolve, reject) => {
+      oauth.getOAuthRequestToken((err, token) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve(token);
+      });
+    });
+  }
+
   // twitter号验证，获取oauth_token_secret
   // 详情见https://developer.twitter.com/en/docs/basics/authentication/guides/log-in-with-twitter
   async twitter_auth(oauth_token, oauth_verifier) {
-    function randomString(len) {
-      len = len || 32;
-      const $chars = 'abcdefhijkmnprstwxyz2345678';
-      const maxPos = $chars.length;
-      let pwd = '';
-      for (let i = 0; i < len; i++) {
-        pwd += $chars.charAt(Math.floor(Math.random() * maxPos));
-      }
-      return pwd;
-    }
-    const timestamp = parseInt(Date.parse(new Date())) / 1000;
-    const ranstr = randomString(12);
-    const httpmethod = 'GET';
-    let twitterurl = 'http://api.twitter.com/oauth/access_token';
-    const params = 'oauth_consumer_key=' + this.app.config.twitter.appkey
-    + '&oauth_nonce=' + ranstr
-    + '&oauth_signature_method=' + 'HMAC-SHA1'
-    + '&oauth_timestamp=' + timestamp
-    + '&oauth_token=' + oauth_token
-    + '&oauth_verifier=' + oauth_verifier
-    + '&oauth_version=' + '1.0';
-    const signtext = httpmethod + '&' + encodeURIComponent(twitterurl) + '&' + encodeURIComponent(params);
-    const signkey = encodeURIComponent(this.app.config.twitter.appkey) + '&' + encodeURIComponent(this.app.config.twitter.appsecret);
-    const sign = encodeURIComponent(createHmac('sha1', signkey).update(signtext).digest()
-      .toString('base64'));
-    twitterurl = 'https://api.twitter.com/oauth/access_token';
-    const requesturl = twitterurl + '?' + params
-    + '&oauth_signature=' + sign;
-    const data = (await axios({
-      method: 'get',
-      url: requesturl,
-    })).data;
-    const token = {};
-    const dataarr = data.split('&');
-    for (const index in dataarr) {
-      token[dataarr[index].split('=')[0]] = dataarr[index].split('=')[1];
-    }
-    return token;
+    const { data } = await axios({
+      method: "POST",
+      url: "https://api.twitter.com/oauth/access_token",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      data: qs.stringify({ oauth_token, oauth_verifier }),
+    });
+
+    return qs.parse(data);
   }
 
   // twitter号登录，验证token和secret
@@ -630,7 +626,7 @@ class AuthService extends Service {
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
     try {
       await this.app.mysql.query(
-        `UPDATE users SET last_login_time=:now, last_login_ip=:ip WHERE id=:uid; 
+        `UPDATE users SET last_login_time=:now, last_login_ip=:ip WHERE id=:uid;
          INSERT INTO users_login_log (uid, ip, source, login_time) VALUES (:uid, :ip, \'ss\', :now);`,
         { uid, ip, now }
       );
