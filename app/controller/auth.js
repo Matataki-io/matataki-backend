@@ -204,6 +204,17 @@ class AuthController extends Controller {
     };
   }
 
+  async twitterPrepareForAuth() {
+    const ctx = this.ctx;
+
+    const token = await this.service.auth.twitter_prepare();
+
+    ctx.body = {
+      ...ctx.msg.success,
+      data: token,
+    };
+  }
+
   async twitterAuth() {
     const ctx = this.ctx;
     const { oauth_token, oauth_verifier } = ctx.request.body;
