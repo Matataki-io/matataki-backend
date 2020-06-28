@@ -131,7 +131,7 @@ class MineTokenController extends Controller {
     // 记录转赠fan票常用候选列表
     await this.ctx.service.history.put('token', to);
     // amount 客户端*精度，10^decimals
-    const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, memo, this.clientIP, consts.mineTokenTransferTypes.transfer);
+    const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP, consts.mineTokenTransferTypes.transfer, null, memo);
     if (result) {
       // 发送转账消息
       ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', result.logId, 'tokenWallet');
@@ -146,7 +146,7 @@ class MineTokenController extends Controller {
     // 记录转赠fan票常用候选列表
     await this.ctx.service.history.put('token', to);
     // amount 客户端*精度，10^decimals
-    const transferResult = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, memo, this.clientIP, consts.mineTokenTransferTypes.reward_article, null, pid);
+    const transferResult = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP, consts.mineTokenTransferTypes.reward_article, null, memo, pid);
 
     // start: 添加评论
     const userId = ctx.user.id;
