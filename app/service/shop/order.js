@@ -300,6 +300,12 @@ class OrderService extends Service {
 
     return false;
   }
+
+  /** 批量查询是否已经购买 */
+  async isBuyBySignIdArray(signIds, userId, category = 0) {
+    const orders = await this.app.mysql.select('orders', { where: { signid: signIds, uid: userId, status: 9, category } });
+    return orders
+  }
 }
 
 module.exports = OrderService;

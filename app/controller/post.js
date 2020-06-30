@@ -440,18 +440,37 @@ class PostController extends Controller {
       channel
     );
 
+    if (!postData) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
       return;
     }
 
-    if (postData) {
-      ctx.body = ctx.msg.success;
-      ctx.body.data = postData;
-      return;
+    // 这部分是登录之后才会执行的查询
+    if(ctx.user && ctx.user.id) {
+      let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+      let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
+      postData.list.forEach(post => {
+        // 是自己的文章？
+        post.isMyOwnPost = post.uid === ctx.user.id
+        // 是否满足持币可见
+        if(post.token_amount) {
+          let token = tokens.find(token => token.token_id === post.token_id);
+          post.tokenUnlock = (!!token && token.amount >= post.token_amount);
+        }
+        // 是否买过这篇文章
+        if(post.pay_price) {
+          post.payUnlock = !!purchasedPost.find(buy => buy.signid === post.id);
+        }
+      })
     }
 
-    ctx.body = ctx.msg.failure;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = postData;
   }
 
   // 获取按照时间排序的文章列表(基础方法)(新)
