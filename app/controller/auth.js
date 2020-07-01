@@ -206,8 +206,9 @@ class AuthController extends Controller {
 
   async twitterPrepareForAuth() {
     const ctx = this.ctx;
+    const { type } = ctx.request.query;
 
-    const token = await this.service.auth.twitter_prepare();
+    const token = await this.service.auth.twitter_prepare(type);
 
     ctx.body = {
       ...ctx.msg.success,

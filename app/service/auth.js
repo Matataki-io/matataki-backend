@@ -100,14 +100,14 @@ class AuthService extends Service {
     return hmac === hash;
   }
 
-  twitter_prepare() {
+  twitter_prepare(type = "binding") {
     const oauth = new OAuth.OAuth(
       'https://api.twitter.com/oauth/request_token',
       'https://api.twitter.com/oauth/access_token',
       this.app.config.twitter.appkey,
       this.app.config.twitter.appsecret,
       '1.0',
-      this.app.config.twitter.callbackUrl,
+      this.app.config.twitter.callbackUrl + "?type=" + type,
       'HMAC-SHA1'
     );
 
