@@ -1630,6 +1630,10 @@ class PostService extends Service {
         status: 1,
         category,
       });
+      await conn.update('posts',
+        { require_buy: 1 },
+        { where: { id: signId } }
+      );
       await conn.commit();
       return 0;
     } catch (e) {
