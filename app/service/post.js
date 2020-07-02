@@ -1598,6 +1598,46 @@ class PostService extends Service {
     }
     return true;
   }
+  // 添加文章付费阅读
+  async addArticlePay(userId, signId, price, tokenId) {
+    const category = 0;
+    const post = await this.get(signId);
+    if (!post) return -1;
+    if (post.uid !== userId) return -2;
+    // 0代表cny
+    let symbol = 'CNY';
+    let decimals = 4;
+    if (tokenId !== 0) {
+      const token = await this.service.token.mineToken.get(tokenId);
+      if (!token) return -4;
+      symbol = token.symbol;
+      decimals = token.decimals;
+    }
+    const conn = await this.app.mysql.beginTransaction();
+    try {
+      await conn.query('DELETE FROM product_prices WHERE sign_id = ? AND category = ?;', [ signId, category ]);
+      // 默认CNY定价
+      await conn.insert('product_prices', {
+        sign_id: signId,
+        title: post.title,
+        sku: signId,
+        stock_quantity: 0,
+        token_id: tokenId,
+        platform: 'cny',
+        symbol,
+        price,
+        decimals,
+        status: 1,
+        category,
+      });
+      await conn.commit();
+      return 0;
+    } catch (e) {
+      await conn.rollback();
+      this.ctx.logger.error(e);
+      return -3;
+    }
+  }
 
   // todo：拆分出来
   async addPrices(userId, signId, price, category = 0) {
