@@ -279,6 +279,25 @@ class MineTokenController extends Controller {
       return;
     }
 
+    // 这部分是登录之后才会执行的查询
+    if (ctx.user && ctx.user.id) {
+      let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+      let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(result.list.map(post => post.id), ctx.user.id);
+      result.list.forEach(post => {
+        // 是自己的文章？
+        post.is_ownpost = post.uid === ctx.user.id
+        // 是否满足持币可见
+        if (post.token_amount) {
+          let token = tokens.find(token => token.token_id === post.token_id);
+          post.token_unlock = !!token && token.amount >= post.token_amount;
+        }
+        // 是否买过这篇文章
+        if (post.pay_price) {
+          post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
+        }
+      })
+    }
+
     ctx.body = {
       ...ctx.msg.success,
       data: result,

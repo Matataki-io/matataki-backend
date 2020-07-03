@@ -45,7 +45,8 @@ class PostController extends Controller {
       editRequireBuy = null,
       ipfs_hide = false,
     } = ctx.request.body;
-    const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
+    // 修改requireBuy为数组
+    const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy.length > 0);
 
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
@@ -109,8 +110,10 @@ class PostController extends Controller {
     }
 
     // 超过 0 元才算数，0元则无视
-    if (requireBuy && requireBuy.price > 0) {
-      await this.service.post.addPrices(ctx.user.id, id, requireBuy.price, 0);
+    if (requireBuy && requireBuy.length > 0) {
+      const price = requireBuy[0].amount;
+      const tokenId = requireBuy[0].tokenId;
+      await this.service.post.addArticlePay(ctx.user.id, id, price, tokenId);
     }
 
     // 记录持币编辑信息
@@ -395,27 +398,35 @@ class PostController extends Controller {
       channel
     );
 
-    /* const postData = await this.service.post.followedPosts(
-      page,
-      pagesize,
-      userid,
-      channel,
-      extra,
-      filter
-    ); */
+    if (!postData) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
 
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
       return;
     }
 
-    if (postData) {
-      ctx.body = ctx.msg.success;
-      ctx.body.data = postData;
-      return;
-    }
+    // 获取文章解锁、购买状态
+    let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+    let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
+    postData.list.forEach(post => {
+      // 是自己的文章？
+      post.is_ownpost = post.uid === ctx.user.id
+      // 是否满足持币可见
+      if (post.token_amount) {
+        let token = tokens.find(token => token.token_id === post.token_id);
+        post.token_unlock = !!token && token.amount >= post.token_amount;
+      }
+      // 是否买过这篇文章
+      if (post.pay_price) {
+        post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
+      }
+    })
 
-    ctx.body = ctx.msg.failure;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = postData;
   }
 
   // 获取推荐分数排序的文章列表(基础方法)(新)
@@ -440,18 +451,37 @@ class PostController extends Controller {
       channel
     );
 
+    if (!postData) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
       return;
     }
 
-    if (postData) {
-      ctx.body = ctx.msg.success;
-      ctx.body.data = postData;
-      return;
+    // 这部分是登录之后才会执行的查询
+    if(ctx.user && ctx.user.id) {
+      let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+      let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
+      postData.list.forEach(post => {
+        // 是自己的文章？
+        post.is_ownpost = post.uid === ctx.user.id
+        // 是否满足持币可见
+        if(post.token_amount) {
+          let token = tokens.find(token => token.token_id === post.token_id);
+          post.token_unlock = !!token && token.amount >= post.token_amount;
+        }
+        // 是否买过这篇文章
+        if(post.pay_price) {
+          post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
+        }
+      })
     }
 
-    ctx.body = ctx.msg.failure;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = postData;
   }
 
   // 获取按照时间排序的文章列表(基础方法)(新)
@@ -480,18 +510,37 @@ class PostController extends Controller {
       isShowingDeleted
     );
 
+    if (!postData) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
     if (postData === 2) {
       ctx.body = ctx.msg.paramsError;
       return;
     }
 
-    if (postData) {
-      ctx.body = ctx.msg.success;
-      ctx.body.data = postData;
-      return;
+    // 这部分是登录之后才会执行的查询
+    if(ctx.user && ctx.user.id) {
+      let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+      let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
+      postData.list.forEach(post => {
+        // 是自己的文章？
+        post.is_ownpost = post.uid === ctx.user.id
+        // 是否满足持币可见
+        if (post.token_amount) {
+          let token = tokens.find(token => token.token_id === post.token_id);
+          post.token_unlock = !!token && token.amount >= post.token_amount;
+        }
+        // 是否买过这篇文章
+        if (post.pay_price) {
+          post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
+        }
+      })
     }
 
-    ctx.body = ctx.msg.failure;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = postData;
   }
 
   // 获取按照赞赏次数排序的文章列表(新)
@@ -621,17 +670,28 @@ class PostController extends Controller {
       this.ctx.body = ctx.msg.paramsError;
       return;
     }
-    this.ctx.body = ctx.msg.success;
-    this.ctx.body.data = result;
-    /* const postData = await this.service.post.getPostByTag(
-      page,
-      pagesize,
-      extra,
-      tagid
-    );
+
+    // 这部分是登录之后才会执行的查询
+    if (ctx.user && ctx.user.id) {
+      let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+      let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(result.list.map(post => post.id), ctx.user.id);
+      result.list.forEach(post => {
+        // 是自己的文章？
+        post.is_ownpost = post.uid === ctx.user.id
+        // 是否满足持币可见
+        if (post.token_amount) {
+          let token = tokens.find(token => token.token_id === post.token_id);
+          post.token_unlock = !!token && token.amount >= post.token_amount;
+        }
+        // 是否买过这篇文章
+        if (post.pay_price) {
+          post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
+        }
+      })
+    }
 
     this.ctx.body = ctx.msg.success;
-    this.ctx.body.data = postData; */
+    this.ctx.body.data = result;
   }
 
   // 查看单篇文章

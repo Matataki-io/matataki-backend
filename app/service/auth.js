@@ -13,6 +13,7 @@ const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
 const OAuth = require('oauth');
 const { createHash, createHmac } = require('crypto');
+const { google } = require("googleapis");
 
 class AuthService extends Service {
 
@@ -100,14 +101,14 @@ class AuthService extends Service {
     return hmac === hash;
   }
 
-  twitter_prepare() {
+  twitter_prepare(type = "binding") {
     const oauth = new OAuth.OAuth(
       'https://api.twitter.com/oauth/request_token',
       'https://api.twitter.com/oauth/access_token',
       this.app.config.twitter.appkey,
       this.app.config.twitter.appsecret,
       '1.0',
-      this.app.config.twitter.callbackUrl,
+      this.app.config.twitter.callbackUrl + "?type=" + type,
       'HMAC-SHA1'
     );
 
@@ -169,6 +170,27 @@ class AuthService extends Service {
       return null;
     }
     return tokendata;
+  }
+
+  googleLoginPrepare(callbackUrl) {
+    const oauth = new google.auth.OAuth2(
+      this.app.config.google.appKey,
+      this.app.config.google.appSecret, callbackUrl);
+
+    return oauth.generateAuthUrl({
+      redirect_uri: callbackUrl,
+      scope: ["profile", "email"],
+    });
+  }
+  googleLogin(code) {
+    const oauth = new google.auth.OAuth2(
+      this.app.config.google.appKey,
+      this.app.config.google.appSecret, callbackUrl);
+    const { tokens } = await oauth.getToken(code);
+
+    const { data } = await axios.get("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + tokens.access_token);
+
+    return data;
   }
 
   // github账号登录，验证access_token, 暂时是不verify state的

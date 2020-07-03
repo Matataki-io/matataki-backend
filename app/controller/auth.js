@@ -206,8 +206,9 @@ class AuthController extends Controller {
 
   async twitterPrepareForAuth() {
     const ctx = this.ctx;
+    const { type } = ctx.request.query;
 
-    const token = await this.service.auth.twitter_prepare();
+    const token = await this.service.auth.twitter_prepare(type);
 
     ctx.body = {
       ...ctx.msg.success,
@@ -229,6 +230,40 @@ class AuthController extends Controller {
       profile_image_url,
     } = loginResult;
     const jwttoken = await this.service.auth.saveTwitterUser(screen_name, name, profile_image_url, this.clientIP, 0, 'twitter');
+    if (jwttoken === null) {
+      ctx.body = ctx.msg.generateTokenError;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: jwttoken,
+    };
+  }
+
+  googlePrepareForAuth() {
+    const ctx = this.ctx;
+    const { callbackUrl } = ctx.request.query;
+
+    const authUrl = this.service.auth.googleLoginPrepare(callbackUrl);
+
+    ctx.body = {
+      ...ctx.msg.success,
+      data: authUrl,
+    };
+  }
+  async googleAuth() {
+    const ctx = this.ctx;
+    const { code } = ctx.request.body;
+    const loginResult = await this.service.auth.googleLogin(code);
+    if (!loginResult) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    const { email,
+      name,
+      picture,
+    } = loginResult;
+    const jwttoken = await this.service.auth.saveTwitterUser(email, name, picture, this.clientIP, 0, 'google');
     if (jwttoken === null) {
       ctx.body = ctx.msg.generateTokenError;
       return;

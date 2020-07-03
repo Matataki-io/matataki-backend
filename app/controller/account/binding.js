@@ -11,7 +11,7 @@ class AccountBindingController extends Controller {
   async binding() {
     const { ctx } = this;
     const uid = ctx.user.id;
-    let { code, platform, email, captcha = null, password, sign, username, publickey, msgParams, telegramParams, telegramBotName } = ctx.request.body;
+    let { code, platform, email, captcha = null, password, sign, username, publickey, msgParams, telegramParams, telegramBotName, oauth_token, oauth_verifier } = ctx.request.body;
     // username = account;
 
     let flag = false;
@@ -55,6 +55,16 @@ class AccountBindingController extends Controller {
         const telegramResult = this.handleTelegram(telegramBotName, telegramParams);
         username = telegramParams.id;
         flag = telegramResult;
+        break;
+      }
+      case 'twitter': {
+        username = await this.handleTwitter(oauth_token, oauth_verifier);
+        flag = true;
+        break;
+      }
+      case 'google': {
+        username = await this.handleGoogle(code);
+        flag = true;
         break;
       }
       default: {
@@ -131,6 +141,19 @@ class AccountBindingController extends Controller {
     const telegramBot = this.config.telegramBot;
     if (!telegramBot[botName]) return false;
     return this.service.auth.telegram_auth(telegramBot[botName], user);
+  }
+
+  async handleTwitter(oauth_token, oauth_verifier) {
+    const authtokens = await this.service.auth.twitter_auth(oauth_token, oauth_verifier);
+    const loginResult = await this.service.auth.twitter_login(authtokens.oauth_token, authtokens.oauth_token_secret);
+
+    return loginResult.screen_name;
+  }
+
+  async handleGoogle(code) {
+    const loginResult = await this.service.auth.googleLogin(code);
+
+    return loginResult.email;
   }
 
   /**
