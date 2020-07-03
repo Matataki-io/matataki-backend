@@ -40,6 +40,9 @@ module.exports = app => {
   // twitter登录
   router.get('/login/twitter/prepare', passport.verify, controller.auth.twitterPrepareForAuth);
   router.post('/login/twitter', passport.verify, controller.auth.twitterAuth);
+  // google登录
+  router.get('/login/google/prepare', passport.verify, controller.auth.googlePrepareForAuth);
+  router.post('/login/google', passport.verify, controller.auth.googleAuth);
 
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
