@@ -62,6 +62,11 @@ class AccountBindingController extends Controller {
         flag = true;
         break;
       }
+      case 'google': {
+        username = await this.handleGoogle(code);
+        flag = true;
+        break;
+      }
       default: {
         ctx.body = ctx.msg.unsupportedPlatform;
         return;
@@ -143,6 +148,12 @@ class AccountBindingController extends Controller {
     const loginResult = await this.service.auth.twitter_login(authtokens.oauth_token, authtokens.oauth_token_secret);
 
     return loginResult.screen_name;
+  }
+
+  async handleGoogle(code) {
+    const loginResult = await this.service.auth.googleLogin(code);
+
+    return loginResult.email;
   }
 
   /**
