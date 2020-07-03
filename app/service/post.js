@@ -372,11 +372,13 @@ class PostService extends Service {
 
   // 获取商品价格
   async getPrices(signId, category = 0) {
-    const prices = await this.app.mysql.select('product_prices', {
-      where: { sign_id: signId, status: 1, category },
-      columns: [ 'platform', 'symbol', 'price', 'decimals', 'stock_quantity' ],
-    });
-
+    const prices = await this.app.mysql.query(`
+      SELECT p.token_id, p.platform, p.price, p.decimals, p.stock_quantity, m.symbol, m.logo, m.name
+      FROM product_prices p
+      LEFT JOIN minetokens m 
+      ON p.token_id = m.id
+      WHERE p.sign_id = ? AND p.status = 1 AND p.category = ?;
+    `, [ signId, category ]);
     return prices;
   }
 
