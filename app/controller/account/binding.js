@@ -67,6 +67,11 @@ class AccountBindingController extends Controller {
         flag = true;
         break;
       }
+      case 'facebook': {
+        username = await this.handleFacebook(code, callbackUrl);
+        flag = true;
+        break;
+      }
       default: {
         ctx.body = ctx.msg.unsupportedPlatform;
         return;
@@ -154,6 +159,11 @@ class AccountBindingController extends Controller {
     const loginResult = await this.service.auth.googleLogin(code, callbackUrl);
 
     return loginResult.email;
+  }
+  async handleFacebook(code, callbackUrl) {
+    const loginResult = await this.service.auth.facebookLogin(code, callbackUrl);
+
+    return loginResult.id;
   }
 
   /**

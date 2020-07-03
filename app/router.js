@@ -43,6 +43,9 @@ module.exports = app => {
   // google登录
   router.get('/login/google/prepare', passport.verify, controller.auth.googlePrepareForAuth);
   router.post('/login/google', passport.verify, controller.auth.googleAuth);
+  // facebook登录
+  router.get('/login/facebook/prepare', passport.verify, controller.auth.facebookPrepareForAuth);
+  router.post('/login/facebook', passport.verify, controller.auth.facebookAuth);
 
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章

@@ -194,6 +194,31 @@ class AuthService extends Service {
     return data;
   }
 
+  facebookLoginPrepare(callbackUrl, state) {
+    const appKey = this.app.config.facebook.appKey;
+
+    return `https://www.facebook.com/v7.0/dialog/oauth?client_id=${appKey}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${state}`;
+  }
+  async facebookLogin(code, callbackUrl) {
+    const { data: oauthResponse } = await axios.get("https://graph.facebook.com/v7.0/oauth/access_token", {
+      params: {
+        client_id: this.app.config.facebook.appKey,
+        client_secret: this.app.config.facebook.appSecret,
+        redirect_uri: callbackUrl,
+        code,
+      },
+    });
+
+    const { data } = await axios.get("https://graph.facebook.com/me", {
+      params: {
+        access_token: oauthResponse.access_token,
+        fields: "name,picture.type(large){url}",
+      }
+    });
+
+    return data;
+  }
+
   // github账号登录，验证access_token, 暂时是不verify state的
   async verifyCode(code) {
     let tokendata = null;
