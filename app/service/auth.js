@@ -172,7 +172,7 @@ class AuthService extends Service {
     return tokendata;
   }
 
-  googleLoginPrepare(callbackUrl) {
+  googleLoginPrepare(callbackUrl, state) {
     const oauth = new google.auth.OAuth2(
       this.app.config.google.appKey,
       this.app.config.google.appSecret, callbackUrl);
@@ -180,6 +180,7 @@ class AuthService extends Service {
     return oauth.generateAuthUrl({
       redirect_uri: callbackUrl,
       scope: ["profile", "email"],
+      state,
     });
   }
   async googleLogin(code, callbackUrl) {
