@@ -182,7 +182,7 @@ class AuthService extends Service {
       scope: ["profile", "email"],
     });
   }
-  googleLogin(code) {
+  async googleLogin(code, callbackUrl) {
     const oauth = new google.auth.OAuth2(
       this.app.config.google.appKey,
       this.app.config.google.appSecret, callbackUrl);
