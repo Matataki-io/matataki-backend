@@ -174,8 +174,8 @@ class AuthService extends Service {
 
   googleLoginPrepare(callbackUrl, state) {
     const oauth = new google.auth.OAuth2(
-      this.app.config.google.appKey,
-      this.app.config.google.appSecret, callbackUrl);
+      this.app.config.google.appkey,
+      this.app.config.google.appsecret, callbackUrl);
 
     return oauth.generateAuthUrl({
       redirect_uri: callbackUrl,
@@ -185,11 +185,36 @@ class AuthService extends Service {
   }
   async googleLogin(code, callbackUrl) {
     const oauth = new google.auth.OAuth2(
-      this.app.config.google.appKey,
-      this.app.config.google.appSecret, callbackUrl);
+      this.app.config.google.appkey,
+      this.app.config.google.appsecret, callbackUrl);
     const { tokens } = await oauth.getToken(code);
 
     const { data } = await axios.get("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + tokens.access_token);
+
+    return data;
+  }
+
+  facebookLoginPrepare(callbackUrl, state) {
+    const appKey = this.app.config.facebook.appkey;
+
+    return `https://www.facebook.com/v7.0/dialog/oauth?client_id=${appKey}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${state}`;
+  }
+  async facebookLogin(code, callbackUrl) {
+    const { data: oauthResponse } = await axios.get("https://graph.facebook.com/v7.0/oauth/access_token", {
+      params: {
+        client_id: this.app.config.facebook.appkey,
+        client_secret: this.app.config.facebook.appsecret,
+        redirect_uri: callbackUrl,
+        code,
+      },
+    });
+
+    const { data } = await axios.get("https://graph.facebook.com/me", {
+      params: {
+        access_token: oauthResponse.access_token,
+        fields: "name,picture.type(large){url}",
+      }
+    });
 
     return data;
   }
