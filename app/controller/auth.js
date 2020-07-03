@@ -242,9 +242,9 @@ class AuthController extends Controller {
 
   googlePrepareForAuth() {
     const ctx = this.ctx;
-    const { callbackUrl } = ctx.request.query;
+    const { callbackUrl, state } = ctx.request.query;
 
-    const authUrl = this.service.auth.googleLoginPrepare(callbackUrl);
+    const authUrl = this.service.auth.googleLoginPrepare(callbackUrl, state);
 
     ctx.body = {
       ...ctx.msg.success,
@@ -253,8 +253,8 @@ class AuthController extends Controller {
   }
   async googleAuth() {
     const ctx = this.ctx;
-    const { code } = ctx.request.body;
-    const loginResult = await this.service.auth.googleLogin(code);
+    const { code, callbackUrl } = ctx.request.body;
+    const loginResult = await this.service.auth.googleLogin(code, callbackUrl);
     if (!loginResult) {
       ctx.body = ctx.msg.failure;
       return;
