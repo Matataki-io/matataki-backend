@@ -11,7 +11,7 @@ class AccountBindingController extends Controller {
   async binding() {
     const { ctx } = this;
     const uid = ctx.user.id;
-    let { code, platform, email, captcha = null, password, sign, username, publickey, msgParams, telegramParams, telegramBotName, oauth_token, oauth_verifier } = ctx.request.body;
+    let { code, platform, email, captcha = null, password, sign, username, publickey, msgParams, telegramParams, telegramBotName, oauth_token, oauth_verifier, callbackUrl } = ctx.request.body;
     // username = account;
 
     let flag = false;
@@ -63,7 +63,7 @@ class AccountBindingController extends Controller {
         break;
       }
       case 'google': {
-        username = await this.handleGoogle(code);
+        username = await this.handleGoogle(code, callbackUrl);
         flag = true;
         break;
       }
@@ -150,8 +150,8 @@ class AccountBindingController extends Controller {
     return loginResult.screen_name;
   }
 
-  async handleGoogle(code) {
-    const loginResult = await this.service.auth.googleLogin(code);
+  async handleGoogle(code, callbackUrl) {
+    const loginResult = await this.service.auth.googleLogin(code, callbackUrl);
 
     return loginResult.email;
   }
