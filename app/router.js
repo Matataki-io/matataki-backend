@@ -430,6 +430,7 @@ module.exports = app => {
   router.get('/orders/:tradeNo', passport.authorize, controller.order.get);
   router.put('/orders/:tradeNo', passport.authorize, controller.order.updateOrder);
   router.post('/orders/handleAmount0', passport.authorize, controller.order.handleAmount0);
+  router.post('/orders/payArticle', passport.authorize, controller.order.tokenPayArticle);
 
   router.post('/wx/payarticlenotify', app.middleware.tenpay('pay', app), controller.wxpay.payArticleNotify);
   router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);

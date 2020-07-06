@@ -305,7 +305,27 @@ class OrderService extends Service {
   async isBuyBySignIdArray(signIds, userId, category = 0) {
     if (signIds.length === 0) return [];
     const orders = await this.app.mysql.select('orders', { where: { signid: signIds, uid: userId, status: 9, category } });
-    return orders
+    return orders;
+  }
+
+  async getPayArticleObj(trade_no, uid) {
+    const result = await this.app.mysql.query(`
+      SELECT o.amount amount, pp.token_id tokenId, p.uid uid
+      FROM orders o
+      LEFT JOIN product_prices pp ON o.signid = pp.sign_id
+      LEFT JOIN posts p ON o.signid = p.id
+      WHERE trade_no = ? AND o.uid = ?;
+    `, [ trade_no, uid ]);
+    if (result) {
+      return result[0];
+    }
+    return null;
+  }
+  async updateOrderSuccess(trade_no, uid) {
+    const sql = `UPDATE order_headers SET status = 9 WHERE trade_no = :trade_no AND uid = :uid;
+                 UPDATE orders SET status = 9 WHERE trade_no = :trade_no AND uid = :uid;`;
+    const result = await this.app.mysql.query(sql, { trade_no, uid });
+    return result.affectedRows > 0;
   }
 }
 
