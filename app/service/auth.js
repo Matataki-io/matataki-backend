@@ -547,7 +547,7 @@ class AuthService extends Service {
 
     // if (userPw.length === 0) {
     // const userPw = await this.service.account.binding.getSyncFieldWithUser(username, platform);
-    const userPw = await this.service.account.binding.get2({ username, platform });
+    const userPw = await this.service.account.binding.get2({ username, platform, needPasswordHash: true });
     this.logger.info('AuthService:: verifyLogin: userPw ', userPw);
 
     if (!userPw) {

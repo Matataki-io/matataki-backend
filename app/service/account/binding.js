@@ -252,6 +252,7 @@ class AccountBindingService extends Service {
     platform = null,
     nickname = null,
     id = null,
+    needPasswordHash = false,
   }) {
     const whereArr = [];
     const searchObj = {};
@@ -275,8 +276,12 @@ class AccountBindingService extends Service {
 
     this.logger.info('service::binding:get2: whereArr, ', whereArr.join(' AND '));
     this.logger.info('service::binding:get2: searchObj, ', searchObj);
+    let pswSql = '';
+    if (needPasswordHash) {
+      pswSql = ' ua.password_hash, ';
+    }
     const users = await this.app.mysql.query(`
-      SELECT ua.uid as id, ua.account as username, ua.platform, ua.password_hash,
+      SELECT ua.uid as id, ua.account as username, ua.platform, ${pswSql}
       u.email, u.nickname, u.avatar, u.create_time, u.introduction, u.accept, u.source,
       u.reg_ip, u.last_login_time, u.is_recommend, u.referral_uid, u.last_login_ip, u.level, u.status, u.banner, u.create_time
       FROM users as u
