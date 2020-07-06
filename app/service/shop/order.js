@@ -325,7 +325,8 @@ class OrderService extends Service {
     const sql = `UPDATE order_headers SET status = 9 WHERE trade_no = :trade_no AND uid = :uid;
                  UPDATE orders SET status = 9 WHERE trade_no = :trade_no AND uid = :uid;`;
     const result = await this.app.mysql.query(sql, { trade_no, uid });
-    return result.affectedRows > 0;
+    this.ctx.logger.info('update Order Success result', result);
+    return result.length > 0;
   }
 }
 
