@@ -379,6 +379,9 @@ class PostService extends Service {
       ON p.token_id = m.id
       WHERE p.sign_id = ? AND p.status = 1 AND p.category = ?;
     `, [ signId, category ]);
+    if (prices && prices.length > 0 && prices[0].token_id === 0) {
+      prices[0].symbol = 'CNY';
+    }
     return prices;
   }
 
