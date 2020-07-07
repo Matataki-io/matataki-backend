@@ -122,11 +122,16 @@ class ExchangeService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
+    const tokenChangeObj = await this.service.token.exchange.getAllChangeByDay(1);
+    const tokenPriceObj = await this.service.token.exchange.getAllPrice();
     const memberObj = await this.service.token.mineToken.countMember();
 
     _.each(result[0], row => {
+      console.log(row);
       row.member = memberObj[row.id] || '0';
       row.username = this.service.user.maskEmailAddress(row.username);
+      row.current_price = tokenPriceObj[row.token_id] || 0;
+      row.price_change_24h = tokenChangeObj[row.token_id] || 0;
     });
 
     return {
