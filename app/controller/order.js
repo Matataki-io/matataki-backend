@@ -223,7 +223,7 @@ class OrderController extends Controller {
       return;
     }
     const { amount, tokenId, uid: to } = payParams;
-    const transferResult = await ctx.service.token.mineToken.transferFrom(tokenId, uid, to, amount, this.clientIP, consts.mineTokenTransferTypes.transfer);
+    const transferResult = await ctx.service.token.mineToken.transferFrom(tokenId, uid, to, amount, this.clientIP, consts.mineTokenTransferTypes.pay_article, null, null, pid);
     if (!transferResult) {
       ctx.body = {
         ...ctx.msg.failure,
