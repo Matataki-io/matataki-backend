@@ -219,6 +219,18 @@ class TokenController extends Controller {
       },
     };
   }
+  // 根据用户查看所有的token转账日志
+  async getAllTokenLogsByUser() {
+    const { ctx } = this;
+    const { pagesize = 10, page = 1, type = null } = ctx.query;
+    const result = await ctx.service.token.mineToken.getAllTokenLogsByUser(ctx.user.id, parseInt(page), parseInt(pagesize), type || null);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        ...result,
+      },
+    };
+  }
 
   // 持有的流动金list
   async getHoldLiquidity() {

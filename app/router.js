@@ -319,6 +319,7 @@ module.exports = app => {
 
   // 我的token transfer日志
   router.get('/token/userlogs', passport.authorize, controller.token.getUserLogs);
+  router.get('/token/allLogs', passport.authorize, controller.token.getAllTokenLogsByUser);
   // 我发行的token transfer日志
   router.get('/token/tokenlogs', passport.authorize, controller.token.getTokenLogs);
   // 查询用户:id发行的token

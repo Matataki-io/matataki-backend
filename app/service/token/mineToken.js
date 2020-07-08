@@ -526,6 +526,50 @@ class MineTokenService extends Service {
       list: result[0],
     };
   }
+  // 根据用户查看所有的token转账日志
+  async getAllTokenLogsByUser(userId, page = 1, pagesize = 20, _type = null) {
+    let whereSql = '';
+    let query = {};
+    const type = consts.mineTokenTransferTypes[_type];
+    // _type有值 但是 type没值
+    if (_type && !type) {
+      return { count: 0, list: [] };
+    }
+    if (type) {
+      whereSql = ' AND type = :type ';
+      query = { type };
+    }
+    const sql
+      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type, t.tx_hash, t.post_id, t.memo,
+        m.name, m.symbol, m.decimals,
+        u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar,
+        u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar,
+        p.title, p.cover
+        FROM (
+          SELECT * FROM assets_minetokens_log WHERE (from_uid = :userId OR to_uid = :userId) ${whereSql} ORDER BY id DESC LIMIT :offset, :limit
+        ) t
+        JOIN minetokens m ON m.id = t.token_id
+        LEFT JOIN users u1 ON t.from_uid = u1.id
+        LEFT JOIN users u2 ON t.to_uid = u2.id
+        LEFT JOIN posts p ON t.post_id = p.id;
+        SELECT count(1) AS count FROM assets_minetokens_log WHERE (from_uid = :userId OR to_uid = :userId) ${whereSql};`;
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      userId,
+      ...query,
+    });
+
+    _.each(result[0], row => {
+      row.from_username = this.service.user.maskEmailAddress(row.from_username);
+      row.to_username = this.service.user.maskEmailAddress(row.to_username);
+    });
+
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
+  }
 
   getAllTokens() {
     return this.app.mysql.select('minetokens');
