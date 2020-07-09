@@ -275,6 +275,23 @@ class TokenController extends Controller {
       },
     };
   }
+  // 根据用户获取他所有的流动金日志
+  async getLiquidityLogsByUser() {
+    const { ctx } = this;
+    const { pagesize = 100, page = 1, type = null } = ctx.query;
+    const userId = ctx.user.id;
+    const result = await ctx.service.token.mineToken.getLiquidityLogsByUser(userId, type, parseInt(page), parseInt(pagesize));
+    if (result === -1) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        ...result,
+      },
+    };
+  }
   // 全部
   async getPurchaseLog() {
     const { ctx } = this;

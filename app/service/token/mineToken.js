@@ -659,6 +659,45 @@ class MineTokenService extends Service {
       list: result[0],
     };
   }
+  async getLiquidityLogsByUser(userId, type = null, page = 1, pagesize = 10) {
+    const add = consts.mineTokenTransferTypes.exchange_addliquidity;
+    const remove = consts.mineTokenTransferTypes.exchange_removeliquidity;
+    // type存在，只能是add 和remove
+    let typeWhereSql = '';
+    if (type) {
+      if (type !== add && type !== remove) return -1;
+      if (type === add) typeWhereSql = ' AND liquidity > 0 ';
+      if (type === remove) typeWhereSql = ' AND liquidity < 0 ';
+    }
+    const sql = `
+      SELECT t1.id, t1.uid, t1.token_id, t1.cny_amount, t1.token_amount, t1.liquidity, t1.create_time,
+      t3.name, t3.symbol, t3.decimals, t3.total_supply, t3.logo,
+      t4.username, t4.nickname
+      FROM exchange_liquidity_logs t1
+      JOIN minetokens AS t3 ON t1.token_id = t3.id
+      JOIN users as t4 ON t3.uid = t4.id
+      WHERE t1.uid = :userId ${typeWhereSql}
+      ORDER BY t1.create_time DESC
+      LIMIT :offset, :limit;
+      SELECT count(1) AS count FROM exchange_liquidity_logs
+      WHERE uid = :userId ${typeWhereSql};
+      `;
+
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      userId,
+    });
+
+    _.each(result[0], row => {
+      row.username = this.service.user.maskEmailAddress(row.username);
+    });
+
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
+  }
 
   async getPurchaseLog(tokenId, userId = null, page = 1, pagesize = 100) {
     let sql = `

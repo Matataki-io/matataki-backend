@@ -410,6 +410,8 @@ module.exports = app => {
   router.get('/token/:id/liquidity/balances', passport.verify, controller.token.getLiquidityBalances);
   router.get('/token/:id/liquidity/transactions', passport.verify, controller.token.getLiquidityTransactions);
 
+  router.get('/token/allLiquidityLogs', passport.authorize, controller.token.getLiquidityLogsByUser);
+
   // -------------------------------- 微信支付相关API --------------------------------
   // 微信支付回调
   router.post('/wx/notify', app.middleware.tenpay('pay', app), controller.wxpay.notify);
