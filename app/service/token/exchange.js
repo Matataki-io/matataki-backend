@@ -1280,7 +1280,6 @@ class ExchangeService extends Service {
         }
       }
     }
-    // console.log('priceChangeObj', priceChangeObj);
     return priceChangeObj;
   }
   async getAllPrice() {
@@ -1300,8 +1299,27 @@ class ExchangeService extends Service {
         priceObj[item.token_id] = price === 0 ? 0.0001 : price;
       }
     }
-    // console.log(priceObj);
     return priceObj;
+  }
+  async getPriceHistory(tokenId) {
+    const sql = `SELECT 
+    case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
+    case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
+    case when sold_token_id = 0 THEN sold_amount/bought_amount ELSE bought_amount/sold_amount END 'price',
+    sold_amount,
+    bought_amount,
+    create_time,
+    cny_reserve_before,
+    token_reserve_before,
+    cny_reserve_before/token_reserve_before AS 'last_price'
+    FROM exchange_purchase_logs
+    WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId)
+    ORDER BY create_time DESC;`;
+    const result = await this.app.mysql.query(sql, {
+      tokenId,
+    });
+    console.log(result);
+    return result;
   }
 }
 

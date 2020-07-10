@@ -525,4 +525,5 @@ module.exports = app => {
   // 全部标记已读
   router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
   router.post('/test/search', passport.verify, controller.search.importTag);
+  router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
 };

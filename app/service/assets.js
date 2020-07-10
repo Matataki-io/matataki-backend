@@ -52,10 +52,12 @@ class AssetsService extends Service {
         return false;
       }
       // 记录log
-      const fromLogResult = await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      const fromLogResult = await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time, object_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [ from, 0, '', symbol, -amount, platform,
           consts.assetTypes.transferOut, // 'sign income'
-          moment().format('YYYY-MM-DD HH:mm:ss') ]
+          moment().format('YYYY-MM-DD HH:mm:ss'),
+          to,
+        ]
       );
 
       // 增加to的token
@@ -64,10 +66,12 @@ class AssetsService extends Service {
         [ to, '', symbol, amount, platform, amount ]
       );
       // 记录log
-      const toLogResult = await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      const toLogResult = await conn.query('INSERT INTO assets_change_log(uid, signid, contract, symbol, amount, platform, type, create_time, object_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [ to, 0, '', symbol, amount, platform,
           consts.assetTypes.transferIn, // 'sign income'
-          moment().format('YYYY-MM-DD HH:mm:ss') ]
+          moment().format('YYYY-MM-DD HH:mm:ss'),
+          from,
+        ]
       );
 
       if (!isOutConn) {
@@ -75,7 +79,7 @@ class AssetsService extends Service {
       }
       return {
         fromLogId: fromLogResult.insertId,
-        toLogId: toLogResult.insertId
+        toLogId: toLogResult.insertId,
       };
     } catch (e) {
       if (!isOutConn) {

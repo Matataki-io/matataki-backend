@@ -303,6 +303,15 @@ class MineTokenController extends Controller {
       data: result,
     };
   }
+  async getPriceHistory() {
+    const { ctx } = this;
+    const { tokenId } = ctx.query;
+    const result = await ctx.service.token.exchange.getPriceHistory(tokenId);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
 
 }
 
