@@ -58,7 +58,7 @@
     "remove-markdown": "^0.3.0",
     "sanitize-html": "^1.20.1",
     "tenpay": "^2.1.18",
-    "tnw": "^1.2.0",
+    "tnwx": "^2.4.5",
     "turndown": "^5.0.3",
     "vnt": "git+https://github.com/vntchain/vnt.js.git",
     "web3": "^1.2.4"

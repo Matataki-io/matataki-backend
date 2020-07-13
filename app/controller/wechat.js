@@ -1,7 +1,7 @@
 'use strict';
 
 const Controller = require('../core/base_controller');
-const { ApiConfig, ApiConfigKit, WeChat } = require('tnw');
+const { ApiConfig, ApiConfigKit, WeChat } = require('tnwx');
 
 class WechatController extends Controller {
   // 获取签名
@@ -31,10 +31,11 @@ class WechatController extends Controller {
       nonce,
       echostr,
     } = ctx.query;
-    const apiConfig = new ApiConfig('andoromeda', appId, appSecret);
+    const apiConfig = new ApiConfig(appId, appSecret, 'andoromeda');
     ApiConfigKit.putApiConfig(apiConfig);
+    ApiConfigKit.devMode = true;
     ApiConfigKit.setCurrentAppId(appId);
-    return WeChat.checkSignature(signature, timestamp, nonce, echostr);
+    ctx.body = WeChat.checkSignature(signature, timestamp, nonce, echostr);
   }
 
   async handleMsg() {
