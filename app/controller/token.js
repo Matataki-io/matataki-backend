@@ -219,6 +219,18 @@ class TokenController extends Controller {
       },
     };
   }
+  // 根据用户查看所有的token转账日志
+  async getAllTokenLogsByUser() {
+    const { ctx } = this;
+    const { pagesize = 10, page = 1, type = null } = ctx.query;
+    const result = await ctx.service.token.mineToken.getAllTokenLogsByUser(ctx.user.id, parseInt(page), parseInt(pagesize), type || null);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        ...result,
+      },
+    };
+  }
 
   // 持有的流动金list
   async getHoldLiquidity() {
@@ -256,6 +268,23 @@ class TokenController extends Controller {
     const { ctx } = this;
     const { tokenId, pagesize = 100, page = 1 } = ctx.query;
     const result = await ctx.service.token.mineToken.getLiquidityLogs(tokenId, null, parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        ...result,
+      },
+    };
+  }
+  // 根据用户获取他所有的流动金日志
+  async getLiquidityLogsByUser() {
+    const { ctx } = this;
+    const { pagesize = 100, page = 1, type = null } = ctx.query;
+    const userId = ctx.user.id;
+    const result = await ctx.service.token.mineToken.getLiquidityLogsByUser(userId, type, parseInt(page), parseInt(pagesize));
+    if (result === -1) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
     ctx.body = {
       ...ctx.msg.success,
       data: {

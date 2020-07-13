@@ -240,6 +240,74 @@ class AuthController extends Controller {
     };
   }
 
+  googlePrepareForAuth() {
+    const ctx = this.ctx;
+    const { callbackUrl, state } = ctx.request.query;
+
+    const authUrl = this.service.auth.googleLoginPrepare(callbackUrl, state);
+
+    ctx.body = {
+      ...ctx.msg.success,
+      data: authUrl,
+    };
+  }
+  async googleAuth() {
+    const ctx = this.ctx;
+    const { code, callbackUrl } = ctx.request.body;
+    const loginResult = await this.service.auth.googleLogin(code, callbackUrl);
+    if (!loginResult) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    const { email,
+      name,
+      picture,
+    } = loginResult;
+    const jwttoken = await this.service.auth.saveTwitterUser(email, name, picture, this.clientIP, 0, 'google');
+    if (jwttoken === null) {
+      ctx.body = ctx.msg.generateTokenError;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: jwttoken,
+    };
+  }
+
+  facebookPrepareForAuth() {
+    const ctx = this.ctx;
+    const { callbackUrl, state } = ctx.request.query;
+
+    const authUrl = this.service.auth.facebookLoginPrepare(callbackUrl, state);
+
+    ctx.body = {
+      ...ctx.msg.success,
+      data: authUrl,
+    };
+  }
+  async facebookAuth() {
+    const ctx = this.ctx;
+    const { code, callbackUrl } = ctx.request.body;
+    const loginResult = await this.service.auth.facebookLogin(code, callbackUrl);
+    if (!loginResult) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    const { id,
+      name,
+      picture: { data: { url: picture } },
+    } = loginResult;
+    const jwttoken = await this.service.auth.saveTwitterUser(`fb_${id}`, name, picture, this.clientIP, 0, 'facebook');
+    if (jwttoken === null) {
+      ctx.body = ctx.msg.generateTokenError;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: jwttoken,
+    };
+  }
+
   // 验证邮箱是否存在
   async verifyReg() {
     const ctx = this.ctx;

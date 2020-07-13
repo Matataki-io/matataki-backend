@@ -1187,7 +1187,7 @@ class ExchangeService extends Service {
                 SELECT IFNULL(SUM(ABS(amount)), 0) AS amount FROM exchanges e JOIN assets_change_log acl ON acl.uid = e.exchange_uid WHERE token_id = :tokenId AND acl.create_time > DATE_SUB(NOW(), INTERVAL 1 DAY);`;
     const result = await this.app.mysql.query(sql, { tokenId });
 
-    let first_price = 0;
+    /* let first_price = 0;
     let last_price = 0;
     if (result[0].length > 0) {
       first_price = result[0][0].sold_token_id === 0 ? result[0][0].sold_amount / result[0][0].bought_amount : result[0][0].bought_amount / result[0][0].sold_amount;
@@ -1198,15 +1198,129 @@ class ExchangeService extends Service {
     let change_24h = 0;
     if (first_price > 0) {
       change_24h = (last_price - first_price) / first_price;
-    }
+    } */
     const volume_24h = result[3][0].total + result[4][0].total;
+    const tokenChangeObj = await this.getAllChangeByDay();
     return {
-      change_24h,
+      change_24h: tokenChangeObj[tokenId] || 0,
       volume_24h,
       amount_24h: result[5][0].amount,
     };
   }
-
+  async getAllChangeByDay() {
+    const beforeTimeSql = `
+                SELECT T.* FROM
+                (SELECT 
+                case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
+                case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
+                sold_amount,
+                bought_amount,
+                create_time
+                FROM exchange_purchase_logs
+                ORDER BY create_time DESC
+                LIMIT 10000000000
+                ) AS T 
+                WHERE T.create_time <= DATE_SUB(NOW(),INTERVAL 1 DAY)
+                GROUP BY T.id;`;
+    const afterTimeDESCSql = `
+                SELECT T.* FROM
+                (SELECT 
+                case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
+                case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
+                sold_amount,
+                bought_amount,
+                create_time
+                FROM exchange_purchase_logs
+                ORDER BY create_time DESC
+                LIMIT 10000000000
+                ) AS T 
+                WHERE T.create_time > DATE_SUB(NOW(),INTERVAL 1 DAY)
+                GROUP BY T.id;`;
+    const afterTimeASCSql = `
+                SELECT T.* FROM
+                (SELECT 
+                case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
+                case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
+                sold_amount,
+                bought_amount,
+                create_time
+                FROM exchange_purchase_logs
+                ORDER BY create_time ASC
+                LIMIT 10000000000
+                ) AS T 
+                WHERE T.create_time > DATE_SUB(NOW(),INTERVAL 1 DAY)
+                GROUP BY T.id;`;
+    const result = await this.app.mysql.query(beforeTimeSql + afterTimeDESCSql + afterTimeASCSql);
+    const beforeTimeObj = {};
+    const afterTimeASCObj = {};
+    const priceChangeObj = {};
+    for (const item of result[0]) {
+      beforeTimeObj[item.id] = item;
+    }
+    for (const item of result[2]) {
+      afterTimeASCObj[item.id] = item;
+    }
+    for (const item of result[1]) {
+      // 代表这一天只执行了一笔
+      const id = item.id;
+      let first_price_item = afterTimeASCObj[id] || null;
+      if (first_price_item && moment(first_price_item.create_time).isSame(item.create_time)) {
+        first_price_item = beforeTimeObj[id] || null;
+      }
+      if (first_price_item === null) {
+        priceChangeObj[item.id] = 0;
+      } else {
+        const first_price = first_price_item.type === 'buy' ? first_price_item.sold_amount / first_price_item.bought_amount : first_price_item.bought_amount / first_price_item.sold_amount;
+        const last_price = item.type === 'buy' ? item.sold_amount / item.bought_amount : item.bought_amount / item.sold_amount;
+        console.log(first_price, last_price);
+        if (first_price === 0) {
+          priceChangeObj[item.id] = 0;
+        } else {
+          priceChangeObj[item.id] = (last_price - first_price) / first_price;
+        }
+      }
+    }
+    return priceChangeObj;
+  }
+  async getAllPrice() {
+    const sql = `SELECT am.amount token_reserve, a.amount cny_reserve, e.token_id FROM exchanges e
+    LEFT JOIN assets_minetokens am ON e.exchange_uid = am.uid
+    LEFT JOIN assets a ON e.exchange_uid = a.uid  
+    WHERE a.symbol = 'CNY' AND e.token_id = am.token_id
+    ORDER BY e.token_id;`;
+    const result = await this.app.mysql.query(sql);
+    console.log(result);
+    const priceObj = {};
+    for (const item of result) {
+      if (item.token_reserve <= 0) {
+        priceObj[item.token_id] = 0;
+      } else {
+        const price = parseFloat((item.cny_reserve / item.token_reserve).toFixed(4));
+        priceObj[item.token_id] = price === 0 ? 0.0001 : price;
+      }
+    }
+    return priceObj;
+  }
+  async getPriceHistory(tokenId) {
+    const sql = `SELECT 
+    case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
+    case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
+    case when sold_token_id = 0 THEN sold_amount/bought_amount ELSE bought_amount/sold_amount END 'price',
+    sold_amount,
+    bought_amount,
+    create_time,
+    cny_reserve_before,
+    token_reserve_before,
+    cny_reserve_before/token_reserve_before AS 'last_price'
+    FROM exchange_purchase_logs
+    WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId)
+    ORDER BY create_time DESC;`;
+    const result = await this.app.mysql.query(sql, {
+      tokenId,
+    });
+    console.log(result);
+    return result;
+  }
 }
 
 module.exports = ExchangeService;

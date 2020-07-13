@@ -11,7 +11,7 @@ class AccountBindingController extends Controller {
   async binding() {
     const { ctx } = this;
     const uid = ctx.user.id;
-    let { code, platform, email, captcha = null, password, sign, username, publickey, msgParams, telegramParams, telegramBotName, oauth_token, oauth_verifier } = ctx.request.body;
+    let { code, platform, email, captcha = null, password, sign, username, publickey, msgParams, telegramParams, telegramBotName, oauth_token, oauth_verifier, callbackUrl } = ctx.request.body;
     // username = account;
 
     let flag = false;
@@ -59,6 +59,16 @@ class AccountBindingController extends Controller {
       }
       case 'twitter': {
         username = await this.handleTwitter(oauth_token, oauth_verifier);
+        flag = true;
+        break;
+      }
+      case 'google': {
+        username = await this.handleGoogle(code, callbackUrl);
+        flag = true;
+        break;
+      }
+      case 'facebook': {
+        username = await this.handleFacebook(code, callbackUrl);
         flag = true;
         break;
       }
@@ -143,6 +153,17 @@ class AccountBindingController extends Controller {
     const loginResult = await this.service.auth.twitter_login(authtokens.oauth_token, authtokens.oauth_token_secret);
 
     return loginResult.screen_name;
+  }
+
+  async handleGoogle(code, callbackUrl) {
+    const loginResult = await this.service.auth.googleLogin(code, callbackUrl);
+
+    return loginResult.email;
+  }
+  async handleFacebook(code, callbackUrl) {
+    const loginResult = await this.service.auth.facebookLogin(code, callbackUrl);
+
+    return loginResult.id;
   }
 
   /**

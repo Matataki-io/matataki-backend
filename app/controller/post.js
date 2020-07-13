@@ -45,7 +45,8 @@ class PostController extends Controller {
       editRequireBuy = null,
       ipfs_hide = false,
     } = ctx.request.body;
-    const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
+    // 修改requireBuy为数组
+    const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy.length > 0);
 
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
@@ -109,8 +110,10 @@ class PostController extends Controller {
     }
 
     // 超过 0 元才算数，0元则无视
-    if (requireBuy && requireBuy.price > 0) {
-      await this.service.post.addPrices(ctx.user.id, id, requireBuy.price, 0);
+    if (requireBuy && requireBuy.length > 0) {
+      const price = requireBuy[0].amount;
+      const tokenId = requireBuy[0].tokenId;
+      await this.service.post.addArticlePay(ctx.user.id, id, price, tokenId);
     }
 
     // 记录持币编辑信息

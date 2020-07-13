@@ -40,6 +40,12 @@ module.exports = app => {
   // twitter登录
   router.get('/login/twitter/prepare', passport.verify, controller.auth.twitterPrepareForAuth);
   router.post('/login/twitter', passport.verify, controller.auth.twitterAuth);
+  // google登录
+  router.get('/login/google/prepare', passport.verify, controller.auth.googlePrepareForAuth);
+  router.post('/login/google', passport.verify, controller.auth.googleAuth);
+  // facebook登录
+  router.get('/login/facebook/prepare', passport.verify, controller.auth.facebookPrepareForAuth);
+  router.post('/login/facebook', passport.verify, controller.auth.facebookAuth);
 
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
@@ -313,6 +319,7 @@ module.exports = app => {
 
   // 我的token transfer日志
   router.get('/token/userlogs', passport.authorize, controller.token.getUserLogs);
+  router.get('/token/allLogs', passport.authorize, controller.token.getAllTokenLogsByUser);
   // 我发行的token transfer日志
   router.get('/token/tokenlogs', passport.authorize, controller.token.getTokenLogs);
   // 查询用户:id发行的token
@@ -403,6 +410,8 @@ module.exports = app => {
   router.get('/token/:id/liquidity/balances', passport.verify, controller.token.getLiquidityBalances);
   router.get('/token/:id/liquidity/transactions', passport.verify, controller.token.getLiquidityTransactions);
 
+  router.get('/token/allLiquidityLogs', passport.authorize, controller.token.getLiquidityLogsByUser);
+
   // -------------------------------- 微信支付相关API --------------------------------
   // 微信支付回调
   router.post('/wx/notify', app.middleware.tenpay('pay', app), controller.wxpay.notify);
@@ -424,6 +433,7 @@ module.exports = app => {
   router.get('/orders/:tradeNo', passport.authorize, controller.order.get);
   router.put('/orders/:tradeNo', passport.authorize, controller.order.updateOrder);
   router.post('/orders/handleAmount0', passport.authorize, controller.order.handleAmount0);
+  router.post('/orders/payArticle', passport.authorize, controller.order.tokenPayArticle);
 
   router.post('/wx/payarticlenotify', app.middleware.tenpay('pay', app), controller.wxpay.payArticleNotify);
   router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
@@ -515,4 +525,8 @@ module.exports = app => {
   // 全部标记已读
   router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
   router.post('/test/search', passport.verify, controller.search.importTag);
+  router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
+
+  router.get('/api/wechat', passport.verify, controller.wechat.auth);
+  router.post('/api/wechat', passport.verify, controller.wechat.handleMsg);
 };

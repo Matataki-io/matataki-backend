@@ -36,6 +36,7 @@
     "ethereumjs-util": "^6.2.0",
     "file-type": "^12.0.1",
     "form-data": "^3.0.0",
+    "googleapis": "^52.1.0",
     "gt3-sdk": "^2.0.0",
     "image-downloader": "^3.4.2",
     "ipfs-http-client-lite": "^0.3.0",
@@ -57,6 +58,7 @@
     "remove-markdown": "^0.3.0",
     "sanitize-html": "^1.20.1",
     "tenpay": "^2.1.18",
+    "tnwx": "^2.4.5",
     "turndown": "^5.0.3",
     "vnt": "git+https://github.com/vntchain/vnt.js.git",
     "web3": "^1.2.4"

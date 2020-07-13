@@ -13,6 +13,7 @@ const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
 const OAuth = require('oauth');
 const { createHash, createHmac } = require('crypto');
+const { google } = require("googleapis");
 
 class AuthService extends Service {
 
@@ -169,6 +170,53 @@ class AuthService extends Service {
       return null;
     }
     return tokendata;
+  }
+
+  googleLoginPrepare(callbackUrl, state) {
+    const oauth = new google.auth.OAuth2(
+      this.app.config.google.appkey,
+      this.app.config.google.appsecret, callbackUrl);
+
+    return oauth.generateAuthUrl({
+      redirect_uri: callbackUrl,
+      scope: ["profile", "email"],
+      state,
+    });
+  }
+  async googleLogin(code, callbackUrl) {
+    const oauth = new google.auth.OAuth2(
+      this.app.config.google.appkey,
+      this.app.config.google.appsecret, callbackUrl);
+    const { tokens } = await oauth.getToken(code);
+
+    const { data } = await axios.get("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + tokens.access_token);
+
+    return data;
+  }
+
+  facebookLoginPrepare(callbackUrl, state) {
+    const appKey = this.app.config.facebook.appkey;
+
+    return `https://www.facebook.com/v7.0/dialog/oauth?client_id=${appKey}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${state}`;
+  }
+  async facebookLogin(code, callbackUrl) {
+    const { data: oauthResponse } = await axios.get("https://graph.facebook.com/v7.0/oauth/access_token", {
+      params: {
+        client_id: this.app.config.facebook.appkey,
+        client_secret: this.app.config.facebook.appsecret,
+        redirect_uri: callbackUrl,
+        code,
+      },
+    });
+
+    const { data } = await axios.get("https://graph.facebook.com/me", {
+      params: {
+        access_token: oauthResponse.access_token,
+        fields: "name,picture.type(large){url}",
+      }
+    });
+
+    return data;
   }
 
   // github账号登录，验证access_token, 暂时是不verify state的
@@ -499,7 +547,7 @@ class AuthService extends Service {
 
     // if (userPw.length === 0) {
     // const userPw = await this.service.account.binding.getSyncFieldWithUser(username, platform);
-    const userPw = await this.service.account.binding.get2({ username, platform });
+    const userPw = await this.service.account.binding.get2({ username, platform, needPasswordHash: true });
     this.logger.info('AuthService:: verifyLogin: userPw ', userPw);
 
     if (!userPw) {
