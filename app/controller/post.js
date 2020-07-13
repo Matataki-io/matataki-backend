@@ -46,7 +46,7 @@ class PostController extends Controller {
       ipfs_hide = false,
     } = ctx.request.body;
     // 修改requireBuy为数组
-    const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy.length > 0);
+    const isEncrypt = Boolean(requireToken && requireToken.length > 0) || Boolean(requireBuy && requireBuy.length > 0);
 
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
