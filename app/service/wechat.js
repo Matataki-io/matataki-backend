@@ -128,6 +128,40 @@ class WechatService extends Service {
     ctx.logger.info('service getUserInfo result:', result);
     return result;
   }
+  async getQrCode() {
+    const ctx = this.ctx;
+    const appId = this.config.wechat.appId;
+    const appSecret = this.config.wechat.appSecret;
+    const token = await ctx.curl(
+      `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appId}&secret=${appSecret}`,
+      {
+        dataType: 'json',
+      }
+    );
+    const access_token = token.data.access_token;
+    const ticketRes = await ctx.curl(
+      `https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=${access_token}`,
+      {
+        // 必须指定 method
+        method: 'POST',
+        // 通过 contentType 告诉 HttpClient 以 JSON 格式发送
+        contentType: 'json',
+        data: {
+          expire_seconds: 604800,
+          action_name: 'QR_SCENE',
+          action_info: {
+            scene: {
+              scene_id: 123,
+            },
+          },
+        },
+        // 明确告诉 HttpClient 以 JSON 格式处理返回的响应 body
+        dataType: 'json',
+      }
+    );
+    // https://developers.weixin.qq.com/doc/offiaccount/Account_Management/Generating_a_Parametric_QR_Code.html
+    return 'https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=' + ticketRes.data.ticket;
+  }
 }
 
 module.exports = WechatService;

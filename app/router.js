@@ -526,4 +526,7 @@ module.exports = app => {
   router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
   router.post('/test/search', passport.verify, controller.search.importTag);
   router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
+
+  router.get('/api/wechat', passport.verify, controller.wechat.auth);
+  router.post('/api/wechat', passport.verify, controller.wechat.handleMsg);
 };
