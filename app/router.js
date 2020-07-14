@@ -300,6 +300,7 @@ module.exports = app => {
   router.get('/minetoken/:id/resources', passport.verify, controller.mineToken.getResources);
   router.put('/minetoken/:id/resources', passport.authorize, controller.mineToken.saveResources);
   router.get('/minetoken/:id/related', passport.verify, controller.mineToken.getRelated);
+  router.get('/minetoken/:id/supplyChart', passport.verify, controller.mineToken.getAddSupplyChart);
 
   // -------------------------------- token display API --------------------------------
   // 查询用户发行的token持仓用户list

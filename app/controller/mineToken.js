@@ -313,6 +313,16 @@ class MineTokenController extends Controller {
     };
   }
 
+  async getAddSupplyChart() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getAddSupplyChart(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result
+    }
+  }
+
 }
 
 module.exports = MineTokenController;
