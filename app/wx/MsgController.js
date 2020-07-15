@@ -9,6 +9,10 @@ const {
 } = require('tnwx');
 
 class MsgController extends MsgAdapter {
+  constructor(_this) {
+    super(_this);
+    this._this = _this;
+  }
   processInTextMsg(inTextMsg) {
     let outMsg;
     let content = 'IJPay 让支付触手可及 \n\nhttps://gitee.com/javen205/IJPay';
@@ -47,22 +51,38 @@ class MsgController extends MsgAdapter {
     }
     return outMsg;
   }
+  // 处理关注、取消关注事件
   processInFollowEvent(inFollowEvent) {
-    if (InFollowEvent.EVENT_INFOLLOW_SUBSCRIBE === inFollowEvent.getEvent) {
-      return this.renderOutTextMsg(
-        inFollowEvent,
-        '感谢你的关注 么么哒 \n\n交流群：114196246'
-      );
-    } else if (
-      InFollowEvent.EVENT_INFOLLOW_UNSUBSCRIBE === inFollowEvent.getEvent
-    ) {
+    console.log('processInFollowEvent inFollowEvent', inFollowEvent);
+    // console.log('_this', global.WechatService);
+
+
+    // eslint-disable-next-line eqeqeq
+    if (InFollowEvent.EVENT_INFOLLOW_SUBSCRIBE == inFollowEvent.getEvent) {
+
+      // 自定义方法
+      try {
+        // console.log('Service', this.wechat.followEvent);
+        // this.wechat.followEvent(inFollowEvent);
+
+      } catch (e) {
+        console.log(e);
+      }
+
+      return this.renderOutTextMsg(inFollowEvent,
+        '感谢你的关注 么么哒 \n\n交流群：114196246');
+    // eslint-disable-next-line eqeqeq
+    } else if (InFollowEvent.EVENT_INFOLLOW_UNSUBSCRIBE == inFollowEvent.getEvent) {
       console.error('取消关注：' + inFollowEvent.getFromUserName);
       return this.renderOutTextMsg(inFollowEvent);
     }
     return this.renderOutTextMsg(inFollowEvent);
+
   }
 
   processInQrCodeEvent(inQrCodeEvent) {
+    console.log('processInQrCodeEvent inQrCodeEvent', inQrCodeEvent);
+
     if (InQrCodeEvent.EVENT_INQRCODE_SUBSCRIBE === inQrCodeEvent.getEvent) {
       console.debug('扫码未关注：' + inQrCodeEvent.getFromUserName);
       return this.renderOutTextMsg(

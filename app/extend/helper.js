@@ -14,4 +14,8 @@ module.exports = {
       /(?<=.)[^@\n](?=[^@\n]*?@)|(?:(?<=@.)|(?!^)\G(?=[^@\n]*$)).(?=.*\.)/gm,
       '*');
   },
+  // 随机数
+  randomRange(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+  },
 };

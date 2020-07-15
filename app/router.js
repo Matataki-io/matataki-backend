@@ -527,6 +527,13 @@ module.exports = app => {
   router.post('/test/search', passport.verify, controller.search.importTag);
   router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
 
+  // -------------------------------- 微信服务号 ---------------------------
+  // 微信验证接口
   router.get('/api/wechat', passport.verify, controller.wechat.auth);
+  // 微信消息接口
   router.post('/api/wechat', passport.verify, controller.wechat.handleMsg);
+  // 获取登录二维码
+  router.post('/api/wechat/qrcode', passport.verify, controller.wechat.qrcode);
+  // 轮询微信扫码登录
+  router.get('/api/login_by_wx', passport.verify, controller.wechat.loginByWx);
 };

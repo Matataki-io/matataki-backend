@@ -2,7 +2,6 @@
 
 const Controller = require('../core/base_controller');
 const { ApiConfig, ApiConfigKit, WeChat } = require('tnwx');
-const MsgController = require('../wx/MsgController');
 
 class WechatController extends Controller {
   // 获取签名
@@ -41,26 +40,7 @@ class WechatController extends Controller {
 
   async handleMsg() {
     const { ctx } = this;
-    console.log(ctx);
-    ctx.logger.info('controller wechat auth: ', ctx.query);
-    const {
-      msgSignature,
-      timestamp,
-      nonce,
-    } = ctx.query;
-    const msgXml = this.ctx.request.rawBody;
-    console.log(msgXml);
-    const appId = this.config.wechat.appId;
-    const appSecret = this.config.wechat.appSecret;
-    const apiConfig = new ApiConfig(appId, appSecret, 'andoromeda');
-    ApiConfigKit.putApiConfig(apiConfig);
-    ApiConfigKit.devMode = true;
-    ApiConfigKit.setCurrentAppId(appId);
-    const msgAdapter = new MsgController();
-    ctx.set('Content-Type', 'text/xml');
-    const msg = await WeChat.handleMsg(msgAdapter, msgXml, msgSignature, timestamp, nonce);
-    console.log(msg);
-    ctx.body = msg;
+    ctx.body = await this.service.wechatTnwx.handleMsg();
 
     // 获取签名相关的参数用于消息解密(测试号以及明文模式无此参数)
     /* const buffer = [];
@@ -92,6 +72,19 @@ class WechatController extends Controller {
     /* const xml = await raw(inflate(this.ctx.req));
     console.log(xml); */
     // ctx.body = 'handleMsg';
+  }
+
+  async qrcode() {
+    const { ctx } = this;
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = await this.service.wechatTnwx.qrcode();
+  }
+  async loginByWx() {
+    const { ctx } = this;
+    const { scene } = ctx.query;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = await this.service.wechatTnwx.loginByWx(scene);
   }
 }
 
