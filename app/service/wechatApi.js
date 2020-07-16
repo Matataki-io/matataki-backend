@@ -1,9 +1,36 @@
 'use strict';
 
 const Service = require('egg').Service;
+const { ApiConfig, ApiConfigKit, AccessTokenApi } = require('tnwx');
+
 
 class WechatService extends Service {
   // ------------------------- 微信服务号接口调用公用方法 -------------------------
+
+  // 应用初始化
+  weChatTnwxInit() {
+    const appId = this.config.wechat.appId;
+    const appSecret = this.config.wechat.appSecret;
+    const apiConfig = new ApiConfig(appId, appSecret, 'andoromeda');
+    ApiConfigKit.putApiConfig(apiConfig);
+    ApiConfigKit.devMode = true;
+    ApiConfigKit.setCurrentAppId(appId);
+  }
+
+  // 获取 access_token
+  async getAccessToken() {
+    try {
+      const assessTokenRes = await AccessTokenApi.getAccessToken();
+      console.log('assessTokenRes', assessTokenRes);
+      if (assessTokenRes && assessTokenRes.access_token) {
+        return assessTokenRes.access_token;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // 得到推广临时二维码 (用于扫码登录)
   async getTemporaryQrcode(access_token, scene) {
     const { ctx } = this;
@@ -30,7 +57,7 @@ class WechatService extends Service {
 
   // ticket 换取 二维码 链接
   ticketExchangeQRcode(ticket) {
-    return `https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=${encodeURI(ticket)}`;
+    return `https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=${encodeURIComponent(ticket)}`;
   }
 
   // 长链接转换成端链接
@@ -48,6 +75,17 @@ class WechatService extends Service {
       dataType: 'json',
     });
     ctx.logger.info('service longUrlConvertShortUrl result:', result);
+    return result;
+  }
+
+  // 拉取用户信息
+  async getUserInfo(access_token, openid) {
+    const { ctx } = this;
+    ctx.logger.info('service getUserInfo');
+    const result = await ctx.curl(`https://api.weixin.qq.com/cgi-bin/user/info?access_token=${access_token}&openid=${openid}&lang=zh_CN`, {
+      dataType: 'json',
+    });
+    ctx.logger.info('service getUserInfo result:', result);
     return result;
   }
 }
