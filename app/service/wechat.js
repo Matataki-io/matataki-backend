@@ -4,8 +4,6 @@ const Service = require('egg').Service;
 const axios = require('axios');
 const sha1 = require('crypto-js/sha1');
 const md5 = require('crypto-js/md5');
-const { ApiConfig, ApiConfigKit, AccessTokenApi, WeChat } = require('tnwx');
-const MsgController = require('../wx/MsgController');
 
 class WechatService extends Service {
 
@@ -166,45 +164,6 @@ class WechatService extends Service {
   }
 
 
-  // -------------------------------- 微信服务号扫码方法 ------------------------
-  // 处理事件
-  async handleMsg() {
-    const { ctx } = this;
-    // console.log(ctx);
-
-    // signature: 'f7868e6c4b4927cec1ac9874f134d2c41c67c2cc',
-    // timestamp: '1594724130',
-    // nonce: '1613386257',
-    // openid: 'ofjFouIxYtOnJk1VF48SHKJkbLhg'
-
-    // ctx.logger.info('controller wechat auth: ', ctx.query);
-    const {
-      msgSignature,
-      timestamp,
-      nonce,
-    } = ctx.query;
-    const msgXml = this.ctx.request.rawBody;
-    console.log('msgXml', msgXml);
-
-    const appId = this.config.wechat.appId;
-    const appSecret = this.config.wechat.appSecret;
-    const apiConfig = new ApiConfig(appId, appSecret, 'andoromeda');
-    ApiConfigKit.putApiConfig(apiConfig);
-    ApiConfigKit.devMode = true;
-    ApiConfigKit.setCurrentAppId(appId);
-
-    const res = await AccessTokenApi.getAccessToken();
-    console.log('res', res);
-
-    const msgAdapter = new MsgController();
-
-    console.log('msgAdapter', msgAdapter);
-
-    ctx.set('Content-Type', 'text/xml');
-    const msg = await WeChat.handleMsg(msgAdapter, msgXml, msgSignature, timestamp, nonce);
-    console.log('msg', msg);
-    return msg;
-  }
 }
 
 module.exports = WechatService;
