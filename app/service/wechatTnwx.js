@@ -30,7 +30,10 @@ class WechatService extends Service {
 
     // 创建， 设置用户
     const { nickname, headimgurl } = userInfoResult;
-    const jwttoken = await this.service.auth.saveUser(openid, nickname, headimgurl, this.clientIP, 0, 'weixin');
+    const jwttoken = await this.service.auth.saveWeChatUser(openid, nickname, headimgurl, this.clientIP, 0, 'weixin');
+
+    console.log('jwttoken', jwttoken);
+
     if (jwttoken === null) {
       return ctx.msg.generateTokenError;
     }
@@ -64,7 +67,7 @@ class WechatService extends Service {
     // 事件处理
     if (msgXmlResult.MsgType[0] === 'event') {
 
-      if (msgXmlResult.Event[0] === 'SCAN' && msg === 'success') { // 扫码进入
+      if (msgXmlResult.Event[0] === 'SCAN') { // 扫码进入
 
         // 如果用户已经关注公众号
         // SCAN
@@ -84,7 +87,7 @@ class WechatService extends Service {
               await this.app.redis.set(`scene:${msgXmlResult.EventKey[0]}`, res.data, 'EX', 60);
             }
           } catch (e) {
-            ctx.logger.error('event SCAN: ', e);
+            this.logger.error('event SCAN: ', e);
           }
         } else {
           console.log('not event key, msgXmlResult: ', msgXmlResult);
@@ -119,7 +122,7 @@ class WechatService extends Service {
                 await this.app.redis.set(`scene:${eventKey[1]}`, res.data, 'EX', 60);
               }
             } catch (e) {
-              ctx.logger.error('event subscribe: ', e);
+              this.logger.error('event subscribe: ', e);
             }
           } else {
             // 其他自定义事件
@@ -167,11 +170,11 @@ class WechatService extends Service {
           checkScene(randomNumber);
         }
       } catch (e) {
-        ctx.logger.error('checkScene', e);
+        this.logger.error('checkScene', e);
       }
     };
 
-    checkScene(randomNumber);
+    await checkScene(randomNumber);
 
 
     const [ ticketError, ticketResult ] = await this.service.utils.facotryRequst(this.service.wechatApi.getTemporaryQrcode, assessToken, randomNumber);
@@ -224,7 +227,7 @@ class WechatService extends Service {
       return resultToken ? resultToken : false;
     } catch (e) {
       console.log(e);
-      ctx.logger.error('login by wx', e);
+      this.logger.error('login by wx', e);
       return false;
     }
   }
