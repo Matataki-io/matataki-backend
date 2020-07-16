@@ -13,7 +13,7 @@ class WechatService extends Service {
     const appSecret = this.config.wechat.appSecret;
     const apiConfig = new ApiConfig(appId, appSecret, 'andoromeda');
     ApiConfigKit.putApiConfig(apiConfig);
-    ApiConfigKit.devMode = true;
+    ApiConfigKit.devMode = false;
     ApiConfigKit.setCurrentAppId(appId);
   }
 
