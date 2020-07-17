@@ -15,7 +15,7 @@ class KeepWalletBalance extends Subscription {
     const needAirdropList = await this.service.ethereum
       .etherBalance.getActiveUnderBalanceWallet(lowestBalanceLimit);
     this.logger.info('KeepWalletBalance::needAirdropList', needAirdropList);
-    if (needAirdropList.length !== 0) {
+    /* if (needAirdropList.length !== 0) {
       try {
         const txHash = await this.service.ethereum.etherAirdrop.batchAirdropEther(
           needAirdropList,
@@ -24,7 +24,7 @@ class KeepWalletBalance extends Subscription {
       } catch (error) {
         this.logger.info('KeepWalletBalance error', error);
       }
-    }
+    } */
   }
 }
 
