@@ -1031,7 +1031,7 @@ class MineTokenService extends Service {
   async getIssuedHistory(tokenId) {
     const sql = `
       SELECT
-        id, SUM(amount), DATE(create_time) as create_time
+        id, SUM(amount) as amount, DATE(create_time) as create_time
       FROM assets_minetokens_log
       WHERE type = 'mint' AND token_id = :tokenId
       GROUP BY DATE(create_time);
