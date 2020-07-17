@@ -1314,12 +1314,72 @@ class ExchangeService extends Service {
     cny_reserve_before/token_reserve_before AS 'last_price'
     FROM exchange_purchase_logs
     WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId)
-    ORDER BY create_time DESC;`;
+    ORDER BY create_time DESC;
+    SELECT * FROM exchange_liquidity_logs WHERE token_id = :tokenId limit 0, 1;`;
     const result = await this.app.mysql.query(sql, {
       tokenId,
     });
-    console.log(result);
-    return result;
+    const priceLog = result[0];
+    const liquidity = result[1];
+    // 计算代币初始价格
+    let init_price = '';
+    let init_time = '';
+    if (liquidity.length > 0) {
+      init_time = moment(liquidity[0].create_time).format('YYYY-MM-DD');
+      init_price = parseFloat((liquidity[0].cny_amount / liquidity[0].token_amount).toFixed(4));
+    } else {
+      return {};
+    }
+
+    // 获取当前代币价格
+    const exchange = await this.service.token.exchange.detail(tokenId);
+    let current_price = 0;
+    if (exchange) {
+      current_price = parseFloat((exchange.cny_reserve / exchange.token_reserve).toFixed(4));
+    }
+
+    // 数据处理
+    const p_obj = {};
+    const p_arr = [];
+    const len = priceLog.length;
+    for (let i = 0; i < len; i++) {
+      const current_item = priceLog[i];
+      const ymd = moment(current_item.create_time).format('YYYY-MM-DD');
+      // 当前价格
+      if (i === 0) {
+        p_obj[ymd] = current_price;
+        p_arr.push({
+          time: ymd,
+          price: current_price,
+        });
+      }
+      // 前一个的价格都是后一天时间
+      if (i + 1 < len) {
+        const next_item = priceLog[i + 1];
+        const ymd = moment(next_item.create_time).format('YYYY-MM-DD');
+        if (!p_obj[ymd]) {
+          p_obj[ymd] = current_item.last_price;
+          p_arr.push({
+            time: ymd,
+            price: current_item.last_price,
+          });
+        }
+      }
+      // 初始价格
+      if (i === len - 1) {
+        if (!p_obj[init_time]) {
+          p_obj[init_time] = init_price;
+          p_arr.push({
+            time: init_time,
+            price: init_price,
+          });
+        }
+      }
+    }
+    return {
+      obj: p_obj,
+      arr: p_arr,
+    };
   }
 }
 

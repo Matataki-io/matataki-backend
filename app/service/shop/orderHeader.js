@@ -26,18 +26,21 @@ class OrderHeaderService extends Service {
           const prices = await this.ctx.service.post.getPrices(item.signId);
           if (!prices || prices.length <= 0) {
             await conn.rollback();
+            this.logger.error('OrderHeaderService.createOrder exception. !prices || prices.length <= 0 %j', prices);
             return '-1';
           }
 
           // 先判断有没有购买过文章
           if (await this.service.shop.order.isBuy(userId, item.signId)) {
             await conn.rollback();
+            this.logger.error('OrderHeaderService.createOrder exception. isBuy');
             return '-1';
           }
           // 创建购买文章订单行
           const result = await this.service.shop.order.create(userId, item.signId, '', prices[0].symbol, prices[0].price, prices[0].platform, 1, 0, trade_no, conn);
           if (result <= 0) {
             await conn.rollback();
+            this.logger.error('OrderHeaderService.createOrder exception. result <= 0 %j', result);
             return '-1';
           }
           total = total + prices[0].price;
@@ -74,6 +77,7 @@ class OrderHeaderService extends Service {
           }
           if (cny_amount <= 0) {
             await conn.rollback();
+            this.logger.error('OrderHeaderService.createOrder exception. cny_amount <= 0 %j', cny_amount);
             return '-1';
           }
           // 创建购买粉丝币订单行
@@ -97,6 +101,7 @@ class OrderHeaderService extends Service {
           );
           if (!result) {
             await conn.rollback();
+            this.logger.error('OrderHeaderService.createOrder exception. !result %j', result);
             return '-1';
           }
           total = total + cny_amount;
@@ -119,6 +124,7 @@ class OrderHeaderService extends Service {
         [ userId, trade_no, total, amount, moment().format('YYYY-MM-DD HH:mm:ss'), 0, ip, useBalance ]);
       if (headerResult.affectedRows <= 0) {
         await conn.rollback();
+        this.logger.error('OrderHeaderService.createOrder exception. headerResult.affectedRows <= 0 %j', headerResult);
         return '-1';
       }
 

@@ -991,6 +991,42 @@ class MineTokenService extends Service {
     if (logs === null) return [];
     return logs;
   }
+
+  async getAddSupplyChart(tokenId) {
+    const sum = list => {
+      let total = 0;
+      list.forEach(item => total += item);
+      return total;
+    }
+    const res = await this.app.mysql.select('assets_minetokens_log',{
+      where: {
+        type: 'mint',
+        token_id: tokenId
+      }
+    })
+    let result = {
+      total_supply: 0,
+      suppl_24h: 0,
+      suppl_7d: 0,
+      suppl_30d: 0
+    }
+    if(res.length === 0) return result
+
+    let mapres = res.map(log => log.amount);
+    result.total_supply = sum(mapres);
+
+    let date = new Date();
+    date.setDate(date.getDate() - 30);
+    result.suppl_30d = sum(res.filter(log => log.create_time >= date).map(log => log.amount));
+    date = new Date();
+    date.setDate(date.getDate() - 7);
+    result.suppl_7d = sum(res.filter(log => log.create_time >= date).map(log => log.amount));
+    date = new Date();
+    date.setDate(date.getDate() - 1);
+    result.suppl_24h = sum(res.filter(log => log.create_time >= date).map(log => log.amount));
+
+    return result;
+  }
 }
 
 module.exports = MineTokenService;
