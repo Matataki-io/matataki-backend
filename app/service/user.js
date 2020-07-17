@@ -9,6 +9,7 @@ const downloader = require('image-downloader');
 const md5 = require('crypto-js/md5');
 const filetype = require('file-type');
 const _ = require('lodash');
+const path = require('path');
 
 const introductionLengthInvalid = 4;
 const emailDuplicated = 5;
@@ -388,8 +389,9 @@ class UserService extends Service {
     try {
       imageFile = await downloader.image({
         url: avatarurl,
-        dest: './uploads',
+        dest: path.resolve(__dirname, './uploads'),
       });
+      console.log(__dirname);
     } catch (err) {
       this.logger.error('UserService:: uploadAvatarFromUrl error: %j', err);
       return null;
