@@ -355,6 +355,12 @@ module.exports = app => {
   router.post('/exchange/tokenToTokenOutput', passport.authorize, controller.exchange.tokenToTokenOutput);
   router.post('/exchange/refundOrder', passport.authorize, controller.exchange.refundOrder);
 
+  // ------ token详情页折线图数据 -----
+  // token价格历史
+  router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
+  // token增发历史
+  router.get('/token/:id/history/issued', passport.verify, controller.mineToken.getIssuedHistory);
+
   // -------------------------------- exchage计算 display API --------------------------------
   // 获取pool size & supply
   router.get('/exchange/currentPoolSize', passport.verify, controller.exchange.getCurrentPoolSize);
@@ -525,8 +531,8 @@ module.exports = app => {
   router.put('/notify/event', passport.authorize, controller.notify.haveRead);
   // 全部标记已读
   router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
+
   router.post('/test/search', passport.verify, controller.search.importTag);
-  router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
 
   // -------------------------------- 微信服务号 ---------------------------
   // 微信验证接口
