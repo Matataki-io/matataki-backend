@@ -307,7 +307,7 @@ class SearchService extends Service {
         },
       });
     } catch (err) {
-      this.logger.error('SearchService:: deletePost: error ', err);
+      this.logger.error('SearchService:: importUser index: error ', err);
       return null;
     }
     return 1;

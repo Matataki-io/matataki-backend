@@ -162,6 +162,8 @@ class WechatService extends Service {
     // https://developers.weixin.qq.com/doc/offiaccount/Account_Management/Generating_a_Parametric_QR_Code.html
     return 'https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=' + ticketRes.data.ticket;
   }
+
+
 }
 
 module.exports = WechatService;
