@@ -323,6 +323,16 @@ class MineTokenController extends Controller {
     }
   }
 
+  async getIssuedHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getIssuedHistory(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result
+    }
+  }
+
 }
 
 module.exports = MineTokenController;

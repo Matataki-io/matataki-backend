@@ -1027,6 +1027,19 @@ class MineTokenService extends Service {
 
     return result;
   }
+
+  async getIssuedHistory(tokenId) {
+    const sql = `
+      SELECT
+        id, SUM(amount), DATE(create_time) as create_time
+      FROM assets_minetokens_log
+      WHERE type = 'mint' AND token_id = :tokenId
+      GROUP BY DATE(create_time);
+    `;
+    const result = await this.app.mysql.query(sql, { tokenId });
+
+    return result
+  }
 }
 
 module.exports = MineTokenService;
