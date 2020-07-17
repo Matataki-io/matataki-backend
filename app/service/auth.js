@@ -372,6 +372,9 @@ class AuthService extends Service {
 
           const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);
 
+          this.logger.info('saveWeChatUser nickname', nickname);
+          this.logger.info('saveWeChatUser avatar', avatar);
+
           // 更新昵称
           await this.app.mysql.update('users',
             { nickname, avatar },
