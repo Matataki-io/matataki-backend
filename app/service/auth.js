@@ -370,6 +370,7 @@ class AuthService extends Service {
 
           await setNickname(nickname);
 
+          this.logger.info('saveWeChatUser avatarUrl', avatarUrl);
           const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);
 
           this.logger.info('saveWeChatUser nickname', nickname);
