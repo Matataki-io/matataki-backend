@@ -9,8 +9,8 @@ class WechatService extends Service {
 
   // 应用初始化
   weChatTnwxInit() {
-    const appId = this.config.wechat.appId;
-    const appSecret = this.config.wechat.appSecret;
+    const appId = this.config.wxServiceAccount.appId;
+    const appSecret = this.config.wxServiceAccount.appSecret;
     const apiConfig = new ApiConfig(appId, appSecret, 'andoromeda');
     ApiConfigKit.putApiConfig(apiConfig);
     ApiConfigKit.devMode = false;
