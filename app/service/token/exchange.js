@@ -1442,6 +1442,8 @@ class ExchangeService extends Service {
         if (liquidity < 0) {
           cny = last_item.cny_amount - cny_amount;
           token = last_item.token_amount - token_amount;
+          if (cny < 0) cny = 0;
+          if (token < 0) token = 0;
           arr.push({
             time, cny, token,
           });
