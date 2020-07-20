@@ -1381,6 +1381,113 @@ class ExchangeService extends Service {
       arr: p_arr,
     };
   }
+
+  async getLiquidityHistory(tokenId) {
+    const sql = `SELECT * FROM
+    (
+      (
+        SELECT token_id, 'liquidity' AS type, create_time,
+        0 as sold_amount,
+        0 as bought_amount,
+        liquidity, cny_amount, token_amount
+        FROM exchange_liquidity_logs t1
+        WHERE token_id = :tokenId
+      )
+    UNION ALL
+      (
+        SELECT 
+        case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'token_id',
+        case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
+        create_time,
+        sold_amount,
+        bought_amount,
+        0 as liquidity,
+        cny_reserve_before AS cny_amount,
+        token_reserve_before AS token_amount
+        FROM exchange_purchase_logs t2
+        WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId)
+      )
+    ) as T
+    ORDER BY T.create_time ASC;`;
+    const result = await this.app.mysql.query(sql, {
+      tokenId,
+    });
+    // 获取当前代币流动金池
+    const exchange = await this.service.token.exchange.detail(tokenId);
+    const current_cny_reserve = exchange ? exchange.cny_reserve : 0;
+    const current_token_reserve = exchange ? exchange.token_reserve : 0;
+
+    // 数据处理
+    const arr = [];
+    const len = result.length;
+    for (let i = 0; i < len; i++) {
+      const current_item = result[i];
+      const { cny_amount, token_amount, create_time, type, liquidity, sold_amount, bought_amount } = current_item;
+      const time = moment(create_time).format('YYYY-MM-DD HH:mm:ss');
+      // 首个是添加流动性
+      if (i === 0 && type === 'liquidity') {
+        arr.push({
+          time,
+          cny: cny_amount,
+          token: token_amount,
+        });
+        continue;
+      }
+      // 如果是添加流动性
+      if (type === 'liquidity') {
+        const last_item = result[i - 1];
+        // 判断是删除还是添加流动性，数据都是上一个item的数据+/-当前数据的操作
+        let cny = 0;
+        let token = 0;
+        if (liquidity < 0) {
+          cny = last_item.cny_amount - cny_amount;
+          token = last_item.token_amount - token_amount;
+          arr.push({
+            time, cny, token,
+          });
+        }
+        if (liquidity > 0) {
+          cny = last_item.cny_amount + cny_amount;
+          token = last_item.token_amount + token_amount;
+          arr.push({
+            time, cny, token,
+          });
+        }
+        current_item.cny_amount = cny;
+        current_item.token_amount = token;
+      } else {
+        // 最后一个的数据
+        if (i === len - 1) {
+          arr.push({
+            time,
+            cny: current_cny_reserve,
+            token: current_token_reserve,
+          });
+        } else {
+          let cny = 0;
+          let token = 0;
+          if (type === 'sell') {
+            cny = cny_amount - bought_amount;
+            token = token_amount + sold_amount;
+            arr.push({
+              time, cny, token,
+            });
+          }
+          if (type === 'buy') {
+            cny = cny_amount + sold_amount;
+            token = token_amount - bought_amount;
+            arr.push({
+              time, cny, token,
+            });
+          }
+          current_item.cny_amount = cny;
+          current_item.token_amount = token;
+        }
+      }
+    }
+    // console.log(result);
+    return arr;
+  }
 }
 
 module.exports = ExchangeService;
