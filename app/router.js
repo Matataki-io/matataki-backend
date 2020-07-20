@@ -300,6 +300,7 @@ module.exports = app => {
   router.get('/minetoken/:id/resources', passport.verify, controller.mineToken.getResources);
   router.put('/minetoken/:id/resources', passport.authorize, controller.mineToken.saveResources);
   router.get('/minetoken/:id/related', passport.verify, controller.mineToken.getRelated);
+  router.get('/minetoken/:id/supplyChart', passport.verify, controller.mineToken.getAddSupplyChart);
 
   // -------------------------------- token display API --------------------------------
   // 查询用户发行的token持仓用户list
@@ -353,6 +354,18 @@ module.exports = app => {
   router.post('/exchange/tokenToTokenInput', passport.authorize, controller.exchange.tokenToTokenInput);
   router.post('/exchange/tokenToTokenOutput', passport.authorize, controller.exchange.tokenToTokenOutput);
   router.post('/exchange/refundOrder', passport.authorize, controller.exchange.refundOrder);
+
+  // ------ token详情页折线图数据 -----
+  // token价格历史
+  router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
+  // token流动金历史
+  router.get('/token/:id/history/liquidity', passport.verify, controller.mineToken.getLiquidityHistory);
+  // token增发历史
+  router.get('/token/:id/history/issued', passport.verify, controller.mineToken.getIssuedHistory);
+  // token交易额历史
+  router.get('/token/:id/history/amount', passport.verify, controller.mineToken.getAmountHistory);
+  // token交易量历史
+  router.get('/token/:id/history/volume', passport.verify, controller.mineToken.getVolumeHistory);
 
   // -------------------------------- exchage计算 display API --------------------------------
   // 获取pool size & supply
@@ -524,9 +537,16 @@ module.exports = app => {
   router.put('/notify/event', passport.authorize, controller.notify.haveRead);
   // 全部标记已读
   router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
-  router.post('/test/search', passport.verify, controller.search.importTag);
-  router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
 
+  router.post('/test/search', passport.verify, controller.search.importTag);
+
+  // -------------------------------- 微信服务号 ---------------------------
+  // 微信验证接口
   router.get('/api/wechat', passport.verify, controller.wechat.auth);
+  // 微信消息接口
   router.post('/api/wechat', passport.verify, controller.wechat.handleMsg);
+  // 获取登录二维码
+  router.post('/api/wechat/qrcode', passport.verify, controller.wechat.qrcode);
+  // 轮询微信扫码登录
+  router.get('/api/login_by_wx', passport.verify, controller.wechat.loginByWx);
 };

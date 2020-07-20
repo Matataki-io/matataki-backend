@@ -13,7 +13,7 @@ const ONT = require('ontology-ts-sdk');
 const EOS = require('eosjs');
 const OAuth = require('oauth');
 const { createHash, createHmac } = require('crypto');
-const { google } = require("googleapis");
+const { google } = require('googleapis');
 
 class AuthService extends Service {
 
@@ -101,14 +101,14 @@ class AuthService extends Service {
     return hmac === hash;
   }
 
-  twitter_prepare(type = "binding") {
+  twitter_prepare(type = 'binding') {
     const oauth = new OAuth.OAuth(
       'https://api.twitter.com/oauth/request_token',
       'https://api.twitter.com/oauth/access_token',
       this.app.config.twitter.appkey,
       this.app.config.twitter.appsecret,
       '1.0',
-      this.app.config.twitter.callbackUrl + "?type=" + type,
+      this.app.config.twitter.callbackUrl + '?type=' + type,
       'HMAC-SHA1'
     );
 
@@ -128,10 +128,10 @@ class AuthService extends Service {
   // 详情见https://developer.twitter.com/en/docs/basics/authentication/guides/log-in-with-twitter
   async twitter_auth(oauth_token, oauth_verifier) {
     const { data } = await axios({
-      method: "POST",
-      url: "https://api.twitter.com/oauth/access_token",
+      method: 'POST',
+      url: 'https://api.twitter.com/oauth/access_token',
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
       data: qs.stringify({ oauth_token, oauth_verifier }),
     });
@@ -179,7 +179,7 @@ class AuthService extends Service {
 
     return oauth.generateAuthUrl({
       redirect_uri: callbackUrl,
-      scope: ["profile", "email"],
+      scope: [ 'profile', 'email' ],
       state,
     });
   }
@@ -189,7 +189,7 @@ class AuthService extends Service {
       this.app.config.google.appsecret, callbackUrl);
     const { tokens } = await oauth.getToken(code);
 
-    const { data } = await axios.get("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=" + tokens.access_token);
+    const { data } = await axios.get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + tokens.access_token);
 
     return data;
   }
@@ -200,7 +200,7 @@ class AuthService extends Service {
     return `https://www.facebook.com/v7.0/dialog/oauth?client_id=${appKey}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${state}`;
   }
   async facebookLogin(code, callbackUrl) {
-    const { data: oauthResponse } = await axios.get("https://graph.facebook.com/v7.0/oauth/access_token", {
+    const { data: oauthResponse } = await axios.get('https://graph.facebook.com/v7.0/oauth/access_token', {
       params: {
         client_id: this.app.config.facebook.appkey,
         client_secret: this.app.config.facebook.appsecret,
@@ -209,11 +209,11 @@ class AuthService extends Service {
       },
     });
 
-    const { data } = await axios.get("https://graph.facebook.com/me", {
+    const { data } = await axios.get('https://graph.facebook.com/me', {
       params: {
         access_token: oauthResponse.access_token,
-        fields: "name,picture.type(large){url}",
-      }
+        fields: 'name,picture.type(large){url}',
+      },
     });
 
     return data;
@@ -282,7 +282,6 @@ class AuthService extends Service {
         //   platform,
         //   create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
         // });
-
         await this.insertUser(username, '', platform, 'ss', ip, '', referral);
 
         // 若没有昵称, 先把username给nickname
@@ -297,7 +296,6 @@ class AuthService extends Service {
         if (duplicatedNickname !== null) {
           nickname = `${platform}_${nickname}`;
         }
-
         const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);
 
         // 更新昵称
@@ -305,6 +303,7 @@ class AuthService extends Service {
           { nickname, avatar },
           { where: { username, platform } }
         );
+
 
         currentUser = await this.service.account.binding.get2({ username, platform });
         if (platform === 'telegram') { // update telegramUid
@@ -321,6 +320,7 @@ class AuthService extends Service {
       await this.insertLoginLog(currentUser.id, ip);
 
       // const expires = moment().add(7, 'days').valueOf();
+      console.log('currentUser', currentUser);
 
       const jwttoken = this.jwtSign(currentUser);
       // jwt.encode({
@@ -330,6 +330,70 @@ class AuthService extends Service {
       //   id: currentUser.id,
       // }, this.app.config.jwtTokenSecret);
 
+      return jwttoken;
+
+    } catch (err) {
+      this.logger.error('AuthService:: getUserinfo failed: %j', err);
+      return null;
+    }
+  }
+
+  // weChat账号登录，创建或登录用户, 发放jwt token
+  // todo：2019-8-27 缺少登录日志
+  async saveWeChatUser(username, _nickname, avatarUrl, ip = '', referral = 0, platform = 'weixin') {
+    let nickname = _nickname; // copy
+    try {
+      let currentUser = await this.service.account.binding.get2({ username, platform });
+      // 用户是第一次登录, 先创建
+      if (currentUser === null) {
+        const res = await this.insertUser(username, '', platform, 'ss', ip, '', referral);
+        if (res) {
+
+          // 若没有昵称, 先把username给nickname
+          if (nickname === null) {
+            nickname = username;
+          }
+
+          // 判断昵称是否重复, 重复就加前缀
+          const setNickname = async name => {
+            try {
+              const duplicatedNickname = await this.app.mysql.get('users', { nickname: name });
+
+              if (duplicatedNickname !== null) {
+                nickname = `${name}_${this.ctx.helper.randomRange(1, 100000)}`;
+                await setNickname(nickname);
+              }
+            } catch (e) {
+              this.logger.error('setNickname error', e);
+            }
+          };
+
+          await setNickname(nickname);
+
+          this.logger.info('saveWeChatUser avatarUrl', avatarUrl);
+          const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);
+
+          this.logger.info('saveWeChatUser nickname', nickname);
+          this.logger.info('saveWeChatUser avatar', avatar);
+
+          // 更新昵称
+          await this.app.mysql.update('users',
+            { nickname, avatar },
+            { where: { username, platform } }
+          );
+
+          currentUser = await this.service.account.binding.get2({ username, platform });
+
+        } else {
+          return '';
+        }
+
+      }
+
+      // 增加登录日志
+      await this.insertLoginLog(currentUser.id, ip);
+
+      const jwttoken = this.jwtSign(currentUser);
       return jwttoken;
 
     } catch (err) {
@@ -624,8 +688,15 @@ class AuthService extends Service {
 
     if (createAccount.affectedRows === 1) {
       // 插入ES
-      await this.service.search.importUser(createAccount.insertId);
-      this.logger.info('service:: Auth: insertUser: success');
+
+      try {
+        await this.service.search.importUser(createAccount.insertId);
+        this.logger.info('service:: Auth: insertUser: success');
+      } catch (e) {
+        this.logger.info('search importUser error', e);
+      }
+
+
       // 处理注册推荐积分
       if (referral_uid > 0) {
         await this.service.mining.register(createAccount.insertId, referral, ip);
@@ -636,12 +707,15 @@ class AuthService extends Service {
         this.app.redis.expire(rediskey, 30 * 24 * 3600); // 30天过期
       }
 
-      // 检测用户有没有托管的以太坊私钥，没有就生成
-      const wallet = await this.service.account.hosting.create(createAccount.insertId);
-
-      await this.service.tokenCircle.api.addUserProfile(
-        createAccount.insertId, username, wallet
-      );
+      try {
+        // 检测用户有没有托管的以太坊私钥，没有就生成
+        const wallet = await this.service.account.hosting.create(createAccount.insertId);
+        await this.service.tokenCircle.api.addUserProfile(
+          createAccount.insertId, username, wallet
+        );
+      } catch (e) {
+        console.log('service.account.hosting.create error', e);
+      }
 
       // 初始化新用户公告
       await this.service.notify.announcement.initRecipients(createAccount.insertId, 'informNewUser');

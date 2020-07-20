@@ -1,6 +1,7 @@
 'use strict';
 const consts = require('../service/consts');
 const Controller = require('../core/base_controller');
+const moment = require('moment');
 
 class MineTokenController extends Controller {
   // 创建
@@ -311,6 +312,65 @@ class MineTokenController extends Controller {
       ...ctx.msg.success,
       data: result,
     };
+  }
+  async getLiquidityHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const res = await ctx.service.token.exchange.getLiquidityHistory(id);
+    let oldDate = '';
+    let result = [];
+    for (let i = res.length - 1; i >= 0; i--) {
+      let dateText = moment(res[i].time).format('YYYY-MM-DD');
+      if(dateText !== oldDate) {
+        result.unshift(res[i])
+        result[0].time = dateText
+        oldDate = dateText
+      }
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+
+  async getAddSupplyChart() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getAddSupplyChart(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+
+  async getIssuedHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getIssuedHistory(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+
+  async getAmountHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getAmountHistory(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result
+    }
+  }
+
+  async getVolumeHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getVolumeHistory(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result
+    }
   }
 
 }
