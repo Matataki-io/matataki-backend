@@ -1485,7 +1485,7 @@ class ExchangeService extends Service {
         }
       }
     }
-    console.log(result);
+    // console.log(result);
     return arr;
   }
 }
