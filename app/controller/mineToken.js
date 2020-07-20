@@ -312,6 +312,15 @@ class MineTokenController extends Controller {
       data: result,
     };
   }
+  async getLiquidityHistory() {
+    const { ctx } = this;
+    const { tokenId } = ctx.query;
+    const result = await ctx.service.token.exchange.getLiquidityHistory(tokenId);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
 
   async getAddSupplyChart() {
     const { ctx } = this;
@@ -319,8 +328,8 @@ class MineTokenController extends Controller {
     const result = await ctx.service.token.mineToken.getAddSupplyChart(id);
     ctx.body = {
       ...ctx.msg.success,
-      data: result
-    }
+      data: result,
+    };
   }
 
   async getIssuedHistory() {
@@ -329,8 +338,8 @@ class MineTokenController extends Controller {
     const result = await ctx.service.token.mineToken.getIssuedHistory(id);
     ctx.body = {
       ...ctx.msg.success,
-      data: result
-    }
+      data: result,
+    };
   }
 
 }
