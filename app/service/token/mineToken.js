@@ -839,8 +839,8 @@ class MineTokenService extends Service {
     let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
 
     if (filter === 1) {
-      sql += 'AND require_buy = 0 ';
-      countSql += 'AND require_buy = 0;';
+      sql += 'AND require_holdtokens = 1 ';
+      countSql += 'AND require_holdtokens = 1;';
     } else if (filter === 2) {
       sql += 'AND require_buy = 1 ';
       countSql += 'AND require_buy = 1;';
@@ -904,8 +904,8 @@ class MineTokenService extends Service {
     // let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
 
     if (filter === 1) {
-      sql += 'AND require_buy = 0 ';
-      countSql += 'AND require_buy = 0';
+      sql += 'AND require_holdtokens = 1 ';
+      countSql += 'AND require_holdtokens = 1';
     } else if (filter === 2) {
       sql += 'AND require_buy = 1 ';
       countSql += 'AND require_buy = 1';
