@@ -1038,7 +1038,55 @@ class MineTokenService extends Service {
     `;
     const result = await this.app.mysql.query(sql, { tokenId });
 
-    return result
+    return result;
+  }
+
+  async getAmountHistory(tokenId) {
+    const sql = `
+      SELECT
+        IFNULL(SUM(ABS(amount)), 0) AS amount,
+        DATE_FORMAT(acl.create_time, '%Y-%m-%d') AS create_time
+      FROM
+        exchanges e
+        JOIN assets_change_log acl ON acl.uid = e.exchange_uid 
+      WHERE
+        token_id = :tokenId
+      GROUP BY DATE(acl.create_time);
+    `;
+    const result = await this.app.mysql.query(sql, {tokenId});
+
+    return result;
+  }
+
+  async getVolumeHistory(tokenId) {
+    const sql = `
+      SELECT
+        IFNULL(SUM(amount), 0) AS amount,
+        DATE_FORMAT(create_time, '%Y-%m-%d') AS create_time
+      FROM
+        (
+          SELECT
+            IF(sold_token_id = :tokenId,'sold','bought') AS type,
+            (
+              CASE
+                WHEN sold_token_id = :tokenId
+                  THEN sold_amount
+                WHEN bought_token_id = :tokenId
+                  THEN bought_amount
+                ELSE 0
+              END
+            ) AS amount,
+            create_time
+          FROM
+            exchange_purchase_logs
+          WHERE
+            sold_token_id = :tokenId OR bought_token_id = :tokenId
+        ) t1
+      GROUP BY DATE(create_time)
+    `;
+    const result = await this.app.mysql.query(sql, {tokenId});
+
+    return result;
   }
 }
 

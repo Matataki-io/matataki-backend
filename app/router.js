@@ -360,6 +360,10 @@ module.exports = app => {
   router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
   // token增发历史
   router.get('/token/:id/history/issued', passport.verify, controller.mineToken.getIssuedHistory);
+  // token交易额历史
+  router.get('/token/:id/history/amount', passport.verify, controller.mineToken.getAmountHistory);
+  // token交易量历史
+  router.get('/token/:id/history/volume', passport.verify, controller.mineToken.getVolumeHistory);
 
   // -------------------------------- exchage计算 display API --------------------------------
   // 获取pool size & supply
