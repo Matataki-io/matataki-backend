@@ -358,8 +358,8 @@ module.exports = app => {
   // ------ token详情页折线图数据 -----
   // token价格历史
   router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
-  // token流动金历史
-  router.get('/token/history/liquidity', passport.verify, controller.mineToken.getLiquidityHistory);
+  // token流动金历史
+  router.get('/token/:id/history/liquidity', passport.verify, controller.mineToken.getLiquidityHistory);
   // token增发历史
   router.get('/token/:id/history/issued', passport.verify, controller.mineToken.getIssuedHistory);
   // token交易额历史
