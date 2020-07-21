@@ -63,8 +63,16 @@ class WechatController extends Controller {
   async bindByWx() {
     const { ctx } = this;
     const { scene } = ctx.query;
-    ctx.body = ctx.msg.success;
-    ctx.body.data = await this.service.wechatTnwx.bindByWx(scene);
+
+    const result = await this.service.wechatTnwx.bindByWx(scene);
+    if (result.code === 0) {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = result.data;
+    } else {
+      ctx.body = ctx.msg.failure;
+      ctx.body.data = result.data;
+    }
+
   }
 
 

@@ -116,6 +116,8 @@ class WechatService extends Service {
         console.log('result', result);
         if (result) {
           this.app.redis.set(`scene_bind:${eventKey}`, eventKey, 'EX', 60);
+        } else {
+          this.app.redis.set(`scene_bind_error:${eventKey}`, eventKey, 'EX', 60);
         }
 
       } catch (e) {
@@ -330,8 +332,23 @@ class WechatService extends Service {
 
     try {
       const sceneId = scene.split('_');
+      // 查询是否失败
+      const resultError = await this.app.redis.get(`scene_bind_error:${sceneId[1]}`);
+      if (resultError) {
+        await this.app.redis.del(`scene_bind_error:${sceneId[1]}`);
+
+        return {
+          code: -1,
+          data: false,
+        };
+      }
       const resultToken = await this.app.redis.get(`scene_bind:${sceneId[1]}`);
-      return resultToken ? resultToken : false;
+      return {
+        code: 0,
+        data: resultToken ? resultToken : false,
+      };
+
+
     } catch (e) {
       console.log(e);
       this.logger.error('login by wx', e);
