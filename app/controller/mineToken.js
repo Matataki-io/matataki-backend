@@ -1,6 +1,7 @@
 'use strict';
 const consts = require('../service/consts');
 const Controller = require('../core/base_controller');
+const moment = require('moment');
 
 class MineTokenController extends Controller {
   // 创建
@@ -134,7 +135,7 @@ class MineTokenController extends Controller {
     const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP, consts.mineTokenTransferTypes.transfer, null, memo);
     if (result) {
       // 发送转账消息
-      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', result.logId, 'tokenWallet');
+      ctx.service.notify.event.sendEvent(ctx.user.id, [to], 'transfer', result.logId, 'tokenWallet');
 
       ctx.body = { ...ctx.msg.success, data: { tx_hash: result.txHash } };
     } else ctx.msg.failure;
@@ -159,7 +160,7 @@ class MineTokenController extends Controller {
     // end: 添加评论
     if (transferResult) {
       // 发送打赏文章消息
-      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', signId, 'article', transferResult.logId);
+      ctx.service.notify.event.sendEvent(ctx.user.id, [to], 'transfer', signId, 'article', transferResult.logId);
       ctx.body = {
         ...ctx.msg.success,
         data: {
@@ -187,7 +188,7 @@ class MineTokenController extends Controller {
   async approveTokenToBatch() {
     const { ctx } = this;
     const { tokenId } = ctx.params;
-    const [ token, fromWallet ] = await Promise.all([
+    const [token, fromWallet] = await Promise.all([
       this.service.token.mineToken.get(tokenId),
       this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
     ]);
@@ -201,7 +202,7 @@ class MineTokenController extends Controller {
   async getBatchAllowance() {
     const { ctx } = this;
     const { tokenId } = ctx.params;
-    const [ token, fromWallet ] = await Promise.all([
+    const [token, fromWallet] = await Promise.all([
       this.service.token.mineToken.get(tokenId),
       this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
     ]);
@@ -312,6 +313,25 @@ class MineTokenController extends Controller {
       data: result,
     };
   }
+  async getLiquidityHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const res = await ctx.service.token.exchange.getLiquidityHistory(id);
+    let oldDate = '';
+    const result = [];
+    for (let i = res.length - 1; i >= 0; i--) {
+      const dateText = moment(res[i].time).format('YYYY-MM-DD');
+      if (dateText !== oldDate) {
+        result.unshift(res[i]);
+        result[0].time = dateText;
+        oldDate = dateText;
+      }
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
 
   async getAddSupplyChart() {
     const { ctx } = this;
@@ -319,14 +339,34 @@ class MineTokenController extends Controller {
     const result = await ctx.service.token.mineToken.getAddSupplyChart(id);
     ctx.body = {
       ...ctx.msg.success,
-      data: result
-    }
+      data: result,
+    };
   }
 
   async getIssuedHistory() {
     const { ctx } = this;
     const id = ctx.params.id;
     const result = await ctx.service.token.mineToken.getIssuedHistory(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+
+  async getAmountHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getAmountHistory(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result
+    }
+  }
+
+  async getVolumeHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getVolumeHistory(id);
     ctx.body = {
       ...ctx.msg.success,
       data: result
