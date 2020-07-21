@@ -291,9 +291,9 @@ module.exports = app => {
   router.get('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.getBatchAllowance);
   router.post('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.approveTokenToBatch);
 
-   // token 的出入站
-   router.post('/minetoken/:id/deposit', passport.authorize, controller.mineToken.deposit);
-   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
+  // token 的出入站
+  router.post('/minetoken/:id/deposit', passport.authorize, controller.mineToken.deposit);
+  router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
 
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
