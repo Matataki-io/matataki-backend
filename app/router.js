@@ -291,6 +291,10 @@ module.exports = app => {
   router.get('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.getBatchAllowance);
   router.post('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.approveTokenToBatch);
 
+   // token 的出入站
+   router.post('/minetoken/:id/deposit', passport.authorize, controller.mineToken.deposit);
+   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
+
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
   // 查询任意用户的token余额
@@ -358,8 +362,14 @@ module.exports = app => {
   // ------ token详情页折线图数据 -----
   // token价格历史
   router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
+  // token流动金历史
+  router.get('/token/:id/history/liquidity', passport.verify, controller.mineToken.getLiquidityHistory);
   // token增发历史
   router.get('/token/:id/history/issued', passport.verify, controller.mineToken.getIssuedHistory);
+  // token交易额历史
+  router.get('/token/:id/history/amount', passport.verify, controller.mineToken.getAmountHistory);
+  // token交易量历史
+  router.get('/token/:id/history/volume', passport.verify, controller.mineToken.getVolumeHistory);
 
   // -------------------------------- exchage计算 display API --------------------------------
   // 获取pool size & supply

@@ -423,7 +423,7 @@ class MineTokenService extends Service {
 
 
   // 链上交易已完成，同步到数据库
-  async _syncTransfer(tokenId, from, to, value, ip, type = '', transactionHash, conn) {
+  async _syncTransfer(tokenId, from, to, value, ip, type = '', transactionHash, conn, memo = '') {
     if (from === to) {
       return false;
     }
@@ -439,8 +439,8 @@ class MineTokenService extends Service {
         [ to, tokenId, amount, amount ]);
 
       // 记录日志
-      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
-        [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash ]);
+      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash, memo) VALUES(?,?,?,?,?,?,?,?,?);',
+        [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash, memo ]);
 
       return true;
     } catch (e) {
@@ -839,8 +839,8 @@ class MineTokenService extends Service {
     let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
 
     if (filter === 1) {
-      sql += 'AND require_buy = 0 ';
-      countSql += 'AND require_buy = 0;';
+      sql += 'AND require_holdtokens = 1 ';
+      countSql += 'AND require_holdtokens = 1;';
     } else if (filter === 2) {
       sql += 'AND require_buy = 1 ';
       countSql += 'AND require_buy = 1;';
@@ -904,8 +904,8 @@ class MineTokenService extends Service {
     // let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
 
     if (filter === 1) {
-      sql += 'AND require_buy = 0 ';
-      countSql += 'AND require_buy = 0';
+      sql += 'AND require_holdtokens = 1 ';
+      countSql += 'AND require_holdtokens = 1';
     } else if (filter === 2) {
       sql += 'AND require_buy = 1 ';
       countSql += 'AND require_buy = 1';
@@ -1038,7 +1038,87 @@ class MineTokenService extends Service {
     `;
     const result = await this.app.mysql.query(sql, { tokenId });
 
-    return result
+    return result;
+  }
+
+  async getAmountHistory(tokenId) {
+    const sql = `
+      SELECT
+        IFNULL(SUM(ABS(amount)), 0) AS amount,
+        DATE_FORMAT(acl.create_time, '%Y-%m-%d') AS create_time
+      FROM
+        exchanges e
+        JOIN assets_change_log acl ON acl.uid = e.exchange_uid 
+      WHERE
+        token_id = :tokenId
+      GROUP BY DATE(acl.create_time);
+    `;
+    const result = await this.app.mysql.query(sql, {tokenId});
+
+    return result;
+  }
+
+  async getVolumeHistory(tokenId) {
+    const sql = `
+      SELECT
+        IFNULL(SUM(amount), 0) AS amount,
+        DATE_FORMAT(create_time, '%Y-%m-%d') AS create_time
+      FROM
+        (
+          SELECT
+            IF(sold_token_id = :tokenId,'sold','bought') AS type,
+            (
+              CASE
+                WHEN sold_token_id = :tokenId
+                  THEN sold_amount
+                WHEN bought_token_id = :tokenId
+                  THEN bought_amount
+                ELSE 0
+              END
+            ) AS amount,
+            create_time
+          FROM
+            exchange_purchase_logs
+          WHERE
+            sold_token_id = :tokenId OR bought_token_id = :tokenId
+        ) t1
+      GROUP BY DATE(create_time)
+    `;
+    const result = await this.app.mysql.query(sql, {tokenId});
+
+    return result;
+  }
+
+  /**
+   * withdraw, 提取饭票到外部以太坊地址
+   * @param {number} tokenId 饭票的ID
+   * @param {number} sender 发送方的UID
+   * @param {string} target 目标以太坊钱包地址
+   * @param {number} amount 数额
+   */
+  async withdraw(tokenId, sender, target, amount) {
+    const uidOfInAndOut = this.config.tokenInAndOut.specialAccount.uid;
+    const [ token, fromWallet ] = await Promise.all([
+      this.get(tokenId),
+      this.service.account.hosting.isHosting(sender, 'ETH'),
+    ]);
+
+    const EtherToken = new Token(20, token.contract_address);
+    let transactionHash;
+    try {
+        const transferAction = await EtherToken.transfer(
+          fromWallet.private_key, target, amount);
+        transactionHash = transferAction.transactionHash;
+    } catch (error) {
+        this.logger.error('transferFrom::syncBlockchain', error);
+    }
+    // Update DB
+    const dbConnection = await this.app.mysql.beginTransaction();
+    await this._syncTransfer(
+        tokenId, sender, uidOfInAndOut, amount, this.clientIP,
+        consts.mineTokenTransferTypes.transfer, transactionHash, dbConnection, `Withdraw to ${target}`);
+    await dbConnection.commit();
+    return transactionHash;
   }
 }
 
