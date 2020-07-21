@@ -373,6 +373,39 @@ class MineTokenController extends Controller {
     }
   }
 
+  async deposit() {
+    const { ctx } = this;
+    const tokenId = ctx.params.id;
+    throw new Error("Method Not implemented")
+  }
+
+
+  async withdraw() {
+    const { ctx } = this;
+    const tokenId = ctx.params.id;
+    const { target, amount } = ctx.request.body;
+    if (isNaN(amount) && amount > 0) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "Use legit amount"
+    }
+    if (target.slice(0,2) !== '0x' || target.length !== 42) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "Use legit ethereum address"
+    }
+    try { 
+      const txHash = await this.service.token.mineToken.withdraw(tokenId, ctx.user.id, target, amount)
+      ctx.body = {
+        ...ctx.msg.success,
+        data: { txHash },
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = { error }
+    }
+  }
 }
 
 module.exports = MineTokenController;
