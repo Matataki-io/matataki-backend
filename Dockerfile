@@ -9,7 +9,10 @@ HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD curl -fs http://localhos
 WORKDIR /usr/src/app
 COPY package.json /usr/src/app/
 
+# Install Yarn Pkg
+RUN npm install --global yarn
 # RUN npm config set registry "https://registry.npm.taobao.org"
+
 RUN yarn
 COPY . /usr/src/app
 
