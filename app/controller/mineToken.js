@@ -373,10 +373,10 @@ class MineTokenController extends Controller {
     }
   }
 
-  async transferIn() {
+  async deposit() {
     throw new Error("Method Not implemented")
   }
-  async transferOut() {
+  async withdraw() {
     throw new Error("Method Not implemented")
   }
 }
