@@ -333,6 +333,12 @@ class MineTokenController extends Controller {
     }
   }
 
+  async transferIn() {
+    throw new Error("Method Not implemented")
+  }
+  async transferOut() {
+    throw new Error("Method Not implemented")
+  }
 }
 
 module.exports = MineTokenController;

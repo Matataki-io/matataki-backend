@@ -291,6 +291,10 @@ module.exports = app => {
   router.get('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.getBatchAllowance);
   router.post('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.approveTokenToBatch);
 
+   // token 的出入站
+   router.post('/minetoken/transferIn', passport.authorize, controller.mineToken.transferIn);
+   router.post('/minetoken/transferOut', passport.authorize, controller.mineToken.transferOut);
+
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
   // 查询任意用户的token余额
