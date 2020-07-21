@@ -37,9 +37,22 @@ class WechatController extends Controller {
 
   async qrcode() {
     const { ctx } = this;
+    const { source, uid } = ctx.request.body;
 
-    ctx.body = ctx.msg.success;
-    ctx.body.data = await this.service.wechatTnwx.qrcode();
+    // source === 1 微信扫码登录
+    if (Number(source) === 1) {
+      ctx.body = await this.service.wechatTnwx.qrcode();
+    } else if (Number(source) === 2) {
+      // source === 2 微信扫码绑定账号
+      ctx.body = await this.service.wechatTnwx.qrcodeBind(uid);
+    } else {
+      ctx.body = {
+        code: -1,
+        message: '非法参数',
+        data: '',
+      };
+    }
+
   }
   async loginByWx() {
     const { ctx } = this;
@@ -47,6 +60,14 @@ class WechatController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = await this.service.wechatTnwx.loginByWx(scene);
   }
+  async bindByWx() {
+    const { ctx } = this;
+    const { scene } = ctx.query;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = await this.service.wechatTnwx.bindByWx(scene);
+  }
+
+
 }
 
 module.exports = WechatController;

@@ -32,22 +32,14 @@ class WechatService extends Service {
   }
 
   // 得到推广临时二维码 (用于扫码登录)
-  async getTemporaryQrcode(access_token, scene) {
+  async getTemporaryQrcode(access_token, data) {
     const { ctx } = this;
     ctx.logger.info('service getTemporaryQrcode');
     const result = await ctx.curl(`https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=${access_token}`, {
       method: 'POST',
       // 通过 contentType 告诉 HttpClient 以 JSON 格式发送
       contentType: 'json',
-      data: {
-        expire_seconds: 60,
-        action_name: 'QR_SCENE',
-        action_info: {
-          scene: {
-            scene_id: scene,
-          },
-        },
-      },
+      data,
       // 明确告诉 HttpClient 以 JSON 格式处理返回的响应 body
       dataType: 'json',
     });

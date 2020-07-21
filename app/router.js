@@ -543,4 +543,5 @@ module.exports = app => {
   router.post('/api/wechat/qrcode', passport.verify, controller.wechat.qrcode);
   // 轮询微信扫码登录
   router.get('/api/login_by_wx', passport.verify, controller.wechat.loginByWx);
+  router.get('/api/bind_by_wx', passport.verify, controller.wechat.bindByWx);
 };

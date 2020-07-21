@@ -102,20 +102,41 @@ class WechatService extends Service {
       }
     };
 
+    // 扫码绑定
+    const scanBind = async (msgXmlResult, eventKey) => {
+      try {
+
+        const data = {
+          uid: eventKey,
+          account: msgXmlResult.FromUserName[0],
+          platform: 'weixin',
+        };
+        const result = await this.ctx.service.account.binding.create(data);
+
+        console.log('result', result);
+        if (result) {
+          this.app.redis.set(`scene_bind:${eventKey}`, eventKey, 'EX', 60);
+        }
+
+      } catch (e) {
+        this.logger.error('scanBind event SCAN: ', e);
+      }
+    };
+
     // 事件处理
     if (msgXmlResult.MsgType[0] !== 'event') {
       return msg;
     }
 
-    // 判断事件
+    // 判断各种事件
+    const EventKeys = msgXmlResult.EventKey[0];
+    const eventKey = EventKeys.split('_');
+
     if (msgXmlResult.Event[0] === 'SCAN') { // 扫码进入
 
-      // 如果用户已经关注公众号
-      // SCAN
-      // 478398
-
-      // 如果有 event key
-      if (msgXmlResult.EventKey[0]) {
+      if (eventKey[0] === 'bind') { //  bind_830714 绑定账号
+        scanBind(msgXmlResult, eventKey[1]);
+      } else if (eventKey[0]) { // 478398 如果用户已经关注公众号 纯数字内容 扫码登录
         scanLogin(msgXmlResult);
       } else {
         console.log('not event key, msgXmlResult: ', msgXmlResult);
@@ -126,25 +147,11 @@ class WechatService extends Service {
     } else if (msgXmlResult.Event[0] === 'subscribe') { // 关注了
       console.log(`${msgXmlResult.FromUserName[0]}关注了`);
 
-      // 如果用户还未关注公众号
-      // subscribe
-      // qrscene_478398
-
-      // 判断是否有 event key
-      if (msgXmlResult.EventKey[0]) {
-
-        const eventKey = msgXmlResult.EventKey[0].split('_');
-
-        // 判断是否为 qrscene_123456 格式
-        if (eventKey[0] === 'qrscene') { // 认为是扫码关注的
-          scanFollowLogin(msgXmlResult, eventKey[1]);
-        } else {
-          // 其他自定义事件
-          console.log('other event key msgXmlResult: ', msgXmlResult);
-        }
-
+      if (eventKey[0] === 'qrscene' && eventKey[1] === 'bind') { // qrscene_bind_1053 扫码绑定账号
+        scanBind(msgXmlResult, eventKey[2]);
+      } else if (eventKey[0] === 'qrscene') { // qrscene_123456 如果用户还未关注公众号 扫码关注登录
+        scanFollowLogin(msgXmlResult, eventKey[1]);
       } else {
-        // 没有事件key
         console.log('not event key, msgXmlResult: ', msgXmlResult);
       }
 
@@ -185,8 +192,17 @@ class WechatService extends Service {
 
     await checkScene(randomNumber);
 
-
-    const [ ticketError, ticketResult ] = await this.service.utils.facotryRequst(this.service.wechatApi.getTemporaryQrcode, assessToken, randomNumber);
+    // 二维码场景值
+    const data = {
+      expire_seconds: 60,
+      action_name: 'QR_SCENE',
+      action_info: {
+        scene: {
+          scene_id: randomNumber,
+        },
+      },
+    };
+    const [ ticketError, ticketResult ] = await this.service.utils.facotryRequst(this.service.wechatApi.getTemporaryQrcode, assessToken, data);
     if (ticketError) {
       return {
         code: -1,
@@ -218,8 +234,77 @@ class WechatService extends Service {
     }
 
     return {
-      qrcode: longUrlResult.short_url,
-      scene: randomNumber,
+      code: 0,
+      message: '成功',
+      data: {
+        qrcode: longUrlResult.short_url,
+        scene: randomNumber,
+      },
+    };
+
+
+  }
+  // 绑定扫码二维码
+  async qrcodeBind(uid) {
+    // init
+    this.service.wechatApi.weChatTnwxInit();
+
+    // get accesstoken
+    const assessToken = await this.service.wechatApi.getAccessToken();
+    if (!assessToken) return;
+
+
+    // 二维码字符场景值
+    const sceneStr = `bind_${uid}`;
+
+    const data = {
+      expire_seconds: 60,
+      action_name: 'QR_STR_SCENE',
+      action_info: {
+        scene: {
+          scene_str: sceneStr,
+        },
+      },
+    };
+
+    const [ ticketError, ticketResult ] = await this.service.utils.facotryRequst(this.service.wechatApi.getTemporaryQrcode, assessToken, data);
+    if (ticketError) {
+      return {
+        code: -1,
+        message: 'qrcodeBind ticketError error',
+        data: ticketResult,
+      };
+    }
+
+    console.log('qrcodeBind ticketResult', ticketResult);
+
+    const [ longUrlError, longUrlResult ] = await this.service.utils.facotryRequst(this.service.wechatApi.longUrlConvertShortUrl, assessToken, this.service.wechatApi.ticketExchangeQRcode(ticketResult.ticket));
+    if (longUrlError) {
+      return {
+        code: -1,
+        message: 'qrcodeBind longUrlError error',
+        data: longUrlResult,
+      };
+    }
+
+    console.log('qrcodeBind longUrlResult', longUrlResult);
+
+    // 没有 url
+    if (!longUrlResult.short_url) {
+      return {
+        code: -1,
+        message: 'qrcodeBind longUrlResult error',
+        data: longUrlResult,
+      };
+    }
+
+    return {
+      code: 0,
+      message: '成功',
+      data: {
+        qrcode: longUrlResult.short_url,
+        scene: sceneStr,
+      },
     };
 
 
@@ -231,6 +316,21 @@ class WechatService extends Service {
 
     try {
       const resultToken = await this.app.redis.get(`scene:${scene}`);
+      return resultToken ? resultToken : false;
+    } catch (e) {
+      console.log(e);
+      this.logger.error('login by wx', e);
+      return false;
+    }
+  }
+
+  // 通过wx绑定
+  async bindByWx(scene) {
+    if (!scene) return false;
+
+    try {
+      const sceneId = scene.split('_');
+      const resultToken = await this.app.redis.get(`scene_bind:${sceneId[1]}`);
       return resultToken ? resultToken : false;
     } catch (e) {
       console.log(e);
