@@ -10,7 +10,7 @@ WORKDIR /usr/src/app
 COPY package.json /usr/src/app/
 
 # RUN npm config set registry "https://registry.npm.taobao.org"
-RUN npm install
+RUN yarn
 COPY . /usr/src/app
 
 # RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
