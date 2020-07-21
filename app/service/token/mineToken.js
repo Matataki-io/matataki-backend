@@ -889,7 +889,7 @@ class MineTokenService extends Service {
       WHERE ((uid = (
         SELECT uid FROM minetokens WHERE id = :tokenId
       ) AND p.require_holdtokens = 0
-      ) OR m.token_id = :tokenId) AND channel_id = :channel_id `;
+      ) OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0 `;
     let countSql = `
       SELECT count(1) as count
       FROM posts p
@@ -898,7 +898,7 @@ class MineTokenService extends Service {
       WHERE ((uid = (
         SELECT uid FROM minetokens WHERE id = :tokenId
       ) AND p.require_holdtokens = 0
-      ) OR m.token_id = :tokenId) AND channel_id = :channel_id `;
+      ) OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0 `;
 
     // let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
     // let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
