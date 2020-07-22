@@ -146,7 +146,8 @@ class MineTokenService extends Service {
         await conn.insert('minetoken_resources', {
           token_id: tokenId,
           type: 'website',
-          content: website,
+          content: website.url,
+          name: website.name,
           create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
         });
       }
@@ -173,7 +174,7 @@ class MineTokenService extends Service {
 
   // 获取网址、社交媒体账号
   async getResources(tokenId) {
-    const result = await this.app.mysql.query('SELECT type, content FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
+    const result = await this.app.mysql.query('SELECT type, content, name FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
     // const websites = result.filter(row => row.type === 'website');
     // const socials = result.filter(row => row.type !== 'website');;
     const websites = [];
@@ -181,7 +182,10 @@ class MineTokenService extends Service {
     if (result) {
       for (const row of result) {
         if (row.type === 'website') {
-          websites.push(row.content);
+          websites.push({
+            url: row.content,
+            name: row.name
+          });
         } else {
           socials.push(row);
         }
