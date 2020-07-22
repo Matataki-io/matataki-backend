@@ -389,11 +389,20 @@ class MineTokenController extends Controller {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.message = "Use legit amount"
+      return;
     }
     if (target.slice(0,2) !== '0x' || target.length !== 42) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.message = "Use legit ethereum address"
+      return;
+    }
+    const currentBalance = Number(await ctx.service.token.mineToken.balanceOf(ctx.user.id, tokenId));
+    if (currentBalance < amount) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "You don't have so much token to do that, please check and try again."
+      return;
     }
     try { 
       const txHash = await this.service.token.mineToken.withdraw(tokenId, ctx.user.id, target, amount)
