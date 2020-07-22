@@ -7,7 +7,7 @@ class MineTokenController extends Controller {
   // 创建
   async create() {
     const ctx = this.ctx;
-    const { name, symbol, decimals = 4, logo, brief, introduction, initialSupply } = this.ctx.request.body;
+    const { name, symbol, decimals = 4, logo, brief, introduction, initialSupply, tags = [] } = this.ctx.request.body;
     // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
     if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
@@ -24,7 +24,7 @@ class MineTokenController extends Controller {
         ctx.body = ctx.msg.failure;
         ctx.body.data = { error };
       }
-      const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash); // decimals默认4位
+      const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash, tags); // decimals默认4位
       if (result === -1) {
         ctx.body = ctx.msg.tokenAlreadyCreated;
       } else if (result === -2) {
@@ -45,13 +45,13 @@ class MineTokenController extends Controller {
   async update() {
     const ctx = this.ctx;
     const tokenId = parseInt(ctx.params.id);
-    const { name, logo, brief, introduction } = ctx.request.body;
+    const { name, logo, brief, introduction, tags = [] } = ctx.request.body;
 
     // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
     if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
     } else { // 好耶 字数没有超限
-      const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction);
+      const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction, tags = []);
       if (result) {
         ctx.body = ctx.msg.success;
       } else {
@@ -66,6 +66,7 @@ class MineTokenController extends Controller {
 
     const token = await ctx.service.token.mineToken.get(id);
     const exchange = await ctx.service.token.exchange.detail(id);
+    const tags = await ctx.service.token.mineToken.getTokenTags(id);
     const user = await ctx.service.user.get(token.uid);
     // const vol_24h = await ctx.service.token.exchange.volume_24hour(id);
     if (exchange) {
@@ -82,6 +83,7 @@ class MineTokenController extends Controller {
         user,
         token,
         exchange,
+        tags
       },
     };
   }
@@ -378,7 +380,6 @@ class MineTokenController extends Controller {
     const tokenId = ctx.params.id;
     throw new Error("Method Not implemented")
   }
-
 
   async withdraw() {
     const { ctx } = this;

@@ -103,10 +103,12 @@ class TokenController extends Controller {
     // 根据user_id查找用户发行的token
     const token = await ctx.service.token.mineToken.getByUserId(user_id);
     let exchange = null;
+    let tags = [];
     if (token) {
       const balance = await ctx.service.token.mineToken.balanceOf(user_id, token.id);
       token.balance = balance;
       exchange = await ctx.service.token.exchange.detail(token.id);
+      tags = await ctx.service.token.mineToken.getTokenTags(token.id);
     }
     ctx.body = {
       ...ctx.msg.success,
@@ -114,6 +116,7 @@ class TokenController extends Controller {
       {
         token,
         exchange,
+        tags
       },
     };
   }
