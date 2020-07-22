@@ -51,7 +51,7 @@ class MineTokenController extends Controller {
     if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
     } else { // 好耶 字数没有超限
-      const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction, tags = []);
+      const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction, tags);
       if (result) {
         ctx.body = ctx.msg.success;
       } else {
