@@ -384,7 +384,7 @@ class MineTokenController extends Controller {
     const { ctx } = this;
     const tokenId = ctx.params.id;
     const { target, amount } = ctx.request.body;
-    if (isNaN(amount) && amount > 0) {
+    if (isNaN(amount) || amount <= 0) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.message = "Use legit amount"
