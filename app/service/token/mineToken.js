@@ -21,7 +21,7 @@ class MineTokenService extends Service {
   }
 
   // 作者创建一个token
-  async create(userId, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash) {
+  async create(userId, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash, tags = []) {
     let token = await this.getByUserId(userId);
     if (token) {
       return -1;
@@ -51,6 +51,9 @@ class MineTokenService extends Service {
     await this.emitIssueEvent(userId, result.insertId, null, txHash);
     await this._mint(result.insertId, userId, initialSupply, null, null);
     await this.service.tokenCircle.api.addTokenProfile(result.insertId, name, symbol, userId, 'NULL');
+    // 设定token标签
+    await this.setTokenTags(result.insertId, tags);
+
     // es里添加新加入的fan票
     await this.service.search.importToken({
       id: result.insertId,
@@ -72,7 +75,7 @@ class MineTokenService extends Service {
   }
 
   // 更新粉丝币信息
-  async update(userId, tokenId, name, logo, brief, introduction) {
+  async update(userId, tokenId, name, logo, brief, introduction, tags) {
     const row = {};
     row.name = name;
     row.logo = logo;
@@ -84,6 +87,10 @@ class MineTokenService extends Service {
     };
 
     const result = await this.app.mysql.update('minetokens', row, options);
+    // 修改标签
+    await this.deleteTokenTags(tokenId);
+    await this.setTokenTags(tokenId, tags);
+
     return result.affectedRows > 0;
   }
 
@@ -1119,6 +1126,31 @@ class MineTokenService extends Service {
         consts.mineTokenTransferTypes.transfer, transactionHash, dbConnection, `Withdraw to ${target}`);
     await dbConnection.commit();
     return transactionHash;
+  }
+
+  async setTokenTags(id, tags) {
+    if(tags && tags.length > 0) {
+      let minetokenTags = [];
+      tags.forEach(tag => {
+        minetokenTags.push({
+          token_id: id,
+          tag
+        });
+      })
+      return await this.app.mysql.insert('minetoken_tags', minetokenTags);
+    }
+  }
+  async getTokenTags(id) {
+    return await this.app.mysql.select('minetoken_tags', {
+      where: {
+        token_id: id
+      }
+    });
+  }
+  async deleteTokenTags(id) {
+    return await this.app.mysql.delete('minetoken_tags', {
+      token_id: id,
+    });
   }
 }
 
