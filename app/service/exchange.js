@@ -135,7 +135,7 @@ class ExchangeService extends Service {
       row.username = this.service.user.maskEmailAddress(row.username);
       row.current_price = tokenPriceObj[row.token_id] || 0;
       row.price_change_24h = tokenChangeObj[row.token_id] || 0;
-      row.hold_percentage = Math.floor((row.amount / maxAmount) * 100); // 持有百分比
+      row.hold_percentage = maxAmount <= 0 ? 0 : Math.floor((row.amount / maxAmount) * 100); // 持有百分比
     });
 
     return {
