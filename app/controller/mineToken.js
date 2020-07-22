@@ -388,11 +388,13 @@ class MineTokenController extends Controller {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.message = "Use legit amount"
+      return;
     }
     if (target.slice(0,2) !== '0x' || target.length !== 42) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.message = "Use legit ethereum address"
+      return;
     }
     try { 
       const txHash = await this.service.token.mineToken.withdraw(tokenId, ctx.user.id, target, amount)
