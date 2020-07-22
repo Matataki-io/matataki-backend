@@ -291,9 +291,9 @@ module.exports = app => {
   router.get('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.getBatchAllowance);
   router.post('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.approveTokenToBatch);
 
-   // token 的出入站
-   router.post('/minetoken/:id/deposit', passport.authorize, controller.mineToken.deposit);
-   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
+  // token 的出入站
+  router.post('/minetoken/:id/deposit', passport.authorize, controller.mineToken.deposit);
+  router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
 
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
@@ -554,4 +554,13 @@ module.exports = app => {
   // 轮询微信扫码登录
   router.get('/api/login_by_wx', passport.verify, controller.wechat.loginByWx);
   router.get('/api/bind_by_wx', passport.verify, controller.wechat.bindByWx);
+
+  // ---------------- Fan票申请 ----------------------------------------
+  // 获取自己相关的 fan票申请
+  router.get('/api/minetoken_application', passport.verify, controller.wechat.qrcode);
+  // 创建、更新、提交 fan票申请
+  router.post('/api/minetoken_application', passport.authorize, controller.mineTokenApplication.index);
+  // fan票表单申请调研表单
+  router.post('/api/minetoken_application_survey', passport.authorize, controller.mineTokenApplication.survey);
+
 };
