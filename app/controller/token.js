@@ -350,6 +350,61 @@ class TokenController extends Controller {
       },
     };
   }
+
+  /** 添加协作者 */
+  async setCollaborator() {
+    const { ctx } = this;
+    const userId = parseInt(ctx.params.id);
+    const token = await ctx.service.token.mineToken.getByUserId(ctx.user.id);
+    // Fan票不存在
+    if (!token) {
+      ctx.body = ctx.msg.tokenNotExist;
+      return;
+    }
+    const collaborators = await this.service.token.mineToken.getCollaborators(token.id);
+    // 协作者人数已满
+    if (collaborators.length >= 20) {
+      ctx.body = ctx.msg.notEnoughPlaces;
+      return;
+    }
+    // 该协作者已被添加
+    if (collaborators.find(col => col.user_id === userId)) {
+      ctx.body = ctx.msg.accountBinded;
+      return;
+    }
+    const result = await this.service.token.mineToken.setCollaborator(token.id, userId);
+    ctx.body = result.affectedRows === 1 ? ctx.msg.success : ctx.msg.failure;
+  }
+
+  /** 删除协作者 */
+  async deleteCollaborator() {
+    const { ctx } = this;
+    const userId = parseInt(ctx.params.id);
+    const token = await ctx.service.token.mineToken.getByUserId(ctx.user.id);
+    // Fan票不存在
+    if (!token) {
+      ctx.body = ctx.msg.tokenNotExist;
+      return;
+    }
+    const result = await this.service.token.mineToken.deleteCollaborator(token.id, userId);
+    ctx.body = result !== false ? ctx.msg.success : ctx.msg.failure;
+  }
+
+  /** 获取协作者列表 */
+  async getCollaborators() {
+    const { ctx } = this;
+    const token = await ctx.service.token.mineToken.getByUserId(ctx.user.id);
+    // Fan票不存在
+    if (!token) {
+      ctx.body = ctx.msg.tokenNotExist;
+      return;
+    }
+    const result = await this.service.token.mineToken.getCollaborators(token.id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
 }
 
 module.exports = TokenController;
