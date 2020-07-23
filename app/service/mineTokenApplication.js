@@ -7,19 +7,17 @@ class MineTokenApplicationService extends Service {
   // 创建一条申请
   async create(data) {
     const { app } = this;
-    const conn = await app.mysql.beginTransaction(); // 初始化事务
+    const conn = await app.mysql.beginTransaction();
 
     try {
-      const result = await conn.insert('minetokens_application', data); // 第一步操作
-      await conn.commit(); // 提交事务
-      if (result.affectedRows === 1) {
-        return { code: 0 };
-      }
-      return { code: -1 };
+
+      const result = await conn.insert('minetokens_application', data);
+      await conn.commit();
+      return (result.affectedRows === 1) ? { code: 0 } : { code: -1 };
 
     } catch (err) {
       console.log('minetoken application create error', err);
-      await conn.rollback(); // 一定记得捕获异常后回滚事务！！
+      await conn.rollback();
       return { code: -1 };
     }
   }
@@ -27,19 +25,17 @@ class MineTokenApplicationService extends Service {
   // 更新一条申请
   async update(data) {
     const { app } = this;
-    const conn = await app.mysql.beginTransaction(); // 初始化事务
+    const conn = await app.mysql.beginTransaction();
 
     try {
-      const result = await conn.update('minetokens_application', data); // 第一步操作
-      await conn.commit(); // 提交事务
-      if (result.affectedRows === 1) {
-        return { code: 0 };
-      }
-      return { code: -1 };
+
+      const result = await conn.update('minetokens_application', data);
+      await conn.commit();
+      return (result.affectedRows === 1) ? { code: 0 } : { code: -1 };
 
     } catch (err) {
       console.log('minetoken application create error', err);
-      await conn.rollback(); // 一定记得捕获异常后回滚事务！！
+      await conn.rollback();
       return { code: -1 };
     }
   }
@@ -135,10 +131,65 @@ class MineTokenApplicationService extends Service {
   }
 
   // 调研表单提交
-  async survey() {
-    return '1';
+  async survey(
+    introduction, age, number,
+    career, field, platform,
+    nickname, link, interview,
+    know, publish, info,
+    promote
+  ) {
+    const { ctx, app } = this;
+    const uid = ctx.user.id;
+    const time = moment().format('YYYY-MM-DD HH:mm:ss');
+    const conn = await app.mysql.beginTransaction();
+
+    try {
+
+      const applicationResult = await conn.get('minetokens_survey', { uid });
+      console.log('applicationResult', applicationResult);
+
+      const data = {
+        uid,
+        introduction,
+        age,
+        number,
+        career,
+        field,
+        platform,
+        nickname,
+        link,
+        interview,
+        know,
+        publish,
+        info,
+        promote,
+      };
+
+      if (applicationResult) {
+
+        data.id = applicationResult.id;
+        data.update_time = time;
+
+        const result = await conn.update('minetokens_survey', data);
+        await conn.commit();
+
+        return (result.affectedRows === 1) ? { code: 0 } : { code: -1 };
+      }
+
+      data.create_time = time;
+      data.update_time = time;
+
+      const result = await conn.insert('minetokens_survey', data);
+      await conn.commit();
+
+      return (result.affectedRows === 1) ? { code: 0 } : { code: -1 };
+
+    } catch (e) {
+      console.log('minetoken survey error', e);
+      await conn.rollback();
+      return { code: -1 };
+    }
+
   }
-
-
 }
 module.exports = MineTokenApplicationService;
