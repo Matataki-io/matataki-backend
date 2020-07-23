@@ -43,6 +43,9 @@ module.exports = app => {
   // google登录
   router.get('/login/google/prepare', passport.verify, controller.auth.googlePrepareForAuth);
   router.post('/login/google', passport.verify, controller.auth.googleAuth);
+  // facebook登录
+  router.get('/login/facebook/prepare', passport.verify, controller.auth.facebookPrepareForAuth);
+  router.post('/login/facebook', passport.verify, controller.auth.facebookAuth);
 
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
@@ -288,6 +291,10 @@ module.exports = app => {
   router.get('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.getBatchAllowance);
   router.post('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.approveTokenToBatch);
 
+  // token 的出入站
+  router.post('/minetoken/:id/deposit', passport.authorize, controller.mineToken.deposit);
+  router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
+
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
   // 查询任意用户的token余额
@@ -297,6 +304,7 @@ module.exports = app => {
   router.get('/minetoken/:id/resources', passport.verify, controller.mineToken.getResources);
   router.put('/minetoken/:id/resources', passport.authorize, controller.mineToken.saveResources);
   router.get('/minetoken/:id/related', passport.verify, controller.mineToken.getRelated);
+  router.get('/minetoken/:id/supplyChart', passport.verify, controller.mineToken.getAddSupplyChart);
 
   // -------------------------------- token display API --------------------------------
   // 查询用户发行的token持仓用户list
@@ -316,12 +324,20 @@ module.exports = app => {
 
   // 我的token transfer日志
   router.get('/token/userlogs', passport.authorize, controller.token.getUserLogs);
+  router.get('/token/allLogs', passport.authorize, controller.token.getAllTokenLogsByUser);
   // 我发行的token transfer日志
   router.get('/token/tokenlogs', passport.authorize, controller.token.getTokenLogs);
   // 查询用户:id发行的token
   router.get('/token/user/:id', passport.verify, controller.token.getByUserId);
   // 查询符号为:symbol的token
   router.get('/token/symbol/:symbol', passport.verify, controller.token.getBySymbol);
+
+  // 添加token协作者
+  router.post('/token/collaborator/:id', passport.authorize, controller.token.setCollaborator);
+  // 删除token协作者
+  router.delete('/token/collaborator/:id', passport.authorize, controller.token.deleteCollaborator);
+  // 获取token协作者列表
+  router.get('/token/collaborator', passport.authorize, controller.token.getCollaborators);
 
   // 查询当前用户的资产余额
   router.get('/asset/balance', passport.verify, controller.asset.getBalance);
@@ -349,6 +365,18 @@ module.exports = app => {
   router.post('/exchange/tokenToTokenInput', passport.authorize, controller.exchange.tokenToTokenInput);
   router.post('/exchange/tokenToTokenOutput', passport.authorize, controller.exchange.tokenToTokenOutput);
   router.post('/exchange/refundOrder', passport.authorize, controller.exchange.refundOrder);
+
+  // ------ token详情页折线图数据 -----
+  // token价格历史
+  router.get('/token/history/price', passport.verify, controller.mineToken.getPriceHistory);
+  // token流动金历史
+  router.get('/token/:id/history/liquidity', passport.verify, controller.mineToken.getLiquidityHistory);
+  // token增发历史
+  router.get('/token/:id/history/issued', passport.verify, controller.mineToken.getIssuedHistory);
+  // token交易额历史
+  router.get('/token/:id/history/amount', passport.verify, controller.mineToken.getAmountHistory);
+  // token交易量历史
+  router.get('/token/:id/history/volume', passport.verify, controller.mineToken.getVolumeHistory);
 
   // -------------------------------- exchage计算 display API --------------------------------
   // 获取pool size & supply
@@ -406,6 +434,8 @@ module.exports = app => {
   router.get('/token/:id/liquidity/balances', passport.verify, controller.token.getLiquidityBalances);
   router.get('/token/:id/liquidity/transactions', passport.verify, controller.token.getLiquidityTransactions);
 
+  router.get('/token/allLiquidityLogs', passport.authorize, controller.token.getLiquidityLogsByUser);
+
   // -------------------------------- 微信支付相关API --------------------------------
   // 微信支付回调
   router.post('/wx/notify', app.middleware.tenpay('pay', app), controller.wxpay.notify);
@@ -427,6 +457,7 @@ module.exports = app => {
   router.get('/orders/:tradeNo', passport.authorize, controller.order.get);
   router.put('/orders/:tradeNo', passport.authorize, controller.order.updateOrder);
   router.post('/orders/handleAmount0', passport.authorize, controller.order.handleAmount0);
+  router.post('/orders/payArticle', passport.authorize, controller.order.tokenPayArticle);
 
   router.post('/wx/payarticlenotify', app.middleware.tenpay('pay', app), controller.wxpay.payArticleNotify);
   router.post('/order/wxpay', passport.authorize, controller.wxpay.wxpayArticle);
@@ -517,5 +548,17 @@ module.exports = app => {
   router.put('/notify/event', passport.authorize, controller.notify.haveRead);
   // 全部标记已读
   router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
+
   router.post('/test/search', passport.verify, controller.search.importTag);
+
+  // -------------------------------- 微信服务号 ---------------------------
+  // 微信验证接口
+  router.get('/api/wechat', passport.verify, controller.wechat.auth);
+  // 微信消息接口
+  router.post('/api/wechat', passport.verify, controller.wechat.handleMsg);
+  // 获取登录二维码
+  router.post('/api/wechat/qrcode', passport.verify, controller.wechat.qrcode);
+  // 轮询微信扫码登录
+  router.get('/api/login_by_wx', passport.verify, controller.wechat.loginByWx);
+  router.get('/api/bind_by_wx', passport.verify, controller.wechat.bindByWx);
 };

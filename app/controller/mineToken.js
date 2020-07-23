@@ -1,12 +1,13 @@
 'use strict';
 const consts = require('../service/consts');
 const Controller = require('../core/base_controller');
+const moment = require('moment');
 
 class MineTokenController extends Controller {
   // 创建
   async create() {
     const ctx = this.ctx;
-    const { name, symbol, decimals = 4, logo, brief, introduction, initialSupply } = this.ctx.request.body;
+    const { name, symbol, decimals = 4, logo, brief, introduction, initialSupply, tags = [] } = this.ctx.request.body;
     // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
     if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
@@ -23,7 +24,7 @@ class MineTokenController extends Controller {
         ctx.body = ctx.msg.failure;
         ctx.body.data = { error };
       }
-      const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash); // decimals默认4位
+      const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash, tags); // decimals默认4位
       if (result === -1) {
         ctx.body = ctx.msg.tokenAlreadyCreated;
       } else if (result === -2) {
@@ -44,13 +45,13 @@ class MineTokenController extends Controller {
   async update() {
     const ctx = this.ctx;
     const tokenId = parseInt(ctx.params.id);
-    const { name, logo, brief, introduction } = ctx.request.body;
+    const { name, logo, brief, introduction, tags = [] } = ctx.request.body;
 
     // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
     if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
     } else { // 好耶 字数没有超限
-      const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction);
+      const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction, tags);
       if (result) {
         ctx.body = ctx.msg.success;
       } else {
@@ -65,6 +66,7 @@ class MineTokenController extends Controller {
 
     const token = await ctx.service.token.mineToken.get(id);
     const exchange = await ctx.service.token.exchange.detail(id);
+    const tags = await ctx.service.token.mineToken.getTokenTags(id);
     const user = await ctx.service.user.get(token.uid);
     // const vol_24h = await ctx.service.token.exchange.volume_24hour(id);
     if (exchange) {
@@ -81,6 +83,7 @@ class MineTokenController extends Controller {
         user,
         token,
         exchange,
+        tags
       },
     };
   }
@@ -134,7 +137,7 @@ class MineTokenController extends Controller {
     const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP, consts.mineTokenTransferTypes.transfer, null, memo);
     if (result) {
       // 发送转账消息
-      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', result.logId, 'tokenWallet');
+      ctx.service.notify.event.sendEvent(ctx.user.id, [to], 'transfer', result.logId, 'tokenWallet');
 
       ctx.body = { ...ctx.msg.success, data: { tx_hash: result.txHash } };
     } else ctx.msg.failure;
@@ -159,7 +162,7 @@ class MineTokenController extends Controller {
     // end: 添加评论
     if (transferResult) {
       // 发送打赏文章消息
-      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', signId, 'article', transferResult.logId);
+      ctx.service.notify.event.sendEvent(ctx.user.id, [to], 'transfer', signId, 'article', transferResult.logId);
       ctx.body = {
         ...ctx.msg.success,
         data: {
@@ -187,7 +190,7 @@ class MineTokenController extends Controller {
   async approveTokenToBatch() {
     const { ctx } = this;
     const { tokenId } = ctx.params;
-    const [ token, fromWallet ] = await Promise.all([
+    const [token, fromWallet] = await Promise.all([
       this.service.token.mineToken.get(tokenId),
       this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
     ]);
@@ -201,7 +204,7 @@ class MineTokenController extends Controller {
   async getBatchAllowance() {
     const { ctx } = this;
     const { tokenId } = ctx.params;
-    const [ token, fromWallet ] = await Promise.all([
+    const [token, fromWallet] = await Promise.all([
       this.service.token.mineToken.get(tokenId),
       this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
     ]);
@@ -303,7 +306,116 @@ class MineTokenController extends Controller {
       data: result,
     };
   }
+  async getPriceHistory() {
+    const { ctx } = this;
+    const { tokenId } = ctx.query;
+    const result = await ctx.service.token.exchange.getPriceHistory(tokenId);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+  async getLiquidityHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const res = await ctx.service.token.exchange.getLiquidityHistory(id);
+    let oldDate = '';
+    const result = [];
+    for (let i = res.length - 1; i >= 0; i--) {
+      const dateText = moment(res[i].time).format('YYYY-MM-DD');
+      if (dateText !== oldDate) {
+        result.unshift(res[i]);
+        result[0].time = dateText;
+        oldDate = dateText;
+      }
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
 
+  async getAddSupplyChart() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getAddSupplyChart(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+
+  async getIssuedHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getIssuedHistory(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    };
+  }
+
+  async getAmountHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getAmountHistory(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result
+    }
+  }
+
+  async getVolumeHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getVolumeHistory(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result
+    }
+  }
+
+  async deposit() {
+    const { ctx } = this;
+    const tokenId = ctx.params.id;
+    throw new Error("Method Not implemented")
+  }
+
+  async withdraw() {
+    const { ctx } = this;
+    const tokenId = ctx.params.id;
+    const { target, amount } = ctx.request.body;
+    if (isNaN(amount) || amount <= 0) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "Use legit amount"
+      return;
+    }
+    if (target.slice(0,2) !== '0x' || target.length !== 42) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "Use legit ethereum address"
+      return;
+    }
+    const currentBalance = Number(await ctx.service.token.mineToken.balanceOf(ctx.user.id, tokenId));
+    if (currentBalance < amount) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "You don't have so much token to do that, please check and try again."
+      return;
+    }
+    try { 
+      const txHash = await this.service.token.mineToken.withdraw(tokenId, ctx.user.id, target, amount)
+      ctx.body = {
+        ...ctx.msg.success,
+        data: { txHash },
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = { error }
+    }
+  }
 }
 
 module.exports = MineTokenController;

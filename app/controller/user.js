@@ -41,7 +41,15 @@ class UserController extends Controller {
     );
 
     const countsql = 'SELECT COUNT(*) AS count FROM assets_change_log a LEFT JOIN posts b ON a.signid = b.id ';
-    const listsql = 'SELECT a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, a.trx, a.toaddress, a.memo, a.status, b.title FROM assets_change_log a LEFT JOIN posts b ON a.signid = b.id ';
+    const listsql = `
+      SELECT a.uid, a.object_id, a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, a.trx, a.toaddress, a.memo, a.status, b.title,
+      u1.username AS from_username, u1.nickname AS from_nickname, u1.avatar AS from_avatar, u1.platform AS from_platform,
+      u2.username AS to_username, u2.nickname AS to_nickname, u2.avatar AS to_avatar, u2.platform AS to_platform
+      FROM assets_change_log a 
+      LEFT JOIN posts b ON a.signid = b.id
+      LEFT JOIN users u1 ON a.uid = u1.id
+      LEFT JOIN users u2 ON a.object_id = u2.id `;
+    // const listsql = 'SELECT a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, a.trx, a.toaddress, a.memo, a.status, b.title FROM assets_change_log a LEFT JOIN posts b ON a.signid = b.id ';
     const wheresql = 'WHERE a.uid = ? AND a.symbol = ? ';
     const ordersql = 'ORDER BY a.id DESC LIMIT ? ,? ';
     const sqlcode = countsql + wheresql + ';' + listsql + wheresql + ordersql + ';';

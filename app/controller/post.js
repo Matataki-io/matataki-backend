@@ -34,6 +34,7 @@ class PostController extends Controller {
       is_original = 0,
       platform = 'eos',
       tags = [],
+      assosiateWith,
       commentPayPoint = 0,
       shortContent = null,
       cc_license = null,
@@ -46,7 +47,7 @@ class PostController extends Controller {
       ipfs_hide = false,
     } = ctx.request.body;
     // 修改requireBuy为数组
-    const isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy.length > 0);
+    const isEncrypt = Boolean(requireToken && requireToken.length > 0) || Boolean(requireBuy && requireBuy.length > 0);
 
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
@@ -91,6 +92,7 @@ class PostController extends Controller {
         is_original,
         fission_factor: fissionFactor,
         create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        assosiateWith,
         cover, // 封面url
         platform,
         uid: ctx.user.id,
@@ -167,6 +169,7 @@ class PostController extends Controller {
       cover,
       is_original = 0,
       tags = [],
+      assosiateWith,
       shortContent = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
       requireToken = null,
@@ -288,6 +291,8 @@ class PostController extends Controller {
         }
 
         if (ipfs_hide !== undefined) updateRow.ipfs_hide = ipfs_hide;
+
+        if (assosiateWith !== null) updateRow.assosiate_with = assosiateWith;
 
         // if (is_original) {
         //   updateRow.is_original = is_original;
@@ -462,19 +467,19 @@ class PostController extends Controller {
     }
 
     // 这部分是登录之后才会执行的查询
-    if(ctx.user && ctx.user.id) {
+    if (ctx.user && ctx.user.id) {
       let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
       let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
       postData.list.forEach(post => {
         // 是自己的文章？
         post.is_ownpost = post.uid === ctx.user.id
         // 是否满足持币可见
-        if(post.token_amount) {
+        if (post.token_amount) {
           let token = tokens.find(token => token.token_id === post.token_id);
           post.token_unlock = !!token && token.amount >= post.token_amount;
         }
         // 是否买过这篇文章
-        if(post.pay_price) {
+        if (post.pay_price) {
           post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
         }
       })
@@ -521,7 +526,7 @@ class PostController extends Controller {
     }
 
     // 这部分是登录之后才会执行的查询
-    if(ctx.user && ctx.user.id) {
+    if (ctx.user && ctx.user.id) {
       let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
       let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
       postData.list.forEach(post => {

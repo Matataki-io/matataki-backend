@@ -93,6 +93,7 @@ module.exports = {
     exchange_addliquidity: 'exchange_addliquidity',
     exchange_removeliquidity: 'exchange_removeliquidity',
     reward_article: 'reward_article',
+    pay_article: 'pay_article',
   },
 
   socialTypes1: {

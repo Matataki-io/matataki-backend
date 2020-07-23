@@ -21,7 +21,7 @@ class MineTokenService extends Service {
   }
 
   // 作者创建一个token
-  async create(userId, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash) {
+  async create(userId, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash, tags = []) {
     let token = await this.getByUserId(userId);
     if (token) {
       return -1;
@@ -51,6 +51,9 @@ class MineTokenService extends Service {
     await this.emitIssueEvent(userId, result.insertId, null, txHash);
     await this._mint(result.insertId, userId, initialSupply, null, null);
     await this.service.tokenCircle.api.addTokenProfile(result.insertId, name, symbol, userId, 'NULL');
+    // 设定token标签
+    await this.setTokenTags(result.insertId, tags);
+
     // es里添加新加入的fan票
     await this.service.search.importToken({
       id: result.insertId,
@@ -72,7 +75,7 @@ class MineTokenService extends Service {
   }
 
   // 更新粉丝币信息
-  async update(userId, tokenId, name, logo, brief, introduction) {
+  async update(userId, tokenId, name, logo, brief, introduction, tags) {
     const row = {};
     row.name = name;
     row.logo = logo;
@@ -84,6 +87,10 @@ class MineTokenService extends Service {
     };
 
     const result = await this.app.mysql.update('minetokens', row, options);
+    // 修改标签
+    await this.deleteTokenTags(tokenId);
+    await this.setTokenTags(tokenId, tags);
+
     return result.affectedRows > 0;
   }
 
@@ -135,11 +142,13 @@ class MineTokenService extends Service {
     try {
       await conn.query('DELETE FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
 
+      websites = websites.filter(web => web.url);
       for (const website of websites) {
         await conn.insert('minetoken_resources', {
           token_id: tokenId,
           type: 'website',
-          content: website,
+          content: website.url,
+          name: website.name,
           create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
         });
       }
@@ -166,7 +175,7 @@ class MineTokenService extends Service {
 
   // 获取网址、社交媒体账号
   async getResources(tokenId) {
-    const result = await this.app.mysql.query('SELECT type, content FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
+    const result = await this.app.mysql.query('SELECT type, content, name FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
     // const websites = result.filter(row => row.type === 'website');
     // const socials = result.filter(row => row.type !== 'website');;
     const websites = [];
@@ -174,7 +183,10 @@ class MineTokenService extends Service {
     if (result) {
       for (const row of result) {
         if (row.type === 'website') {
-          websites.push(row.content);
+          websites.push({
+            url: row.content,
+            name: row.name
+          });
         } else {
           socials.push(row);
         }
@@ -423,7 +435,7 @@ class MineTokenService extends Service {
 
 
   // 链上交易已完成，同步到数据库
-  async _syncTransfer(tokenId, from, to, value, ip, type = '', transactionHash, conn) {
+  async _syncTransfer(tokenId, from, to, value, ip, type = '', transactionHash, conn, memo = '') {
     if (from === to) {
       return false;
     }
@@ -439,8 +451,8 @@ class MineTokenService extends Service {
         [ to, tokenId, amount, amount ]);
 
       // 记录日志
-      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
-        [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash ]);
+      await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash, memo) VALUES(?,?,?,?,?,?,?,?,?);',
+        [ from, to, tokenId, amount, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash, memo ]);
 
       return true;
     } catch (e) {
@@ -514,6 +526,50 @@ class MineTokenService extends Service {
       limit: pagesize,
       userId,
       tokenId,
+    });
+
+    _.each(result[0], row => {
+      row.from_username = this.service.user.maskEmailAddress(row.from_username);
+      row.to_username = this.service.user.maskEmailAddress(row.to_username);
+    });
+
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
+  }
+  // 根据用户查看所有的token转账日志
+  async getAllTokenLogsByUser(userId, page = 1, pagesize = 20, _type = null) {
+    let whereSql = '';
+    let query = {};
+    const type = consts.mineTokenTransferTypes[_type];
+    // _type有值 但是 type没值
+    if (_type && !type) {
+      return { count: 0, list: [] };
+    }
+    if (type) {
+      whereSql = ' AND type = :type ';
+      query = { type };
+    }
+    const sql
+      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type, t.tx_hash, t.post_id, t.memo,
+        m.name, m.symbol, m.decimals,
+        u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar,
+        u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar,
+        p.title, p.cover
+        FROM (
+          SELECT * FROM assets_minetokens_log WHERE (from_uid = :userId OR to_uid = :userId) ${whereSql} ORDER BY id DESC LIMIT :offset, :limit
+        ) t
+        JOIN minetokens m ON m.id = t.token_id
+        LEFT JOIN users u1 ON t.from_uid = u1.id
+        LEFT JOIN users u2 ON t.to_uid = u2.id
+        LEFT JOIN posts p ON t.post_id = p.id;
+        SELECT count(1) AS count FROM assets_minetokens_log WHERE (from_uid = :userId OR to_uid = :userId) ${whereSql};`;
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      userId,
+      ...query,
     });
 
     _.each(result[0], row => {
@@ -604,6 +660,45 @@ class MineTokenService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
       ...params,
+    });
+
+    _.each(result[0], row => {
+      row.username = this.service.user.maskEmailAddress(row.username);
+    });
+
+    return {
+      count: result[1][0].count,
+      list: result[0],
+    };
+  }
+  async getLiquidityLogsByUser(userId, type = null, page = 1, pagesize = 10) {
+    const add = consts.mineTokenTransferTypes.exchange_addliquidity;
+    const remove = consts.mineTokenTransferTypes.exchange_removeliquidity;
+    // type存在，只能是add 和remove
+    let typeWhereSql = '';
+    if (type) {
+      if (type !== add && type !== remove) return -1;
+      if (type === add) typeWhereSql = ' AND liquidity > 0 ';
+      if (type === remove) typeWhereSql = ' AND liquidity < 0 ';
+    }
+    const sql = `
+      SELECT t1.id, t1.uid, t1.token_id, t1.cny_amount, t1.token_amount, t1.liquidity, t1.create_time,
+      t3.name, t3.symbol, t3.decimals, t3.total_supply, t3.logo,
+      t4.username, t4.nickname
+      FROM exchange_liquidity_logs t1
+      JOIN minetokens AS t3 ON t1.token_id = t3.id
+      JOIN users as t4 ON t3.uid = t4.id
+      WHERE t1.uid = :userId ${typeWhereSql}
+      ORDER BY t1.create_time DESC
+      LIMIT :offset, :limit;
+      SELECT count(1) AS count FROM exchange_liquidity_logs
+      WHERE uid = :userId ${typeWhereSql};
+      `;
+
+    const result = await this.app.mysql.query(sql, {
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+      userId,
     });
 
     _.each(result[0], row => {
@@ -756,8 +851,8 @@ class MineTokenService extends Service {
     let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
 
     if (filter === 1) {
-      sql += 'AND require_buy = 0 ';
-      countSql += 'AND require_buy = 0;';
+      sql += 'AND require_holdtokens = 1 ';
+      countSql += 'AND require_holdtokens = 1;';
     } else if (filter === 2) {
       sql += 'AND require_buy = 1 ';
       countSql += 'AND require_buy = 1;';
@@ -806,7 +901,7 @@ class MineTokenService extends Service {
       WHERE ((uid = (
         SELECT uid FROM minetokens WHERE id = :tokenId
       ) AND p.require_holdtokens = 0
-      ) OR m.token_id = :tokenId) AND channel_id = :channel_id `;
+      ) OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0 `;
     let countSql = `
       SELECT count(1) as count
       FROM posts p
@@ -815,14 +910,14 @@ class MineTokenService extends Service {
       WHERE ((uid = (
         SELECT uid FROM minetokens WHERE id = :tokenId
       ) AND p.require_holdtokens = 0
-      ) OR m.token_id = :tokenId) AND channel_id = :channel_id `;
+      ) OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0 `;
 
     // let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
     // let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
 
     if (filter === 1) {
-      sql += 'AND require_buy = 0 ';
-      countSql += 'AND require_buy = 0';
+      sql += 'AND require_holdtokens = 1 ';
+      countSql += 'AND require_holdtokens = 1';
     } else if (filter === 2) {
       sql += 'AND require_buy = 1 ';
       countSql += 'AND require_buy = 1';
@@ -907,6 +1002,194 @@ class MineTokenService extends Service {
     );
     if (logs === null) return [];
     return logs;
+  }
+
+  async getAddSupplyChart(tokenId) {
+    const sum = list => {
+      let total = 0;
+      list.forEach(item => total += item);
+      return total;
+    }
+    const res = await this.app.mysql.select('assets_minetokens_log',{
+      where: {
+        type: 'mint',
+        token_id: tokenId
+      }
+    })
+    let result = {
+      total_supply: 0,
+      suppl_24h: 0,
+      suppl_7d: 0,
+      suppl_30d: 0
+    }
+    if(res.length === 0) return result
+
+    let mapres = res.map(log => log.amount);
+    result.total_supply = sum(mapres);
+
+    let date = new Date();
+    date.setDate(date.getDate() - 30);
+    result.suppl_30d = sum(res.filter(log => log.create_time >= date).map(log => log.amount));
+    date = new Date();
+    date.setDate(date.getDate() - 7);
+    result.suppl_7d = sum(res.filter(log => log.create_time >= date).map(log => log.amount));
+    date = new Date();
+    date.setDate(date.getDate() - 1);
+    result.suppl_24h = sum(res.filter(log => log.create_time >= date).map(log => log.amount));
+
+    return result;
+  }
+
+  async getIssuedHistory(tokenId) {
+    const sql = `
+      SELECT
+        id, SUM(amount) as amount, DATE(create_time) as create_time
+      FROM assets_minetokens_log
+      WHERE type = 'mint' AND token_id = :tokenId
+      GROUP BY DATE(create_time);
+    `;
+    const result = await this.app.mysql.query(sql, { tokenId });
+
+    return result;
+  }
+
+  async getAmountHistory(tokenId) {
+    const sql = `
+      SELECT
+        IFNULL(SUM(ABS(amount)), 0) AS amount,
+        DATE_FORMAT(acl.create_time, '%Y-%m-%d') AS create_time
+      FROM
+        exchanges e
+        JOIN assets_change_log acl ON acl.uid = e.exchange_uid 
+      WHERE
+        token_id = :tokenId
+      GROUP BY DATE(acl.create_time);
+    `;
+    const result = await this.app.mysql.query(sql, {tokenId});
+
+    return result;
+  }
+
+  async getVolumeHistory(tokenId) {
+    const sql = `
+      SELECT
+        IFNULL(SUM(amount), 0) AS amount,
+        DATE_FORMAT(create_time, '%Y-%m-%d') AS create_time
+      FROM
+        (
+          SELECT
+            IF(sold_token_id = :tokenId,'sold','bought') AS type,
+            (
+              CASE
+                WHEN sold_token_id = :tokenId
+                  THEN sold_amount
+                WHEN bought_token_id = :tokenId
+                  THEN bought_amount
+                ELSE 0
+              END
+            ) AS amount,
+            create_time
+          FROM
+            exchange_purchase_logs
+          WHERE
+            sold_token_id = :tokenId OR bought_token_id = :tokenId
+        ) t1
+      GROUP BY DATE(create_time)
+    `;
+    const result = await this.app.mysql.query(sql, {tokenId});
+
+    return result;
+  }
+
+  /**
+   * withdraw, 提取饭票到外部以太坊地址
+   * @param {number} tokenId 饭票的ID
+   * @param {number} sender 发送方的UID
+   * @param {string} target 目标以太坊钱包地址
+   * @param {number} amount 数额
+   */
+  async withdraw(tokenId, sender, target, amount) {
+    const uidOfInAndOut = this.config.tokenInAndOut.specialAccount.uid;
+    const [ token, fromWallet ] = await Promise.all([
+      this.get(tokenId),
+      this.service.account.hosting.isHosting(sender, 'ETH'),
+    ]);
+
+    const EtherToken = new Token(20, token.contract_address);
+    let transactionHash;
+    try {
+        const transferAction = await EtherToken.transfer(
+          fromWallet.private_key, target, amount);
+        transactionHash = transferAction.transactionHash;
+    } catch (error) {
+        this.logger.error('transferFrom::syncBlockchain', error);
+    }
+    // Update DB
+    const dbConnection = await this.app.mysql.beginTransaction();
+    await this._syncTransfer(
+        tokenId, sender, uidOfInAndOut, amount, this.clientIP,
+        consts.mineTokenTransferTypes.transfer, transactionHash, dbConnection, `Withdraw to ${target}`);
+    await dbConnection.commit();
+    return transactionHash;
+  }
+
+  async setTokenTags(id, tags) {
+    if(tags && tags.length > 0) {
+      let minetokenTags = [];
+      tags.forEach(tag => {
+        minetokenTags.push({
+          token_id: id,
+          tag
+        });
+      })
+      return await this.app.mysql.insert('minetoken_tags', minetokenTags);
+    }
+  }
+  async getTokenTags(id) {
+    return await this.app.mysql.select('minetoken_tags', {
+      where: {
+        token_id: id
+      }
+    });
+  }
+  async deleteTokenTags(id) {
+    return await this.app.mysql.delete('minetoken_tags', {
+      token_id: id,
+    });
+  }
+
+  /** 添加协作者 */
+  async setCollaborator(tokenId, userId) {
+    return await this.app.mysql.insert('minetoken_collaborators', {
+      token_id: tokenId,
+      user_id: userId,
+      create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+    });
+  }
+
+  /** 获取协作者列表 */
+  async getCollaborators(tokenId) {
+    const sql = `
+      SELECT
+        c.token_id, c.user_id, c.create_time,
+        u.username, u.nickname, u.avatar
+      FROM minetoken_collaborators c
+      LEFT JOIN users u ON c.user_id = u.id
+      WHERE c.token_id = :tokenId;
+    `;
+    return await this.app.mysql.query(sql, {
+      tokenId,
+    });
+  }
+
+  /** 删除协作者 */
+  async deleteCollaborator(tokenId, userId) {
+    if (typeof tokenId !== 'number' || typeof userId !== 'number') return false;
+
+    return await this.app.mysql.delete('minetoken_collaborators', {
+      token_id: tokenId,
+      user_id: userId,
+    });
   }
 }
 

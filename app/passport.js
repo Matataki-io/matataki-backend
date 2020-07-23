@@ -54,7 +54,7 @@ module.exports = {
     ctx.msg = message.returnObj(lang);
 
     // 校验 token， 解密， 验证token的可用性 ，检索里面的用户
-    if (token !== undefined) {
+    if (token !== undefined && token !== 'undefined' && token) {
       try {
         const decoded = jwt.decode(token, ctx.app.config.jwtTokenSecret);
 

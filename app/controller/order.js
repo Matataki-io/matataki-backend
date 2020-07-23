@@ -196,6 +196,51 @@ class OrderController extends Controller {
       ctx.body = ctx.msg.failure;
     }
   }
+  // tokenPayArticle
+  async tokenPayArticle() {
+    const { ctx } = this;
+    const { pid } = ctx.request.body;
+    const useBalance = 0;
+    const items = [{
+      signId: pid,
+      type: 'buy_post',
+    }];
+    const uid = ctx.user.id;
+    const tradeNo = await ctx.service.shop.orderHeader.createOrder(uid, items, useBalance, ctx.ip);
+    if (tradeNo === '-1') {
+      ctx.body = {
+        ...ctx.msg.failure,
+        message: '创建订单失败',
+      };
+      return;
+    }
+    const payParams = await ctx.service.shop.order.getPayArticleObj(tradeNo, uid);
+    if (payParams === null) {
+      ctx.body = {
+        ...ctx.msg.failure,
+        message: '找不到订单',
+      };
+      return;
+    }
+    const { amount, tokenId, uid: to } = payParams;
+    const transferResult = await ctx.service.token.mineToken.transferFrom(tokenId, uid, to, amount, this.clientIP, consts.mineTokenTransferTypes.pay_article, null, null, pid);
+    if (!transferResult) {
+      ctx.body = {
+        ...ctx.msg.failure,
+        message: '转账失败',
+      };
+      return;
+    }
+    const updateStatusResult = await ctx.service.shop.order.updateOrderSuccess(tradeNo, uid);
+    if (!updateStatusResult) {
+      ctx.body = {
+        ...ctx.msg.failure,
+        message: '更新订单状态失败',
+      };
+      return;
+    }
+    ctx.body = ctx.msg.success;
+  }
 
 }
 

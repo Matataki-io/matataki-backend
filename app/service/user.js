@@ -623,15 +623,16 @@ class UserService extends Service {
 
     const conn = await this.app.mysql.beginTransaction();
     try {
+      websites = websites.filter(web => web.url);
       await conn.query('DELETE FROM user_websites WHERE uid = ? AND website_id >= ?', [ userId, websites.length ]);
 
       let websiteId = 0;
-
       for (const website of websites) {
-        await conn.query('INSERT INTO user_websites VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE url = VALUES(url)', [
+        await conn.query('INSERT INTO user_websites VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE url = VALUES(url), name = VALUES(name)', [
           userId,
           websiteId,
-          website,
+          website.url,
+          website.name,
         ]);
 
         websiteId++;
@@ -681,9 +682,12 @@ class UserService extends Service {
 
     const websites = [];
 
-    const websiteResults = await this.app.mysql.query('SELECT url FROM user_websites WHERE uid = ?;', [ userId ]);
-    for (const { url } of websiteResults) {
-      websites.push(url);
+    const websiteResults = await this.app.mysql.query('SELECT url, name FROM user_websites WHERE uid = ?;', [ userId ]);
+    for (const { url, name } of websiteResults) {
+      websites.push({
+        url,
+        name,
+      });
     }
 
     const socialAccounts = [];

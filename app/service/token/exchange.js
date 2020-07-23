@@ -91,6 +91,8 @@ class ExchangeService extends Service {
     // exchangeRate = tokenToCnyInput
     exchange.token_reserve = token_reserve;
     exchange.cny_reserve = cny_reserve;
+    exchange.number_of_holders = await this.getNumberOfHolders(tokenId);
+    exchange.number_of_liquidity_holders = await this.getNumberOfLiquidityHolders(tokenId);
 
     return exchange;
   }
@@ -1187,7 +1189,7 @@ class ExchangeService extends Service {
                 SELECT IFNULL(SUM(ABS(amount)), 0) AS amount FROM exchanges e JOIN assets_change_log acl ON acl.uid = e.exchange_uid WHERE token_id = :tokenId AND acl.create_time > DATE_SUB(NOW(), INTERVAL 1 DAY);`;
     const result = await this.app.mysql.query(sql, { tokenId });
 
-    let first_price = 0;
+    /* let first_price = 0;
     let last_price = 0;
     if (result[0].length > 0) {
       first_price = result[0][0].sold_token_id === 0 ? result[0][0].sold_amount / result[0][0].bought_amount : result[0][0].bought_amount / result[0][0].sold_amount;
@@ -1198,15 +1200,312 @@ class ExchangeService extends Service {
     let change_24h = 0;
     if (first_price > 0) {
       change_24h = (last_price - first_price) / first_price;
-    }
+    } */
     const volume_24h = result[3][0].total + result[4][0].total;
+    const tokenChangeObj = await this.getAllChangeByDay();
     return {
-      change_24h,
+      change_24h: tokenChangeObj[tokenId] || 0,
       volume_24h,
       amount_24h: result[5][0].amount,
     };
   }
+  async getAllChangeByDay() {
+    const beforeTimeSql = `
+                SELECT T.* FROM
+                (SELECT 
+                case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
+                case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
+                sold_amount,
+                bought_amount,
+                create_time
+                FROM exchange_purchase_logs
+                ORDER BY create_time DESC
+                LIMIT 10000000000
+                ) AS T 
+                WHERE T.create_time <= DATE_SUB(NOW(),INTERVAL 1 DAY)
+                GROUP BY T.id;`;
+    const afterTimeDESCSql = `
+                SELECT T.* FROM
+                (SELECT 
+                case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
+                case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
+                sold_amount,
+                bought_amount,
+                create_time
+                FROM exchange_purchase_logs
+                ORDER BY create_time DESC
+                LIMIT 10000000000
+                ) AS T 
+                WHERE T.create_time > DATE_SUB(NOW(),INTERVAL 1 DAY)
+                GROUP BY T.id;`;
+    const afterTimeASCSql = `
+                SELECT T.* FROM
+                (SELECT 
+                case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
+                case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
+                sold_amount,
+                bought_amount,
+                create_time
+                FROM exchange_purchase_logs
+                ORDER BY create_time ASC
+                LIMIT 10000000000
+                ) AS T 
+                WHERE T.create_time > DATE_SUB(NOW(),INTERVAL 1 DAY)
+                GROUP BY T.id;`;
+    const result = await this.app.mysql.query(beforeTimeSql + afterTimeDESCSql + afterTimeASCSql);
+    const beforeTimeObj = {};
+    const afterTimeASCObj = {};
+    const priceChangeObj = {};
+    for (const item of result[0]) {
+      beforeTimeObj[item.id] = item;
+    }
+    for (const item of result[2]) {
+      afterTimeASCObj[item.id] = item;
+    }
+    for (const item of result[1]) {
+      // 代表这一天只执行了一笔
+      const id = item.id;
+      let first_price_item = afterTimeASCObj[id] || null;
+      if (first_price_item && moment(first_price_item.create_time).isSame(item.create_time)) {
+        first_price_item = beforeTimeObj[id] || null;
+      }
+      if (first_price_item === null) {
+        priceChangeObj[item.id] = 0;
+      } else {
+        const first_price = first_price_item.type === 'buy' ? first_price_item.sold_amount / first_price_item.bought_amount : first_price_item.bought_amount / first_price_item.sold_amount;
+        const last_price = item.type === 'buy' ? item.sold_amount / item.bought_amount : item.bought_amount / item.sold_amount;
+        console.log(first_price, last_price);
+        if (first_price === 0) {
+          priceChangeObj[item.id] = 0;
+        } else {
+          priceChangeObj[item.id] = (last_price - first_price) / first_price;
+        }
+      }
+    }
+    return priceChangeObj;
+  }
+  async getAllPrice() {
+    const sql = `SELECT am.amount token_reserve, a.amount cny_reserve, e.token_id FROM exchanges e
+    LEFT JOIN assets_minetokens am ON e.exchange_uid = am.uid
+    LEFT JOIN assets a ON e.exchange_uid = a.uid  
+    WHERE a.symbol = 'CNY' AND e.token_id = am.token_id
+    ORDER BY e.token_id;`;
+    const result = await this.app.mysql.query(sql);
+    console.log(result);
+    const priceObj = {};
+    for (const item of result) {
+      if (item.token_reserve <= 0) {
+        priceObj[item.token_id] = 0;
+      } else {
+        const price = parseFloat((item.cny_reserve / item.token_reserve).toFixed(4));
+        priceObj[item.token_id] = price === 0 ? 0.0001 : price;
+      }
+    }
+    return priceObj;
+  }
+  async getPriceHistory(tokenId) {
+    const sql = `SELECT 
+    case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
+    case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
+    case when sold_token_id = 0 THEN sold_amount/bought_amount ELSE bought_amount/sold_amount END 'price',
+    sold_amount,
+    bought_amount,
+    create_time,
+    cny_reserve_before,
+    token_reserve_before,
+    cny_reserve_before/token_reserve_before AS 'last_price'
+    FROM exchange_purchase_logs
+    WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId)
+    ORDER BY create_time DESC;
+    SELECT * FROM exchange_liquidity_logs WHERE token_id = :tokenId limit 0, 1;`;
+    const result = await this.app.mysql.query(sql, {
+      tokenId,
+    });
+    const priceLog = result[0];
+    const liquidity = result[1];
+    // 计算代币初始价格
+    let init_price = '';
+    let init_time = '';
+    if (liquidity.length > 0) {
+      init_time = moment(liquidity[0].create_time).format('YYYY-MM-DD');
+      init_price = parseFloat((liquidity[0].cny_amount / liquidity[0].token_amount).toFixed(4));
+    } else {
+      return {};
+    }
 
+    // 获取当前代币价格
+    const exchange = await this.service.token.exchange.detail(tokenId);
+    let current_price = 0;
+    if (exchange) {
+      current_price = parseFloat((exchange.cny_reserve / exchange.token_reserve).toFixed(4));
+    }
+
+    // 数据处理
+    const p_obj = {};
+    const p_arr = [];
+    const len = priceLog.length;
+    for (let i = 0; i < len; i++) {
+      const current_item = priceLog[i];
+      const ymd = moment(current_item.create_time).format('YYYY-MM-DD');
+      // 当前价格
+      if (i === 0) {
+        p_obj[ymd] = current_price;
+        p_arr.push({
+          time: ymd,
+          price: current_price,
+        });
+      }
+      // 前一个的价格都是后一天时间
+      if (i + 1 < len) {
+        const next_item = priceLog[i + 1];
+        const ymd = moment(next_item.create_time).format('YYYY-MM-DD');
+        if (!p_obj[ymd]) {
+          p_obj[ymd] = current_item.last_price;
+          p_arr.push({
+            time: ymd,
+            price: current_item.last_price,
+          });
+        }
+      }
+      // 初始价格
+      if (i === len - 1) {
+        if (!p_obj[init_time]) {
+          p_obj[init_time] = init_price;
+          p_arr.push({
+            time: init_time,
+            price: init_price,
+          });
+        }
+      }
+    }
+    return {
+      obj: p_obj,
+      arr: p_arr,
+    };
+  }
+
+  async getLiquidityHistory(tokenId) {
+    const sql = `SELECT * FROM
+    (
+      (
+        SELECT token_id, 'liquidity' AS type, create_time,
+        0 as sold_amount,
+        0 as bought_amount,
+        liquidity, cny_amount, token_amount
+        FROM exchange_liquidity_logs t1
+        WHERE token_id = :tokenId
+      )
+    UNION ALL
+      (
+        SELECT 
+        case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'token_id',
+        case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
+        create_time,
+        sold_amount,
+        bought_amount,
+        0 as liquidity,
+        cny_reserve_before AS cny_amount,
+        token_reserve_before AS token_amount
+        FROM exchange_purchase_logs t2
+        WHERE (sold_token_id = :tokenId OR bought_token_id = :tokenId)
+      )
+    ) as T
+    ORDER BY T.create_time ASC;`;
+    const result = await this.app.mysql.query(sql, {
+      tokenId,
+    });
+    // 获取当前代币流动金池
+    const exchange = await this.service.token.exchange.detail(tokenId);
+    const current_cny_reserve = exchange ? exchange.cny_reserve : 0;
+    const current_token_reserve = exchange ? exchange.token_reserve : 0;
+
+    // 数据处理
+    const arr = [];
+    const len = result.length;
+    for (let i = 0; i < len; i++) {
+      const current_item = result[i];
+      const { cny_amount, token_amount, create_time, type, liquidity, sold_amount, bought_amount } = current_item;
+      const time = moment(create_time).format('YYYY-MM-DD HH:mm:ss');
+      // 首个是添加流动性
+      if (i === 0 && type === 'liquidity') {
+        arr.push({
+          time,
+          cny: cny_amount,
+          token: token_amount,
+        });
+        continue;
+      }
+      // 如果是添加流动性
+      if (type === 'liquidity') {
+        const last_item = result[i - 1];
+        // 判断是删除还是添加流动性，数据都是上一个item的数据+/-当前数据的操作
+        let cny = 0;
+        let token = 0;
+        if (liquidity < 0) {
+          cny = last_item.cny_amount - cny_amount;
+          token = last_item.token_amount - token_amount;
+          if (cny < 0) cny = 0;
+          if (token < 0) token = 0;
+          arr.push({
+            time, cny, token,
+          });
+        }
+        if (liquidity > 0) {
+          cny = last_item.cny_amount + cny_amount;
+          token = last_item.token_amount + token_amount;
+          arr.push({
+            time, cny, token,
+          });
+        }
+        current_item.cny_amount = cny;
+        current_item.token_amount = token;
+      } else {
+        // 最后一个的数据
+        if (i === len - 1) {
+          arr.push({
+            time,
+            cny: current_cny_reserve,
+            token: current_token_reserve,
+          });
+        } else {
+          let cny = 0;
+          let token = 0;
+          if (type === 'sell') {
+            cny = cny_amount - bought_amount;
+            token = token_amount + sold_amount;
+            arr.push({
+              time, cny, token,
+            });
+          }
+          if (type === 'buy') {
+            cny = cny_amount + sold_amount;
+            token = token_amount - bought_amount;
+            arr.push({
+              time, cny, token,
+            });
+          }
+          current_item.cny_amount = cny;
+          current_item.token_amount = token;
+        }
+      }
+    }
+    // console.log(result);
+    return arr;
+  }
+
+  // 根据 token id 获取持仓者数量
+  async getNumberOfHolders(id) {
+    const sql = 'SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id AND amount > 0;';
+    const result = await this.app.mysql.query(sql, { id });
+    return result && result.length > 0 ? result[0].count : 0;
+  }
+
+  // 根据 token id 获取流动金持仓者数量
+  async getNumberOfLiquidityHolders(id) {
+    const sql = 'SELECT count(1) AS count FROM exchange_balances WHERE token_id = :id;';
+    const result = await this.app.mysql.query(sql, { id });
+    return result && result.length > 0 ? result[0].count : 0;
+  }
 }
 
 module.exports = ExchangeService;
