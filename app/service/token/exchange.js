@@ -91,6 +91,8 @@ class ExchangeService extends Service {
     // exchangeRate = tokenToCnyInput
     exchange.token_reserve = token_reserve;
     exchange.cny_reserve = cny_reserve;
+    exchange.number_of_holders = await this.getNumberOfHolders(tokenId);
+    exchange.number_of_liquidity_holders = await this.getNumberOfLiquidityHolders(tokenId);
 
     return exchange;
   }
@@ -1489,6 +1491,20 @@ class ExchangeService extends Service {
     }
     // console.log(result);
     return arr;
+  }
+
+  // 根据 token id 获取持仓者数量
+  async getNumberOfHolders(id) {
+    const sql = 'SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id AND amount > 0;';
+    const result = await this.app.mysql.query(sql, { id });
+    return result && result.length > 0 ? result[0].count : 0;
+  }
+
+  // 根据 token id 获取流动金持仓者数量
+  async getNumberOfLiquidityHolders(id) {
+    const sql = 'SELECT count(1) AS count FROM exchange_balances WHERE token_id = :id;';
+    const result = await this.app.mysql.query(sql, { id });
+    return result && result.length > 0 ? result[0].count : 0;
   }
 }
 

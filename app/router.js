@@ -291,9 +291,9 @@ module.exports = app => {
   router.get('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.getBatchAllowance);
   router.post('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.approveTokenToBatch);
 
-   // token 的出入站
-   router.post('/minetoken/deposit', passport.authorize, controller.mineToken.deposit);
-   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
+  // token 的出入站
+  router.post('/minetoken/deposit', passport.authorize, controller.mineToken.deposit);
+  router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
 
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
@@ -331,6 +331,13 @@ module.exports = app => {
   router.get('/token/user/:id', passport.verify, controller.token.getByUserId);
   // 查询符号为:symbol的token
   router.get('/token/symbol/:symbol', passport.verify, controller.token.getBySymbol);
+
+  // 添加token协作者
+  router.post('/token/collaborator/:id', passport.authorize, controller.token.setCollaborator);
+  // 删除token协作者
+  router.delete('/token/collaborator/:id', passport.authorize, controller.token.deleteCollaborator);
+  // 获取token协作者列表
+  router.get('/token/collaborator', passport.authorize, controller.token.getCollaborators);
 
   // 查询当前用户的资产余额
   router.get('/asset/balance', passport.verify, controller.asset.getBalance);
@@ -554,4 +561,5 @@ module.exports = app => {
   router.post('/api/wechat/qrcode', passport.verify, controller.wechat.qrcode);
   // 轮询微信扫码登录
   router.get('/api/login_by_wx', passport.verify, controller.wechat.loginByWx);
+  router.get('/api/bind_by_wx', passport.verify, controller.wechat.bindByWx);
 };

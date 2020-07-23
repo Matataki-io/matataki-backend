@@ -127,6 +127,7 @@ module.exports = {
   accountBinded: 11001,
   publishRatelimit: 11002,
   notFountComment: 11100,
+  notEnoughPlaces: 11200,
 
   returnObj(lang) {
 
@@ -210,6 +211,7 @@ module.exports = {
       accountBinded: { code: this.accountBinded, message: 'account already exist, cannot beed binded' },
       publishRatelimit: { code: this.publishRatelimit, message: 'too many requests' },
       notFountComment: { code: this.notFountComment, message: 'not found comment' },
+      notEnoughPlaces: { code: this.notEnoughPlaces, message: 'Not enough places' },
     };
 
     const zh = {
@@ -292,6 +294,7 @@ module.exports = {
       accountBinded: { code: this.accountBinded, message: '账号已存在，无法绑定' },
       publishRatelimit: { code: this.publishRatelimit, message: '请求过多' },
       notFountComment: { code: this.notFountComment, message: '回复评论不存在' },
+      notEnoughPlaces: { code: this.notEnoughPlaces, message: '名额不足' },
     };
 
     let message;
