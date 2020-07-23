@@ -175,7 +175,7 @@ class PostService extends Service {
       where: { id },
       columns: [ 'id', 'hash', 'cover', 'uid', 'title', 'short_content',
         'status', 'create_time', 'comment_pay_point', 'channel_id',
-        'require_buy', 'ipfs_hide' ], // todo：需要再增加
+        'require_buy', 'ipfs_hide', 'assosiate_with' ], // todo：需要再增加
     });
     if (posts && posts.length > 0) {
       return posts[0];
@@ -229,7 +229,7 @@ class PostService extends Service {
   async getById(id) {
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, ipfs_hide,'
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy, cc_license FROM posts WHERE id = ?;',
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, require_buy, cc_license, assosiate_with FROM posts WHERE id = ?;',
       [ id ]
     );
 
@@ -249,7 +249,7 @@ class PostService extends Service {
   async getForEdit(id, current_user) {
     const posts = await this.app.mysql.query(
       'SELECT id, username, author, title, short_content, hash, status, onchain_status, create_time, fission_factor, '
-      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens FROM posts WHERE id = ? AND uid = ?;',
+      + 'cover, is_original, channel_id, fission_rate, referral_rate, uid, is_recommend, category_id, comment_pay_point, require_holdtokens, assosiate_with FROM posts WHERE id = ? AND uid = ?;',
       [ id, current_user ]
     );
 
