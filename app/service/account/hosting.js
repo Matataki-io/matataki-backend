@@ -48,6 +48,10 @@ class AccountHostingService extends Service {
       return false;
     }
   }
+
+  searchByPublicKey(public_key, blockchain = 'ETH') {
+      return this.app.mysql.get('account_hosting', { public_key, blockchain });
+  }
 }
 
 module.exports = AccountHostingService;
