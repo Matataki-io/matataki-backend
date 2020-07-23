@@ -142,6 +142,7 @@ class MineTokenService extends Service {
     try {
       await conn.query('DELETE FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
 
+      websites = websites.filter(web => web.url);
       for (const website of websites) {
         await conn.insert('minetoken_resources', {
           token_id: tokenId,
