@@ -142,6 +142,7 @@ class MineTokenService extends Service {
     try {
       await conn.query('DELETE FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
 
+      websites = websites.filter(web => web.url);
       for (const website of websites) {
         await conn.insert('minetoken_resources', {
           token_id: tokenId,
@@ -1154,6 +1155,40 @@ class MineTokenService extends Service {
   async deleteTokenTags(id) {
     return await this.app.mysql.delete('minetoken_tags', {
       token_id: id,
+    });
+  }
+
+  /** 添加协作者 */
+  async setCollaborator(tokenId, userId) {
+    return await this.app.mysql.insert('minetoken_collaborators', {
+      token_id: tokenId,
+      user_id: userId,
+      create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+    });
+  }
+
+  /** 获取协作者列表 */
+  async getCollaborators(tokenId) {
+    const sql = `
+      SELECT
+        c.token_id, c.user_id, c.create_time,
+        u.username, u.nickname, u.avatar
+      FROM minetoken_collaborators c
+      LEFT JOIN users u ON c.user_id = u.id
+      WHERE c.token_id = :tokenId;
+    `;
+    return await this.app.mysql.query(sql, {
+      tokenId,
+    });
+  }
+
+  /** 删除协作者 */
+  async deleteCollaborator(tokenId, userId) {
+    if (typeof tokenId !== 'number' || typeof userId !== 'number') return false;
+
+    return await this.app.mysql.delete('minetoken_collaborators', {
+      token_id: tokenId,
+      user_id: userId,
     });
   }
 }

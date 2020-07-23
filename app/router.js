@@ -332,6 +332,13 @@ module.exports = app => {
   // 查询符号为:symbol的token
   router.get('/token/symbol/:symbol', passport.verify, controller.token.getBySymbol);
 
+  // 添加token协作者
+  router.post('/token/collaborator/:id', passport.authorize, controller.token.setCollaborator);
+  // 删除token协作者
+  router.delete('/token/collaborator/:id', passport.authorize, controller.token.deleteCollaborator);
+  // 获取token协作者列表
+  router.get('/token/collaborator', passport.authorize, controller.token.getCollaborators);
+
   // 查询当前用户的资产余额
   router.get('/asset/balance', passport.verify, controller.asset.getBalance);
   // 资产转移
