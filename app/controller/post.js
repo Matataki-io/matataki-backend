@@ -92,7 +92,7 @@ class PostController extends Controller {
         is_original,
         fission_factor: fissionFactor,
         create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-        assosiateWith,
+        assosiate_with: assosiateWith,
         cover, // 封面url
         platform,
         uid: ctx.user.id,
