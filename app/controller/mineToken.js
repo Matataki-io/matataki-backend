@@ -406,15 +406,6 @@ class MineTokenController extends Controller {
       return;
     }
 
-    // 检查这个交易是不是已经在数据库入账了
-    const isTxNotExistInDB = await this.service.token.externalDeposit.isTxNotExistInDB(txHash);
-    if (!isTxNotExistInDB) {
-      ctx.body = ctx.msg.failure;
-      ctx.status = 400;
-      ctx.body.message = "This transaction is already in the database, please check your txHash and try again."
-      return;
-    }
-
     // 检查这个交易是不是非 Transfer
     const event = this.service.token.externalDeposit.getTransferEvent(receipt.logs);
     if (!event) {
@@ -437,6 +428,15 @@ class MineTokenController extends Controller {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.message = "This is not your deposit, please switch to another account."
+      return;
+    }
+
+    // 检查这个交易是不是已经在数据库入账了
+    const isTxNotExistInDB = await this.service.token.externalDeposit.isTxNotExistInDB(txHash);
+    if (!isTxNotExistInDB) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "This transaction is already in the database, please check your txHash and try again."
       return;
     }
 
