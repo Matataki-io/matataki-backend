@@ -115,7 +115,7 @@ class SearchController extends Controller {
     // 还需要记录搜索历史
     await this.service.search.writeLog(word, 3);
 
-    const result = await this.service.search.searchUser(word, page, pagesize, current_user);
+    const result = await this.service.search.searchUser2DB(word, page, pagesize, current_user);
 
     if (!result) {
       ctx.body = ctx.msg.failure;

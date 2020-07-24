@@ -616,6 +616,40 @@ class SearchService extends Service {
 
     return { count, list: tagList };
   }
+  async searchUser2DB(keyword, page = 1, pagesize = 10, current_user = null) {
+    const pi = parseInt(page);
+    const pz = parseInt(pagesize);
+    const wehreSql = `
+    WHERE (username REGEXP :keyword OR nickname REGEXP :keyword) AND platform != 'cny'
+    `;
+    const result = await this.app.mysql.query(`
+    SELECT id FROM users ${wehreSql} LIMIT :start, :end;
+    SELECT count(*) as count FROM users ${wehreSql};
+    `, {
+      keyword,
+      start: (pi - 1) * pz, end: pz,
+    });
+    const list = result[0];
+    const count = result[1][0].count;
+
+    const userids = [];
+    // 生成userid列表
+    for (let i = 0; i < list.length; i++) {
+      userids.push(list[i].id);
+    }
+
+    if (userids.length === 0) {
+      return { count: 0, list: [] };
+    }
+
+    // 获取详情
+    const userList = await this.service.user.getUserList(userids, current_user);
+
+    return {
+      list: userList,
+      count,
+    };
+  }
 }
 
 module.exports = SearchService;
