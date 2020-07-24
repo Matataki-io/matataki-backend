@@ -50,8 +50,10 @@ class ExternalDepositService extends Service {
       return logs.length === 0;
   }
 
-  async getFanPiaoFromAddress(contract_address) {
-      const list = await this.app.mysql.select('minetokens', { where: { contract_address } });
+  async getFanPiaoFromAddress(addr) {
+      // Fixed since receipt's address is all lowercase, we need checksumed address
+      const addressChecksumed = this.service.ethereum.web3.toChecksumAddress(addr)
+      const list = await this.app.mysql.select('minetokens', { where: { contract_address: addressChecksumed } });
       return list[0];
   }
 
