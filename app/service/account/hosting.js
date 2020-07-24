@@ -49,7 +49,8 @@ class AccountHostingService extends Service {
     }
   }
 
-  searchByPublicKey(public_key, blockchain = 'ETH') {
+  searchByPublicKey(publicKey, blockchain = 'ETH') {
+      const public_key = this.service.ethereum.web3.toChecksumAddress(publicKey);
       return this.app.mysql.get('account_hosting', { public_key, blockchain });
   }
 }
