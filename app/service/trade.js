@@ -81,7 +81,7 @@ class TradeService extends Service {
     }
     const { token_id, price } = market;
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    const result = await this.app.mysql.insert('direct_trade_market', {
+    const result = await this.app.mysql.insert('direct_trade_log', {
       uid,
       token_id,
       market_id: marketId,
