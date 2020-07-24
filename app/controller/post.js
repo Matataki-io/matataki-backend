@@ -8,11 +8,11 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
 
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
       return query.replace(
         /\:(\w+)/g,
-        function(txt, key) {
+        function (txt, key) {
           if (values.hasOwnProperty(key)) {
             return this.escape(values[key]);
           }
@@ -92,7 +92,7 @@ class PostController extends Controller {
         is_original,
         fission_factor: fissionFactor,
         create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-        assosiateWith,
+        assosiate_with: assosiateWith,
         cover, // 封面url
         platform,
         uid: ctx.user.id,
@@ -169,7 +169,7 @@ class PostController extends Controller {
       cover,
       is_original = 0,
       tags = [],
-      assosiateWith,
+      assosiate_with: assosiateWith,
       shortContent = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
       requireToken = null,
@@ -777,7 +777,7 @@ class PostController extends Controller {
       const result = await this.app.mysql.query(
         'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count) VALUES (?, ?, 0, 0, 0, 0)'
         + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
-        [ post.id, 1 ]
+        [post.id, 1]
       );
 
       const updateSuccess = result.affectedRows !== 0;
