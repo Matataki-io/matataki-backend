@@ -380,6 +380,23 @@ class MineTokenController extends Controller {
     const { txHash } = ctx.request.body;
     // 拿到 receipt
     const receipt = await this.service.ethereum.web3.getTransactionReceipt(txHash);
+
+    // 检查这个交易是不是失败交易，以防万一
+    if (!receipt) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "Didn't found this transaction on Rinkeby network. please check your hash."
+      return;
+    }
+
+    if (!receipt.status) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "This is a reverted transaction, not a successful deposit."
+      return;
+    }
+
+
     // 检查该 to 合约是不是我们DB列入的Fan票
     const token = await this.service.token.externalDeposit.getFanPiaoFromAddress(receipt.to);
     if (!token) {
@@ -431,6 +448,17 @@ class MineTokenController extends Controller {
         amount,
         receipt.transactionHash
       );
+      ctx.body = {
+        ...ctx.msg.success,
+        message: "Deposit successfully",
+        data: {
+          tokenId: token.id,
+          from: fromAddr,
+          to: to.uid,
+          amount,
+          transactionHash: receipt.transactionHash
+        }
+      };
     } catch (error) {
       this.logger.error('minetoken::deposit error happened when handleDeposit', error)
       ctx.body = ctx.msg.failure;
