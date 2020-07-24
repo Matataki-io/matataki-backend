@@ -292,7 +292,7 @@ module.exports = app => {
   router.post('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.approveTokenToBatch);
 
   // token 的出入站
-  router.post('/minetoken/:id/deposit', passport.authorize, controller.mineToken.deposit);
+  router.post('/minetoken/deposit', passport.authorize, controller.mineToken.deposit);
   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
 
   // 查询当前用户的token余额
@@ -493,6 +493,7 @@ module.exports = app => {
   // 开发用
   router.get('/_internal/getWallet', passport.apiVerify, controller.dev.getActiveUnderBalanceWallet);
   router.post('/_internal/justAirdrop', passport.apiVerify, controller.dev.justAirDrop);
+  router.get('/_internal/isTxExistInDB/:txHash', passport.verify, controller.dev.isExistInDB);
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
   router.post('/account/unbinding', passport.authorize, controller.account.binding.unbinding);

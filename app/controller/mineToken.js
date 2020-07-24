@@ -377,8 +377,71 @@ class MineTokenController extends Controller {
 
   async deposit() {
     const { ctx } = this;
-    const tokenId = ctx.params.id;
-    throw new Error("Method Not implemented")
+    const { txHash } = ctx.request.body;
+
+    try {
+      // 拿到 receipt
+      const receipt = await this.service.ethereum.web3.getTransactionReceipt(txHash);
+      // 检查这个交易是不是失败交易，以防万一
+      if (!receipt) {
+        throw new Error("Didn't found this transaction on Rinkeby network. please check your hash.");
+      }
+
+      if (!receipt.status) {
+        throw new Error("This is a reverted transaction, not a successful deposit.");
+      }
+
+      // 检查该 to 合约是不是我们DB列入的Fan票
+      const token = await this.service.token.externalDeposit.getFanPiaoFromAddress(receipt.to);
+      if (!token) {
+        throw new Error("No such Token was found in our database, please check agian is it Matataki FanPiao.");
+      }
+
+      // 检查这个交易是不是非 Transfer
+      const event = this.service.token.externalDeposit.getTransferEvent(receipt.logs);
+      if (!event) {
+        throw new Error("This transaction seems not a FanPiao transfer, please check agian.");
+      }
+    
+      const { fromAddr, toAddr, amount } = this.service.token.externalDeposit.getDataFromTransferEvent(event);
+      const to = await this.service.account.hosting.searchByPublicKey(toAddr);
+      if (!to) { 
+        throw new Error("No such hosting account was found.");
+      }
+
+      if (to.uid !== ctx.user.id) {
+        throw new Error("This is not your deposit, please switch to another account.");
+      }
+
+      // 检查这个交易是不是已经在数据库入账了
+      const isTxNotExistInDB = await this.service.token.externalDeposit.isTxNotExistInDB(txHash);
+      if (!isTxNotExistInDB) {
+        throw new Error("This transaction is already in the database, please check your txHash and try again.");
+      }
+      await this.service.token.externalDeposit.handleDeposit(
+        token.id,
+        fromAddr,
+        to.uid,
+        amount,
+        receipt.transactionHash
+      );
+      ctx.body = {
+        ...ctx.msg.success,
+        message: "Deposit successfully",
+        data: {
+          tokenId: token.id,
+          from: fromAddr,
+          to: to.uid,
+          amount,
+          transactionHash: receipt.transactionHash
+        }
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = error;
+      ctx.body.message = error.message;
+    }
   }
 
   async withdraw() {

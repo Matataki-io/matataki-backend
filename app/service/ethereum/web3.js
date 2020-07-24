@@ -91,6 +91,13 @@ class Web3Service extends Service {
     return web3.eth.sendSignedTransaction(`0x${tx.serialize().toString('hex')}`);
   }
 
+  /**
+   * Will convert an upper or lowercase Ethereum address to a checksum address.
+   * @param {string} address An address string.
+   */
+  toChecksumAddress(address) {
+    return this.web3.utils.toChecksumAddress(address)
+  }
 }
 
 module.exports = Web3Service;

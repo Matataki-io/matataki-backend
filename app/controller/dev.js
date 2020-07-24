@@ -25,6 +25,14 @@ class OnlyForDevController extends Controller {
       ctx.body.data = { error };
     }
   }
+
+  async isExistInDB() {
+    const { ctx } = this;
+    const { txHash } = ctx.params;
+    const result = await this.service.token.externalDeposit.isTxNotExistInDB(txHash);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = { result };
+  }
 }
 
 module.exports = OnlyForDevController;
