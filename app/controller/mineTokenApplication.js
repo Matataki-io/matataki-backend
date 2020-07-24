@@ -109,7 +109,7 @@ class MineTokenController extends Controller {
     const { ctx } = this;
     // 参数可以参考数据库字段comment
     const {
-      introduction = '', age = 0, number = 0,
+      introduction = '', age = '', number = '',
       career = '', field = '', platform = '',
       nickname = '', link = '', interview = 1,
       know = '', publish = '', info = '',
