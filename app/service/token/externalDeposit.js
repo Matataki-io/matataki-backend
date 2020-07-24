@@ -38,11 +38,21 @@ class ExternalDepositService extends Service {
       return target || null;
   }
 
+  getAddressFrom64BitHex(hex) {
+    const paddedZerosOnTheLeft = Array(24).fill('0').join('');
+    const allInLowercase = hex.replace(paddedZerosOnTheLeft, '');
+    return this.service.ethereum.web3.toChecksumAddress(allInLowercase);
+  }
+
   getDataFromTransferEvent(event) {
-      const [eventSig, fromAddr, toAddr] = event.topics;
+      const [eventSig, from, to ] = event.topics;
       if (eventSig !== TransferEventTopicHash) throw new Error("This is not an ERC20 Transfer Event");
-      const amount = Number(event.data);
-      return { fromAddr, toAddr, amount, transactionHash: event.transactionHash }
+      const amount = parseInt(event.data, 16);
+      return { 
+        fromAddr: this.getAddressFrom64BitHex(from),
+        toAddr: this.getAddressFrom64BitHex(to),
+        amount, transactionHash: event.transactionHash 
+      };
   }
 
   async isTxNotExistInDB(txHash) {
@@ -69,7 +79,7 @@ class ExternalDepositService extends Service {
     const uidOfInAndOut = this.config.tokenInAndOut.specialAccount.uid;
     // Update DB
     const dbConnection = await this.app.mysql.beginTransaction();
-    await this._syncTransfer(
+    await this.service.token.mineToken._syncTransfer(
         tokenId, uidOfInAndOut, depositor, amount, this.clientIP,
         consts.mineTokenTransferTypes.transfer, transactionHash, dbConnection,
         `Deposit from external wallet: ${from}`
