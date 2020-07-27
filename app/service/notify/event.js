@@ -89,6 +89,9 @@ class NotifyService extends Service {
    * @noDuplication 【默认：true】避免重复。开启时，如果参数相同的事件已经存在，将不会创建新事件。
    */
   async sendEvent(senderId, receivingIds,  action, objectId, objectType, remark, noDuplication = true) {
+    // 过滤接收者和发送者相同的情况
+    receivingIds = receivingIds.filter(userId => userId !== senderId)
+    if(receivingIds.length === 0) return true
     // 参数相同的事件如果已经存在了，就不会在创建新的
     if(noDuplication) {
       const existing = await this.app.mysql.select(EVENT_TABLE, {
