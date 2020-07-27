@@ -510,7 +510,7 @@ class MineTokenService extends Service {
   // 查看用户的token日志
   async getUserLogs(tokenId, userId, page = 1, pagesize = 20) {
     const sql
-      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type, t.tx_hash,
+      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type, t.tx_hash, t.memo,
         m.name, m.symbol, m.decimals,
         u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar,
         u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar
