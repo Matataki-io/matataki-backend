@@ -557,10 +557,14 @@ module.exports = app => {
 
   // ---------------- Fan票申请 ----------------------------------------
   // 获取自己相关的 fan票申请
-  router.get('/api/minetoken_application', passport.verify, controller.wechat.qrcode);
+  router.get('/api/minetoken_application', passport.authorize, controller.mineTokenApplication.userApplication);
   // 创建、更新、提交 fan票申请
   router.post('/api/minetoken_application', passport.authorize, controller.mineTokenApplication.index);
+  // 获取自己相关的 fan票申请调研表单
+  router.get('/api/minetoken_application_survey', passport.authorize, controller.mineTokenApplication.userApplicationSurvey);
   // fan票表单申请调研表单
   router.post('/api/minetoken_application_survey', passport.authorize, controller.mineTokenApplication.survey);
+  // fan票提交校验 不能重复 symbol
+  router.post('/api/minetoken_application_verify', passport.verify, controller.mineTokenApplication.verify);
 
 };

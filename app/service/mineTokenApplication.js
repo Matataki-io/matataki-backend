@@ -40,6 +40,45 @@ class MineTokenApplicationService extends Service {
     }
   }
 
+  // 获取用户Fan票申请信息
+  async userApplication() {
+    try {
+      const { ctx, app } = this;
+      const uid = ctx.user.id;
+      const applicationResult = await app.mysql.get('minetokens_application', { uid });
+
+      if (applicationResult) {
+        return {
+          code: 0,
+          data: applicationResult,
+        };
+      }
+      return { code: -1 };
+    } catch (e) {
+      console.log(e);
+      return { code: -1 };
+    }
+  }
+  // 获取用户Fan票申请信息 调研表单
+  async userApplicationSurvey() {
+    try {
+      const { ctx, app } = this;
+      const uid = ctx.user.id;
+      const applicationResult = await app.mysql.get('minetokens_survey', { uid });
+
+      if (applicationResult) {
+        return {
+          code: 0,
+          data: applicationResult,
+        };
+      }
+      return { code: -1 };
+    } catch (e) {
+      console.log(e);
+      return { code: -1 };
+    }
+  }
+
   // fan票申请
   async index(type, logo, name, symbol, tag) {
     const { ctx } = this;
@@ -111,10 +150,6 @@ class MineTokenApplicationService extends Service {
       } else if (type === 'reset') {
         const data = {
           id: applicationResult.id,
-          logo,
-          name,
-          symbol,
-          tag: tag.join(','),
           status: 1,
           update_time: time,
         };
@@ -190,6 +225,25 @@ class MineTokenApplicationService extends Service {
       return { code: -1 };
     }
 
+  }
+
+  // fan票提交校验 不能重复 symbol
+  async verify(symbol) {
+    try {
+      const { app } = this;
+      const applicationResult = await app.mysql.get('minetokens', { symbol });
+
+      if (applicationResult) {
+        return {
+          code: -1,
+          message: 'Symbol 重复',
+        };
+      }
+      return { code: 0 };
+    } catch (e) {
+      console.log(e);
+      return { code: -1 };
+    }
   }
 }
 module.exports = MineTokenApplicationService;
