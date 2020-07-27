@@ -129,6 +129,7 @@ module.exports = {
   notFountComment: 11100,
   notEnoughPlaces: 11200,
   cannotAddFounder: 11201,
+  notCollaborator: 11202,
 
   returnObj(lang) {
 
@@ -214,6 +215,7 @@ module.exports = {
       notFountComment: { code: this.notFountComment, message: 'not found comment' },
       notEnoughPlaces: { code: this.notEnoughPlaces, message: 'Not enough places' },
       cannotAddFounder: { code: this.cannotAddFounder, message: 'Cannot add founder' },
+      notCollaborator: { code: this.notCollaborator, message: 'Not a token collaborator' },
     };
 
     const zh = {
@@ -298,6 +300,7 @@ module.exports = {
       notFountComment: { code: this.notFountComment, message: '回复评论不存在' },
       notEnoughPlaces: { code: this.notEnoughPlaces, message: '名额不足' },
       cannotAddFounder: { code: this.cannotAddFounder, message: '无法添加创始人' },
+      notCollaborator: { code: this.notCollaborator, message: '你不是此Fan票的协作者' },
     };
 
     let message;

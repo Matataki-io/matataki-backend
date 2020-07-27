@@ -49,6 +49,24 @@ class PostController extends Controller {
     // 修改requireBuy为数组
     const isEncrypt = Boolean(requireToken && requireToken.length > 0) || Boolean(requireBuy && requireBuy.length > 0);
 
+    // 检查Fan票协作者权限
+    if (requireToken) {
+      for (let i = 0; i < requireToken.length; i++) {
+        if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireToken[i].tokenId)) {
+          ctx.body = ctx.msg.notCollaborator;
+          return;
+        }
+      }
+    }
+    if (editRequireToken) {
+      for (let i = 0; i < editRequireToken.length; i++) {
+        if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, editRequireToken[i].tokenId)) {
+          ctx.body = ctx.msg.notCollaborator;
+          return;
+        }
+      }
+    }
+
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
     const articleContent = await this.service.post.wash(data.content);
@@ -228,7 +246,28 @@ class PostController extends Controller {
       }
       // 这里判断是否为付费文章，用于决定ipfs是否加密，如果不是作者的则不采用api传入的值。
       isEncrypt = Boolean(post.require_holdtokens > 0 || post.require_buy > 0);
-    } else isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
+    } else {
+      // 如果是作者本人将会执行这部分
+      isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
+
+      // 检查Fan票协作者权限
+      if (requireToken) {
+        for (let i = 0; i < requireToken.length; i++) {
+          if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireToken[i].tokenId)) {
+            ctx.body = ctx.msg.notCollaborator;
+            return;
+          }
+        }
+      }
+      if (editRequireToken) {
+        for (let i = 0; i < editRequireToken.length; i++) {
+          if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, editRequireToken[i].tokenId)) {
+            ctx.body = ctx.msg.notCollaborator;
+            return;
+          }
+        }
+      }
+    }
 
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);

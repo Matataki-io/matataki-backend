@@ -1191,6 +1191,33 @@ class MineTokenService extends Service {
       user_id: userId,
     });
   }
+
+  /** 获取自己创建和协作的Fan票列表 */
+  async getBindableTokenList(userId) {
+    const sql = `
+      SELECT
+        t.id, t.uid, t.name, t.symbol, t.decimals, t.logo, t.brief
+      FROM minetokens t
+      LEFT JOIN minetoken_collaborators c ON t.id = c.token_id
+      WHERE t.uid = :userId OR c.user_id = :userId
+      GROUP BY t.id;
+    `;
+    return await this.app.mysql.query(sql, { userId })
+  }
+
+  /** 检查用户是不是 token 的协作者或创建者 */
+  async isItCollaborator(userId, tokenId) {
+    const sql = `
+      SELECT
+        t.id, t.uid, t.name, t.symbol, t.decimals, t.logo, t.brief
+      FROM minetokens t
+      LEFT JOIN minetoken_collaborators c ON t.id = c.token_id
+      WHERE t.id = :tokenId AND (t.uid = :userId OR c.user_id = :userId)
+      GROUP BY t.id;
+    `;
+    const result = await this.app.mysql.query(sql, { userId, tokenId })
+    return result.length > 0;
+  }
 }
 
 module.exports = MineTokenService;
