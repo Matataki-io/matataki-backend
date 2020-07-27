@@ -361,6 +361,10 @@ class TokenController extends Controller {
       ctx.body = ctx.msg.tokenNotExist;
       return;
     }
+    if (token.uid === userId) {
+      ctx.body = ctx.msg.cannotAddFounder;
+      return;
+    }
     const collaborators = await this.service.token.mineToken.getCollaborators(token.id);
     // 协作者人数已满
     if (collaborators.length >= 20) {
