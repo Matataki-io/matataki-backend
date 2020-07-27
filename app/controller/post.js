@@ -58,6 +58,15 @@ class PostController extends Controller {
         }
       }
     }
+    if (requireBuy) {
+      for (let i = 0; i < requireBuy.length; i++) {
+        // 需要注意CNY的情况下 tokenId 是 0
+        if (requireBuy[i].tokenId && !await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireBuy[i].tokenId)) {
+          ctx.body = ctx.msg.notCollaborator;
+          return;
+        }
+      }
+    }
     if (editRequireToken) {
       for (let i = 0; i < editRequireToken.length; i++) {
         if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, editRequireToken[i].tokenId)) {
@@ -254,6 +263,15 @@ class PostController extends Controller {
       if (requireToken) {
         for (let i = 0; i < requireToken.length; i++) {
           if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireToken[i].tokenId)) {
+            ctx.body = ctx.msg.notCollaborator;
+            return;
+          }
+        }
+      }
+      if (requireBuy) {
+        for (let i = 0; i < requireBuy.length; i++) {
+          // 需要注意CNY的情况下 tokenId 是 0
+          if (requireBuy[i].tokenId && !await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireBuy[i].tokenId)) {
             ctx.body = ctx.msg.notCollaborator;
             return;
           }
