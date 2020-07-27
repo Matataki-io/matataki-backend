@@ -479,6 +479,14 @@ class MineTokenController extends Controller {
       ctx.body.data = { error }
     }
   }
+
+  async getBindableTokenList() {
+    const { ctx } = this;
+    ctx.body = {
+      ...ctx.msg.success,
+      data: await this.service.token.mineToken.getBindableTokenList(ctx.user.id)
+    }
+  }
 }
 
 module.exports = MineTokenController;
