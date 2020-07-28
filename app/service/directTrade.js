@@ -70,6 +70,7 @@ class directTradeService extends Service {
         update_time: now,
       });
       const insertSuccess = result.affectedRows === 1;
+      await conn.commit();
       return insertSuccess;
     } catch (error) {
       await conn.rollback();

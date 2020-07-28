@@ -562,4 +562,8 @@ module.exports = app => {
   // 轮询微信扫码登录
   router.get('/api/login_by_wx', passport.verify, controller.wechat.loginByWx);
   router.get('/api/bind_by_wx', passport.verify, controller.wechat.bindByWx);
+
+  // -------------------------------- 直通车交易 ---------------------------
+  // 创建市场
+  router.post('/trade/direct', passport.authorize, controller.directTrade.createMarket);
 };
