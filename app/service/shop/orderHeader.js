@@ -71,7 +71,7 @@ class OrderHeaderService extends Service {
             }
             case TYPEOPTIONS.direct_trade: {
               // 查看是否有市场trade_market
-              const market = await this.service.trade.getMarket(item.tokenId);
+              const market = await this.service.directTrade.getMarket(item.tokenId);
               if (!market) {
                 await conn.rollback();
                 this.logger.error('OrderHeaderService.createOrder direct_trade error: market not exist.');

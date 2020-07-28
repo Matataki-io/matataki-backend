@@ -639,6 +639,10 @@ class ExchangeService extends Service {
         res = await this.addLiquidity(userId, tokenId, order.cny_amount, order.token_amount, order.min_liquidity, order.max_tokens, order.deadline, conn);
         break;
       }
+      case direct_trade: {
+        res = await this.service.directTrade.buy(userId, tokenId, order.cny_amount, order.token_amount, conn);
+        break;
+      }
     }
     if (res < 0) {
       this.logger.info('service.exchange.cnyToTokenSubOrder res < 0 ', order.type, res);

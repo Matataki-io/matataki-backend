@@ -3,7 +3,7 @@ const moment = require('moment');
 const Service = require('egg').Service;
 const consts = require('./consts');
 
-class TradeService extends Service {
+class directTradeService extends Service {
   /**
    * 创建直接交易市场
    * @param {*} {
@@ -156,6 +156,22 @@ class TradeService extends Service {
 
     return exchangeUser.id;
   }
+  async buy(userId, tokenId, cny_amount, token_amount, conn) {
+    const market = await this.getMarket(tokenId);
+    // 转移token， exchange_uid -> userId，直购交易所到购买者
+    const transferResult = await this.service.token.mineToken.transferFrom(tokenId, market.exchange_uid, userId, token_amount, '', consts.mineTokenTransferTypes.exchange_purchase, conn);
+    // 转移资产失败
+    if (!transferResult) {
+      return -1;
+    }
+
+    // 转移cny，userId -> market.uid 购买者到市场创建者
+    const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, market.uid, cny_amount, conn);
+    // 转移资产失败
+    if (!cnyTransferResult) {
+      return -1;
+    }
+  }
 }
 
-module.exports = TradeService;
+module.exports = directTradeService;
