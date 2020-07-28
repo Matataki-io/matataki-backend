@@ -199,7 +199,7 @@ class directTradeService extends Service {
     }
 
     // 转移token， exchange_uid -> userId，直购交易所到购买者
-    const transferResult = await this.service.token.mineToken.transferFrom(tokenId, market.exchange_uid, userId, token_amount, '', consts.mineTokenTransferTypes.exchange_purchase, conn);
+    const transferResult = await this.service.token.mineToken.transferFrom(tokenId, market.exchange_uid, userId, token_amount, '', consts.mineTokenTransferTypes.direct_trade, conn);
     // 转移资产失败
     if (!transferResult) {
       this.logger.error('directTradeService.buy exception. transfer token error: %j', transferResult);
