@@ -140,7 +140,6 @@ class directTradeService extends Service {
       price,
       amount,
       create_time: now,
-      update_time: now,
     });
     const insertSuccess = result.affectedRows === 1;
     return insertSuccess;
