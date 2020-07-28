@@ -78,11 +78,11 @@ class OrderHeaderService extends Service {
                 return '-1';
               }
               // 判断市场是否有足够的交易余额
-              const token_amount = item.amount;
-              const balance = await this.service.assets.balanceOf(market.exchange_uid, 'CNY');
+              token_amount = item.amount;
+              const balance = await this.service.token.mineToken.balanceOf(market.exchange_uid, item.tokenId);
               if (balance < item.amount) {
                 await conn.rollback();
-                this.logger.error('OrderHeaderService.createOrder direct_trade error: market balance not enough.');
+                this.logger.error('OrderHeaderService.createOrder direct_trade error: market balance not enough.', { balance, amount: item.amount });
                 return '-1';
               }
               // 根据token_id获取价格
