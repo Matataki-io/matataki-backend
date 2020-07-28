@@ -192,6 +192,10 @@ class directTradeService extends Service {
       this.logger.error('directTradeService.buy error: market balance not enough.');
       return -1;
     } */
+    if (!market) {
+      this.logger.error('directTradeService.buy error: market not exist.');
+      return -1;
+    }
 
     // 转移token， exchange_uid -> userId，直购交易所到购买者
     const transferResult = await this.service.token.mineToken.transferFrom(tokenId, market.exchange_uid, userId, token_amount, '', consts.mineTokenTransferTypes.exchange_purchase, conn);
