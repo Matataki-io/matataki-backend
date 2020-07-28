@@ -2,13 +2,7 @@
 const moment = require('moment');
 
 const Service = require('egg').Service;
-const TYPEOPTIONS = {
-  add: 'add',
-  buy_token_input: 'buy_token_input',
-  buy_token_output: 'buy_token_output',
-  sale_token: 'sale_token',
-  direct_trade: 'direct_trade',
-};
+const TYPEOPTIONS = require('../consts').exchangeOrderType;
 
 class OrderHeaderService extends Service {
   // 以下是CNY支付相关处理 2019-11-13

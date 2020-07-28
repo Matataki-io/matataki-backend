@@ -121,4 +121,11 @@ module.exports = {
     registered: 'registered',
     resetPassword: 'resetPassword',
   },
+  exchangeOrderType: {
+    add: 'add',
+    buy_token_input: 'buy_token_input',
+    buy_token_output: 'buy_token_output',
+    sale_token: 'sale_token',
+    direct_trade: 'direct_trade',
+  },
 };
