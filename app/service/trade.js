@@ -1,7 +1,6 @@
 'use strict';
 const moment = require('moment');
 const Service = require('egg').Service;
-const DEADLINE = 300; // 超时时间300秒
 const consts = require('./consts');
 
 class TradeService extends Service {
@@ -132,25 +131,7 @@ class TradeService extends Service {
     const insertSuccess = result.affectedRows === 1;
     return insertSuccess;
   }
-  /* async createOrder(order, conn) {
-    const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    const deadline = parseInt(moment().format('X')) + DEADLINE; // 设置unix时间戳
-    const category = 1;
-    const decimals = 4;
-    const platform = 'cny';
-    const status = 0;
-    const symbol = 'CNY';
-    const signId = 0;
-    const result = await conn.query(
-      'INSERT INTO exchange_orders(uid, token_id, cny_amount, token_amount, type, trade_no, openid, status, create_time, deadline, min_liquidity, max_tokens, min_tokens, recipient, ip, pay_cny_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [ order.uid, order.token_id, order.cny_amount, order.token_amount, order.type, order.trade_no, order.openid, order.status, now, deadline, order.min_liquidity, order.max_tokens, order.min_tokens, order.recipient, order.ip, order.pay_cny_amount ]
-    );
-  } */
   async getMarket(tokenId) {
-    const post = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
-    return post;
-  }
-  async getMarketAmount(tokenId) {
     const post = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
     return post;
   }
