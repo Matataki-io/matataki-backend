@@ -10,6 +10,7 @@ class directTradeService extends Service {
    *     uid,
    *     tokenId,
    *     amount,
+   *     price,
    *   }
    * @return {*} 返回创建是否成功
    * @memberof TradeService
@@ -111,7 +112,19 @@ class directTradeService extends Service {
    * @return {*} 返回添加是否成功
    * @memberof TradeService
    */
-  async createLog({ uid, marketId, amount }) {
+
+  /**
+   * 直接购买添加交易日志
+   * @param {*} {
+   *     uid,  // 购买者
+   *     marketId,  // 交易市场ID
+   *     amount, // 购买数量
+   *   }
+   * @param {*} conn mysql事务
+   * @return {*} 返回添加是否成功
+   * @memberof directTradeService
+   */
+  async createLog({ uid, marketId, amount }, conn) {
     const market = await this.app.mysql.get('direct_trade_market', { id: marketId });
     if (!market) {
       this.logger.info('service::TradeService createLog error, cannot get market id: %j', { marketId });
@@ -119,7 +132,7 @@ class directTradeService extends Service {
     }
     const { token_id, price } = market;
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    const result = await this.app.mysql.insert('direct_trade_log', {
+    const result = await conn.insert('direct_trade_log', {
       uid,
       token_id,
       market_id: marketId,
@@ -135,10 +148,13 @@ class directTradeService extends Service {
     const post = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
     return post;
   }
-  // 创建虚拟账号
+  /**
+   * 创建虚拟账号
+   * @param {*} symbol token symbol
+   * @return {Number} 返回创建的uid
+   * @memberof directTradeService
+   */
   async createVisualUser(symbol) {
-    // this.service.token.exchange.create()
-
     const username = this.config.user.tradeUserPrefix + symbol;
     const platform = 'cny';
     // 虚拟账号
@@ -147,7 +163,7 @@ class directTradeService extends Service {
       try {
         await this.service.auth.insertUser(username, '', platform, 'ss', '', 'cv46BYasKvID933R', 0); // todo：确认该类账号不可从前端登录
       } catch (e) {
-        this.logger.error('ExchangeService.create exception. %j', e);
+        this.logger.error('directTradeService.createVisualUser exception. %j', e);
         return -1;
       }
       exchangeUser = await this.service.auth.getUser(username, platform);
@@ -156,21 +172,47 @@ class directTradeService extends Service {
 
     return exchangeUser.id;
   }
+  /**
+   * 从直接交易市场购买
+   * @param {*} userId 购买者id
+   * @param {*} tokenId token id
+   * @param {*} cny_amount 需付款cny
+   * @param {*} token_amount 购买token数量
+   * @param {*} conn mysql连接
+   * @return {Number} 0为成功
+   * @memberof directTradeService
+   */
   async buy(userId, tokenId, cny_amount, token_amount, conn) {
     const market = await this.getMarket(tokenId);
+
+    /* const balance = await this.service.assets.balanceOf(market.exchange_uid, 'CNY');
+    // 资产是否充足
+    if (balance < token_amount) {
+      await conn.rollback();
+      this.logger.error('directTradeService.buy error: market balance not enough.');
+      return -1;
+    } */
+
     // 转移token， exchange_uid -> userId，直购交易所到购买者
     const transferResult = await this.service.token.mineToken.transferFrom(tokenId, market.exchange_uid, userId, token_amount, '', consts.mineTokenTransferTypes.exchange_purchase, conn);
     // 转移资产失败
     if (!transferResult) {
-      return -1;
+      this.logger.error('directTradeService.buy exception. transfer token error: %j', transferResult);
+      return -2;
     }
 
     // 转移cny，userId -> market.uid 购买者到市场创建者
     const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, market.uid, cny_amount, conn);
     // 转移资产失败
     if (!cnyTransferResult) {
-      return -1;
+      this.logger.error('directTradeService.buy exception. transfer cny error: %j', cnyTransferResult);
+      return -3;
     }
+    await this.createLog({
+      uid: userId, marketId: market.id, amount: token_amount,
+    }, conn);
+
+    return 0;
   }
 }
 
