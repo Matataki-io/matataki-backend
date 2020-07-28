@@ -1,6 +1,8 @@
 'use strict';
 const moment = require('moment');
 const Service = require('egg').Service;
+const DEADLINE = 300; // 超时时间300秒
+const consts = require('./consts');
 
 class TradeService extends Service {
   /**
@@ -17,26 +19,63 @@ class TradeService extends Service {
     uid,
     tokenId,
     amount,
+    price,
   }) {
     const token = await this.service.token.mineToken.getToken({ id: tokenId });
     if (!token) {
-      this.logger.info('service::TradeService createMarket error, cannot get token by id: %j', tokenId);
+      this.logger.error('service::TradeService createMarket error, cannot get token by id: %j', tokenId);
       return -1;
     }
+    // 查看用户token余额
+    const token_balance = await this.service.token.mineToken.balanceOf(uid, tokenId);
+    if (token_balance < amount) {
+      this.logger.error('service::TradeService createMarket error token_balance < amount, ', { token_balance, amount });
+      return -2;
+    }
+
+    const marketExist = await this.getMarket(tokenId);
+    // 直连交易已存在
+    if (marketExist) {
+      this.logger.error('service::TradeService createMarket error market already exist ');
+      return -3;
+    }
+
+    const exchange_uid = await this.createVisualUser(token.symbol);
+    // 创建虚拟用户失败
+    if (exchange_uid === -1) {
+      this.logger.error('service::TradeService createMarket create visual user error');
+      return -4;
+    }
     const market = token.symbol + '_CNY';
-    const price = 10000;
+
+    const conn = await this.app.mysql.beginTransaction();
+    // 转移资产
+    const transferResult = await this.service.token.mineToken.transferFrom(tokenId, uid, exchange_uid, amount, '', consts.mineTokenTransferTypes.direct_trade, conn);
+    // 转移资产失败
+    if (!transferResult) {
+      await conn.rollback();
+      this.logger.error('service::TradeService createMarket error transfer token error, Result: %j', transferResult);
+      return -5;
+    }
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
-    const result = await this.app.mysql.insert('direct_trade_market', {
-      uid,
-      token_id: tokenId,
-      market,
-      price,
-      amount,
-      create_time: now,
-      update_time: now,
-    });
-    const insertSuccess = result.affectedRows === 1;
-    return insertSuccess;
+    try {
+      const result = await conn.insert('direct_trade_market', {
+        uid,
+        token_id: tokenId,
+        market,
+        price,
+        amount,
+        exchange_uid,
+        create_time: now,
+        update_time: now,
+      });
+      const insertSuccess = result.affectedRows === 1;
+      return insertSuccess;
+    } catch (error) {
+      await conn.rollback();
+      this.logger.error('service::TradeService createMarket insert direct_trade_market error, error: %j', error);
+      return -6;
+    }
   }
   /**
    * 更新市场数量
@@ -92,6 +131,49 @@ class TradeService extends Service {
     });
     const insertSuccess = result.affectedRows === 1;
     return insertSuccess;
+  }
+  /* async createOrder(order, conn) {
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    const deadline = parseInt(moment().format('X')) + DEADLINE; // 设置unix时间戳
+    const category = 1;
+    const decimals = 4;
+    const platform = 'cny';
+    const status = 0;
+    const symbol = 'CNY';
+    const signId = 0;
+    const result = await conn.query(
+      'INSERT INTO exchange_orders(uid, token_id, cny_amount, token_amount, type, trade_no, openid, status, create_time, deadline, min_liquidity, max_tokens, min_tokens, recipient, ip, pay_cny_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [ order.uid, order.token_id, order.cny_amount, order.token_amount, order.type, order.trade_no, order.openid, order.status, now, deadline, order.min_liquidity, order.max_tokens, order.min_tokens, order.recipient, order.ip, order.pay_cny_amount ]
+    );
+  } */
+  async getMarket(tokenId) {
+    const post = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
+    return post;
+  }
+  async getMarketAmount(tokenId) {
+    const post = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
+    return post;
+  }
+  // 创建虚拟账号
+  async createVisualUser(symbol) {
+    // this.service.token.exchange.create()
+
+    const username = this.config.user.tradeUserPrefix + symbol;
+    const platform = 'cny';
+    // 虚拟账号
+    let exchangeUser = await this.service.auth.getUser(username, platform);
+    if (!exchangeUser) {
+      try {
+        await this.service.auth.insertUser(username, '', platform, 'ss', '', 'cv46BYasKvID933R', 0); // todo：确认该类账号不可从前端登录
+      } catch (e) {
+        this.logger.error('ExchangeService.create exception. %j', e);
+        return -1;
+      }
+      exchangeUser = await this.service.auth.getUser(username, platform);
+      await this.service.user.setAvatar('/avatar/trade.png', exchangeUser.id);
+    }
+
+    return exchangeUser.id;
   }
 }
 

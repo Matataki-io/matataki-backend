@@ -94,6 +94,7 @@ module.exports = {
     exchange_removeliquidity: 'exchange_removeliquidity',
     reward_article: 'reward_article',
     pay_article: 'pay_article',
+    direct_trade: 'direct_trade',
   },
 
   socialTypes1: {
