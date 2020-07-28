@@ -625,17 +625,22 @@ class ExchangeService extends Service {
     const tokens_bought = order.token_amount;
 
     let res = 0;
+    const { buy_token_output, buy_token_input, add, direct_trade } = consts.exchangeOrderType;
     switch (order.type) {
-      case 'buy_token_output': {
+      case buy_token_output: {
         res = await this.cnyToTokenOutput(userId, tokenId, tokens_bought, cny_sold, order.deadline, order.recipient, conn);
         break;
       }
-      case 'buy_token_input': {
+      case buy_token_input: {
         res = await this.cnyToTokenInput(userId, tokenId, cny_sold, order.min_tokens, order.deadline, order.recipient, conn);
         break;
       }
-      case 'add': {
+      case add: {
         res = await this.addLiquidity(userId, tokenId, order.cny_amount, order.token_amount, order.min_liquidity, order.max_tokens, order.deadline, conn);
+        break;
+      }
+      case direct_trade: {
+        res = await this.service.directTrade.buy(userId, tokenId, order.cny_amount, order.token_amount, conn);
         break;
       }
     }

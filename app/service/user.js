@@ -287,7 +287,7 @@ class UserService extends Service {
       }
 
       // 普通用户不能以exchange打头
-      if (nickname.toLowerCase().startsWith(this.config.user.virtualUserPrefix)) {
+      if (nickname.toLowerCase().startsWith(this.config.user.virtualUserPrefix) || nickname.toLowerCase().startsWith(this.config.user.tradeUserPrefix)) {
         return nicknameInvalid;
       }
 
