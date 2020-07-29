@@ -59,7 +59,7 @@ class directTradeService extends Service {
       });
       await conn.commit();
       this.logger.info('service::TradeService createMarket success, result: %j', result);
-      return result.affectedRows === 1;
+      return result.insertId;
     } catch (error) {
       await conn.rollback();
       this.logger.error('service::TradeService createMarket insert direct_trade_market error, error: %j', error);
@@ -108,7 +108,7 @@ class directTradeService extends Service {
       });
       await conn.commit();
       this.logger.info('service::TradeService updateMarket success, result: %j', result);
-      return result.affectedRows === 1;
+      return result.insertId;
     } catch (error) {
       await conn.rollback();
       this.logger.error('service::TradeService updateMarket  error: %j', error);
@@ -154,8 +154,7 @@ class directTradeService extends Service {
       amount,
       create_time: now,
     });
-    const insertSuccess = result.affectedRows === 1;
-    return insertSuccess;
+    return result.insertId;
   }
   async getByTokenId(tokenId) {
     const market = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
