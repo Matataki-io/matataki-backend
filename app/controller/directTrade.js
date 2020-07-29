@@ -8,7 +8,7 @@ class DirectTradeController extends Controller {
     const uid = ctx.user.id;
     const token = await this.service.token.mineToken.getByUserId(uid);
     if (!token) {
-      ctx.body = ctx.msg.failure;
+      ctx.body = ctx.msg.tokenNotExist;
       return;
     }
     let result = 0;
@@ -35,7 +35,7 @@ class DirectTradeController extends Controller {
     const uid = ctx.user.id;
     const token = await this.service.token.mineToken.getByUserId(uid);
     if (!token) {
-      ctx.body = ctx.msg.failure;
+      ctx.body = ctx.msg.tokenNotExist;
       return;
     }
     let result = 0;
@@ -69,12 +69,12 @@ class DirectTradeController extends Controller {
     const uid = ctx.user.id;
     const token = await this.service.token.mineToken.getByUserId(uid);
     if (!token) {
-      ctx.body = ctx.msg.failure;
+      ctx.body = ctx.msg.tokenNotExist;
       return;
     }
     const market = await this.service.directTrade.getByTokenId(token.id);
     if (!market) {
-      ctx.body = ctx.msg.failure;
+      ctx.body = ctx.msg.marketNotExist;
       return;
     }
     const _market = await this.service.directTrade.get(market.id);
