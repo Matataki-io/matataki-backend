@@ -566,4 +566,5 @@ module.exports = app => {
   // -------------------------------- 直通车交易 ---------------------------
   // 创建市场
   router.post('/trade/direct', passport.authorize, controller.directTrade.createMarket);
+  router.get('/trade/direct', passport.authorize, controller.directTrade.getMarket);
 };

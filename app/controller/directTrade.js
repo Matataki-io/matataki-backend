@@ -24,6 +24,24 @@ class DirectTradeController extends Controller {
       };
     }
   }
+  async getMarket() {
+    const { ctx } = this;
+    const uid = ctx.user.id;
+    const token = await this.service.token.mineToken.getByUserId(uid);
+    if (!token) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    const market = await this.service.directTrade.getMarket(token.id);
+    if (!market) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: market,
+    };
+  }
 }
 
 module.exports = DirectTradeController;
