@@ -7,7 +7,7 @@ class MineTokenController extends Controller {
   // 创建
   async create() {
     const ctx = this.ctx;
-    const { name, symbol, decimals = 4, logo, brief, introduction, initialSupply } = this.ctx.request.body;
+    const { name, symbol, decimals = 4, logo, brief, introduction, initialSupply, tags = [] } = this.ctx.request.body;
     // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
     if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
@@ -24,7 +24,7 @@ class MineTokenController extends Controller {
         ctx.body = ctx.msg.failure;
         ctx.body.data = { error };
       }
-      const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash); // decimals默认4位
+      const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash, tags); // decimals默认4位
       if (result === -1) {
         ctx.body = ctx.msg.tokenAlreadyCreated;
       } else if (result === -2) {
@@ -83,13 +83,13 @@ class MineTokenController extends Controller {
   async update() {
     const ctx = this.ctx;
     const tokenId = parseInt(ctx.params.id);
-    const { name, logo, brief, introduction } = ctx.request.body;
+    const { name, logo, brief, introduction, tags = [] } = ctx.request.body;
 
     // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
     if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
     } else { // 好耶 字数没有超限
-      const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction);
+      const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction, tags);
       if (result) {
         ctx.body = ctx.msg.success;
       } else {
@@ -104,6 +104,7 @@ class MineTokenController extends Controller {
 
     const token = await ctx.service.token.mineToken.get(id);
     const exchange = await ctx.service.token.exchange.detail(id);
+    const tags = await ctx.service.token.mineToken.getTokenTags(id);
     const user = await ctx.service.user.get(token.uid);
     // const vol_24h = await ctx.service.token.exchange.volume_24hour(id);
     if (exchange) {
@@ -120,6 +121,7 @@ class MineTokenController extends Controller {
         user,
         token,
         exchange,
+        tags,
       },
     };
   }
@@ -413,24 +415,95 @@ class MineTokenController extends Controller {
 
   async deposit() {
     const { ctx } = this;
-    const tokenId = ctx.params.id;
-    throw new Error('Method Not implemented');
-  }
+    const { txHash } = ctx.request.body;
 
+    try {
+      // 拿到 receipt
+      const receipt = await this.service.ethereum.web3.getTransactionReceipt(txHash);
+      // 检查这个交易是不是失败交易，以防万一
+      if (!receipt) {
+        throw new Error("Didn't found this transaction on Rinkeby network. please check your hash.");
+      }
+
+      if (!receipt.status) {
+        throw new Error('This is a reverted transaction, not a successful deposit.');
+      }
+
+      // 检查该 to 合约是不是我们DB列入的Fan票
+      const token = await this.service.token.externalDeposit.getFanPiaoFromAddress(receipt.to);
+      if (!token) {
+        throw new Error('No such Token was found in our database, please check agian is it Matataki FanPiao.');
+      }
+
+      // 检查这个交易是不是非 Transfer
+      const event = this.service.token.externalDeposit.getTransferEvent(receipt.logs);
+      if (!event) {
+        throw new Error('This transaction seems not a FanPiao transfer, please check agian.');
+      }
+
+      const { fromAddr, toAddr, amount } = this.service.token.externalDeposit.getDataFromTransferEvent(event);
+      const to = await this.service.account.hosting.searchByPublicKey(toAddr);
+      if (!to) {
+        throw new Error('No such hosting account was found.');
+      }
+
+      if (to.uid !== ctx.user.id) {
+        throw new Error('This is not your deposit, please switch to another account.');
+      }
+
+      // 检查这个交易是不是已经在数据库入账了
+      const isTxNotExistInDB = await this.service.token.externalDeposit.isTxNotExistInDB(txHash);
+      if (!isTxNotExistInDB) {
+        throw new Error('This transaction is already in the database, please check your txHash and try again.');
+      }
+      await this.service.token.externalDeposit.handleDeposit(
+        token.id,
+        fromAddr,
+        to.uid,
+        amount,
+        receipt.transactionHash
+      );
+      ctx.body = {
+        ...ctx.msg.success,
+        message: 'Deposit successfully',
+        data: {
+          tokenId: token.id,
+          from: fromAddr,
+          to: to.uid,
+          amount,
+          transactionHash: receipt.transactionHash,
+        },
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = error;
+      ctx.body.message = error.message;
+    }
+  }
 
   async withdraw() {
     const { ctx } = this;
     const tokenId = ctx.params.id;
     const { target, amount } = ctx.request.body;
-    if (isNaN(amount) && amount > 0) {
+    if (isNaN(amount) || amount <= 0) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.message = 'Use legit amount';
+      return;
     }
     if (target.slice(0, 2) !== '0x' || target.length !== 42) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.message = 'Use legit ethereum address';
+      return;
+    }
+    const currentBalance = Number(await ctx.service.token.mineToken.balanceOf(ctx.user.id, tokenId));
+    if (currentBalance < amount) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "You don't have so much token to do that, please check and try again.";
+      return;
     }
     try {
       const txHash = await this.service.token.mineToken.withdraw(tokenId, ctx.user.id, target, amount);
@@ -443,6 +516,14 @@ class MineTokenController extends Controller {
       ctx.status = 400;
       ctx.body.data = { error };
     }
+  }
+
+  async getBindableTokenList() {
+    const { ctx } = this;
+    ctx.body = {
+      ...ctx.msg.success,
+      data: await this.service.token.mineToken.getBindableTokenList(ctx.user.id),
+    };
   }
 }
 

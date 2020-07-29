@@ -1,6 +1,7 @@
 const Subscription = require('egg').Subscription;
 const moment = require('moment');
 
+// todo: 用户充值未到账的bug是不是这个定时任务导致的？
 class UpdateCache extends Subscription {
   // 通过 schedule 属性来设置定时任务的执行间隔等配置
   static get schedule() {
@@ -23,6 +24,7 @@ class UpdateCache extends Subscription {
         out_trade_no: trade_no,
       });
       if (result.return_code === 'SUCCESS' && result.trade_state === 'SUCCESS') {
+        this.logger.info('Running update order trade_no: %j', trade_no);
         ctx.service.exchange.setStatusPayed(trade_no);
       }
     }

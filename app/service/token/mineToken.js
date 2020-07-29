@@ -21,7 +21,7 @@ class MineTokenService extends Service {
   }
 
   // 作者创建一个token
-  async create(userId, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash) {
+  async create(userId, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash, tags = []) {
     let token = await this.getByUserId(userId);
     if (token) {
       return -1;
@@ -51,6 +51,9 @@ class MineTokenService extends Service {
     await this.emitIssueEvent(userId, result.insertId, null, txHash);
     await this._mint(result.insertId, userId, initialSupply, null, null);
     await this.service.tokenCircle.api.addTokenProfile(result.insertId, name, symbol, userId, 'NULL');
+    // 设定token标签
+    await this.setTokenTags(result.insertId, tags);
+
     // es里添加新加入的fan票
     await this.service.search.importToken({
       id: result.insertId,
@@ -72,7 +75,7 @@ class MineTokenService extends Service {
   }
 
   // 更新粉丝币信息
-  async update(userId, tokenId, name, logo, brief, introduction) {
+  async update(userId, tokenId, name, logo, brief, introduction, tags) {
     const row = {};
     row.name = name;
     row.logo = logo;
@@ -84,6 +87,10 @@ class MineTokenService extends Service {
     };
 
     const result = await this.app.mysql.update('minetokens', row, options);
+    // 修改标签
+    await this.deleteTokenTags(tokenId);
+    await this.setTokenTags(tokenId, tags);
+
     return result.affectedRows > 0;
   }
 
@@ -135,11 +142,13 @@ class MineTokenService extends Service {
     try {
       await conn.query('DELETE FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
 
+      websites = websites.filter(web => web.url);
       for (const website of websites) {
         await conn.insert('minetoken_resources', {
           token_id: tokenId,
           type: 'website',
-          content: website,
+          content: website.url,
+          name: website.name,
           create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
         });
       }
@@ -166,7 +175,7 @@ class MineTokenService extends Service {
 
   // 获取网址、社交媒体账号
   async getResources(tokenId) {
-    const result = await this.app.mysql.query('SELECT type, content FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
+    const result = await this.app.mysql.query('SELECT type, content, name FROM minetoken_resources WHERE token_id = ?;', [ tokenId ]);
     // const websites = result.filter(row => row.type === 'website');
     // const socials = result.filter(row => row.type !== 'website');;
     const websites = [];
@@ -174,7 +183,10 @@ class MineTokenService extends Service {
     if (result) {
       for (const row of result) {
         if (row.type === 'website') {
-          websites.push(row.content);
+          websites.push({
+            url: row.content,
+            name: row.name
+          });
         } else {
           socials.push(row);
         }
@@ -498,7 +510,7 @@ class MineTokenService extends Service {
   // 查看用户的token日志
   async getUserLogs(tokenId, userId, page = 1, pagesize = 20) {
     const sql
-      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type, t.tx_hash,
+      = `SELECT t.token_id, t.from_uid, t.to_uid, t.amount, t.create_time, t.type, t.tx_hash, t.memo,
         m.name, m.symbol, m.decimals,
         u1.username AS from_username, u1.nickname AS from_nickname,u1.avatar AS from_avatar,
         u2.username AS to_username, u2.nickname AS to_nickname,u2.avatar AS to_avatar
@@ -889,7 +901,7 @@ class MineTokenService extends Service {
       WHERE ((uid = (
         SELECT uid FROM minetokens WHERE id = :tokenId
       ) AND p.require_holdtokens = 0
-      ) OR m.token_id = :tokenId) AND channel_id = :channel_id `;
+      ) OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0 `;
     let countSql = `
       SELECT count(1) as count
       FROM posts p
@@ -898,7 +910,7 @@ class MineTokenService extends Service {
       WHERE ((uid = (
         SELECT uid FROM minetokens WHERE id = :tokenId
       ) AND p.require_holdtokens = 0
-      ) OR m.token_id = :tokenId) AND channel_id = :channel_id `;
+      ) OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0 `;
 
     // let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
     // let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
@@ -1119,6 +1131,92 @@ class MineTokenService extends Service {
         consts.mineTokenTransferTypes.transfer, transactionHash, dbConnection, `Withdraw to ${target}`);
     await dbConnection.commit();
     return transactionHash;
+  }
+
+  async setTokenTags(id, tags) {
+    if(tags && tags.length > 0) {
+      let minetokenTags = [];
+      tags.forEach(tag => {
+        minetokenTags.push({
+          token_id: id,
+          tag
+        });
+      })
+      return await this.app.mysql.insert('minetoken_tags', minetokenTags);
+    }
+  }
+  async getTokenTags(id) {
+    return await this.app.mysql.select('minetoken_tags', {
+      where: {
+        token_id: id
+      }
+    });
+  }
+  async deleteTokenTags(id) {
+    return await this.app.mysql.delete('minetoken_tags', {
+      token_id: id,
+    });
+  }
+
+  /** 添加协作者 */
+  async setCollaborator(tokenId, userId) {
+    return await this.app.mysql.insert('minetoken_collaborators', {
+      token_id: tokenId,
+      user_id: userId,
+      create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+    });
+  }
+
+  /** 获取协作者列表 */
+  async getCollaborators(tokenId) {
+    const sql = `
+      SELECT
+        c.token_id, c.user_id, c.create_time,
+        u.username, u.nickname, u.avatar
+      FROM minetoken_collaborators c
+      LEFT JOIN users u ON c.user_id = u.id
+      WHERE c.token_id = :tokenId;
+    `;
+    return await this.app.mysql.query(sql, {
+      tokenId,
+    });
+  }
+
+  /** 删除协作者 */
+  async deleteCollaborator(tokenId, userId) {
+    if (typeof tokenId !== 'number' || typeof userId !== 'number') return false;
+
+    return await this.app.mysql.delete('minetoken_collaborators', {
+      token_id: tokenId,
+      user_id: userId,
+    });
+  }
+
+  /** 获取自己创建和协作的Fan票列表 */
+  async getBindableTokenList(userId) {
+    const sql = `
+      SELECT
+        t.id, t.uid, t.name, t.symbol, t.decimals, t.logo, t.brief
+      FROM minetokens t
+      LEFT JOIN minetoken_collaborators c ON t.id = c.token_id
+      WHERE t.uid = :userId OR c.user_id = :userId
+      GROUP BY t.id;
+    `;
+    return await this.app.mysql.query(sql, { userId })
+  }
+
+  /** 检查用户是不是 token 的协作者或创建者 */
+  async isItCollaborator(userId, tokenId) {
+    const sql = `
+      SELECT
+        t.id, t.uid, t.name, t.symbol, t.decimals, t.logo, t.brief
+      FROM minetokens t
+      LEFT JOIN minetoken_collaborators c ON t.id = c.token_id
+      WHERE t.id = :tokenId AND (t.uid = :userId OR c.user_id = :userId)
+      GROUP BY t.id;
+    `;
+    const result = await this.app.mysql.query(sql, { userId, tokenId })
+    return result.length > 0;
   }
 }
 

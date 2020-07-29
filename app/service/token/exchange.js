@@ -91,6 +91,8 @@ class ExchangeService extends Service {
     // exchangeRate = tokenToCnyInput
     exchange.token_reserve = token_reserve;
     exchange.cny_reserve = cny_reserve;
+    exchange.number_of_holders = await this.getNumberOfHolders(tokenId);
+    exchange.number_of_liquidity_holders = await this.getNumberOfLiquidityHolders(tokenId);
 
     return exchange;
   }
@@ -623,17 +625,22 @@ class ExchangeService extends Service {
     const tokens_bought = order.token_amount;
 
     let res = 0;
+    const { buy_token_output, buy_token_input, add, direct_trade } = consts.exchangeOrderType;
     switch (order.type) {
-      case 'buy_token_output': {
+      case buy_token_output: {
         res = await this.cnyToTokenOutput(userId, tokenId, tokens_bought, cny_sold, order.deadline, order.recipient, conn);
         break;
       }
-      case 'buy_token_input': {
+      case buy_token_input: {
         res = await this.cnyToTokenInput(userId, tokenId, cny_sold, order.min_tokens, order.deadline, order.recipient, conn);
         break;
       }
-      case 'add': {
+      case add: {
         res = await this.addLiquidity(userId, tokenId, order.cny_amount, order.token_amount, order.min_liquidity, order.max_tokens, order.deadline, conn);
+        break;
+      }
+      case direct_trade: {
+        res = await this.service.directTrade.buy(userId, tokenId, order.cny_amount, order.token_amount, conn);
         break;
       }
     }
@@ -1489,6 +1496,20 @@ class ExchangeService extends Service {
     }
     // console.log(result);
     return arr;
+  }
+
+  // 根据 token id 获取持仓者数量
+  async getNumberOfHolders(id) {
+    const sql = 'SELECT count(1) as count FROM assets_minetokens WHERE token_id = :id AND amount > 0;';
+    const result = await this.app.mysql.query(sql, { id });
+    return result && result.length > 0 ? result[0].count : 0;
+  }
+
+  // 根据 token id 获取流动金持仓者数量
+  async getNumberOfLiquidityHolders(id) {
+    const sql = 'SELECT count(1) AS count FROM exchange_balances WHERE token_id = :id;';
+    const result = await this.app.mysql.query(sql, { id });
+    return result && result.length > 0 ? result[0].count : 0;
   }
 }
 
