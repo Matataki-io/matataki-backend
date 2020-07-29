@@ -293,6 +293,7 @@ module.exports = app => {
 
   // token 的出入站
   router.post('/minetoken/deposit', passport.authorize, controller.mineToken.deposit);
+  router.get('/token/myAddress', passport.authorize, controller.user.getHostingAccountPublicKey);
   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
 
   // 查询当前用户的token余额
@@ -338,6 +339,8 @@ module.exports = app => {
   router.delete('/token/collaborator/:id', passport.authorize, controller.token.deleteCollaborator);
   // 获取token协作者列表
   router.get('/token/collaborator', passport.authorize, controller.token.getCollaborators);
+  // 获取自己创建和协作的Fan票列表
+  router.get('/token/bindable', passport.authorize, controller.mineToken.getBindableTokenList)
 
   // 查询当前用户的资产余额
   router.get('/asset/balance', passport.verify, controller.asset.getBalance);
