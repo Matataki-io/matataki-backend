@@ -9,7 +9,6 @@ class directTradeService extends Service {
    * @param {*} {
    *     uid,
    *     tokenId,
-   *     amount,
    *     price,
    *   }
    * @return {*} 返回创建是否成功
@@ -18,22 +17,18 @@ class directTradeService extends Service {
   async createMarket({
     uid,
     tokenId,
-    amount,
     price,
   }) {
+    if (!price || parseInt(price) <= 0) {
+      return -7;
+    }
     const token = await this.service.token.mineToken.getToken({ id: tokenId });
     if (!token) {
       this.logger.error('service::TradeService createMarket error, cannot get token by id: %j', tokenId);
       return -1;
     }
-    // 查看用户token余额
-    const token_balance = await this.service.token.mineToken.balanceOf(uid, tokenId);
-    if (token_balance < amount) {
-      this.logger.error('service::TradeService createMarket error token_balance < amount, ', { token_balance, amount });
-      return -2;
-    }
 
-    const marketExist = await this.getMarket(tokenId);
+    const marketExist = await this.getByTokenId(tokenId);
     // 直连交易已存在
     if (marketExist) {
       this.logger.error('service::TradeService createMarket error market already exist ');
@@ -49,14 +44,6 @@ class directTradeService extends Service {
     const market = token.symbol + '_CNY';
 
     const conn = await this.app.mysql.beginTransaction();
-    // 转移资产
-    const transferResult = await this.service.token.mineToken.transferFrom(tokenId, uid, exchange_uid, amount, '', consts.mineTokenTransferTypes.direct_trade, conn);
-    // 转移资产失败
-    if (!transferResult) {
-      await conn.rollback();
-      this.logger.error('service::TradeService createMarket error transfer token error, Result: %j', transferResult);
-      return -5;
-    }
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
     try {
       const result = await conn.insert('direct_trade_market', {
@@ -64,14 +51,15 @@ class directTradeService extends Service {
         token_id: tokenId,
         market,
         price,
-        amount,
         exchange_uid,
+        amount: 0,
         create_time: now,
         update_time: now,
+        status: 0,
       });
       await conn.commit();
       this.logger.info('service::TradeService createMarket success, result: %j', result);
-      return result.id;
+      return result.affectedRows === 1;
     } catch (error) {
       await conn.rollback();
       this.logger.error('service::TradeService createMarket insert direct_trade_market error, error: %j', error);
@@ -85,22 +73,47 @@ class directTradeService extends Service {
    * @memberof TradeService
    */
   async updateMarketAmount({ uid, tokenId, amount }) {
-    const { app } = this;
-    const now = app.mysql.literals.now();
-    const market = await app.mysql.get('direct_trade_market', { uid, token_id: tokenId });
+    if (!amount || parseInt(amount) <= 0) {
+      return -7;
+    }
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    const market = await this.getByTokenId(tokenId);
     if (!market) {
       this.logger.info('service::TradeService updateMarketAmount error, cannot get market by uid & tokenId: %j', { uid, tokenId });
       return -1;
+    }
+    // 查看用户token余额
+    const token_balance = await this.service.token.mineToken.balanceOf(uid, tokenId);
+    if (token_balance < amount) {
+      this.logger.error('service::TradeService updateMarket error token_balance < amount, ', { token_balance, amount });
+      return -2;
+    }
+    const conn = await this.app.mysql.beginTransaction();
+    const exchange_uid = market.exchange_uid;
+    // 转移资产
+    const transferResult = await this.service.token.mineToken.transferFrom(tokenId, uid, exchange_uid, amount, '', consts.mineTokenTransferTypes.direct_trade, conn);
+    // 转移资产失败
+    if (!transferResult) {
+      await conn.rollback();
+      this.logger.error('service::TradeService updateMarket error, transfer token error, Result: %j', transferResult);
+      return -3;
     }
     const row = {
       amount: market.amount + amount,
       update_time: now,
     };
-    const result = app.mysql.update('direct_trade_market', row, {
-      where: { id: market.id },
-    });
-    const updateSuccess = result.affectedRows === 1;
-    return updateSuccess;
+    try {
+      const result = conn.update('direct_trade_market', row, {
+        where: { id: market.id },
+      });
+      await conn.commit();
+      this.logger.info('service::TradeService updateMarket success, result: %j', result);
+      return result.affectedRows === 1;
+    } catch (error) {
+      await conn.rollback();
+      this.logger.error('service::TradeService updateMarket  error: %j', error);
+      return -4;
+    }
   }
 
   /**
@@ -144,9 +157,18 @@ class directTradeService extends Service {
     const insertSuccess = result.affectedRows === 1;
     return insertSuccess;
   }
-  async getMarket(tokenId) {
-    const post = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
-    return post;
+  async getByTokenId(tokenId) {
+    const market = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
+    return market;
+  }
+  async get(id) {
+    const market = await this.app.mysql.get('direct_trade_market', { id });
+    return market;
+  }
+  async isMarketEnabled(tokenId) {
+    const market = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
+    if (!market || market.status === 1 || market.amount === 0) return null;
+    return market;
   }
   /**
    * 创建虚拟账号
@@ -183,8 +205,6 @@ class directTradeService extends Service {
    * @memberof directTradeService
    */
   async buy(userId, tokenId, cny_amount, token_amount, conn) {
-    const market = await this.getMarket(tokenId);
-
     /* const balance = await this.service.assets.balanceOf(market.exchange_uid, 'CNY');
     // 资产是否充足
     if (balance < token_amount) {
@@ -192,6 +212,7 @@ class directTradeService extends Service {
       this.logger.error('directTradeService.buy error: market balance not enough.');
       return -1;
     } */
+    const market = await this.isMarketEnabled(tokenId);
     if (!market) {
       this.logger.error('directTradeService.buy error: market not exist.');
       return -1;

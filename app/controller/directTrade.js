@@ -2,15 +2,46 @@
 const { Controller } = require('egg');
 
 class DirectTradeController extends Controller {
-  async createMarket() {
+  async create() {
     const { ctx } = this;
-    const { tokenId, amount, price } = ctx.request.body;
+    const { price } = ctx.request.body;
     const uid = ctx.user.id;
-    const result = await this.service.directTrade.createMarket({
+    const token = await this.service.token.mineToken.getByUserId(uid);
+    if (!token) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    let result = 0;
+    result = await this.service.directTrade.createMarket({
       uid,
-      tokenId,
-      amount: parseInt(amount),
+      tokenId: token.id,
       price: parseInt(price),
+    });
+    if (result < 0) {
+      ctx.body = {
+        ...ctx.msg.failure,
+        data: result,
+      };
+    } else {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: result,
+      };
+    }
+  }
+  async update() {
+    const { ctx } = this;
+    const { amount } = ctx.request.body;
+    const uid = ctx.user.id;
+    const token = await this.service.token.mineToken.getByUserId(uid);
+    if (!token) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    const result = await this.service.directTrade.updateMarketAmount({
+      uid,
+      tokenId: token.id,
+      amount: parseInt(amount),
     });
     if (result < 0) {
       ctx.body = {
@@ -32,7 +63,7 @@ class DirectTradeController extends Controller {
       ctx.body = ctx.msg.failure;
       return;
     }
-    const market = await this.service.directTrade.getMarket(token.id);
+    const market = await this.service.directTrade.getByTokenId(token.id);
     if (!market) {
       ctx.body = ctx.msg.failure;
       return;
@@ -41,6 +72,11 @@ class DirectTradeController extends Controller {
       ...ctx.msg.success,
       data: market,
     };
+  }
+  async index() {
+  }
+  async show() {
+
   }
 }
 
