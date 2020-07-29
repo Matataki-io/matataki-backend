@@ -153,7 +153,8 @@ class directTradeService extends Service {
    */
   async getByTokenId(tokenId) {
     const market = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
-    return market;
+    const _market = await this.get(market.id);
+    return _market;
   }
   /**
    * 根据id获取market
