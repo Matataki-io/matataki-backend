@@ -108,7 +108,7 @@ class directTradeService extends Service {
       });
       await conn.commit();
       this.logger.info('service::TradeService updateMarket success, result: %j', result);
-      return result.insertId;
+      return market.id;
     } catch (error) {
       await conn.rollback();
       this.logger.error('service::TradeService updateMarket  error: %j', error);
@@ -161,8 +161,20 @@ class directTradeService extends Service {
     return market;
   }
   async get(id) {
-    const market = await this.app.mysql.get('direct_trade_market', { id });
-    return market;
+    const market = await this.app.mysql.query(`
+      SELECT t1.id, t1.uid, t1.token_id, t1.market, t1.price, t1.amount, t1.create_time, t1.update_time, t1.exchange_uid,
+      t2.username, t2.nickname, t2.avatar,
+      t3.name as token_name, t3.symbol, t3.logo
+      FROM direct_trade_market t1
+      LEFT JOIN users t2 ON t1.uid = t2.id
+      LEFT JOIN minetokens t3 ON t1.token_id = t3.id
+      WHERE t1.status = 0 AND t1.amount > 0 AND t1.id = ?;`, [ id ]);
+    if (market.length <= 0) return null;
+    const _market = market[0];
+    console.log(_market);
+    const balance = await this.service.token.mineToken.balanceOf(_market.exchange_uid, _market.token_id);
+    _market.balance = balance;
+    return _market;
   }
   async isMarketEnabled(tokenId) {
     const market = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
@@ -237,6 +249,33 @@ class directTradeService extends Service {
     }, conn);
 
     return 0;
+  }
+  async list(pi, pz, orderBy, sort) {
+    const orderByArr = [ 'create_time', 'update_time', 'amount', 'price' ];
+    const sortArr = [ 'desc', 'asc' ];
+    if (!orderBy) orderBy = 'amount';
+    if (!sort) sort = 'desc';
+    if (!orderByArr.includes(orderBy.toLowerCase()) || !sortArr.includes(sort.toLowerCase())) {
+      return -1;
+    }
+    const orderByStr = `ORDER BY t1.${orderBy} ${sort}`;
+    const queryResult = await this.app.mysql.query(`
+      SELECT t1.id, t1.uid, t1.token_id, t1.market, t1.price, t1.amount, t1.create_time, t1.update_time,
+      t2.username, t2.nickname, t2.avatar,
+      t3.name as token_name, t3.symbol, t3.logo
+      FROM direct_trade_market t1
+      LEFT JOIN users t2 ON t1.uid = t2.id
+      LEFT JOIN minetokens t3 ON t1.token_id = t3.id
+      WHERE t1.status = 0 AND t1.amount > 0
+      ${orderByStr} LIMIT ? ,? ;
+      SELECT count(*) as count from direct_trade_market WHERE status = 0 AND amount > 0;
+    `, [ (pi - 1) * pz, 1 * pz ]);
+    const list = queryResult[0];
+    const count = queryResult[1][0].count;
+    return {
+      list,
+      count,
+    };
   }
 }
 

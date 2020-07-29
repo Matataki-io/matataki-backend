@@ -74,9 +74,22 @@ class DirectTradeController extends Controller {
     };
   }
   async index() {
+    const { ctx } = this;
+    const { pi = 1, pz = 10, order = '', sort = '' } = ctx.query;
+    const list = await this.service.directTrade.list(parseInt(pi), parseInt(pz), order || '', sort || '');
+    ctx.body = {
+      ...ctx.msg.success,
+      data: list,
+    };
   }
   async show() {
-
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const market = await this.service.directTrade.get(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: market,
+    };
   }
 }
 
