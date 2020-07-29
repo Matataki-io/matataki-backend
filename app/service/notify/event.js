@@ -11,20 +11,21 @@ const EVENT_RECIPIENT_DESC_TABLE = 'notify_event_recipients_desc';
 const ACTION_TYPES = [
   'comment', // 评论
   'like', // 点赞
-  'reply',
-  'follow', //关注
+  'reply', // 回复
+  'follow', // 关注
   'annouce', // 宣布
-  'transfer'
+  'transfer' // 转账
 ];
 
 /** 对象类型 */
 const OBJECT_TYPES = [
   'article', // 文章
   'user', // 用户
-  'comment',
+  'comment', // 评论
   'announcement', // 公告
-  'tokenWallet',
-  'cnyWallet'
+  'tokenWallet', // Token 钱包
+  'cnyWallet', // CNY 钱包
+  'collaborator' //协作者
 ];
 
 const isValidActionAndObject = (action, objectType) => ACTION_TYPES.includes(action) && OBJECT_TYPES.includes(objectType);

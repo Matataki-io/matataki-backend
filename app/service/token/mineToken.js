@@ -976,7 +976,7 @@ class MineTokenService extends Service {
   }
 
   /** 根据id列表获取转账记录 */
-  async getByIdArray(idList) {
+  async getLogByIdArray(idList) {
     const logs = await this.app.mysql.query(`
       SELECT
         t1.id,
@@ -1000,8 +1000,19 @@ class MineTokenService extends Service {
     `,
       { idList }
     );
-    if (logs === null) return [];
-    return logs;
+    return logs || [];
+  }
+
+  /** 根据id列表获取token详情 */
+  async getByIdArray(idList) {
+    const sql = `
+      SELECT
+        id, name, symbol, logo, brief, decimals
+      FROM
+        minetokens
+      WHERE id IN (:idList);
+    `
+    return await this.app.mysql.query(sql, { idList }) || [];
   }
 
   async getAddSupplyChart(tokenId) {
