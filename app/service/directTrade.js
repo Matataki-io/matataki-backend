@@ -115,18 +115,6 @@ class directTradeService extends Service {
       return -4;
     }
   }
-
-  /**
-   * 直接购买添加交易日志
-   * @param {*} {
-   *     uid,  // 购买者
-   *     marketId,  // 交易市场ID
-   *     amount, // 购买数量
-   *   }
-   * @return {*} 返回添加是否成功
-   * @memberof TradeService
-   */
-
   /**
    * 直接购买添加交易日志
    * @param {*} {
@@ -156,10 +144,23 @@ class directTradeService extends Service {
     });
     return result.insertId;
   }
+
+  /**
+   * 根据tokenid获取market
+   * @param {Number} tokenId token id
+   * @return {Object} market
+   * @memberof directTradeService
+   */
   async getByTokenId(tokenId) {
     const market = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
     return market;
   }
+  /**
+   * 根据id获取market
+   * @param {Number} id ...
+   * @return {Object} market
+   * @memberof directTradeService
+   */
   async get(id) {
     const market = await this.app.mysql.query(`
       SELECT t1.id, t1.uid, t1.token_id, t1.market, t1.price, t1.amount, t1.create_time, t1.update_time, t1.exchange_uid,
@@ -176,6 +177,13 @@ class directTradeService extends Service {
     _market.balance = balance;
     return _market;
   }
+
+  /**
+   * 判断market是否可用，status为1为market关闭，如果amount为0，market也不可用
+   * @param {Number} tokenId token id
+   * @return {Object} market
+   * @memberof directTradeService
+   */
   async isMarketEnabled(tokenId) {
     const market = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
     if (!market || market.status === 1 || market.amount === 0) return null;
@@ -250,6 +258,16 @@ class directTradeService extends Service {
 
     return 0;
   }
+
+  /**
+   * 获取market list
+   * @param {Number} pi page index
+   * @param {Number} pz page size
+   * @param {String} orderBy 根据什么排序
+   * @param {String} sort 排序
+   * @return {*} {count, list}
+   * @memberof directTradeService
+   */
   async list(pi, pz, orderBy, sort) {
     const orderByArr = [ 'create_time', 'update_time', 'amount', 'price' ];
     const sortArr = [ 'desc', 'asc' ];
