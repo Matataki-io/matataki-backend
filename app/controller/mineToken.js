@@ -41,6 +41,44 @@ class MineTokenController extends Controller {
       }
     }
   }
+  // 管理后台调用方法
+  async _create() {
+    const { ctx } = this;
+    const { uid, name, symbol, decimals = 4, logo, brief = '', introduction = '', initialSupply } = ctx.request.body;
+
+    // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
+    if (brief && brief.length > 50) {
+      ctx.body = ctx.msg.failure;
+    } else if (!initialSupply) {
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = '请填写初始发行额度';
+    } else { // 好耶 字数没有超限
+      let txHash;
+      try {
+        const { public_key } = await this.service.account.hosting.isHosting(uid, 'ETH');
+        txHash = await this.service.ethereum.fanPiao.issue(name, symbol, decimals, initialSupply, public_key);
+      } catch (error) {
+        this.logger.error('Create error: ', error);
+        ctx.body = ctx.msg.failure;
+        ctx.body.data = { error };
+      }
+      const result = await ctx.service.token.mineToken.create(uid, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash); // decimals默认4位
+      if (result === -1) {
+        ctx.body = ctx.msg.tokenAlreadyCreated;
+      } else if (result === -2) {
+        ctx.body = ctx.msg.tokenSymbolDuplicated;
+      } else if (result === -3) {
+        ctx.body = ctx.msg.tokenNoCreatePermission;
+      } else if (result === 0) {
+        ctx.body = ctx.msg.failure;
+      } else {
+        ctx.body = {
+          ...ctx.msg.success,
+          data: result,
+        };
+      }
+    }
+  }
 
   async update() {
     const ctx = this.ctx;
@@ -135,7 +173,7 @@ class MineTokenController extends Controller {
     const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP, consts.mineTokenTransferTypes.transfer, null, memo);
     if (result) {
       // 发送转账消息
-      ctx.service.notify.event.sendEvent(ctx.user.id, [to], 'transfer', result.logId, 'tokenWallet');
+      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', result.logId, 'tokenWallet');
 
       ctx.body = { ...ctx.msg.success, data: { tx_hash: result.txHash } };
     } else ctx.msg.failure;
@@ -160,7 +198,7 @@ class MineTokenController extends Controller {
     // end: 添加评论
     if (transferResult) {
       // 发送打赏文章消息
-      ctx.service.notify.event.sendEvent(ctx.user.id, [to], 'transfer', signId, 'article', transferResult.logId);
+      ctx.service.notify.event.sendEvent(ctx.user.id, [ to ], 'transfer', signId, 'article', transferResult.logId);
       ctx.body = {
         ...ctx.msg.success,
         data: {
@@ -188,7 +226,7 @@ class MineTokenController extends Controller {
   async approveTokenToBatch() {
     const { ctx } = this;
     const { tokenId } = ctx.params;
-    const [token, fromWallet] = await Promise.all([
+    const [ token, fromWallet ] = await Promise.all([
       this.service.token.mineToken.get(tokenId),
       this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
     ]);
@@ -202,7 +240,7 @@ class MineTokenController extends Controller {
   async getBatchAllowance() {
     const { ctx } = this;
     const { tokenId } = ctx.params;
-    const [token, fromWallet] = await Promise.all([
+    const [ token, fromWallet ] = await Promise.all([
       this.service.token.mineToken.get(tokenId),
       this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
     ]);
@@ -282,21 +320,21 @@ class MineTokenController extends Controller {
 
     // 这部分是登录之后才会执行的查询
     if (ctx.user && ctx.user.id) {
-      let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
-      let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(result.list.map(post => post.id), ctx.user.id);
+      const { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+      const purchasedPost = await this.service.shop.order.isBuyBySignIdArray(result.list.map(post => post.id), ctx.user.id);
       result.list.forEach(post => {
         // 是自己的文章？
-        post.is_ownpost = post.uid === ctx.user.id
+        post.is_ownpost = post.uid === ctx.user.id;
         // 是否满足持币可见
         if (post.token_amount) {
-          let token = tokens.find(token => token.token_id === post.token_id);
+          const token = tokens.find(token => token.token_id === post.token_id);
           post.token_unlock = !!token && token.amount >= post.token_amount;
         }
         // 是否买过这篇文章
         if (post.pay_price) {
           post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
         }
-      })
+      });
     }
 
     ctx.body = {
@@ -359,8 +397,8 @@ class MineTokenController extends Controller {
     const result = await ctx.service.token.mineToken.getAmountHistory(id);
     ctx.body = {
       ...ctx.msg.success,
-      data: result
-    }
+      data: result,
+    };
   }
 
   async getVolumeHistory() {
@@ -369,14 +407,14 @@ class MineTokenController extends Controller {
     const result = await ctx.service.token.mineToken.getVolumeHistory(id);
     ctx.body = {
       ...ctx.msg.success,
-      data: result
-    }
+      data: result,
+    };
   }
 
   async deposit() {
     const { ctx } = this;
     const tokenId = ctx.params.id;
-    throw new Error("Method Not implemented")
+    throw new Error('Method Not implemented');
   }
 
 
@@ -387,15 +425,15 @@ class MineTokenController extends Controller {
     if (isNaN(amount) && amount > 0) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
-      ctx.body.message = "Use legit amount"
+      ctx.body.message = 'Use legit amount';
     }
-    if (target.slice(0,2) !== '0x' || target.length !== 42) {
+    if (target.slice(0, 2) !== '0x' || target.length !== 42) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
-      ctx.body.message = "Use legit ethereum address"
+      ctx.body.message = 'Use legit ethereum address';
     }
-    try { 
-      const txHash = await this.service.token.mineToken.withdraw(tokenId, ctx.user.id, target, amount)
+    try {
+      const txHash = await this.service.token.mineToken.withdraw(tokenId, ctx.user.id, target, amount);
       ctx.body = {
         ...ctx.msg.success,
         data: { txHash },
@@ -403,7 +441,7 @@ class MineTokenController extends Controller {
     } catch (error) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
-      ctx.body.data = { error }
+      ctx.body.data = { error };
     }
   }
 }

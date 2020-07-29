@@ -285,6 +285,7 @@ module.exports = app => {
 
   // 创建token
   router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
+  router.post('/_minetoken/_create', passport.apiManagementAuthorize, controller.mineToken._create); // 管理后台调用
   router.post('/minetoken/mint', passport.authorize, controller.mineToken.mint);
   router.post('/minetoken/transfer', passport.authorize, controller.mineToken.transfer);
   router.post('/minetoken/:tokenId/batchTransfer', passport.authorize, controller.mineToken.batchTransfer);
