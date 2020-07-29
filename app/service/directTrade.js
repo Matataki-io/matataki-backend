@@ -193,7 +193,7 @@ class directTradeService extends Service {
    */
   async get(id) {
     const market = await this.app.mysql.query(`
-      SELECT t1.id, t1.uid, t1.token_id, t1.market, t1.price, t1.amount, t1.create_time, t1.update_time, t1.exchange_uid,
+      SELECT t1.id, t1.uid, t1.token_id, t1.market, t1.price, t1.amount, t1.create_time, t1.update_time, t1.exchange_uid, t1.status,
       t2.username, t2.nickname, t2.avatar,
       t3.name as token_name, t3.symbol, t3.logo
       FROM direct_trade_market t1
