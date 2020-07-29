@@ -69,9 +69,9 @@ class directTradeService extends Service {
         create_time: now,
         update_time: now,
       });
-      const insertSuccess = result.affectedRows === 1;
       await conn.commit();
-      return insertSuccess;
+      this.logger.info('service::TradeService createMarket success, result: %j', result);
+      return result.id;
     } catch (error) {
       await conn.rollback();
       this.logger.error('service::TradeService createMarket insert direct_trade_market error, error: %j', error);
