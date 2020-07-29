@@ -130,6 +130,8 @@ module.exports = {
   notEnoughPlaces: 11200,
   cannotAddFounder: 11201,
   notCollaborator: 11202,
+  // direct trade
+  marketNotExist: 11300,
 
   returnObj(lang) {
 
@@ -216,6 +218,8 @@ module.exports = {
       notEnoughPlaces: { code: this.notEnoughPlaces, message: 'Not enough places' },
       cannotAddFounder: { code: this.cannotAddFounder, message: 'Cannot add founder' },
       notCollaborator: { code: this.notCollaborator, message: 'Not a token collaborator' },
+      marketNotExist: { code: this.marketNotExist, message: 'The market does not exist.' },
+
     };
 
     const zh = {
@@ -301,6 +305,7 @@ module.exports = {
       notEnoughPlaces: { code: this.notEnoughPlaces, message: '名额不足' },
       cannotAddFounder: { code: this.cannotAddFounder, message: '无法添加创始人' },
       notCollaborator: { code: this.notCollaborator, message: '你不是此Fan票的协作者' },
+      marketNotExist: { code: this.marketNotExist, message: '市场不存在' },
     };
 
     let message;
