@@ -31,18 +31,27 @@ class DirectTradeController extends Controller {
   }
   async update() {
     const { ctx } = this;
-    const { amount } = ctx.request.body;
+    const { amount, enabled } = ctx.request.body;
     const uid = ctx.user.id;
     const token = await this.service.token.mineToken.getByUserId(uid);
     if (!token) {
       ctx.body = ctx.msg.failure;
       return;
     }
-    const result = await this.service.directTrade.updateMarketAmount({
-      uid,
-      tokenId: token.id,
-      amount: parseInt(amount),
-    });
+    let result = 0;
+    if (amount) {
+      result = await this.service.directTrade.updateMarketAmount({
+        uid,
+        tokenId: token.id,
+        amount: parseInt(amount),
+      });
+    } else {
+      result = await this.service.directTrade.update({
+        uid,
+        tokenId: token.id,
+        enabled,
+      });
+    }
     if (result < 0) {
       ctx.body = {
         ...ctx.msg.failure,
@@ -68,9 +77,10 @@ class DirectTradeController extends Controller {
       ctx.body = ctx.msg.failure;
       return;
     }
+    const _market = await this.service.directTrade.get(market.id);
     ctx.body = {
       ...ctx.msg.success,
-      data: market,
+      data: _market,
     };
   }
   async index() {

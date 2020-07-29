@@ -20,6 +20,7 @@ class directTradeService extends Service {
     price,
   }) {
     if (!price || parseInt(price) <= 0) {
+      this.logger.info('service::TradeService update error, params error: ', { uid, tokenId, price });
       return -7;
     }
     const token = await this.service.token.mineToken.getToken({ id: tokenId });
@@ -74,18 +75,19 @@ class directTradeService extends Service {
    */
   async updateMarketAmount({ uid, tokenId, amount }) {
     if (!amount || parseInt(amount) <= 0) {
+      this.logger.info('service::TradeService update amount error, params error: ', { uid, tokenId, amount });
       return -7;
     }
     const now = moment().format('YYYY-MM-DD HH:mm:ss');
     const market = await this.getByTokenId(tokenId);
     if (!market) {
-      this.logger.info('service::TradeService updateMarketAmount error, cannot get market by uid & tokenId: %j', { uid, tokenId });
+      this.logger.info('service::TradeService updateMarket amount error, cannot get market by uid & tokenId: %j', { uid, tokenId });
       return -1;
     }
     // 查看用户token余额
     const token_balance = await this.service.token.mineToken.balanceOf(uid, tokenId);
     if (token_balance < amount) {
-      this.logger.error('service::TradeService updateMarket error token_balance < amount, ', { token_balance, amount });
+      this.logger.error('service::TradeService updateMarket amount error token_balance < amount, ', { token_balance, amount });
       return -2;
     }
     const conn = await this.app.mysql.beginTransaction();
@@ -95,7 +97,7 @@ class directTradeService extends Service {
     // 转移资产失败
     if (!transferResult) {
       await conn.rollback();
-      this.logger.error('service::TradeService updateMarket error, transfer token error, Result: %j', transferResult);
+      this.logger.error('service::TradeService updateMarket amount error, transfer token error, Result: %j', transferResult);
       return -3;
     }
     const row = {
@@ -107,13 +109,41 @@ class directTradeService extends Service {
         where: { id: market.id },
       });
       await conn.commit();
-      this.logger.info('service::TradeService updateMarket success, result: %j', result);
+      this.logger.info('service::TradeService updateMarket amount success, result: %j', result);
       return market.id;
     } catch (error) {
       await conn.rollback();
-      this.logger.error('service::TradeService updateMarket  error: %j', error);
+      this.logger.error('service::TradeService updateMarket amount error: %j', error);
       return -4;
     }
+  }
+
+  /**
+   * 更新market状态
+   * @param {*} { uid, tokenId, enabled }
+   * @return {Boolean} 是否成功
+   * @memberof directTradeService
+   */
+  async update({ uid, tokenId, enabled }) {
+    enabled = parseInt(enabled);
+    if (enabled !== 0 && enabled !== 1) {
+      this.logger.info('service::TradeService update status error, params error: ', { uid, tokenId, enabled });
+      return -7;
+    }
+    const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    const market = await this.getByTokenId(tokenId);
+    if (!market) {
+      this.logger.info('service::TradeService update status error, cannot get market by uid & tokenId: %j', { uid, tokenId });
+      return -1;
+    }
+    const result = this.app.mysql.update('direct_trade_market', {
+      status: enabled,
+      update_time: now,
+    }, {
+      where: { id: market.id },
+    });
+    this.logger.info('service::TradeService update status success, result: %j', result);
+    return market.id;
   }
   /**
    * 直接购买添加交易日志
@@ -153,8 +183,7 @@ class directTradeService extends Service {
    */
   async getByTokenId(tokenId) {
     const market = await this.app.mysql.get('direct_trade_market', { token_id: tokenId });
-    const _market = await this.get(market.id);
-    return _market;
+    return market;
   }
   /**
    * 根据id获取market
@@ -170,10 +199,10 @@ class directTradeService extends Service {
       FROM direct_trade_market t1
       LEFT JOIN users t2 ON t1.uid = t2.id
       LEFT JOIN minetokens t3 ON t1.token_id = t3.id
-      WHERE t1.status = 0 AND t1.amount > 0 AND t1.id = ?;`, [ id ]);
+      WHERE t1.id = ?;`, [ id ]);
+    console.log(market);
     if (market.length <= 0) return null;
     const _market = market[0];
-    console.log(_market);
     const balance = await this.service.token.mineToken.balanceOf(_market.exchange_uid, _market.token_id);
     _market.balance = balance;
     return _market;
