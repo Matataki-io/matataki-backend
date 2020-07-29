@@ -377,6 +377,9 @@ class TokenController extends Controller {
       return;
     }
     const result = await this.service.token.mineToken.setCollaborator(token.id, userId);
+    // 发送消息，告知用户自己被添加为协作者
+    if (result.affectedRows === 1) this.service.notify.event.sendEvent(ctx.user.id, [userId], 'annouce', userId, 'collaborator', token.id);
+
     ctx.body = result.affectedRows === 1 ? ctx.msg.success : ctx.msg.failure;
   }
 
