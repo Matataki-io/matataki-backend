@@ -541,6 +541,20 @@ class UserController extends Controller {
     ctx.body.data = result;
   }
 
+  async getHostingAccountPublicKey() {
+    const { ctx } = this;
+    const account = await this.service.account.hosting.isHosting(ctx.user.id, 'ETH');
+    if (account) {
+      const { public_key } = account;
+      ctx.body = ctx.msg.success;
+      ctx.body.data = public_key;
+      return;
+    } else {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+  }
+
   async getBookmarks() {
     const ctx = this.ctx;
     const { pagesize = 20, page = 1, order = 1, channel_id = 1 } = ctx.query;
