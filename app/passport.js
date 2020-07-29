@@ -113,5 +113,22 @@ module.exports = {
     await next();
   },
 
+  // 管理后台校验
+  async apiManagementAuthorize(ctx, next) {
+    const { lang } = ctx.headers;
+    ctx.msg = message.returnObj(lang);
+
+    // key不匹配
+    const { key } = ctx.request.body;
+
+    if (key !== 'matataki_management') {
+      ctx.status = 401;
+      ctx.body = ctx.msg.unauthorized;
+      return;
+    }
+
+    await next();
+  },
+
 };
 

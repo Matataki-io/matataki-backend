@@ -285,6 +285,7 @@ module.exports = app => {
 
   // 创建token
   router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
+  router.post('/_minetoken/_create', passport.apiManagementAuthorize, controller.mineToken._create); // 管理后台调用
   router.post('/minetoken/mint', passport.authorize, controller.mineToken.mint);
   router.post('/minetoken/transfer', passport.authorize, controller.mineToken.transfer);
   router.post('/minetoken/:tokenId/batchTransfer', passport.authorize, controller.mineToken.batchTransfer);
@@ -340,7 +341,7 @@ module.exports = app => {
   // 获取token协作者列表
   router.get('/token/collaborator', passport.authorize, controller.token.getCollaborators);
   // 获取自己创建和协作的Fan票列表
-  router.get('/token/bindable', passport.authorize, controller.mineToken.getBindableTokenList)
+  router.get('/token/bindable', passport.authorize, controller.mineToken.getBindableTokenList);
 
   // 查询当前用户的资产余额
   router.get('/asset/balance', passport.verify, controller.asset.getBalance);
@@ -565,6 +566,19 @@ module.exports = app => {
   // 轮询微信扫码登录
   router.get('/api/login_by_wx', passport.verify, controller.wechat.loginByWx);
   router.get('/api/bind_by_wx', passport.verify, controller.wechat.bindByWx);
+
+  // ---------------- Fan票申请 ----------------------------------------
+  // 获取自己相关的 fan票申请
+  router.get('/api/minetoken_application', passport.authorize, controller.mineTokenApplication.userApplication);
+  // 创建、更新、提交 fan票申请
+  router.post('/api/minetoken_application', passport.authorize, controller.mineTokenApplication.index);
+  // 获取自己相关的 fan票申请调研表单
+  router.get('/api/minetoken_application_survey', passport.authorize, controller.mineTokenApplication.userApplicationSurvey);
+  // fan票表单申请调研表单
+  router.post('/api/minetoken_application_survey', passport.authorize, controller.mineTokenApplication.survey);
+  // fan票提交校验 不能重复 symbol
+  router.post('/api/minetoken_application_verify', passport.verify, controller.mineTokenApplication.verify);
+
 
   // -------------------------------- 直通车交易 ---------------------------
   // 创建市场
