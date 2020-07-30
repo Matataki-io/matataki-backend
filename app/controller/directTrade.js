@@ -94,7 +94,16 @@ class DirectTradeController extends Controller {
   }
   async show() {
     const { ctx } = this;
-    const id = ctx.params.id;
+    let id = ctx.params.id;
+    const { type = 'tokenId' } = ctx.query;
+    if (type === 'tokenId') {
+      const market = await this.service.directTrade.getByTokenId(id);
+      if (!market) {
+        ctx.body = ctx.msg.marketNotExist;
+        return;
+      }
+      id = market.id;
+    }
     const market = await this.service.directTrade.get(id);
     ctx.body = {
       ...ctx.msg.success,
