@@ -487,6 +487,23 @@ class MineTokenController extends Controller {
       data: await this.service.token.mineToken.getBindableTokenList(ctx.user.id)
     }
   }
+  async getMintDetail() {
+    const { ctx } = this;
+    const token = await this.service.token.mineToken.getByUserId(ctx.user.id);
+    if (!token) {
+      ctx.body = ctx.msg.tokenNotExist;
+      return;
+    }
+    const detail = await this.service.token.mineToken.getMintDetail(token.id);
+    if (detail.count === 0) {
+      ctx.body = ctx.msg.tokenNotExist;
+    } else {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: detail,
+      };
+    }
+  }
 }
 
 module.exports = MineTokenController;
