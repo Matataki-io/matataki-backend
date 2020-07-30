@@ -200,7 +200,6 @@ class directTradeService extends Service {
       LEFT JOIN users t2 ON t1.uid = t2.id
       LEFT JOIN minetokens t3 ON t1.token_id = t3.id
       WHERE t1.id = ?;`, [ id ]);
-    console.log(market);
     if (market.length <= 0) return null;
     const _market = market[0];
     const balance = await this.service.token.mineToken.balanceOf(_market.exchange_uid, _market.token_id);
