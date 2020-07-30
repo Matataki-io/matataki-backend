@@ -63,7 +63,7 @@ async function getAnnouncementStatus(conn, uid, startTime, filter = 'informInsta
     WHERE t1.action = 'annouce' AND t1.object_type IN(:objectTypes)${filterSql};
   `;
 
-  const result = await conn.query(sql, {uid, startTime, OBJECT_TYPES});
+  const result = await conn.query(sql, {uid, startTime, objectTypes: OBJECT_TYPES});
   return result
 }
 
