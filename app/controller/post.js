@@ -386,13 +386,16 @@ class PostController extends Controller {
         }
 
         // 超过 0 元才算数，0元则无视
-        if (requireBuy && requireBuy.price > 0) {
-          const addPricesResult = await this.service.post.addPrices(
+        if (requireBuy && requireBuy.length > 0) {
+          const price = requireBuy[0].amount;
+          const tokenId = requireBuy[0].tokenId;
+          const addPricesResult = await this.service.post.addArticlePay(ctx.user.id, signId, price, tokenId);
+          /* const addPricesResult = await this.service.post.addPrices(
             ctx.user.id,
             signId,
             requireBuy.price,
             0
-          );
+          ); */
           this.logger.info('controller post edit addPrices Result:', addPricesResult);
         } else {
           await this.service.post.delPrices(ctx.user.id, signId, 0);
