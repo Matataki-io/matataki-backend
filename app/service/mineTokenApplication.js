@@ -139,7 +139,6 @@ class MineTokenApplicationService extends Service {
         return await this.create(data);
 
       } else if (type === 'submit') {
-
         const data = {
           id: applicationResult.id,
           logo,
@@ -155,6 +154,17 @@ class MineTokenApplicationService extends Service {
         const data = {
           id: applicationResult.id,
           status: 1,
+          update_time: time,
+        };
+        return await this.update(data);
+      } else if (type === 'modify') {
+        const data = {
+          id: applicationResult.id,
+          logo,
+          name,
+          symbol,
+          tag: tag.join(','),
+          status: 2,
           update_time: time,
         };
         return await this.update(data);
