@@ -587,4 +587,5 @@ module.exports = app => {
   router.get('/trade/direct/:id', passport.verify, controller.directTrade.show);
   router.get('/trade/direct', passport.verify, controller.directTrade.index);
   router.get('/api/user/market', passport.authorize, controller.directTrade.getMarket);
+  router.get('/api/mint/detail', passport.authorize, controller.mineToken.getMintDetail);
 };

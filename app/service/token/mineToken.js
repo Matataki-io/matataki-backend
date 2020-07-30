@@ -1229,6 +1229,18 @@ class MineTokenService extends Service {
     const result = await this.app.mysql.query(sql, { userId, tokenId })
     return result.length > 0;
   }
+  async getMintDetail(tokenId) {
+    const result = await this.app.mysql.query(`
+      SELECT COUNT(1) as count FROM assets_minetokens_log WHERE type = 'mint' AND token_id = :tokenId;
+      SELECT * FROM minetokens WHERE id = :tokenId;
+    `, { tokenId });
+    const count = result[0][0].count;
+    const total_supply = result[1][0] ? result[1][0].total_supply : 0;
+    return {
+      count,
+      total_supply,
+    };
+  }
 }
 
 module.exports = MineTokenService;
