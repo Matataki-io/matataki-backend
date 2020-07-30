@@ -128,4 +128,12 @@ module.exports = {
     sale_token: 'sale_token',
     direct_trade: 'direct_trade',
   },
+
+  // 根据 前端 common/config/minetoken_tag 的格式同步
+  tagList: {
+    personal: '个人',
+    organization: '组织',
+    product: '产品',
+    meme: 'MEME',
+  },
 };

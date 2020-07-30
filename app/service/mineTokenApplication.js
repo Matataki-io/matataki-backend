@@ -84,6 +84,10 @@ class MineTokenApplicationService extends Service {
     const { ctx } = this;
     const uid = ctx.user.id;
     const time = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    // 过滤非法tag
+    tag = tag.map(i => (this.service.consts.tagList[i] ? i : '')).filter(Boolean);
+
     try {
 
       const applicationResult = await this.app.mysql.get('minetokens_application', { uid });
