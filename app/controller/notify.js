@@ -51,6 +51,11 @@ class NotificationController extends Controller {
           // 引用文章
           if(item.remark) postIdSet.add(item.remark);
           break;
+        case 'announcementToken': // 公告 引用内容为Token
+          announcementIdSet.add(item.object_id);
+          // 引用Fan票
+          if(item.remark) tokenIdSet.add(item.remark);
+          break;
         case 'cnyWallet': // CNY转账
           assetsLogIdSet.add(item.object_id);
           break;

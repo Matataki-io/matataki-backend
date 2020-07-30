@@ -23,6 +23,7 @@ const OBJECT_TYPES = [
   'user', // 用户
   'comment', // 评论
   'announcement', // 公告
+  'announcementToken', // 引用内容为Fan票的公告
   'tokenWallet', // Token 钱包
   'cnyWallet', // CNY 钱包
   'collaborator' //协作者
