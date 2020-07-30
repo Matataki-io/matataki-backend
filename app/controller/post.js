@@ -34,7 +34,7 @@ class PostController extends Controller {
       is_original = 0,
       platform = 'eos',
       tags = [],
-      assosiateWith,
+      assosiateWith = 0,
       commentPayPoint = 0,
       shortContent = null,
       cc_license = null,
@@ -169,7 +169,7 @@ class PostController extends Controller {
       cover,
       is_original = 0,
       tags = [],
-      assosiate_with: assosiateWith,
+      assosiateWith,
       shortContent = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
       requireToken = null,
