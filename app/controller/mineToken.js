@@ -103,7 +103,7 @@ class MineTokenController extends Controller {
     const id = ctx.params.id;
 
     const token = await ctx.service.token.mineToken.get(id);
-    const exchange = await ctx.service.token.exchange.detail(id);
+    let exchange = await ctx.service.token.exchange.detail(id);
     const tags = await ctx.service.token.mineToken.getTokenTags(id);
     const user = await ctx.service.user.get(token.uid);
     // const vol_24h = await ctx.service.token.exchange.volume_24hour(id);
@@ -114,10 +114,14 @@ class MineTokenController extends Controller {
       exchange.price = parseFloat((exchange.cny_reserve / exchange.token_reserve).toFixed(4));
       exchange.amount_24h = trans_24hour.amount_24h;
     }
+    // 获取持仓人数数据
+    exchange = { ...exchange } // 这段代码是为了避免访问未赋值变量时报错
+    exchange.number_of_holders = await ctx.service.token.exchange.getNumberOfHolders(id);
+    exchange.number_of_liquidity_holders = await ctx.service.token.exchange.getNumberOfLiquidityHolders(id);
+
     ctx.body = {
       ...ctx.msg.success,
-      data:
-      {
+      data: {
         user,
         token,
         exchange,

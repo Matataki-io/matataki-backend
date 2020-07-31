@@ -81,19 +81,9 @@ class ExchangeService extends Service {
 
   async detail(tokenId) {
     const exchange = await this.getExchange(tokenId);
-    if (!exchange) {
-      return null;
-    }
-
-    const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
-    const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
-
-    // exchangeRate = tokenToCnyInput
-    exchange.token_reserve = token_reserve;
-    exchange.cny_reserve = cny_reserve;
-    exchange.number_of_holders = await this.getNumberOfHolders(tokenId);
-    exchange.number_of_liquidity_holders = await this.getNumberOfLiquidityHolders(tokenId);
-
+    if (!exchange) return null;
+    exchange.token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+    exchange.cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
     return exchange;
   }
 
