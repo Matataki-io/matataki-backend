@@ -80,7 +80,7 @@ class MineTokenApplicationService extends Service {
   }
 
   // fan票申请
-  async index(type, logo, name, symbol, tag) {
+  async index(type, logo, name, symbol, brief, tag) {
     const { ctx } = this;
     const uid = ctx.user.id;
     const time = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -117,6 +117,7 @@ class MineTokenApplicationService extends Service {
             logo,
             name,
             symbol,
+            brief,
             tag: tag.join(','),
             update_time: time,
           };
@@ -129,6 +130,7 @@ class MineTokenApplicationService extends Service {
           logo,
           name,
           symbol,
+          brief,
           tag: tag.join(','),
           decimals: 4,
           total_supply: 1000 * (10 ** 4),
@@ -138,12 +140,13 @@ class MineTokenApplicationService extends Service {
         };
         return await this.create(data);
 
-      } else if (type === 'submit') {
+      } else if (type === 'submit' || type === 'modify') {
         const data = {
           id: applicationResult.id,
           logo,
           name,
           symbol,
+          brief,
           tag: tag.join(','),
           status: 2,
           update_time: time,
@@ -154,17 +157,6 @@ class MineTokenApplicationService extends Service {
         const data = {
           id: applicationResult.id,
           status: 1,
-          update_time: time,
-        };
-        return await this.update(data);
-      } else if (type === 'modify') {
-        const data = {
-          id: applicationResult.id,
-          logo,
-          name,
-          symbol,
-          tag: tag.join(','),
-          status: 2,
           update_time: time,
         };
         return await this.update(data);
