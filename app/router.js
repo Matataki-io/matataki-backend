@@ -285,11 +285,17 @@ module.exports = app => {
 
   // 创建token
   router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
+  router.post('/_minetoken/_create', passport.apiManagementAuthorize, controller.mineToken._create); // 管理后台调用
   router.post('/minetoken/mint', passport.authorize, controller.mineToken.mint);
   router.post('/minetoken/transfer', passport.authorize, controller.mineToken.transfer);
   router.post('/minetoken/:tokenId/batchTransfer', passport.authorize, controller.mineToken.batchTransfer);
   router.get('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.getBatchAllowance);
   router.post('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.approveTokenToBatch);
+
+  // token 的出入站
+  router.post('/minetoken/deposit', passport.authorize, controller.mineToken.deposit);
+  router.get('/token/myAddress', passport.authorize, controller.user.getHostingAccountPublicKey);
+  router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
 
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
@@ -327,6 +333,15 @@ module.exports = app => {
   router.get('/token/user/:id', passport.verify, controller.token.getByUserId);
   // 查询符号为:symbol的token
   router.get('/token/symbol/:symbol', passport.verify, controller.token.getBySymbol);
+
+  // 添加token协作者
+  router.post('/token/collaborator/:id', passport.authorize, controller.token.setCollaborator);
+  // 删除token协作者
+  router.delete('/token/collaborator/:id', passport.authorize, controller.token.deleteCollaborator);
+  // 获取token协作者列表
+  router.get('/token/collaborator', passport.authorize, controller.token.getCollaborators);
+  // 获取自己创建和协作的Fan票列表
+  router.get('/token/bindable', passport.authorize, controller.mineToken.getBindableTokenList);
 
   // 查询当前用户的资产余额
   router.get('/asset/balance', passport.verify, controller.asset.getBalance);
@@ -482,6 +497,7 @@ module.exports = app => {
   // 开发用
   router.get('/_internal/getWallet', passport.apiVerify, controller.dev.getActiveUnderBalanceWallet);
   router.post('/_internal/justAirdrop', passport.apiVerify, controller.dev.justAirDrop);
+  router.get('/_internal/isTxExistInDB/:txHash', passport.verify, controller.dev.isExistInDB);
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
   router.post('/account/unbinding', passport.authorize, controller.account.binding.unbinding);
@@ -549,4 +565,27 @@ module.exports = app => {
   router.post('/api/wechat/qrcode', passport.verify, controller.wechat.qrcode);
   // 轮询微信扫码登录
   router.get('/api/login_by_wx', passport.verify, controller.wechat.loginByWx);
+  router.get('/api/bind_by_wx', passport.verify, controller.wechat.bindByWx);
+
+  // ---------------- Fan票申请 ----------------------------------------
+  // 获取自己相关的 fan票申请
+  router.get('/api/minetoken_application', passport.authorize, controller.mineTokenApplication.userApplication);
+  // 创建、更新、提交 fan票申请
+  router.post('/api/minetoken_application', passport.authorize, controller.mineTokenApplication.index);
+  // 获取自己相关的 fan票申请调研表单
+  router.get('/api/minetoken_application_survey', passport.authorize, controller.mineTokenApplication.userApplicationSurvey);
+  // fan票表单申请调研表单
+  router.post('/api/minetoken_application_survey', passport.authorize, controller.mineTokenApplication.survey);
+  // fan票提交校验 不能重复 symbol
+  router.post('/api/minetoken_application_verify', passport.verify, controller.mineTokenApplication.verify);
+
+
+  // -------------------------------- 直通车交易 ---------------------------
+  // 创建市场
+  router.post('/trade/direct', passport.authorize, controller.directTrade.create);
+  router.put('/trade/direct', passport.authorize, controller.directTrade.update);
+  router.get('/trade/direct/:id', passport.verify, controller.directTrade.show);
+  router.get('/trade/direct', passport.verify, controller.directTrade.index);
+  router.get('/api/user/market', passport.authorize, controller.directTrade.getMarket);
+  router.get('/api/mint/detail', passport.authorize, controller.mineToken.getMintDetail);
 };

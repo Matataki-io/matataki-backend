@@ -6,6 +6,8 @@ const ANNOUNCEMENT_TABLE = 'announcement';
 const EVENT_TABLE = 'notify_event';
 const EVENT_RECIPIENT_TABLE = 'notify_event_recipients';
 
+const OBJECT_TYPES = ['announcement', 'announcementToken'];
+
 class AnnouceService extends Service {
 
   /** 根据id列表获取公告 */
@@ -58,10 +60,10 @@ async function getAnnouncementStatus(conn, uid, startTime, filter = 'informInsta
     FROM ${EVENT_TABLE} t1
     JOIN ${ANNOUNCEMENT_TABLE} t2 ON t2.id = t1.object_id
     LEFT JOIN ${EVENT_RECIPIENT_TABLE} t3 ON t1.id = t3.event_id AND t3.user_id = :uid
-    WHERE t1.action = 'annouce' AND t1.object_type = 'announcement'${filterSql};
+    WHERE t1.action = 'annouce' AND t1.object_type IN(:objectTypes)${filterSql};
   `;
 
-  const result = await conn.query(sql, {uid, startTime});
+  const result = await conn.query(sql, {uid, startTime, objectTypes: OBJECT_TYPES});
   return result
 }
 

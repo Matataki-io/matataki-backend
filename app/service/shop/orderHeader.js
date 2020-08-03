@@ -2,12 +2,7 @@
 const moment = require('moment');
 
 const Service = require('egg').Service;
-const typeOptions = {
-  add: 'add',
-  buy_token_input: 'buy_token_input',
-  buy_token_output: 'buy_token_output',
-  sale_token: 'sale_token',
-};
+const TYPEOPTIONS = require('../consts').exchangeOrderType;
 
 class OrderHeaderService extends Service {
   // 以下是CNY支付相关处理 2019-11-13
@@ -44,27 +39,27 @@ class OrderHeaderService extends Service {
             return '-1';
           }
           total = total + prices[0].price;
-        } else if (typeOptions[item.type]) {
+        } else if (TYPEOPTIONS[item.type]) {
           let cny_amount = 0;
           let token_amount = 0;
           let max_tokens = 0;
           let min_tokens = 0;
           let min_liquidity = 0;
           switch (item.type) {
-            case typeOptions.buy_token_output: {
+            case TYPEOPTIONS.buy_token_output: {
               token_amount = item.amount;
               cny_amount = await this.service.token.exchange.getCnyToTokenOutputPrice(item.tokenId, token_amount);
               max_tokens = cny_amount;
               min_tokens = this.calMinTokenByOutput(token_amount);
               break;
             }
-            case typeOptions.buy_token_input: {
+            case TYPEOPTIONS.buy_token_input: {
               cny_amount = item.cny_amount;
               token_amount = await this.service.token.exchange.getCnyToTokenInputPrice(item.tokenId, cny_amount);
               min_tokens = this.calMinTokenByInput(token_amount);
               break;
             }
-            case typeOptions.add: {
+            case TYPEOPTIONS.add: {
               cny_amount = item.cny_amount;
               // 判断是否有交易对
               const tokenResult = await this.service.token.exchange.getPoolCnyToTokenPrice(item.tokenId, cny_amount);
@@ -73,6 +68,27 @@ class OrderHeaderService extends Service {
               max_tokens = this.calMaxToken(token_amount);
               min_liquidity = await this.service.token.exchange.getYourMintToken(cny_amount, item.tokenId);
               break;
+            }
+            case TYPEOPTIONS.direct_trade: {
+              // 查看是否有市场trade_market
+              const market = await this.service.directTrade.isMarketEnabled(item.tokenId);
+              if (!market) {
+                await conn.rollback();
+                this.logger.error('OrderHeaderService.createOrder direct_trade error: market not exist.');
+                return '-1';
+              }
+              // 判断市场是否有足够的交易余额
+              token_amount = item.amount;
+              const balance = await this.service.token.mineToken.balanceOf(market.exchange_uid, item.tokenId);
+              if (balance < item.amount) {
+                await conn.rollback();
+                this.logger.error('OrderHeaderService.createOrder direct_trade error: market balance not enough.', { balance, amount: item.amount });
+                return '-1';
+              }
+              // 根据token_id获取价格
+              const market_price = market.price;
+              // 根据token_amount计算cny_amount
+              cny_amount = token_amount * market_price / (10 ** 4);
             }
           }
           if (cny_amount <= 0) {
@@ -88,7 +104,7 @@ class OrderHeaderService extends Service {
               cny_amount,
               pay_cny_amount: 0,
               token_amount,
-              type: typeOptions[item.type], // 类型：add，buy_token，sale_token
+              type: TYPEOPTIONS[item.type], // 类型：add，buy_token，sale_token
               trade_no, // 订单号
               openid: '',
               status: 0, // 状态，0初始，3支付中，6支付成功，9处理完成

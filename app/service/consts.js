@@ -94,6 +94,7 @@ module.exports = {
     exchange_removeliquidity: 'exchange_removeliquidity',
     reward_article: 'reward_article',
     pay_article: 'pay_article',
+    direct_trade: 'direct_trade',
   },
 
   socialTypes1: {
@@ -119,5 +120,20 @@ module.exports = {
   mailTemplate: {
     registered: 'registered',
     resetPassword: 'resetPassword',
+  },
+  exchangeOrderType: {
+    add: 'add',
+    buy_token_input: 'buy_token_input',
+    buy_token_output: 'buy_token_output',
+    sale_token: 'sale_token',
+    direct_trade: 'direct_trade',
+  },
+
+  // 根据 前端 common/config/minetoken_tag 的格式同步
+  tagList: {
+    personal: '个人',
+    organization: '组织',
+    product: '产品',
+    meme: 'MEME',
   },
 };

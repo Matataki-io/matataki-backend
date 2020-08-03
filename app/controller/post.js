@@ -8,11 +8,11 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
 
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFromat = function (query, values) {
       if (!values) return query;
       return query.replace(
         /\:(\w+)/g,
-        function(txt, key) {
+        function (txt, key) {
           if (values.hasOwnProperty(key)) {
             return this.escape(values[key]);
           }
@@ -34,6 +34,7 @@ class PostController extends Controller {
       is_original = 0,
       platform = 'eos',
       tags = [],
+      assosiateWith = 0,
       commentPayPoint = 0,
       shortContent = null,
       cc_license = null,
@@ -47,6 +48,33 @@ class PostController extends Controller {
     } = ctx.request.body;
     // 修改requireBuy为数组
     const isEncrypt = Boolean(requireToken && requireToken.length > 0) || Boolean(requireBuy && requireBuy.length > 0);
+
+    // 检查Fan票协作者权限
+    if (requireToken) {
+      for (let i = 0; i < requireToken.length; i++) {
+        if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireToken[i].tokenId)) {
+          ctx.body = ctx.msg.notCollaborator;
+          return;
+        }
+      }
+    }
+    if (requireBuy) {
+      for (let i = 0; i < requireBuy.length; i++) {
+        // 需要注意CNY的情况下 tokenId 是 0
+        if (requireBuy[i].tokenId && !await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireBuy[i].tokenId)) {
+          ctx.body = ctx.msg.notCollaborator;
+          return;
+        }
+      }
+    }
+    if (editRequireToken) {
+      for (let i = 0; i < editRequireToken.length; i++) {
+        if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, editRequireToken[i].tokenId)) {
+          ctx.body = ctx.msg.notCollaborator;
+          return;
+        }
+      }
+    }
 
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
@@ -91,6 +119,7 @@ class PostController extends Controller {
         is_original,
         fission_factor: fissionFactor,
         create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        assosiate_with: assosiateWith,
         cover, // 封面url
         platform,
         uid: ctx.user.id,
@@ -167,6 +196,7 @@ class PostController extends Controller {
       cover,
       is_original = 0,
       tags = [],
+      assosiateWith,
       shortContent = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
       requireToken = null,
@@ -225,7 +255,37 @@ class PostController extends Controller {
       }
       // 这里判断是否为付费文章，用于决定ipfs是否加密，如果不是作者的则不采用api传入的值。
       isEncrypt = Boolean(post.require_holdtokens > 0 || post.require_buy > 0);
-    } else isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
+    } else {
+      // 如果是作者本人将会执行这部分
+      isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
+
+      // 检查Fan票协作者权限
+      if (requireToken) {
+        for (let i = 0; i < requireToken.length; i++) {
+          if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireToken[i].tokenId)) {
+            ctx.body = ctx.msg.notCollaborator;
+            return;
+          }
+        }
+      }
+      if (requireBuy) {
+        for (let i = 0; i < requireBuy.length; i++) {
+          // 需要注意CNY的情况下 tokenId 是 0
+          if (requireBuy[i].tokenId && !await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireBuy[i].tokenId)) {
+            ctx.body = ctx.msg.notCollaborator;
+            return;
+          }
+        }
+      }
+      if (editRequireToken) {
+        for (let i = 0; i < editRequireToken.length; i++) {
+          if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, editRequireToken[i].tokenId)) {
+            ctx.body = ctx.msg.notCollaborator;
+            return;
+          }
+        }
+      }
+    }
 
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
@@ -288,6 +348,8 @@ class PostController extends Controller {
         }
 
         if (ipfs_hide !== undefined) updateRow.ipfs_hide = ipfs_hide;
+
+        if (assosiateWith !== null) updateRow.assosiate_with = assosiateWith;
 
         // if (is_original) {
         //   updateRow.is_original = is_original;
@@ -465,19 +527,19 @@ class PostController extends Controller {
     }
 
     // 这部分是登录之后才会执行的查询
-    if(ctx.user && ctx.user.id) {
+    if (ctx.user && ctx.user.id) {
       let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
       let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
       postData.list.forEach(post => {
         // 是自己的文章？
         post.is_ownpost = post.uid === ctx.user.id
         // 是否满足持币可见
-        if(post.token_amount) {
+        if (post.token_amount) {
           let token = tokens.find(token => token.token_id === post.token_id);
           post.token_unlock = !!token && token.amount >= post.token_amount;
         }
         // 是否买过这篇文章
-        if(post.pay_price) {
+        if (post.pay_price) {
           post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
         }
       })
@@ -524,7 +586,7 @@ class PostController extends Controller {
     }
 
     // 这部分是登录之后才会执行的查询
-    if(ctx.user && ctx.user.id) {
+    if (ctx.user && ctx.user.id) {
       let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
       let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
       postData.list.forEach(post => {
@@ -775,7 +837,7 @@ class PostController extends Controller {
       const result = await this.app.mysql.query(
         'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count) VALUES (?, ?, 0, 0, 0, 0)'
         + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
-        [ post.id, 1 ]
+        [post.id, 1]
       );
 
       const updateSuccess = result.affectedRows !== 0;

@@ -11,20 +11,22 @@ const EVENT_RECIPIENT_DESC_TABLE = 'notify_event_recipients_desc';
 const ACTION_TYPES = [
   'comment', // 评论
   'like', // 点赞
-  'reply',
-  'follow', //关注
+  'reply', // 回复
+  'follow', // 关注
   'annouce', // 宣布
-  'transfer'
+  'transfer' // 转账
 ];
 
 /** 对象类型 */
 const OBJECT_TYPES = [
   'article', // 文章
   'user', // 用户
-  'comment',
+  'comment', // 评论
   'announcement', // 公告
-  'tokenWallet',
-  'cnyWallet'
+  'announcementToken', // 引用内容为Fan票的公告
+  'tokenWallet', // Token 钱包
+  'cnyWallet', // CNY 钱包
+  'collaborator' //协作者
 ];
 
 const isValidActionAndObject = (action, objectType) => ACTION_TYPES.includes(action) && OBJECT_TYPES.includes(objectType);
@@ -89,6 +91,9 @@ class NotifyService extends Service {
    * @noDuplication 【默认：true】避免重复。开启时，如果参数相同的事件已经存在，将不会创建新事件。
    */
   async sendEvent(senderId, receivingIds,  action, objectId, objectType, remark, noDuplication = true) {
+    // 过滤接收者和发送者相同的情况
+    receivingIds = receivingIds.filter(userId => userId !== senderId)
+    if(receivingIds.length === 0) return true
     // 参数相同的事件如果已经存在了，就不会在创建新的
     if(noDuplication) {
       const existing = await this.app.mysql.select(EVENT_TABLE, {

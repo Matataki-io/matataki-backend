@@ -25,6 +25,7 @@ class NotificationController extends Controller {
     let announcementIdSet = new Set();
     let assetsLogIdSet = new Set();
     let minetokensLogIdSet = new Set();
+    let tokenIdSet = new Set();
     // 遍历
     eventList.list.forEach(item => {
       userIdSet.add(item.user_id);
@@ -50,6 +51,11 @@ class NotificationController extends Controller {
           // 引用文章
           if(item.remark) postIdSet.add(item.remark);
           break;
+        case 'announcementToken': // 公告 引用内容为Token
+          announcementIdSet.add(item.object_id);
+          // 引用Fan票
+          if(item.remark) tokenIdSet.add(item.remark);
+          break;
         case 'cnyWallet': // CNY转账
           assetsLogIdSet.add(item.object_id);
           break;
@@ -58,6 +64,9 @@ class NotificationController extends Controller {
           break;
         case 'featuredArticles': // 推荐文章
           postIdSet.add(item.object_id);
+          break;
+        case 'collaborator': // 协作者
+          tokenIdSet.add(item.remark);
           break;
       }
     })
@@ -71,7 +80,8 @@ class NotificationController extends Controller {
       comments: commentIdSet.size ? await this.service.comment.getByIdArray([...commentIdSet]) : [],
       announcements: announcementIdSet.size ? await this.service.notify.announcement.getByIdArray([...announcementIdSet]) : [],
       assetsLog: assetsLogIdSet.size ? await this.service.assets.getByIdArray([...assetsLogIdSet]) : [],
-      minetokensLog: minetokensLogIdSet.size ? await this.service.token.mineToken.getByIdArray([...minetokensLogIdSet]) : []
+      minetokensLog: minetokensLogIdSet.size ? await this.service.token.mineToken.getLogByIdArray([...minetokensLogIdSet]) : [],
+      tokens: tokenIdSet.size ? await this.service.token.mineToken.getByIdArray([...tokenIdSet]) : []
     };
   }
 
@@ -106,6 +116,7 @@ class NotificationController extends Controller {
     let userIdSet = new Set();
     let commentIdSet = new Set();
     let minetokensLogIdSet = new Set();
+    let tokenIdSet = new Set();
     eventList.list.forEach(item => {
       userIdSet.add(item.user_id);
 
@@ -113,11 +124,14 @@ class NotificationController extends Controller {
         commentIdSet.add(Number(item.remark));
       else if (item.action === 'transfer' && objectType === 'article') // 打赏文章
         minetokensLogIdSet.add(Number(item.remark));
+      else if (objectType === 'collaborator') // 协作者
+        tokenIdSet.add(Number(item.remark));
     })
     // 获取消息中所需的信息
     const users = userIdSet.size ? await this.service.user.getUserList([...userIdSet], ctx.user.id) : [];
     const comments = commentIdSet.size ? await this.service.comment.getByIdArray([...commentIdSet]) : [];
-    const minetokensLog = minetokensLogIdSet.size ? await this.service.token.mineToken.getByIdArray([...minetokensLogIdSet]) : [];
+    const minetokensLog = minetokensLogIdSet.size ? await this.service.token.mineToken.getLogByIdArray([...minetokensLogIdSet]) : [];
+    const tokens = tokenIdSet.size ? await this.service.token.mineToken.getByIdArray([...tokenIdSet]) : [];
     // 拼接数据
     eventList.list.forEach(item => {
       item.user = users.find(user => user.id === item.user_id)
@@ -125,6 +139,8 @@ class NotificationController extends Controller {
         item.comment = comments.find(comment => comment.id === item.remark)
       else if (item.action === 'transfer' && objectType === 'article')
         item.minetokensLog = minetokensLog.find(minetokenLog => minetokenLog.id === item.remark)
+      else if (objectType === 'collaborator')
+        item.token = tokens.find(token => token.id === item.remark)
     })
 
     ctx.body = ctx.msg.success;

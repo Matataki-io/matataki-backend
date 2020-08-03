@@ -7,7 +7,7 @@ class MineTokenController extends Controller {
   // 创建
   async create() {
     const ctx = this.ctx;
-    const { name, symbol, decimals = 4, logo, brief, introduction, initialSupply } = this.ctx.request.body;
+    const { name, symbol, decimals = 4, logo, brief, introduction, initialSupply, tags = [] } = this.ctx.request.body;
     // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
     if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
@@ -24,7 +24,45 @@ class MineTokenController extends Controller {
         ctx.body = ctx.msg.failure;
         ctx.body.data = { error };
       }
-      const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash); // decimals默认4位
+      const result = await ctx.service.token.mineToken.create(ctx.user.id, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash, tags); // decimals默认4位
+      if (result === -1) {
+        ctx.body = ctx.msg.tokenAlreadyCreated;
+      } else if (result === -2) {
+        ctx.body = ctx.msg.tokenSymbolDuplicated;
+      } else if (result === -3) {
+        ctx.body = ctx.msg.tokenNoCreatePermission;
+      } else if (result === 0) {
+        ctx.body = ctx.msg.failure;
+      } else {
+        ctx.body = {
+          ...ctx.msg.success,
+          data: result,
+        };
+      }
+    }
+  }
+  // 管理后台调用方法
+  async _create() {
+    const { ctx } = this;
+
+    const { uid, name, symbol, decimals = 4, logo, brief = '', introduction = '', initialSupply, tags = [] } = ctx.request.body;
+    // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
+    if (brief && brief.length > 50) {
+      ctx.body = ctx.msg.failure;
+    } else if (!initialSupply) {
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = '请填写初始发行额度';
+    } else { // 好耶 字数没有超限
+      let txHash;
+      try {
+        const { public_key } = await this.service.account.hosting.isHosting(uid, 'ETH');
+        txHash = await this.service.ethereum.fanPiao.issue(name, symbol, decimals, initialSupply, public_key);
+      } catch (error) {
+        this.logger.error('Create error: ', error);
+        ctx.body = ctx.msg.failure;
+        ctx.body.data = { error };
+      }
+      const result = await ctx.service.token.mineToken.create(uid, name, symbol, initialSupply, decimals, logo, brief, introduction, txHash, tags); // decimals默认4位
       if (result === -1) {
         ctx.body = ctx.msg.tokenAlreadyCreated;
       } else if (result === -2) {
@@ -45,13 +83,13 @@ class MineTokenController extends Controller {
   async update() {
     const ctx = this.ctx;
     const tokenId = parseInt(ctx.params.id);
-    const { name, logo, brief, introduction } = ctx.request.body;
+    const { name, logo, brief, introduction, tags = [] } = ctx.request.body;
 
     // 编辑Fan票的时候限制简介字数不超过50字 后端也有字数限制
     if (brief && brief.length > 50) {
       ctx.body = ctx.msg.failure;
     } else { // 好耶 字数没有超限
-      const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction);
+      const result = await ctx.service.token.mineToken.update(ctx.user.id, tokenId, name, logo, brief, introduction, tags);
       if (result) {
         ctx.body = ctx.msg.success;
       } else {
@@ -65,7 +103,8 @@ class MineTokenController extends Controller {
     const id = ctx.params.id;
 
     const token = await ctx.service.token.mineToken.get(id);
-    const exchange = await ctx.service.token.exchange.detail(id);
+    let exchange = await ctx.service.token.exchange.detail(id);
+    const tags = await ctx.service.token.mineToken.getTokenTags(id);
     const user = await ctx.service.user.get(token.uid);
     // const vol_24h = await ctx.service.token.exchange.volume_24hour(id);
     if (exchange) {
@@ -75,13 +114,18 @@ class MineTokenController extends Controller {
       exchange.price = parseFloat((exchange.cny_reserve / exchange.token_reserve).toFixed(4));
       exchange.amount_24h = trans_24hour.amount_24h;
     }
+    // 获取持仓人数数据
+    exchange = { ...exchange } // 这段代码是为了避免访问未赋值变量时报错
+    exchange.number_of_holders = await ctx.service.token.exchange.getNumberOfHolders(id);
+    exchange.number_of_liquidity_holders = await ctx.service.token.exchange.getNumberOfLiquidityHolders(id);
+
     ctx.body = {
       ...ctx.msg.success,
-      data:
-      {
+      data: {
         user,
         token,
         exchange,
+        tags,
       },
     };
   }
@@ -282,21 +326,21 @@ class MineTokenController extends Controller {
 
     // 这部分是登录之后才会执行的查询
     if (ctx.user && ctx.user.id) {
-      let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
-      let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(result.list.map(post => post.id), ctx.user.id);
+      const { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+      const purchasedPost = await this.service.shop.order.isBuyBySignIdArray(result.list.map(post => post.id), ctx.user.id);
       result.list.forEach(post => {
         // 是自己的文章？
-        post.is_ownpost = post.uid === ctx.user.id
+        post.is_ownpost = post.uid === ctx.user.id;
         // 是否满足持币可见
         if (post.token_amount) {
-          let token = tokens.find(token => token.token_id === post.token_id);
+          const token = tokens.find(token => token.token_id === post.token_id);
           post.token_unlock = !!token && token.amount >= post.token_amount;
         }
         // 是否买过这篇文章
         if (post.pay_price) {
           post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
         }
-      })
+      });
     }
 
     ctx.body = {
@@ -318,13 +362,13 @@ class MineTokenController extends Controller {
     const id = ctx.params.id;
     const res = await ctx.service.token.exchange.getLiquidityHistory(id);
     let oldDate = '';
-    let result = [];
+    const result = [];
     for (let i = res.length - 1; i >= 0; i--) {
-      let dateText = moment(res[i].time).format('YYYY-MM-DD');
-      if(dateText !== oldDate) {
-        result.unshift(res[i])
-        result[0].time = dateText
-        oldDate = dateText
+      const dateText = moment(res[i].time).format('YYYY-MM-DD');
+      if (dateText !== oldDate) {
+        result.unshift(res[i]);
+        result[0].time = dateText;
+        oldDate = dateText;
       }
     }
     ctx.body = {
@@ -359,8 +403,8 @@ class MineTokenController extends Controller {
     const result = await ctx.service.token.mineToken.getAmountHistory(id);
     ctx.body = {
       ...ctx.msg.success,
-      data: result
-    }
+      data: result,
+    };
   }
 
   async getVolumeHistory() {
@@ -369,10 +413,139 @@ class MineTokenController extends Controller {
     const result = await ctx.service.token.mineToken.getVolumeHistory(id);
     ctx.body = {
       ...ctx.msg.success,
-      data: result
+      data: result,
+    };
+  }
+
+  async deposit() {
+    const { ctx } = this;
+    const { txHash } = ctx.request.body;
+
+    try {
+      // 拿到 receipt
+      const receipt = await this.service.ethereum.web3.getTransactionReceipt(txHash);
+      // 检查这个交易是不是失败交易，以防万一
+      if (!receipt) {
+        throw new Error("Didn't found this transaction on Rinkeby network. please check your hash.");
+      }
+
+      if (!receipt.status) {
+        throw new Error('This is a reverted transaction, not a successful deposit.');
+      }
+
+      // 检查该 to 合约是不是我们DB列入的Fan票
+      const token = await this.service.token.externalDeposit.getFanPiaoFromAddress(receipt.to);
+      if (!token) {
+        throw new Error('No such Token was found in our database, please check agian is it Matataki FanPiao.');
+      }
+
+      // 检查这个交易是不是非 Transfer
+      const event = this.service.token.externalDeposit.getTransferEvent(receipt.logs);
+      if (!event) {
+        throw new Error('This transaction seems not a FanPiao transfer, please check agian.');
+      }
+
+      const { fromAddr, toAddr, amount } = this.service.token.externalDeposit.getDataFromTransferEvent(event);
+      const to = await this.service.account.hosting.searchByPublicKey(toAddr);
+      if (!to) {
+        throw new Error('No such hosting account was found.');
+      }
+
+      if (to.uid !== ctx.user.id) {
+        throw new Error('This is not your deposit, please switch to another account.');
+      }
+
+      // 检查这个交易是不是已经在数据库入账了
+      const isTxNotExistInDB = await this.service.token.externalDeposit.isTxNotExistInDB(txHash);
+      if (!isTxNotExistInDB) {
+        throw new Error('This transaction is already in the database, please check your txHash and try again.');
+      }
+      await this.service.token.externalDeposit.handleDeposit(
+        token.id,
+        fromAddr,
+        to.uid,
+        amount,
+        receipt.transactionHash
+      );
+      ctx.body = {
+        ...ctx.msg.success,
+        message: 'Deposit successfully',
+        data: {
+          tokenId: token.id,
+          from: fromAddr,
+          to: to.uid,
+          amount,
+          transactionHash: receipt.transactionHash,
+        },
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = error;
+      ctx.body.message = error.message;
     }
   }
 
+  async withdraw() {
+    const { ctx } = this;
+    const tokenId = ctx.params.id;
+    const { target, amount } = ctx.request.body;
+    if (isNaN(amount) || amount <= 0) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = 'Use legit amount';
+      return;
+    }
+    if (target.slice(0, 2) !== '0x' || target.length !== 42) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = 'Use legit ethereum address';
+      return;
+    }
+    const currentBalance = Number(await ctx.service.token.mineToken.balanceOf(ctx.user.id, tokenId));
+    if (currentBalance < amount) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "You don't have so much token to do that, please check and try again.";
+      return;
+    }
+    try {
+      const txHash = await this.service.token.mineToken.withdraw(tokenId, ctx.user.id, target, amount);
+      ctx.body = {
+        ...ctx.msg.success,
+        data: { txHash },
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = { error };
+    }
+  }
+
+  async getBindableTokenList() {
+    const { ctx } = this;
+    ctx.body = {
+      ...ctx.msg.success,
+      data: await this.service.token.mineToken.getBindableTokenList(ctx.user.id),
+    };
+  }
+  async getMintDetail() {
+    const { ctx } = this;
+    const token = await this.service.token.mineToken.getByUserId(ctx.user.id);
+    if (!token) {
+      ctx.body = ctx.msg.tokenNotExist;
+      return;
+    }
+    const detail = await this.service.token.mineToken.getMintDetail(token.id);
+    if (detail.count === 0) {
+      ctx.body = ctx.msg.tokenNotExist;
+    } else {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: detail,
+      };
+    }
+  }
 }
 
 module.exports = MineTokenController;

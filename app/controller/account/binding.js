@@ -290,7 +290,7 @@ class AccountBindingController extends Controller {
     // 邮箱账号验证密码
     const passwordHash = sha256(password).toString();
     if (platform === 'email' && userAccount.password_hash !== passwordHash) {
-      this.logger.error('controller.account.binding.changeMainAccount failed2', { password_hash: userAccount.password_hash, account, passwordHash, });
+      this.logger.error('controller.account.binding.changeMainAccount failed2', { password_hash: userAccount.password_hash, account, passwordHash });
       ctx.body = {
         ...ctx.msg.failure,
       };
