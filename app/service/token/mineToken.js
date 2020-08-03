@@ -898,22 +898,15 @@ class MineTokenService extends Service {
       FROM posts p
       LEFT JOIN post_minetokens m
       ON p.id = m.sign_id
-      WHERE ((uid = (
-        SELECT uid FROM minetokens WHERE id = :tokenId
-      ) AND p.require_holdtokens = 0
-      ) OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0 `;
+      WHERE (p.assosiate_with = :tokenId OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0
+    `;
     let countSql = `
       SELECT count(1) as count
       FROM posts p
       LEFT JOIN post_minetokens m
       ON p.id = m.sign_id
-      WHERE ((uid = (
-        SELECT uid FROM minetokens WHERE id = :tokenId
-      ) AND p.require_holdtokens = 0
-      ) OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0 `;
-
-    // let sql = 'SELECT m.sign_id AS id FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
-    // let countSql = 'SELECT count(1) AS count FROM post_minetokens m JOIN posts p ON p.id = m.sign_id WHERE token_id = :tokenId ';
+      WHERE (p.assosiate_with = :tokenId OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0
+    `;
 
     if (filter === 1) {
       sql += 'AND require_holdtokens = 1 ';
