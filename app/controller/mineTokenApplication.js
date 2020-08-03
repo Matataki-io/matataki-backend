@@ -37,9 +37,9 @@ class MineTokenApplicationController extends Controller {
      *  submit 提交申请
      *  reset 重新申请 || 取消申请
      */
-    const { type, logo = '', name = '', symbol = '', tag = [] } = ctx.request.body;
+    const { type, logo = '', name = '', symbol = '', brief = '', tag = [] } = ctx.request.body;
 
-    const result = await this.ctx.service.mineTokenApplication.index(type, logo, name, symbol, tag);
+    const result = await this.ctx.service.mineTokenApplication.index(type, logo, name, symbol, brief, tag);
     if (result.code === 0) {
       ctx.body = ctx.msg.success;
     } else {
