@@ -84,15 +84,20 @@ class UserService extends Service {
     let introduction = '';
     let banner = '';
     let create_time;
+    let is_recommend = 0;
 
     const user = await this.service.account.binding.get2({ id });
     // const user = await this.app.mysql.get('users', { id });
+
+    console.log('user', user);
+
     if (user) {
       avatar = user.avatar || '';
       nickname = user.nickname || '';
       introduction = user.introduction || '';
       banner = user.banner || '';
       create_time = user.create_time;
+      is_recommend = user.is_recommend;
     } else {
       return null;
     }
@@ -107,7 +112,8 @@ class UserService extends Service {
       fans: fans[0].fans,
       is_follow,
       create_time,
-      status: user.status
+      is_recommend,
+      status: user.status,
     };
 
     ctx.logger.info('debug info', result);
@@ -240,7 +246,7 @@ class UserService extends Service {
 
       ids = await this.app.redis.srandmember('user:recommend', amount);
     }
-    const users = await this.app.mysql.query('SELECT id, username, email, nickname, avatar, introduction FROM users WHERE id IN (:ids);', {
+    const users = await this.app.mysql.query('SELECT id, username, email, nickname, avatar, introduction, is_recommend FROM users WHERE id IN (:ids);', {
       ids,
     });
 

@@ -474,7 +474,7 @@ class PostService extends Service {
     }
     const sql = `
     SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
-    b.nickname, b.avatar, 
+    b.nickname, b.avatar, b.is_recommend AS user_is_recommend, 
     c.real_read_count AS \`read\`, c.likes,
 
     t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
@@ -652,7 +652,7 @@ class PostService extends Service {
       };
     }
     const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
-      b.nickname, b.avatar, 
+      b.nickname, b.avatar, b.is_recommend AS user_is_recommend, 
       c.real_read_count AS \`read\`, c.likes,
 
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
@@ -775,7 +775,7 @@ class PostService extends Service {
     }
 
     const sql = `SELECT a.id, a.uid, a.author, a.title, a.status, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
-      b.nickname, b.avatar, 
+      b.nickname, b.avatar, b.is_recommend AS user_is_recommend,
       c.real_read_count AS \`read\`, c.likes,
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
       t7.id as token_id, t6.amount as token_amount, t7.name as token_name, t7.symbol as token_symbol, t7.decimals  as token_decimals
