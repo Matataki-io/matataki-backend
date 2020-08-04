@@ -1105,6 +1105,22 @@ class MineTokenService extends Service {
     return result;
   }
 
+  async getIncomeHistory(tokenId) {
+    const sql = `
+      SELECT
+        IFNULL(SUM(price), 0) AS amount,
+        DATE_FORMAT(create_time, '%Y-%m-%d') AS create_time
+      FROM
+        direct_trade_log
+      WHERE
+        token_id = :tokenId
+      GROUP BY DATE(create_time);
+    `;
+    const result = await this.app.mysql.query(sql, {tokenId});
+
+    return result;
+  }
+
   /**
    * withdraw, 提取饭票到外部以太坊地址
    * @param {number} tokenId 饭票的ID
