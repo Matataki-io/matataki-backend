@@ -113,7 +113,7 @@ class NotifyService extends Service {
     if(!eventId) return false;
     // 设定事件的接收者
     const result = await this.setEventRecipients(eventId, receivingIds);
-    return result.affectedRows > 0;
+    return result > 0;
   }
 
   /** 数组内的事件设为已读 */

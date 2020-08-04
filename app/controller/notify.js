@@ -180,6 +180,15 @@ class NotificationController extends Controller {
     }
     else ctx.body = ctx.msg.failure;
   }
+
+  /** 通知文章解锁条件内的Fan票流动性不足 */
+  async postInsufficientLiquidity() {
+    const ctx = this.ctx;
+    const { postId, tokenId } = ctx.request.body;
+    const result = await this.service.notify.announcement.postInsufficientLiquidity(postId, tokenId);
+    ctx.body = result ? ctx.msg.success : ctx.msg.failure;
+    if (result) ctx.body.data = result
+  }
 }
 
 module.exports = NotificationController;
