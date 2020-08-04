@@ -381,6 +381,8 @@ module.exports = app => {
   router.get('/token/:id/history/amount', passport.verify, controller.mineToken.getAmountHistory);
   // token交易量历史
   router.get('/token/:id/history/volume', passport.verify, controller.mineToken.getVolumeHistory);
+  // token收益历史
+  router.get('/token/:id/history/income', passport.verify, controller.mineToken.getIncomeHistory);
 
   // -------------------------------- exchage计算 display API --------------------------------
   // 获取pool size & supply
