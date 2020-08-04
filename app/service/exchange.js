@@ -270,7 +270,7 @@ class ExchangeService extends Service {
 
     let sql, parameters;
     if (search === '') {
-      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount, ifnull(t6.amount, 0) AS liquidity, ifnull(t7.amount, 0) AS exchange_amount
+      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t2.is_recommend AS user_is_recommend, t4.amount, ifnull(t6.amount, 0) AS liquidity, ifnull(t7.amount, 0) AS exchange_amount
           FROM mineTokens AS t1
           JOIN users AS t2 ON t1.uid = t2.id
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
@@ -292,7 +292,7 @@ class ExchangeService extends Service {
         limit: pagesize,
       };
     } else {
-      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount, t6.amount AS liquidity, t7.amount AS exchange_amount
+      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t2.is_recommend AS user_is_recommend, t4.amount, t6.amount AS liquidity, t7.amount AS exchange_amount
           FROM mineTokens AS t1
           JOIN users AS t2 ON t1.uid = t2.id
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
