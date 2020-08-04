@@ -556,6 +556,9 @@ module.exports = app => {
   // 全部标记已读
   router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
 
+  // 通知文章解锁条件内的Fan票流动性不足
+  router.post('/post/InsufficientLiquidity', passport.authorize, controller.notify.postInsufficientLiquidity);
+
   router.post('/test/search', passport.verify, controller.search.importTag);
 
   // -------------------------------- 微信服务号 ---------------------------
