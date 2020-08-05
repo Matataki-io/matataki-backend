@@ -330,8 +330,12 @@ class MineTokenService extends Service {
       pid,
       type,
     });
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(result[0], 'from_uid');
+
     return {
-      list: result[0],
+      list: listFormat,
       count: result[1][0].count,
     };
   }
@@ -783,7 +787,7 @@ class MineTokenService extends Service {
       SELECT t1.uid, t1.token_id, t1.liquidity_balance, t1.create_time,
         t2.total_supply,
         t3.name, t3.symbol, decimals, t3.logo,
-        t4.username, t4.nickname, t4.avatar
+        t4.username, t4.nickname, t4.avatar, t4.is_recommend AS user_is_recommend 
       FROM exchange_balances AS t1
       JOIN exchanges AS t2 USING (token_id)
       JOIN minetokens AS t3 ON t1.token_id = t3.id
@@ -802,9 +806,12 @@ class MineTokenService extends Service {
       row.username = this.service.user.maskEmailAddress(row.username);
     });
 
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(result[0], 'uid');
+
     return {
       count: result[1][0].count,
-      list: result[0],
+      list: listFormat,
     };
   }
 
@@ -1249,6 +1256,22 @@ class MineTokenService extends Service {
       count,
       total_supply,
     };
+  }
+  //  格式化列表数据 返回用户是否发行了token
+  async formatListReturnTokenInfo(list, key) {
+    try {
+      for (let i = 0; i < list.length; i++) {
+        const result = await this.app.mysql.get('minetokens', {
+          uid: list[i][key],
+        });
+        list[i].user_is_token = result ? 1 : 0;
+      }
+
+      return list;
+    } catch (e) {
+      console.log('formatListReturnTokenInfo error: ', e);
+      return list;
+    }
   }
 }
 

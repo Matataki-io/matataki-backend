@@ -275,7 +275,10 @@ class UserService extends Service {
       // result.push(info);
     }
 
-    return users;
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(users, 'id');
+
+    return listFormat;
   }
 
   async setProfile(userid, nickname, introduction, accept) {
