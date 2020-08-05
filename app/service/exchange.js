@@ -173,7 +173,7 @@ class ExchangeService extends Service {
     }
 
     id = parseInt(id);
-    const sql = `SELECT a.*, b.total_supply, u.username, u.nickname, u.avatar
+    const sql = `SELECT a.*, b.total_supply, u.username, u.nickname, u.avatar, u.is_recommend AS user_is_recommend 
     FROM assets_minetokens AS a
     JOIN minetokens b ON b.id = a.token_id
     JOIN users u ON u.id = a.uid
@@ -191,9 +191,12 @@ class ExchangeService extends Service {
       row.username = this.service.user.maskEmailAddress(row.username);
     });
 
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(result[0], 'uid');
+
     return {
       count: result[1][0].count,
-      list: result[0],
+      list: listFormat,
     };
   }
   async getTokenBySymbol(symbol) {
