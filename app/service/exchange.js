@@ -325,9 +325,12 @@ class ExchangeService extends Service {
       row.username = this.service.user.maskEmailAddress(row.username);
     });
 
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(result[0], 'uid');
+
     return {
       count: result[1][0].count,
-      list: result[0],
+      list: listFormat,
     };
   }
   async getFlowDetail(tokenId, page = 1, pagesize = 20) {

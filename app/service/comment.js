@@ -225,8 +225,18 @@ class CommentService extends Service {
       const id = item.parents_id;
       c_obj[id].replyList.push(item);
     }
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(list, 'uid');
+
+    for (let i = 0; i < listFormat.length; i++) {
+      listFormat[i].replyList = await this.service.token.mineToken.formatListReturnTokenInfo(listFormat[i].replyList, 'uid');
+    }
+
     return {
-      list, count, allcount,
+      list: listFormat,
+      count,
+      allcount,
     };
   }
 

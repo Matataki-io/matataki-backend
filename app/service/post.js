@@ -513,7 +513,14 @@ class PostService extends Service {
       const author = emailMask(post.author);
       return { ...post, author };
     });
-    return { count: amount[0].count, list };
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(list, 'uid');
+
+    return {
+      count: amount[0].count,
+      list: listFormat,
+    };
   }
 
   async scoreRank(page = 1, pagesize = 20, filter = 7) {
@@ -715,7 +722,11 @@ class PostService extends Service {
       const author = emailMask(post.author);
       return { ...post, author };
     });
-    return { count: amount[0].count, list };
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(list, 'uid');
+
+    return { count: amount[0].count, list: listFormat };
   }
 
   // 发布时间排序()(new format)(count-list格式)
@@ -834,7 +845,11 @@ class PostService extends Service {
       const author = emailMask(post.author);
       return { ...post, author };
     });
-    return { count: amount[0].count, list };
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(list, 'uid');
+
+    return { count: amount[0].count, list: listFormat };
   }
 
   /**

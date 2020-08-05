@@ -330,8 +330,12 @@ class MineTokenService extends Service {
       pid,
       type,
     });
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(result[0], 'from_uid');
+
     return {
-      list: result[0],
+      list: listFormat,
       count: result[1][0].count,
     };
   }
@@ -1233,6 +1237,22 @@ class MineTokenService extends Service {
       count,
       total_supply,
     };
+  }
+  //  格式化列表数据 返回用户是否发行了token
+  async formatListReturnTokenInfo(list, key) {
+    try {
+      for (let i = 0; i < list.length; i++) {
+        const result = await this.app.mysql.get('minetokens', {
+          uid: list[i][key],
+        });
+        list[i].user_is_token = result ? 1 : 0;
+      }
+
+      return list;
+    } catch (e) {
+      console.log('formatListReturnTokenInfo error: ', e);
+      return list;
+    }
   }
 }
 
