@@ -886,9 +886,14 @@ class MineTokenService extends Service {
       end: 1 * pagesize,
     });
 
+    const list = await this.service.post.getByPostIds(results[0].map(row => row.id));
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(list, 'uid');
+
     return {
       count: results[1][0].count,
-      list: await this.service.post.getByPostIds(results[0].map(row => row.id)),
+      list: listFormat,
     };
   }
   async getRelatedWithOnlyCreator(tokenId, filter = 0, sort = 'popular-desc', page = 1, pagesize = 10, onlyCreator = false, channel_id = 1) {
@@ -960,9 +965,14 @@ class MineTokenService extends Service {
       ...whereTerm,
     });
 
+    const list = await this.service.post.getByPostIds(results[0].map(row => row.id));
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(list, 'uid');
+
     return {
       count: results[1][0].count,
-      list: await this.service.post.getByPostIds(results[0].map(row => row.id)),
+      list: listFormat,
     };
   }
   async countMember() {
