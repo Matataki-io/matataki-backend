@@ -1115,7 +1115,7 @@ class MineTokenService extends Service {
   async getIncomeHistory(tokenId) {
     const sql = `
       SELECT
-        IFNULL(SUM(price), 0) AS amount,
+        ROUND(price * (IFNULL(SUM(amount), 0) / 10000)) AS amount,
         DATE_FORMAT(create_time, '%Y-%m-%d') AS create_time
       FROM
         direct_trade_log
