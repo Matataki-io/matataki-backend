@@ -170,7 +170,7 @@ class UserService extends Service {
       return userList;
     }
 
-    let sqlcode = 'SELECT id, username, platform, nickname, avatar, introduction FROM users WHERE id IN (:userids);'
+    let sqlcode = 'SELECT id, username, platform, nickname, avatar, introduction, is_recommend FROM users WHERE id IN (:userids);'
       // 粉丝数量
       + 'SELECT fuid, COUNT(*) AS fans FROM follows WHERE status = 1 AND fuid IN (:userids) GROUP BY fuid;'
       // 关注数量
