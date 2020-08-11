@@ -132,6 +132,7 @@ module.exports = {
   notCollaborator: 11202,
   // direct trade
   marketNotExist: 11300,
+  notInTheFuture: 11400,
 
   returnObj(lang) {
 
@@ -219,6 +220,7 @@ module.exports = {
       cannotAddFounder: { code: this.cannotAddFounder, message: 'Cannot add founder' },
       notCollaborator: { code: this.notCollaborator, message: 'Not a token collaborator' },
       marketNotExist: { code: this.marketNotExist, message: 'The market does not exist.' },
+      notInTheFuture: { code: this.notInTheFuture, message: 'Not in the future, At least two minutes later' },
 
     };
 
@@ -306,6 +308,7 @@ module.exports = {
       cannotAddFounder: { code: this.cannotAddFounder, message: '无法添加创始人' },
       notCollaborator: { code: this.notCollaborator, message: '你不是此Fan票的协作者' },
       marketNotExist: { code: this.marketNotExist, message: '市场不存在' },
+      notInTheFuture: { code: this.notInTheFuture, message: '请填写未来的时间，至少是两分钟后' },
     };
 
     let message;
