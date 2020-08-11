@@ -7,6 +7,10 @@ const moment = require('moment');
 
 class DraftService extends Service {
 
+  async get(id) {
+    return this.app.mysql.get('drafts', { id: id });
+  }
+
   async draftList(uid, page, pagesize) {
     const countsql = 'SELECT COUNT(*) AS count FROM drafts d ';
     const listsql = 'SELECT d.id, d.uid, d.title, d.status, d.create_time, d.update_time, d.fission_factor,'

@@ -52,6 +52,11 @@ module.exports = app => {
   // router.post('/publish', passport.authorize, controller.post.publish);
   router.post('/post/publish', passport.authorize, controller.post.publish);
 
+  // 将草稿定时发送为文章
+  router.post('/post/timed/:id', passport.authorize, controller.timedPost.post);
+  // 取消定时发送
+  router.delete('/post/timed/:id', passport.authorize, controller.timedPost.delete);
+
   // Frank(Feb 6th, 2020): 既然放弃了发文签名，我们应该逐步取消掉这个路由了
   // @todo: 准备放弃上传文章到IPFS的路由，合并到上方的publish
   router.post('/post/ipfs', passport.authorize, controller.post.uploadPost);
