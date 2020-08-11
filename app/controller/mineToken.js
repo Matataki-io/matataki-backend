@@ -417,6 +417,16 @@ class MineTokenController extends Controller {
     };
   }
 
+  async getIncomeHistory() {
+    const { ctx } = this;
+    const id = ctx.params.id;
+    const result = await ctx.service.token.mineToken.getIncomeHistory(id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: result,
+    }
+  }
+
   async deposit() {
     const { ctx } = this;
     const { txHash } = ctx.request.body;

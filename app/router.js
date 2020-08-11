@@ -381,6 +381,8 @@ module.exports = app => {
   router.get('/token/:id/history/amount', passport.verify, controller.mineToken.getAmountHistory);
   // token交易量历史
   router.get('/token/:id/history/volume', passport.verify, controller.mineToken.getVolumeHistory);
+  // token收益历史
+  router.get('/token/:id/history/income', passport.verify, controller.mineToken.getIncomeHistory);
 
   // -------------------------------- exchage计算 display API --------------------------------
   // 获取pool size & supply
@@ -553,6 +555,9 @@ module.exports = app => {
   router.put('/notify/event', passport.authorize, controller.notify.haveRead);
   // 全部标记已读
   router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
+
+  // 通知文章解锁条件内的Fan票流动性不足
+  router.post('/post/InsufficientLiquidity', passport.authorize, controller.notify.postInsufficientLiquidity);
 
   router.post('/test/search', passport.verify, controller.search.importTag);
 

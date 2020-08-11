@@ -40,6 +40,71 @@ class AnnouceService extends Service {
     }, this.ctx);
   }
 
+  /** 设定公告内容  */
+  async setAnnouncement(sender, title, content, informInstant, informNewUser, expireTime) {
+    const result = await this.app.mysql.insert(ANNOUNCEMENT_TABLE, {
+      sender,
+      title,
+      content,
+      inform_instant: informInstant,
+      inform_new_user: informNewUser,
+      expire_time: expireTime
+    })
+    return result.insertId
+  }
+
+  /**
+   * 发布定向公告
+   * @sender 发件人
+   * @receivingIds 事件接收者的列表
+   * @title 公告标题
+   * @content 公告正文
+   * @quoteId 引用内容的ID (传入0表示不引用)
+   * @quoteType 引用内容的类型，有 post 和 token 可选，默认是 post
+   */
+  async targetedPost(sender, receivingIds, title, content, quoteId, quoteType) {
+    const { ctx } = this;
+    const objectSwitch = { post: 'announcement', token: 'announcementToken' };
+    const objectType = objectSwitch[quoteType] || objectSwitch.post
+    try {
+      const announcementId = await this.setAnnouncement(sender, title, content, 0, 0);
+      if(!announcementId) return false;
+
+      return await this.service.notify.event.sendEvent(0, receivingIds, 'annouce', announcementId, objectType, quoteId || 0);
+    }
+    catch(e) {
+      this.logger.error('Announce service error:', e);
+      return false;
+    }
+  }
+
+  /** 通知文章解锁条件内的Fan票流动性不足 */
+  async postInsufficientLiquidity(postId, tokenId) {
+    const { ctx } = this;
+    const autoName = 'auto_insufficient_liquidity';
+
+    const post = await this.service.post.get(postId);
+    if (!post) return false;
+    const token = await this.service.token.mineToken.get(tokenId);
+    if (!token) return false;
+
+    // 今天已经通知过了就不重复通知了
+    const sql = `
+      SELECT a.id
+      FROM announcement a
+      JOIN notify_event n
+        ON n.object_id = a.id
+        AND n.object_type IN('announcement', 'announcementToken')
+      WHERE a.sender = :autoName AND n.remark = :postId AND DATE(n.create_time) = CURDATE();
+    `;
+    const aids = await this.app.mysql.query(sql, { autoName, postId });
+    if (aids.length > 0) return -1;
+
+    const title = `流动性不足提示`;
+    const content = `您发布的文章因为Fan票 ${token.symbol} 流动性不足，读者们无法使用一键解锁功能了呢。<br>Fan票协作者或创始人可以通过“添加流动金”或是“转入直通车”来提升Fan票的流动性。<br><a href="https://www.yuque.com/matataki/matataki/xzzv3r">如何添加流动性？</a>`;
+    return await this.targetedPost(autoName, [post.uid], title, content, postId, 'post'); 
+  }
+
 }
 
 module.exports = AnnouceService;

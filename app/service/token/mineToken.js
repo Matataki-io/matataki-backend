@@ -185,7 +185,7 @@ class MineTokenService extends Service {
         if (row.type === 'website') {
           websites.push({
             url: row.content,
-            name: row.name
+            name: row.name,
           });
         } else {
           socials.push(row);
@@ -315,7 +315,7 @@ class MineTokenService extends Service {
   }
   async getRewardArticle(type, pid, page = 1, pagesize = 10) {
     const result = await this.app.mysql.query(`
-      SELECT t1.from_uid, t1.to_uid, t1.token_id, t1.amount, t1.create_time, t1.tx_hash, t1.memo, t1.post_id,
+      SELECT t1.from_uid, t1.to_uid, t1.token_id, t1.amount, t1.create_time, t1.tx_hash, t1.memo, t1.post_id, t2.is_recommend AS user_is_recommend,
       t2.username, t2.nickname, t2.avatar,
       t3.name as token_name, t3.symbol, t3.decimals, t3.logo as token_logo, t3.contract_address
       FROM assets_minetokens_log t1
@@ -330,8 +330,12 @@ class MineTokenService extends Service {
       pid,
       type,
     });
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(result[0], 'from_uid');
+
     return {
-      list: result[0],
+      list: listFormat,
       count: result[1][0].count,
     };
   }
@@ -783,7 +787,7 @@ class MineTokenService extends Service {
       SELECT t1.uid, t1.token_id, t1.liquidity_balance, t1.create_time,
         t2.total_supply,
         t3.name, t3.symbol, decimals, t3.logo,
-        t4.username, t4.nickname, t4.avatar
+        t4.username, t4.nickname, t4.avatar, t4.is_recommend AS user_is_recommend 
       FROM exchange_balances AS t1
       JOIN exchanges AS t2 USING (token_id)
       JOIN minetokens AS t3 ON t1.token_id = t3.id
@@ -802,9 +806,12 @@ class MineTokenService extends Service {
       row.username = this.service.user.maskEmailAddress(row.username);
     });
 
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(result[0], 'uid');
+
     return {
       count: result[1][0].count,
-      list: result[0],
+      list: listFormat,
     };
   }
 
@@ -879,9 +886,14 @@ class MineTokenService extends Service {
       end: 1 * pagesize,
     });
 
+    const list = await this.service.post.getByPostIds(results[0].map(row => row.id));
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(list, 'uid');
+
     return {
       count: results[1][0].count,
-      list: await this.service.post.getByPostIds(results[0].map(row => row.id)),
+      list: listFormat,
     };
   }
   async getRelatedWithOnlyCreator(tokenId, filter = 0, sort = 'popular-desc', page = 1, pagesize = 10, onlyCreator = false, channel_id = 1) {
@@ -953,9 +965,14 @@ class MineTokenService extends Service {
       ...whereTerm,
     });
 
+    const list = await this.service.post.getByPostIds(results[0].map(row => row.id));
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(list, 'uid');
+
     return {
       count: results[1][0].count,
-      list: await this.service.post.getByPostIds(results[0].map(row => row.id)),
+      list: listFormat,
     };
   }
   async countMember() {
@@ -991,7 +1008,7 @@ class MineTokenService extends Service {
         JOIN minetokens t2 ON t2.id = t1.token_id
       WHERE t1.id IN(:idList);
     `,
-      { idList }
+    { idList }
     );
     return logs || [];
   }
@@ -1004,7 +1021,7 @@ class MineTokenService extends Service {
       FROM
         minetokens
       WHERE id IN (:idList);
-    `
+    `;
     return await this.app.mysql.query(sql, { idList }) || [];
   }
 
@@ -1013,22 +1030,22 @@ class MineTokenService extends Service {
       let total = 0;
       list.forEach(item => total += item);
       return total;
-    }
-    const res = await this.app.mysql.select('assets_minetokens_log',{
+    };
+    const res = await this.app.mysql.select('assets_minetokens_log', {
       where: {
         type: 'mint',
-        token_id: tokenId
-      }
-    })
-    let result = {
+        token_id: tokenId,
+      },
+    });
+    const result = {
       total_supply: 0,
       suppl_24h: 0,
       suppl_7d: 0,
-      suppl_30d: 0
-    }
-    if(res.length === 0) return result
+      suppl_30d: 0,
+    };
+    if (res.length === 0) return result;
 
-    let mapres = res.map(log => log.amount);
+    const mapres = res.map(log => log.amount);
     result.total_supply = sum(mapres);
 
     let date = new Date();
@@ -1069,7 +1086,7 @@ class MineTokenService extends Service {
         token_id = :tokenId
       GROUP BY DATE(acl.create_time);
     `;
-    const result = await this.app.mysql.query(sql, {tokenId});
+    const result = await this.app.mysql.query(sql, { tokenId });
 
     return result;
   }
@@ -1100,6 +1117,22 @@ class MineTokenService extends Service {
         ) t1
       GROUP BY DATE(create_time)
     `;
+    const result = await this.app.mysql.query(sql, { tokenId });
+
+    return result;
+  }
+
+  async getIncomeHistory(tokenId) {
+    const sql = `
+      SELECT
+        ROUND(price * (IFNULL(SUM(amount), 0) / 10000)) AS amount,
+        DATE_FORMAT(create_time, '%Y-%m-%d') AS create_time
+      FROM
+        direct_trade_log
+      WHERE
+        token_id = :tokenId
+      GROUP BY DATE(create_time);
+    `;
     const result = await this.app.mysql.query(sql, {tokenId});
 
     return result;
@@ -1122,38 +1155,38 @@ class MineTokenService extends Service {
     const EtherToken = new Token(20, token.contract_address);
     let transactionHash;
     try {
-        const transferAction = await EtherToken.transfer(
-          fromWallet.private_key, target, amount);
-        transactionHash = transferAction.transactionHash;
+      const transferAction = await EtherToken.transfer(
+        fromWallet.private_key, target, amount);
+      transactionHash = transferAction.transactionHash;
     } catch (error) {
-        this.logger.error('transferFrom::syncBlockchain', error);
+      this.logger.error('transferFrom::syncBlockchain', error);
     }
     // Update DB
     const dbConnection = await this.app.mysql.beginTransaction();
     await this._syncTransfer(
-        tokenId, sender, uidOfInAndOut, amount, this.clientIP,
-        consts.mineTokenTransferTypes.transfer, transactionHash, dbConnection, `Withdraw to ${target}`);
+      tokenId, sender, uidOfInAndOut, amount, this.clientIP,
+      consts.mineTokenTransferTypes.transfer, transactionHash, dbConnection, `Withdraw to ${target}`);
     await dbConnection.commit();
     return transactionHash;
   }
 
   async setTokenTags(id, tags) {
-    if(tags && tags.length > 0) {
-      let minetokenTags = [];
+    if (tags && tags.length > 0) {
+      const minetokenTags = [];
       tags.forEach(tag => {
         minetokenTags.push({
           token_id: id,
-          tag
+          tag,
         });
-      })
+      });
       return await this.app.mysql.insert('minetoken_tags', minetokenTags);
     }
   }
   async getTokenTags(id) {
     return await this.app.mysql.select('minetoken_tags', {
       where: {
-        token_id: id
-      }
+        token_id: id,
+      },
     });
   }
   async deleteTokenTags(id) {
@@ -1206,7 +1239,7 @@ class MineTokenService extends Service {
       WHERE t.uid = :userId OR c.user_id = :userId
       GROUP BY t.id;
     `;
-    return await this.app.mysql.query(sql, { userId })
+    return await this.app.mysql.query(sql, { userId });
   }
 
   /** 检查用户是不是 token 的协作者或创建者 */
@@ -1219,7 +1252,7 @@ class MineTokenService extends Service {
       WHERE t.id = :tokenId AND (t.uid = :userId OR c.user_id = :userId)
       GROUP BY t.id;
     `;
-    const result = await this.app.mysql.query(sql, { userId, tokenId })
+    const result = await this.app.mysql.query(sql, { userId, tokenId });
     return result.length > 0;
   }
   async getMintDetail(tokenId) {
@@ -1233,6 +1266,22 @@ class MineTokenService extends Service {
       count,
       total_supply,
     };
+  }
+  //  格式化列表数据 返回用户是否发行了token
+  async formatListReturnTokenInfo(list, key) {
+    try {
+      for (let i = 0; i < list.length; i++) {
+        const result = await this.app.mysql.get('minetokens', {
+          uid: list[i][key],
+        });
+        list[i].user_is_token = result ? 1 : 0;
+      }
+
+      return list;
+    } catch (e) {
+      console.log('formatListReturnTokenInfo error: ', e);
+      return list;
+    }
   }
 }
 

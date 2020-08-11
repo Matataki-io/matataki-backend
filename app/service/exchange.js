@@ -173,7 +173,7 @@ class ExchangeService extends Service {
     }
 
     id = parseInt(id);
-    const sql = `SELECT a.*, b.total_supply, u.username, u.nickname, u.avatar
+    const sql = `SELECT a.*, b.total_supply, u.username, u.nickname, u.avatar, u.is_recommend AS user_is_recommend 
     FROM assets_minetokens AS a
     JOIN minetokens b ON b.id = a.token_id
     JOIN users u ON u.id = a.uid
@@ -191,9 +191,12 @@ class ExchangeService extends Service {
       row.username = this.service.user.maskEmailAddress(row.username);
     });
 
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(result[0], 'uid');
+
     return {
       count: result[1][0].count,
-      list: result[0],
+      list: listFormat,
     };
   }
   async getTokenBySymbol(symbol) {
@@ -270,7 +273,7 @@ class ExchangeService extends Service {
 
     let sql, parameters;
     if (search === '') {
-      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount, ifnull(t6.amount, 0) AS liquidity, ifnull(t7.amount, 0) AS exchange_amount
+      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t2.is_recommend AS user_is_recommend, t4.amount, ifnull(t6.amount, 0) AS liquidity, ifnull(t7.amount, 0) AS exchange_amount
           FROM mineTokens AS t1
           JOIN users AS t2 ON t1.uid = t2.id
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
@@ -292,7 +295,7 @@ class ExchangeService extends Service {
         limit: pagesize,
       };
     } else {
-      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount, t6.amount AS liquidity, t7.amount AS exchange_amount
+      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t2.is_recommend AS user_is_recommend, t4.amount, t6.amount AS liquidity, t7.amount AS exchange_amount
           FROM mineTokens AS t1
           JOIN users AS t2 ON t1.uid = t2.id
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
@@ -325,9 +328,12 @@ class ExchangeService extends Service {
       row.username = this.service.user.maskEmailAddress(row.username);
     });
 
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(result[0], 'uid');
+
     return {
       count: result[1][0].count,
-      list: result[0],
+      list: listFormat,
     };
   }
   async getFlowDetail(tokenId, page = 1, pagesize = 20) {

@@ -101,11 +101,10 @@ class CommentService extends Service {
   async delete(id, uid) {
     try {
       const { affectedRows } = await this.app.mysql.delete('comments', { id, uid });
-      return affectedRows === 1
-    }
-    catch (e) {
+      return affectedRows === 1;
+    } catch (e) {
       this.logger.error('service.comments delete error: ', e);
-      return false
+      return false;
     }
   }
 
@@ -177,7 +176,7 @@ class CommentService extends Service {
   /** 根据id列表获取评论内容 */
   async getByIdArray(idList) {
     const comments = await this.app.mysql.query(
-      `SELECT id, sign_id, comment FROM comments WHERE id IN (:idList);`,
+      'SELECT id, sign_id, comment FROM comments WHERE id IN (:idList);',
       { idList }
     );
     if (comments === null) return [];
@@ -185,7 +184,7 @@ class CommentService extends Service {
   }
   async getComments(signid, page = 1, pagesize = 20) {
     const sql = `
-    SELECT c.id, c.uid, c.comment, c.like_num, c.reply_id, c.reply_uid, c.create_time, u.username, u.nickname, u.avatar
+    SELECT c.id, c.uid, c.comment, c.like_num, c.reply_id, c.reply_uid, c.create_time, u.username, u.nickname, u.avatar, u.is_recommend AS user_is_recommend
     FROM comments c
     LEFT JOIN users u ON c.uid = u.id
     WHERE c.sign_id = :signid AND c.type=3 AND c.parents_id IS NULL
@@ -215,7 +214,7 @@ class CommentService extends Service {
       c_obj[item.id] = item;
     }
     const children = await this.app.mysql.query(`
-      SELECT c.id, c.uid, c.comment, c.like_num, c.reply_id, c.reply_uid, c.create_time, c.parents_id, u.username, u.nickname, u.avatar, u2.nickname as reply_nickname
+      SELECT c.id, c.uid, c.comment, c.like_num, c.reply_id, c.reply_uid, c.create_time, c.parents_id, u.username, u.nickname, u.avatar, u.is_recommend AS user_is_recommend, u2.nickname as reply_nickname
       FROM comments c
       LEFT JOIN users u ON c.uid = u.id
       LEFT JOIN users u2 ON c.reply_uid = u2.id
@@ -226,8 +225,18 @@ class CommentService extends Service {
       const id = item.parents_id;
       c_obj[id].replyList.push(item);
     }
+
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(list, 'uid');
+
+    for (let i = 0; i < listFormat.length; i++) {
+      listFormat[i].replyList = await this.service.token.mineToken.formatListReturnTokenInfo(listFormat[i].replyList, 'uid');
+    }
+
     return {
-      list, count, allcount,
+      list: listFormat,
+      count,
+      allcount,
     };
   }
 
@@ -264,19 +273,18 @@ class CommentService extends Service {
       WHERE
         t1.id = :id
         OR t1.id IN ( SELECT cid FROM ( SELECT parents_id AS cid FROM comments WHERE id = :id ) c2 );
-    `
+    `;
     try {
       const result = await this.app.mysql.query(sql, { id });
-      if(result[1].length > 0) {
-        return result[1][0]
+      if (result[1].length > 0) {
+        return result[1][0];
       }
-      else {
-        return false
-      }
-    }
-    catch(e) {
+
+      return false;
+
+    } catch (e) {
       this.logger.error(e);
-      return false
+      return false;
     }
   }
 
