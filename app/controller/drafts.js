@@ -313,66 +313,21 @@ class DraftsController extends Controller {
 
   // 获取一篇草稿
   async draft() {
-
-    try {
       const id = this.ctx.params.id;
-
-      const draft = await this.app.mysql.get('drafts', { id });
+      const draft = await this.service.draft.get(id);
 
       if (!draft) {
         this.ctx.body = this.ctx.msg.draftNotFound;
         return;
       }
-
       if (draft.uid !== this.ctx.user.id) {
         this.ctx.body = this.ctx.msg.notYourDraft;
         return;
       }
-
-      // 分配标签
-      let tag_arr = draft.tags.split(',');
-      tag_arr = tag_arr.filter(x => x);
-      draft.tags = tag_arr;
-
-      console.log('draft', draft);
-
-      // 持币阅读
-      if (Number(draft.require_holdtokens) === 1) {
-        const sql = 'SELECT token_id, amount FROM draft_minetokens WHERE draft_id = ?;';
-        draft.require_holdtokens = await this.app.mysql.query(sql, [ draft.id ]);
-      } else {
-        draft.require_holdtokens = [];
-      }
-
-      // 持币阅读支付
-      if (Number(draft.require_buy) === 1) {
-        const sql = 'SELECT token_id, amount FROM draft_prices WHERE draft_id = ?;';
-        draft.require_buy = await this.app.mysql.query(sql, [ draft.id ]);
-      } else {
-        draft.require_buy = [];
-      }
-
-      // 编辑持币
-      if (Number(draft.editor_require_holdtokens) === 1) {
-        const sql = 'SELECT token_id, amount FROM draft_edit_minetokens WHERE draft_id = ?;';
-        draft.editor_require_holdtokens = await this.app.mysql.query(sql, [ draft.id ]);
-      } else {
-        draft.editor_require_holdtokens = [];
-      }
-
-
       this.ctx.body = {
         ...this.ctx.msg.success,
         data: draft,
       };
-
-
-    } catch (e) {
-      console.log(e);
-      this.ctx.body = this.ctx.msg.failure;
-    }
-
-
   }
 
   // 删除草稿
@@ -391,11 +346,9 @@ class DraftsController extends Controller {
       return;
     }
 
-    const result = await this.app.mysql.update('drafts', { status: 1 }, { where: { id } });
+    const result = await this.service.draft.delete(id);
 
-    const updateSuccess = result.affectedRows === 1;
-
-    if (updateSuccess) {
+    if (result) {
       this.ctx.body = this.ctx.msg.success;
     } else {
       this.ctx.body = this.ctx.msg.failure;
