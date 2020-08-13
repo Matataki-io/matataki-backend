@@ -14,17 +14,17 @@ class ipfs extends Service {
       protocol,
     });
   }
-  cat(hash) {
-    return new Promise((resolve, reject) => {
-      this.ipfs.cat(hash, (err, result) => {
-        if (err) {
-          this.logger.error('ipfs.cat error: %j', err);
+  async cat(hash) {
+    const { username, password } = this.config.awsIpfs;
+    const { data } = await axios.post(`https://ipfs.smartsignature.io/api/v0/cat/${hash}`, '', {
+      auth: { username, password },
+      timeout: 1000 * 10
           reject(err);
         } else {
           resolve(result);
         }
-      });
     });
+    return JSON.stringify(data);
   }
   add(data) {
     return new Promise((resolve, reject) => {
