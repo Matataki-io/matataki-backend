@@ -119,6 +119,7 @@ class PostService extends Service {
       title,
       displayName: ctx.helper.emailMask(user.nickname || user.username),
       description: short_content,
+      uid: user.id
     });
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) return ctx.msg.ipfsUploadFailed;
