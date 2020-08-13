@@ -76,7 +76,8 @@ module.exports = app => {
 
   // 通过文章ID获取 IPFS 信息
   router.get('/p/:id/ipfs', passport.verify, controller.post.getIpfsById);
-
+  // 合并获取文章数据接口逻辑 p + ipfs
+  router.get('/pInfo/:id', passport.verify, controller.post.pInfo);
 
   // 按照打赏金额排序的文章列表(新, 可按照币种排序)
   router.get('/posts/amountRanking', passport.verify, controller.post.getAmountRanking);

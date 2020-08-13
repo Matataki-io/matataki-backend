@@ -663,6 +663,67 @@ class PostController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = post;
   }
+  async pInfo() {
+    const ctx = this.ctx;
+    const id = ctx.params.id;
+    let postIpfsBody = {};
+
+    const post = await this.service.post.getById(id);
+
+    // 啥也没有 直接返回
+    if (!post) {
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+    // 有内容继续往后走
+    // 同步 catchPost 方法
+    if (post.uid !== ctx.user.id) {
+      const permission = await this.hasPermission(post, ctx.user.id);
+
+      if (!permission) {
+
+        // 没有权限 返回信息
+        postIpfsBody = ctx.msg.postNoPermission;
+
+        ctx.body = ctx.msg.success;
+        ctx.body.data = {
+          p: post,
+          ipfs: postIpfsBody,
+        };
+        return;
+      }
+    }
+
+    // 从ipfs获取内容
+    const catchRequest = await this.service.post.ipfsCatch(post.hash);
+
+    if (catchRequest) {
+      let data = JSON.parse(catchRequest.toString());
+      if (data.iv) {
+        // 是加密的数据，开始解密
+        data = JSON.parse(this.service.cryptography.decrypt(data));
+      }
+      if (ctx.query.edit) {
+        data.content = this.service.extmarkdown.toEdit(data.content);
+      } else {
+        data.content = await this.service.extmarkdown.transform(data.content, {
+          userId: ctx.user.id,
+        });
+      }
+      // 字符串转为json对象
+      postIpfsBody = Object.assign(postIpfsBody, ctx.msg.success);
+      postIpfsBody.data = data;
+    } else {
+      // IPFS获取失败 返回失败的信息
+      postIpfsBody = ctx.msg.ipfsCatchFailed;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = {
+      p: post,
+      ipfs: postIpfsBody,
+    };
+  }
 
   async getIpfsById() {
     const { ctx } = this;
