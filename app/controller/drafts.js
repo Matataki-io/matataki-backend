@@ -48,6 +48,7 @@ class DraftsController extends Controller {
       requireToken = [], // 阅读 持币
       requireBuy = [], // 阅读 购买
       editRequireToken = [], // 编辑 持币
+      assosiate_with,
     } = ctx.request.body;
 
     // 评论需要支付的积分
@@ -74,7 +75,8 @@ class DraftsController extends Controller {
         ipfs_hide,
         requireToken,
         requireBuy,
-        editRequireToken
+        editRequireToken,
+        assosiate_with
       );
     } else {
       await this.create_draft(
@@ -91,7 +93,8 @@ class DraftsController extends Controller {
         ipfs_hide,
         requireToken,
         requireBuy,
-        editRequireToken
+        editRequireToken,
+        assosiate_with
       );
     }
   }
@@ -112,7 +115,8 @@ class DraftsController extends Controller {
     ipfs_hide,
     requireToken,
     requireBuy,
-    editRequireToken
+    editRequireToken,
+    assosiate_with
   ) {
     const conn = await this.app.mysql.beginTransaction(); // 初始化事务
 
@@ -142,6 +146,7 @@ class DraftsController extends Controller {
         short_content,
         cc_license,
         ipfs_hide,
+        assosiate_with,
       };
 
       // 设置属性
@@ -219,7 +224,9 @@ class DraftsController extends Controller {
     ipfs_hide,
     requireToken,
     requireBuy,
-    editRequireToken) {
+    editRequireToken,
+    assosiate_with
+  ) {
 
     const conn = await this.app.mysql.beginTransaction(); // 初始化事务
     try {
@@ -239,6 +246,7 @@ class DraftsController extends Controller {
         short_content,
         cc_license,
         ipfs_hide,
+        assosiate_with,
       };
 
       // 设置属性
