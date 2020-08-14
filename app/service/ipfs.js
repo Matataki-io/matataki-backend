@@ -17,11 +17,8 @@ class ipfs extends Service {
     });
   }
   async cat(hash) {
-    const { username, password } = this.config.awsIpfs;
-    const { data } = await axios.post(`${IpfsUrl}/api/v0/cat/${hash}`, '', {
-      auth: { username, password },
-      timeout: 1000 * 10
-    });
+    const { site } = this.config.ipfs_service;
+    const { data } = await axios.post(`${site}/api/v0/cat/${hash}`);
     return JSON.stringify(data);
   }
   add(data) {
