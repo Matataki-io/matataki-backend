@@ -4,6 +4,8 @@ const axios = require('axios');
 const FormData = require('form-data');
 const Service = require('egg').Service;
 
+const IpfsUrl = 'https://ipfs.smartsignature.io'
+
 class ipfs extends Service {
   constructor(ctx, app) {
     super(ctx, app);
@@ -16,13 +18,9 @@ class ipfs extends Service {
   }
   async cat(hash) {
     const { username, password } = this.config.awsIpfs;
-    const { data } = await axios.post(`https://ipfs.smartsignature.io/api/v0/cat/${hash}`, '', {
+    const { data } = await axios.post(`${IpfsUrl}/api/v0/cat/${hash}`, '', {
       auth: { username, password },
       timeout: 1000 * 10
-          reject(err);
-        } else {
-          resolve(result);
-        }
     });
     return JSON.stringify(data);
   }
@@ -47,7 +45,7 @@ class ipfs extends Service {
     const fd = new FormData();
     fd.append('', file);
     try {
-      const { data } = await axios.post('https://ipfs.smartsignature.io/api/v0/add', fd, {
+      const { data } = await axios.post(`${IpfsUrl}/api/v0/add`, fd, {
         auth: { username, password },
         headers: fd.getHeaders(),
         timeout: 1000 * 10
