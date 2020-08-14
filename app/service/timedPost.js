@@ -56,6 +56,7 @@ class TimedPostService extends Service {
   /** 发布文章 */
   async post(draftId) {
     const result = await this.service.draft.postDraft(draftId);
+    console.log(`发布结果：`, result);
     if (result && result.code === 0) this.postSuccess(result);
     else this.postFailure(result);
     await this.endTask(draftId, !!result.code);
@@ -76,7 +77,10 @@ class TimedPostService extends Service {
 
   async postFailure(result) {
     const { code, user, draft, message } = result;
-    if (!user || !draft) return;
+    if (!user || !draft) {
+      this.logger.error(`timed post failure, message: ${ message }`);
+      return;
+    };
     return await this.service.notify.announcement.targetedPost(
       'auto_post_failure',
       [user.id],
