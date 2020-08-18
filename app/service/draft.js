@@ -85,7 +85,7 @@ class DraftService extends Service {
       draft.is_original,
       user.platform,
       draft.tags,
-      draft.assosiateWith,
+      draft.assosiate_with,
       draft.comment_pay_point,
       draft.short_content,
       draft.cc_license,
@@ -106,8 +106,16 @@ class DraftService extends Service {
 
   async draftList(uid, page, pagesize) {
     const countsql = 'SELECT COUNT(*) AS count FROM drafts d ';
-    const listsql = 'SELECT d.id, d.uid, d.title, d.status, d.create_time, d.update_time, d.fission_factor,'
-      + ' d.cover, d.is_original, d.tags, u.nickname, u.avatar FROM drafts d INNER JOIN users u ON d.uid = u.id ';
+    const listsql = `
+      SELECT
+        d.id, d.uid, d.title, d.status, d.create_time, d.update_time, d.fission_factor, d.cover, d.is_original, d.tags,
+        u.nickname, u.avatar,
+        t.triggered, t.trigger_time
+      FROM
+        drafts d
+        LEFT JOIN users u ON d.uid = u.id
+        LEFT JOIN timed_post t ON d.id = t.draft_id
+    `;
 
     const wheresql = 'WHERE d.uid = :uid AND d.status = 0 ';
     const ordersql = 'ORDER BY d.update_time DESC LIMIT :start, :end ';
