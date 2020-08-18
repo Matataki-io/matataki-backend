@@ -88,6 +88,8 @@ module.exports = {
   draftNotFound: 10201,
   // 无权操作别人的草稿
   notYourDraft: 10202,
+  // 草稿已被锁定
+  draftIsLocked: 10203,
 
   // 广告牌相关
   // 获取统计数据时候出错
@@ -277,6 +279,7 @@ module.exports = {
 
       draftNotFound: { code: this.draftNotFound, message: '找不到这篇草稿' },
       notYourDraft: { code: this.notYourDraft, message: '无权操作别人的草稿' },
+      draftIsLocked: { code: this.draftIsLocked, message: '草稿已被锁定' },
 
       getStatisticsError: { code: this.getStatisticsError, message: '获取统计信息出错' },
       submitAdErrorOfWrongUser: { code: this.submitAdErrorOfWrongUser, message: '上传广告牌错误, 不是被认可的用户' },
