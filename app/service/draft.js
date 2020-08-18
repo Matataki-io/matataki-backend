@@ -203,7 +203,18 @@ class DraftService extends Service {
       const previewRedis = await this.app.redis.get(`preview:${id}`);
       if (previewRedis) {
         // 获取草稿内容
-        const sql = 'SELECT d.*, u.avatar, u.username, u.nickname FROM drafts d, users u WHERE d.id = ? AND d.uid = u.id AND d.`status` = 0;';
+        const sql = `
+          SELECT
+            d.*,
+            u.avatar, u.username, u.nickname,
+            t.triggered, t.trigger_time
+          FROM
+            drafts d
+            LEFT JOIN users u ON d.uid = u.id
+            LEFT JOIN timed_post t ON d.id = t.draft_id
+          WHERE
+            d.id = ? AND d.status = 0;
+        `;
         let draftContent = await this.app.mysql.query(sql, [ id ]);
         draftContent = draftContent[0];
 
