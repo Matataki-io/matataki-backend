@@ -85,7 +85,7 @@ class DraftService extends Service {
       draft.is_original,
       user.platform,
       draft.tags,
-      draft.assosiateWith,
+      draft.assosiate_with,
       draft.comment_pay_point,
       draft.short_content,
       draft.cc_license,
