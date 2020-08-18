@@ -133,6 +133,12 @@ class DraftsController extends Controller {
         return;
       }
 
+      const timedPost = await conn.get('timed_post', { draft_id: id });
+      if (timedPost) {
+        this.ctx.body = this.ctx.msg.draftIsLocked;
+        return;
+      }
+
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
       const data = {
         title,
