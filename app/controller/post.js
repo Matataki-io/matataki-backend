@@ -235,7 +235,7 @@ class PostController extends Controller {
 
         if (ipfs_hide !== undefined) updateRow.ipfs_hide = ipfs_hide;
 
-        if (assosiateWith !== null) updateRow.assosiate_with = assosiateWith;
+        updateRow.assosiate_with = assosiateWith || 0;
 
         // if (is_original) {
         //   updateRow.is_original = is_original;
