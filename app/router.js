@@ -120,6 +120,8 @@ module.exports = app => {
   router.post('/post/:id/bookmark', passport.authorize, controller.post.addBookmark);
   // 取消收藏文章
   router.delete('/post/:id/bookmark', passport.authorize, controller.post.removeBookmark);
+  // 文章分享事件上报
+  router.post('/post/:id/shareCount', passport.verify, controller.post.shareCount);
 
   // -------------------------------- 标签系统 --------------------------------
   // 标签列表
@@ -603,4 +605,8 @@ module.exports = app => {
   router.get('/trade/direct', passport.verify, controller.directTrade.index);
   router.get('/api/user/market', passport.authorize, controller.directTrade.getMarket);
   router.get('/api/mint/detail', passport.authorize, controller.mineToken.getMintDetail);
+
+  // -------------------------------- Dashboard -----------------------
+  // 获取统计数据
+  router.get('/db/browse/count', passport.authorize, controller.postDashboard.get);
 };

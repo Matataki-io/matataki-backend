@@ -789,6 +789,7 @@ class PostController extends Controller {
         + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
         [ post.id, 1 ]
       );
+      await this.service.postDashboard.addActionLog({...ctx.user}.id, post.id, 'read');
 
       const updateSuccess = result.affectedRows !== 0;
 
@@ -1114,6 +1115,8 @@ class PostController extends Controller {
         ctx.body = ctx.msg.postNoPermission;
         return;
       }
+      // 记录文章解锁行为
+      if (post.require_holdtokens) this.service.postDashboard.addActionLog(ctx.user.id, post.id, 'unlock', true);
     }
     // 从ipfs获取内容
     const catchRequest = await this.service.post.ipfsCatch(hash);
@@ -1472,6 +1475,16 @@ class PostController extends Controller {
     }
 
     ctx.body = ctx.msg.ipfsCatchFailed;
+  }
+
+  /** 记录文章分享行为 */
+  async shareCount() {
+    const { ctx } = this;
+    const { id } = ctx.params;
+    const post = await this.service.post.get(id);
+    if (!post || post.status === 1) return ctx.body = ctx.msg.postNotFound;
+    const res = await this.service.postDashboard.addActionLog({...ctx.user}.id, id, 'share');
+    ctx.body = res ? ctx.msg.success : ctx.msg.failure;
   }
 }
 
