@@ -607,6 +607,24 @@ module.exports = app => {
   router.get('/api/mint/detail', passport.authorize, controller.mineToken.getMintDetail);
 
   // -------------------------------- Dashboard -----------------------
+  // 浏览
   // 获取统计数据
   router.get('/db/browse/count', passport.authorize, controller.postDashboard.get);
+  // 下面8个API参数和返回值格式都是一样的。带 days 参数可筛选多少天内的数据。
+  // 获取阅读量历史
+  router.get('/db/browse/history/read', passport.authorize, controller.postDashboard.getBrowseReadHistory);
+  // 获取推荐量历史
+  router.get('/db/browse/history/like', passport.authorize, controller.postDashboard.getBrowseLikeHistory);
+  // 获取分享量历史
+  router.get('/db/browse/history/share', passport.authorize, controller.postDashboard.getBrowseShareHistory);
+  // 获取解锁量历史
+  router.get('/db/browse/history/unlock', passport.authorize, controller.postDashboard.getBrowseUnlockHistory);
+  // 获取收藏量历史
+  router.get('/db/browse/history/bookmark', passport.authorize, controller.postDashboard.getBrowseBookmarkHistory);
+  // 获取评论量历史
+  router.get('/db/browse/history/comment', passport.authorize, controller.postDashboard.getBrowseCommentHistory);
+  // 获取支付量历史
+  router.get('/db/browse/history/sale', passport.authorize, controller.postDashboard.getBrowseSaleHistory);
+  // 获取赞赏量历史
+  router.get('/db/browse/history/reward', passport.authorize, controller.postDashboard.getBrowseRewardHistory);
 };
