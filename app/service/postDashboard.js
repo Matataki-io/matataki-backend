@@ -39,7 +39,7 @@ class PostDashboardService extends Service {
       reward: `SELECT COUNT(*) AS count FROM ${TABLE.ASSETS_TOKEN_LOG} WHERE type = 'reward_article' AND to_uid = :userId`
     }
     // 时间筛选部分
-    const whereDate = days ? ` AND TO_DAYS(NOW()) - TO_DAYS(create_time) <= :days` : '';
+    const whereDate = days ? ` AND TO_DAYS(NOW()) - TO_DAYS(create_time) < :days` : '';
     // 拼接
     const sql = select.bookmark + whereDate + '; '
       + select.comment + whereDate + '; '
@@ -63,7 +63,7 @@ class PostDashboardService extends Service {
    * @param {Number} days 【选填】筛选多少天内的数据
    */
   async getActionCountByUserId(userId, days) {
-    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(create_time) <= :days';
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(create_time) < :days';
     const sql = `
       SELECT
         action, COUNT(*) AS count
