@@ -83,6 +83,13 @@ class PostDashboardService extends Service {
     return result;
   }
 
+  /**
+   * 添加 post action 日志
+   * @param {Number} userId 用户 id
+   * @param {Number} postId 文章 id
+   * @param {String} action 行为
+   * @param {Boolean} notRepeat 不允许重复
+   */
   async addActionLog(userId, postId, action, notRepeat) {
     if (!ACTION_TYPES.includes(action)) return;
     if (notRepeat && await this.getActionLog(userId, postId, action)) return -1;
@@ -96,12 +103,137 @@ class PostDashboardService extends Service {
     return res.affectedRows
   }
 
+  /**
+   * 查询某条日志是否存在（用于判断是否重复）
+   * @param {Number} userId 用户 id
+   * @param {Number} postId 文章 id
+   * @param {String} action 行为
+   */
   async getActionLog(userId, postId, action) {
     return await this.app.mysql.get(TABLE.POST_ACTION_LOG, {
       uid: userId,
       post_id: postId,
       action
     });
+  }
+
+  /**
+   * 获取 给定行为的 post_action_log 表历史数据，时间跨度是天
+   * @param {Number} userId 用户 id
+   * @param {String} action 行为
+   * @param {Number} days 【选填】筛选多少天内的数据
+   */
+  async getPostActionHistory(userId, action, days) {
+    if (!ACTION_TYPES.includes(action)) return;
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(create_time) < :days';
+    const sql = `
+      SELECT
+        COUNT(*) AS count,
+        DATE_FORMAT(create_time, '%Y-%m-%d') AS create_time
+      FROM
+        ${TABLE.POST_ACTION_LOG}
+      WHERE
+        action = :action
+        AND post_id IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)
+        ${days ? whereDate : ''}
+      GROUP BY
+        DATE(create_time);
+    `;
+    const res = await this.app.mysql.query(sql, { userId, action, days });
+    return res;
+  }
+
+  /**
+   * 获取收藏量历史，单位时间：天
+   * @param {Number} userId 用户 id
+   * @param {Number} days 【选填】筛选多少天内的数据
+   */
+  async getBrowseBookmarkHistory(userId, days) {
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(create_time) < :days';
+    const sql = `
+      SELECT
+        COUNT(*) AS count,
+        DATE_FORMAT(create_time, '%Y-%m-%d') AS create_time
+      FROM
+        ${TABLE.BOOKMARKS}
+      WHERE
+        pid IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)
+        ${ days ? whereDate : ''}
+      GROUP
+        BY DATE(create_time);
+    `;
+    const res = await this.app.mysql.query(sql, { userId, days });
+    return res;
+  }
+
+  /**
+   * 获取评论量历史，单位时间：天
+   * @param {Number} userId 用户 id
+   * @param {Number} days 【选填】筛选多少天内的数据
+   */
+  async getBrowseCommentHistory(userId, days) {
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(create_time) < :days';
+    const sql = `
+      SELECT
+        COUNT(*) AS count,
+        DATE_FORMAT(create_time, '%Y-%m-%d') AS create_time
+      FROM
+        ${TABLE.COMMENTS}
+      WHERE
+        sign_id IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)
+        ${ days ? whereDate : ''}
+      GROUP
+        BY DATE(create_time);
+    `;
+    const res = await this.app.mysql.query(sql, { userId, days });
+    return res;
+  }
+
+  /**
+   * 获取支付量历史，单位时间：天
+   * @param {Number} userId 用户 id
+   * @param {Number} days 【选填】筛选多少天内的数据
+   */
+  async getBrowseSaleHistory(userId, days) {
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(create_time) < :days';
+    const sql = `
+      SELECT
+        COUNT(*) AS count,
+        DATE_FORMAT(create_time, '%Y-%m-%d') AS create_time
+      FROM
+        ${TABLE.ORDERS}
+      WHERE
+        status = 9
+        AND signid IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)
+        ${ days ? whereDate : ''}
+      GROUP
+        BY DATE(create_time);
+    `;
+    const res = await this.app.mysql.query(sql, { userId, days });
+    return res;
+  }
+  
+  /**
+   * 获取赞赏量历史，单位时间：天
+   * @param {Number} userId 用户 id
+   * @param {Number} days 【选填】筛选多少天内的数据
+   */
+  async getBrowseRewardHistory(userId, days) {
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(create_time) < :days';
+    const sql = `
+      SELECT
+        COUNT(*) AS count,
+        DATE_FORMAT(create_time, '%Y-%m-%d') AS create_time
+      FROM
+        ${TABLE.ASSETS_TOKEN_LOG}
+      WHERE
+        type = 'reward_article' AND to_uid = :userId
+        ${ days ? whereDate : ''}
+      GROUP
+        BY DATE(create_time);
+    `;
+    const res = await this.app.mysql.query(sql, { userId, days });
+    return res;
   }
 }
 
