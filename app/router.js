@@ -526,6 +526,8 @@ module.exports = app => {
   router.get('/dev/score', passport.verify, controller.share.getHotArticle);
 
   router.get('/search/token', passport.verify, controller.search.searchToken);
+  // 数据库搜索 token
+  router.get('/search/db/token', passport.verify, controller.search.searchDbToken);
   router.get('/search/share', passport.verify, controller.search.searchShare);
   router.get('/search/post', passport.verify, controller.search.search);
   router.get('/search/user', passport.verify, controller.search.searchUser);

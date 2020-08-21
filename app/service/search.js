@@ -493,6 +493,26 @@ class SearchService extends Service {
 
     return { count, list: tokenList };
   }
+  async searchDbToken(keyword, page = 1, pagesize = 10) {
+    const pi = parseInt(page);
+    const pz = parseInt(pagesize);
+    const wd = keyword.toLowerCase();
+    const wehreSql = 'WHERE LOWER(name) REGEXP :wd OR LOWER(symbol) REGEXP :wd';
+    const result = await this.app.mysql.query(`
+    SELECT uid, name, symbol, logo FROM minetokens ${wehreSql} LIMIT :start, :end;
+    SELECT count(*) as count FROM minetokens ${wehreSql};
+    `, {
+      wd,
+      start: (pi - 1) * pz, end: pz,
+    });
+    const list = result[0];
+    const count = result[1][0].count;
+
+    return {
+      list,
+      count,
+    };
+  }
   async importShare({ id, content }) {
     this.logger.error('SearchService:: importShare: start ', { id, content });
 
