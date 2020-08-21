@@ -500,8 +500,30 @@ class SearchService extends Service {
     const wehreSql = 'WHERE LOWER(name) REGEXP :wd OR LOWER(symbol) REGEXP :wd';
     const result = await this.app.mysql.query(`
     SELECT uid, name, symbol, logo FROM minetokens ${wehreSql} LIMIT :start, :end;
-    SELECT count(*) as count FROM minetokens ${wehreSql};
+    SELECT count(1) as count FROM minetokens ${wehreSql};
     `, {
+      wd,
+      start: (pi - 1) * pz, end: pz,
+    });
+    const list = result[0];
+    const count = result[1][0].count;
+
+    return {
+      list,
+      count,
+    };
+  }
+  async searchDbTokenByUser(keyword, page = 1, pagesize = 10) {
+    const pi = parseInt(page);
+    const pz = parseInt(pagesize);
+    const wd = keyword.toLowerCase();
+    const uid = this.ctx.user.id;
+    const wehreSql = 'WHERE (am.uid = :uid AND am.amount > 0) AND (LOWER(m.name) REGEXP :wd OR LOWER(m.symbol) REGEXP :wd)';
+    const result = await this.app.mysql.query(`
+    SELECT m.id, m.name, m.symbol, m.logo FROM assets_minetokens AS am LEFT JOIN minetokens AS m ON am.token_id = m.id ${wehreSql} LIMIT :start, :end;
+    SELECT COUNT(1) AS count FROM assets_minetokens AS am LEFT JOIN minetokens AS m ON am.token_id = m.id ${wehreSql};
+    `, {
+      uid,
       wd,
       start: (pi - 1) * pz, end: pz,
     });

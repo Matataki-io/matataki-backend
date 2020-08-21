@@ -528,6 +528,8 @@ module.exports = app => {
   router.get('/search/token', passport.verify, controller.search.searchToken);
   // 数据库搜索 token
   router.get('/search/db/token', passport.verify, controller.search.searchDbToken);
+  // 数据库搜索 token 用户的
+  router.get('/search/db/tokenByUser', passport.authorize, controller.search.searchDbTokenByUser);
   router.get('/search/share', passport.verify, controller.search.searchShare);
   router.get('/search/post', passport.verify, controller.search.search);
   router.get('/search/user', passport.verify, controller.search.searchUser);

@@ -38,11 +38,11 @@ class TokenController extends Controller {
   // 查询当前用户持仓token list
   async tokenList() {
     const ctx = this.ctx;
-    const { pagesize = 10, page = 1, order = 0 } = this.ctx.query;
+    const { pagesize = 10, page = 1, order = 0, search = '' } = this.ctx.query;
     // 用户id
     const user_id = ctx.user.id;
     // token list
-    const result = await ctx.service.exchange.getTokenListByUser(user_id, parseInt(page), parseInt(pagesize), parseInt(order));
+    const result = await ctx.service.exchange.getTokenListByUser(user_id, parseInt(page), parseInt(pagesize), parseInt(order), search);
     ctx.body = {
       ...ctx.msg.success,
       data: result,
@@ -116,7 +116,7 @@ class TokenController extends Controller {
       {
         token,
         exchange,
-        tags
+        tags,
       },
     };
   }
@@ -378,7 +378,7 @@ class TokenController extends Controller {
     }
     const result = await this.service.token.mineToken.setCollaborator(token.id, userId);
     // 发送消息，告知用户自己被添加为协作者
-    if (result.affectedRows === 1) this.service.notify.event.sendEvent(ctx.user.id, [userId], 'annouce', userId, 'collaborator', token.id);
+    if (result.affectedRows === 1) this.service.notify.event.sendEvent(ctx.user.id, [ userId ], 'annouce', userId, 'collaborator', token.id);
 
     ctx.body = result.affectedRows === 1 ? ctx.msg.success : ctx.msg.failure;
   }
