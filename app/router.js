@@ -602,7 +602,7 @@ module.exports = app => {
   router.get('/api/user/market', passport.authorize, controller.directTrade.getMarket);
   router.get('/api/mint/detail', passport.authorize, controller.mineToken.getMintDetail);
 
-  // -------------------------------- 文章 Dashboard -----------------------
+  // -------------------------------- Dashboard -----------------------
   // 获取统计数据
-  router.get('/dashboard/count', passport.authorize, controller.postDashboard.get);
+  router.get('/db/browse/count', passport.authorize, controller.postDashboard.get);
 };
