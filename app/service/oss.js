@@ -15,7 +15,7 @@ class AliOssService extends Service {
       this.logger.error('UserService:: uploadAvatar error: %j', err);
       await this.service.system.notification.pushTextToDingTalk("ipfs", 
       `（👷Matataki 后端系统 - 报错）监测到 OSS 上传接口出现了问题，请工程师查看具体日志。` + JSON.stringify(err)
-    )
+      )
       return 2;
     }
 

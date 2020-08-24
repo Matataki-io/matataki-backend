@@ -379,6 +379,15 @@ class MineTokenService extends Service {
           fromWallet.private_key, toWallet.public_key, amount);
         transactionHash = transferAction.transactionHash;
       } catch (error) {
+        await this.service.system.notification.pushMarkdownToDingtalk(
+          "ipfs", 
+          `监测到失败的转账交易`, 
+          `### ⚠️ Matataki 后端系统监测到失败的转账交易⚠️ 
+          From: ${from} (${fromWallet.public_key})
+
+          To: ${to} (${toWallet.public_key})
+
+          Amount: ${amount}`)
         this.logger.error('transferFrom::syncBlockchain', error);
       }
 
