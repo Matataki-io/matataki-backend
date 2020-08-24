@@ -275,7 +275,7 @@ class directTradeService extends Service {
     }
 
     // 转移cny，userId -> market.uid 购买者到市场创建者
-    const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, market.uid, cny_amount, conn);
+    const cnyTransferResult = await this.service.assets.transferFrom('CNY', userId, market.uid, cny_amount, conn, consts.mineTokenTransferTypes.direct_trade);
     // 转移资产失败
     if (!cnyTransferResult) {
       this.logger.error('directTradeService.buy exception. transfer cny error: %j', cnyTransferResult);

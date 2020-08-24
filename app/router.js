@@ -52,6 +52,11 @@ module.exports = app => {
   // router.post('/publish', passport.authorize, controller.post.publish);
   router.post('/post/publish', passport.authorize, controller.post.publish);
 
+  // 将草稿定时发送为文章
+  router.post('/post/timed/:id', passport.authorize, controller.timedPost.post);
+  // 取消定时发送
+  router.delete('/post/timed/:id', passport.authorize, controller.timedPost.delete);
+
   // Frank(Feb 6th, 2020): 既然放弃了发文签名，我们应该逐步取消掉这个路由了
   // @todo: 准备放弃上传文章到IPFS的路由，合并到上方的publish
   router.post('/post/ipfs', passport.authorize, controller.post.uploadPost);
@@ -71,7 +76,8 @@ module.exports = app => {
 
   // 通过文章ID获取 IPFS 信息
   router.get('/p/:id/ipfs', passport.verify, controller.post.getIpfsById);
-
+  // 合并获取文章数据接口逻辑 p + ipfs
+  router.get('/pInfo/:id', passport.verify, controller.post.pInfo);
 
   // 按照打赏金额排序的文章列表(新, 可按照币种排序)
   router.get('/posts/amountRanking', passport.verify, controller.post.getAmountRanking);
@@ -114,6 +120,8 @@ module.exports = app => {
   router.post('/post/:id/bookmark', passport.authorize, controller.post.addBookmark);
   // 取消收藏文章
   router.delete('/post/:id/bookmark', passport.authorize, controller.post.removeBookmark);
+  // 文章分享事件上报
+  router.post('/post/:id/shareCount', passport.verify, controller.post.shareCount);
 
   // -------------------------------- 标签系统 --------------------------------
   // 标签列表
@@ -520,6 +528,10 @@ module.exports = app => {
   router.get('/dev/score', passport.verify, controller.share.getHotArticle);
 
   router.get('/search/token', passport.verify, controller.search.searchToken);
+  // 数据库搜索 token
+  router.get('/search/db/token', passport.verify, controller.search.searchDbToken);
+  // 数据库搜索 token 用户的
+  router.get('/search/db/tokenByUser', passport.authorize, controller.search.searchDbTokenByUser);
   router.get('/search/share', passport.verify, controller.search.searchShare);
   router.get('/search/post', passport.verify, controller.search.search);
   router.get('/search/user', passport.verify, controller.search.searchUser);
@@ -593,4 +605,26 @@ module.exports = app => {
   router.get('/trade/direct', passport.verify, controller.directTrade.index);
   router.get('/api/user/market', passport.authorize, controller.directTrade.getMarket);
   router.get('/api/mint/detail', passport.authorize, controller.mineToken.getMintDetail);
+
+  // -------------------------------- Dashboard -----------------------
+  // 浏览
+  // 获取统计数据
+  router.get('/db/browse/count', passport.authorize, controller.postDashboard.get);
+  // 下面8个API参数和返回值格式都是一样的。带 days 参数可筛选多少天内的数据。
+  // 获取阅读量历史
+  router.get('/db/browse/history/read', passport.authorize, controller.postDashboard.getBrowseReadHistory);
+  // 获取推荐量历史
+  router.get('/db/browse/history/like', passport.authorize, controller.postDashboard.getBrowseLikeHistory);
+  // 获取分享量历史
+  router.get('/db/browse/history/share', passport.authorize, controller.postDashboard.getBrowseShareHistory);
+  // 获取解锁量历史
+  router.get('/db/browse/history/unlock', passport.authorize, controller.postDashboard.getBrowseUnlockHistory);
+  // 获取收藏量历史
+  router.get('/db/browse/history/bookmark', passport.authorize, controller.postDashboard.getBrowseBookmarkHistory);
+  // 获取评论量历史
+  router.get('/db/browse/history/comment', passport.authorize, controller.postDashboard.getBrowseCommentHistory);
+  // 获取支付量历史
+  router.get('/db/browse/history/sale', passport.authorize, controller.postDashboard.getBrowseSaleHistory);
+  // 获取赞赏量历史
+  router.get('/db/browse/history/reward', passport.authorize, controller.postDashboard.getBrowseRewardHistory);
 };
