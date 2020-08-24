@@ -56,6 +56,10 @@ class ipfs extends Service {
     } catch (error) {
       if (error.message.indexOf('timeout') > -1) {
         this.logger.error('uploadToAws failed', 'server down, retry with public node');
+        await this.service.system.notification.pushTextToDingTalk(
+          "ipfs", 
+          "监测到 ipfs.smartsignature.io 添加数据接口无法访问的错误，请检查节点的健康状态。 (AWS: https://aws.amazon.com/)"
+        );
         return this.uploadToPublic(file);
       } else {
         this.logger.error('uploadToAws failed', error);
