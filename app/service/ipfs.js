@@ -51,6 +51,10 @@ class ipfs extends Service {
     } catch (error) {
       if (error.message.indexOf('timeout') > -1) {
         this.logger.error('uploadToAws failed', 'server down, retry with public node');
+        await this.service.system.notification.pushTextToDingTalk(
+          "ipfs", 
+          `（👷IPFS系统警告）监测到 ${IpfsUrl} 的上传接口无法访问，请工程师登录 AWS 检查 EC2 东京节点的健康状态，如果无响应请重启机器。 (AWS: https://aws.amazon.com/)`
+        );
         return this.uploadToPublic(file);
       } else {
         this.logger.error('uploadToAws failed', error);

@@ -32,8 +32,8 @@ class NotificationService extends Service {
     })
   }
 
-  pushTextToDingTalk(botName, text, atMobiles = [], isAtAll = false) {
-      return this.pushToDingTalk(botName, "text", { text }, atMobiles, isAtAll)
+  pushTextToDingTalk(botName, content, atMobiles = [], isAtAll = false) {
+      return this.pushToDingTalk(botName, "text", { text: { content } }, atMobiles, isAtAll)
   }
   
   pushMarkdownToDingtalk(botName, title, text, atMobiles = [], isAtAll = false) {
