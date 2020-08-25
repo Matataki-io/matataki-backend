@@ -10,7 +10,9 @@ const TABLE = {
   COMMENTS: 'comments',
   ORDERS: 'orders',
   SUPPORTS: 'supports',
-  ASSETS_TOKEN_LOG: 'assets_minetokens_log'
+  ASSETS_TOKEN_LOG: 'assets_minetokens_log',
+  TOKENS: 'minetokens',
+  USERS: 'users',
 }
 
 // 行为的种类
@@ -531,6 +533,101 @@ class PostDashboardService extends Service {
       count: res[1][0].count,
       list: res[0]
     };
+  }
+
+  /**
+   * 获取用户的收益历史（该用户所有文章的付费解锁和打赏收益）。
+   * @param {Number} userId 用户 id
+   * @param {Number} tokenId 【可选】Fan票 id。筛选特定Fan票，0表示 CNY, undefined 表示不筛选。
+   * @param {Number} page 【可选】分页：页码
+   * @param {Number} pagesize 【可选】分页：每页条目数
+   */
+  async getIncomeHistory(userId, tokenId, page = 1, pagesize = 10) {
+    // 打赏历史查询
+    const rewardSql = `
+      SELECT
+        o.id,
+        'reward' AS type,
+        o.uid AS user_id,
+        o.signid AS post_id,
+        p.title AS post_title,
+        IFNULL(t.id, 0) AS token_id,
+        o.amount,
+        o.decimals,
+        o.symbol,
+        o.create_time
+      FROM
+        ${TABLE.ORDERS} o
+      JOIN
+        ${TABLE.POSTS} p ON p.id = o.signid
+      LEFT JOIN
+        ${TABLE.TOKENS} t ON t.symbol = o.symbol
+      WHERE
+        p.uid = :userId
+    `;
+    // 售出历史查询
+    const saleSql = `
+      SELECT
+        a.id,
+        'sale' AS type,
+        a.from_uid AS user_id,
+        a.post_id,
+        p.title AS post_title,
+        IFNULL(a.token_id, 0) AS token_id,
+        a.amount,
+        t.decimals,
+        t.symbol,
+        a.create_time
+      FROM
+        ${TABLE.ASSETS_TOKEN_LOG} a
+      JOIN
+        ${TABLE.POSTS} p ON p.id = a.post_id
+      LEFT JOIN
+        ${TABLE.TOKENS} t ON t.id = a.token_id
+      WHERE
+        p.uid = :userId
+    `;
+    // 筛选特定的 token 类型
+    const whereToken = tokenId || tokenId === 0 ? `WHERE t1.token_id = :tokenId` : '';
+    // 连接两种 list 数据，并且查询 user 信息
+    const listSql = `
+      SELECT
+        t1.*,
+        u.username,
+        u.nickname
+      FROM (
+        ${rewardSql}
+        UNION ALL
+        ${saleSql}
+      ) t1
+      LEFT JOIN
+        ${TABLE.USERS} u ON u.id = t1.user_id
+      ${whereToken}
+      ORDER BY
+        t1.create_time DESC
+      LIMIT :offset, :limit;
+    `;
+    // 总条目数 count 查询
+    const countSql = `
+      SELECT
+        COUNT(*) AS count
+      FROM (
+        ${rewardSql}
+        UNION ALL
+        ${saleSql}
+      ) t1
+      ${whereToken};
+    `;
+    const res = await this.app.mysql.query(listSql + countSql, {
+      userId,
+      tokenId,
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+    });
+    return {
+      count: res[1][0].count,
+      list: res[0]
+    }
   }
 }
 
