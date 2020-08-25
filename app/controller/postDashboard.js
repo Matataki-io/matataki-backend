@@ -113,6 +113,21 @@ class PostDashboardController extends Controller {
     }
     else ctx.body = ctx.msg.failure;
   }
+
+  /**
+   * 获取用户的收益历史（该用户所有文章的付费解锁和打赏收益）。
+   * query.tokenId: 可选。Fan票 id。筛选特定Fan票，0表示 CNY, undefined 表示不筛选。
+   * query.page, pagesize: 可选。分页参数，默认 1页 10行。
+   */
+  async getIncomeHistory() {
+    const ctx = this.ctx;
+    const { tokenId, page = 1, pagesize = 10 } = ctx.query;
+    const res = await this.service.postDashboard.getIncomeHistory(ctx.user.id, parseInt(tokenId), parseInt(page), parseInt(pagesize));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: res
+    }
+  }
 }
 
 module.exports = PostDashboardController;

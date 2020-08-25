@@ -625,4 +625,11 @@ module.exports = app => {
    * query.page, pagesize: 可选。分页参数，默认 1页 10行。
    */
   router.get('/db/browse/rank/:type', passport.authorize, controller.postDashboard.getBrowsePostRank);
+
+  /**
+   * 获取用户的收益历史（该用户所有文章的付费解锁和打赏收益）。
+   * query.tokenId: 可选。Fan票 id。筛选特定Fan票，0表示 CNY, undefined 表示不筛选。
+   * query.page, pagesize: 可选。分页参数，默认 1页 10行。
+   */
+  router.get('/db/income/history', passport.authorize, controller.postDashboard.getIncomeHistory);
 };
