@@ -274,6 +274,23 @@ class PostDashboardService extends Service {
       ORDER BY
         count DESC, p.create_time
       LIMIT :offset, :limit;
+
+      SELECT
+        COUNT(*) AS count
+      FROM (
+        SELECT
+          1 AS count
+        FROM
+          ${TABLE.POSTS} p
+        JOIN
+          ${TABLE.POST_ACTION_LOG} a ON a.post_id = p.id
+        WHERE
+          a.action = :action
+          AND p.uid = :userId
+          ${ days ? whereDate : '' }
+        GROUP BY
+          p.id
+      ) t1;
     `;
     const res = await this.app.mysql.query(sql, {
       userId,
@@ -282,7 +299,10 @@ class PostDashboardService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
-    return res;
+    return {
+      count: res[1][0].count,
+      list: res[0]
+    };
   }
 
   /**
@@ -312,6 +332,22 @@ class PostDashboardService extends Service {
       ORDER BY
         count DESC, p.create_time
       LIMIT :offset, :limit;
+
+      SELECT
+        COUNT(*) AS count
+      FROM (
+        SELECT
+          1 AS count
+        FROM
+          ${TABLE.POSTS} p
+        JOIN
+          ${TABLE.BOOKMARKS} b ON b.pid = p.id
+        WHERE
+          p.uid = :userId
+          ${ days ? whereDate : '' }
+        GROUP BY
+          p.id
+      ) t1;
     `;
     const res = await this.app.mysql.query(sql, {
       userId,
@@ -319,7 +355,10 @@ class PostDashboardService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
-    return res;
+    return {
+      count: res[1][0].count,
+      list: res[0]
+    };
   }
 
   /**
@@ -349,6 +388,22 @@ class PostDashboardService extends Service {
       ORDER BY
         count DESC, p.create_time
       LIMIT :offset, :limit;
+
+      SELECT
+        COUNT(*) AS count
+      FROM (
+        SELECT
+          1 AS count
+        FROM
+          ${TABLE.POSTS} p
+        JOIN
+          ${TABLE.COMMENTS} c ON c.sign_id = p.id
+        WHERE
+          p.uid = :userId
+          ${ days ? whereDate : '' }
+        GROUP BY
+          p.id
+      ) t1;
     `;
     const res = await this.app.mysql.query(sql, {
       userId,
@@ -356,7 +411,10 @@ class PostDashboardService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
-    return res;
+    return {
+      count: res[1][0].count,
+      list: res[0]
+    };
   }
 
   /**
@@ -387,6 +445,23 @@ class PostDashboardService extends Service {
       ORDER BY
         count DESC, p.create_time
       LIMIT :offset, :limit;
+
+      SELECT
+        COUNT(*) AS count
+      FROM (
+        SELECT
+          1 AS count
+        FROM
+          ${TABLE.POSTS} p
+        JOIN
+          ${TABLE.ORDERS} o ON o.signid = p.id
+        WHERE
+          o.status = 9
+          AND p.uid = :userId
+          ${ days ? whereDate : '' }
+        GROUP BY
+          p.id
+      ) t1;
     `;
     const res = await this.app.mysql.query(sql, {
       userId,
@@ -394,7 +469,10 @@ class PostDashboardService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
-    return res;
+    return {
+      count: res[1][0].count,
+      list: res[0]
+    };
   }
 
   /**
@@ -425,6 +503,23 @@ class PostDashboardService extends Service {
       ORDER BY
         count DESC, p.create_time
       LIMIT :offset, :limit;
+
+      SELECT
+        COUNT(*) AS count
+      FROM (
+        SELECT
+          1 AS count
+        FROM
+          ${TABLE.POSTS} p
+        JOIN
+          ${TABLE.ASSETS_TOKEN_LOG} t ON t.post_id = p.id
+        WHERE
+          t.type = 'reward_article'
+          AND p.uid = :userId
+          ${ days ? whereDate : '' }
+        GROUP BY
+          p.id
+      ) t1;
     `;
     const res = await this.app.mysql.query(sql, {
       userId,
@@ -432,7 +527,10 @@ class PostDashboardService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
-    return res;
+    return {
+      count: res[1][0].count,
+      list: res[0]
+    };
   }
 }
 
