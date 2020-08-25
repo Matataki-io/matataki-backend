@@ -789,7 +789,7 @@ class PostController extends Controller {
         + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
         [ post.id, 1 ]
       );
-      await this.service.postDashboard.addActionLog({...ctx.user}.id, post.id, 'read');
+      await this.service.postDashboard.addActionLog({ ...ctx.user }.id, post.id, 'read');
 
       const updateSuccess = result.affectedRows !== 0;
 
@@ -1483,7 +1483,7 @@ class PostController extends Controller {
     const { id } = ctx.params;
     const post = await this.service.post.get(id);
     if (!post || post.status === 1) return ctx.body = ctx.msg.postNotFound;
-    const res = await this.service.postDashboard.addActionLog({...ctx.user}.id, id, 'share');
+    const res = await this.service.postDashboard.addActionLog({ ...ctx.user }.id, id, 'share');
     ctx.body = res ? ctx.msg.success : ctx.msg.failure;
   }
 }

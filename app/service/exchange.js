@@ -103,7 +103,7 @@ class ExchangeService extends Service {
     return result;
   }
   // 用户持有的币
-  async getTokenListByUser(id, page = 1, pagesize = 20, order = 0, search) {
+  async getTokenListByUser(id, page = 1, pagesize = 20, order = 0, search = '') {
     const orderList = [
       'b.create_time DESC',
       'a.amount ASC',
