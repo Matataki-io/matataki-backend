@@ -627,4 +627,12 @@ module.exports = app => {
   router.get('/db/browse/history/sale', passport.authorize, controller.postDashboard.getBrowseSaleHistory);
   // 获取赞赏量历史
   router.get('/db/browse/history/reward', passport.authorize, controller.postDashboard.getBrowseRewardHistory);
+
+  /**
+   * 获取用户的文章排名。
+   * type 必填。表示排名的依据，例如 read 或 like，详情请参考 postDashboard.js 中的 BROWSE_ALL_TYPES。
+   * days 可选。表示依据 N 天内的数据进行排名，不填则依据全部历史数据排名。
+   * page, pagesize 可选。分页参数，默认 1页 10行。
+   */
+  router.get('/db/browse/rank/:type', passport.authorize, controller.postDashboard.getBrowsePostRank);
 };
