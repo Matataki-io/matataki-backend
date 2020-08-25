@@ -117,6 +117,11 @@ class PostDashboardService extends Service {
     });
   }
 
+
+  /********************
+   *  阅览数据历史记录  *
+   ********************/
+
   /**
    * 获取 给定行为的 post_action_log 表历史数据，时间跨度是天
    * @param {Number} userId 用户 id
@@ -233,6 +238,200 @@ class PostDashboardService extends Service {
         BY DATE(create_time);
     `;
     const res = await this.app.mysql.query(sql, { userId, days });
+    return res;
+  }
+
+  /********************
+   *  阅览数据文章排名  *
+   ********************/
+
+  /**
+   * 获取 给定行为的 post_action_log 表文章排名。
+   * @param {Number} userId 用户 id
+   * @param {String} action 行为。请参考 ACTION_TYPES
+   * @param {Number} days 【可选】筛选 N 天内的数据
+   * @param {Number} page 【可选】分页：页码
+   * @param {Number} pagesize 【可选】分页：每页条目数
+   */
+  async getBrowsePostActionRank(userId, action, days, page = 1, pagesize = 10) {
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(a.create_time) < :days';
+    const sql = `
+      SELECT
+        p.id,
+        p.title,
+        COUNT(*) AS count,
+        DATE_FORMAT(p.create_time, '%Y-%m-%d') AS create_time
+      FROM
+        ${TABLE.POSTS} p
+      JOIN
+        ${TABLE.POST_ACTION_LOG} a ON a.post_id = p.id
+      WHERE
+        a.action = :action
+        AND p.uid = :userId
+        ${ days ? whereDate : '' }
+      GROUP BY
+        p.id
+      ORDER BY
+        count DESC, p.create_time
+      LIMIT :offset, :limit;
+    `;
+    const res = await this.app.mysql.query(sql, {
+      userId,
+      action,
+      days,
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+    });
+    return res;
+  }
+
+  /**
+   * 获取指定用户的文章收藏量排名。
+   * @param {Number} userId 用户 id
+   * @param {Number} days 【可选】依据 N 天内的数据排，默认依据所有历史数据进行排名。
+   * @param {Number} page 【可选】分页：页码
+   * @param {Number} pagesize 【可选】分页：每页条目数
+   */
+  async getBrowseBookmarkRank(userId, days, page = 1, pagesize = 10) {
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(b.create_time) < :days';
+    const sql = `
+      SELECT
+        p.id,
+        p.title,
+        COUNT(*) AS count,
+        DATE_FORMAT(p.create_time, '%Y-%m-%d') AS create_time
+      FROM
+        ${TABLE.POSTS} p
+      JOIN
+        ${TABLE.BOOKMARKS} b ON b.pid = p.id
+      WHERE
+        p.uid = :userId
+        ${ days ? whereDate : '' }
+      GROUP BY
+        p.id
+      ORDER BY
+        count DESC, p.create_time
+      LIMIT :offset, :limit;
+    `;
+    const res = await this.app.mysql.query(sql, {
+      userId,
+      days,
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+    });
+    return res;
+  }
+
+  /**
+   * 获取指定用户的文章评论量排名。
+   * @param {Number} userId 用户 id
+   * @param {Number} days 【可选】依据 N 天内的数据排，默认依据所有历史数据进行排名。
+   * @param {Number} page 【可选】分页：页码
+   * @param {Number} pagesize 【可选】分页：每页条目数
+   */
+  async getBrowseCommentRank(userId, days, page = 1, pagesize = 10) {
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(c.create_time) < :days';
+    const sql = `
+      SELECT
+        p.id,
+        p.title,
+        COUNT(*) AS count,
+        DATE_FORMAT(p.create_time, '%Y-%m-%d') AS create_time
+      FROM
+        ${TABLE.POSTS} p
+      JOIN
+        ${TABLE.COMMENTS} c ON c.sign_id = p.id
+      WHERE
+        p.uid = :userId
+        ${ days ? whereDate : '' }
+      GROUP BY
+        p.id
+      ORDER BY
+        count DESC, p.create_time
+      LIMIT :offset, :limit;
+    `;
+    const res = await this.app.mysql.query(sql, {
+      userId,
+      days,
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+    });
+    return res;
+  }
+
+  /**
+   * 获取指定用户的文章支付（购买文章）量排名。
+   * @param {Number} userId 用户 id
+   * @param {Number} days 【可选】依据 N 天内的数据排，默认依据所有历史数据进行排名。
+   * @param {Number} page 【可选】分页：页码
+   * @param {Number} pagesize 【可选】分页：每页条目数
+   */
+  async getBrowseSaleRank(userId, days, page = 1, pagesize = 10) {
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(o.create_time) < :days';
+    const sql = `
+      SELECT
+        p.id,
+        p.title,
+        COUNT(*) AS count,
+        DATE_FORMAT(p.create_time, '%Y-%m-%d') AS create_time
+      FROM
+        ${TABLE.POSTS} p
+      JOIN
+        ${TABLE.ORDERS} o ON o.signid = p.id
+      WHERE
+        o.status = 9
+        AND p.uid = :userId
+        ${ days ? whereDate : '' }
+      GROUP BY
+        p.id
+      ORDER BY
+        count DESC, p.create_time
+      LIMIT :offset, :limit;
+    `;
+    const res = await this.app.mysql.query(sql, {
+      userId,
+      days,
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+    });
+    return res;
+  }
+
+  /**
+   * 获取指定用户的文章赞赏量排名。
+   * @param {Number} userId 用户 id
+   * @param {Number} days 【可选】依据 N 天内的数据排，默认依据所有历史数据进行排名。
+   * @param {Number} page 【可选】分页：页码
+   * @param {Number} pagesize 【可选】分页：每页条目数
+   */
+  async getBrowseRewardRank(userId, days, page = 1, pagesize = 10) {
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(t.create_time) < :days';
+    const sql = `
+      SELECT
+        p.id,
+        p.title,
+        COUNT(*) AS count,
+        DATE_FORMAT(p.create_time, '%Y-%m-%d') AS create_time
+      FROM
+        ${TABLE.POSTS} p
+      JOIN
+        ${TABLE.ASSETS_TOKEN_LOG} t ON t.post_id = p.id
+      WHERE
+        t.type = 'reward_article'
+        AND p.uid = :userId
+        ${ days ? whereDate : '' }
+      GROUP BY
+        p.id
+      ORDER BY
+        count DESC, p.create_time
+      LIMIT :offset, :limit;
+    `;
+    const res = await this.app.mysql.query(sql, {
+      userId,
+      days,
+      offset: (page - 1) * pagesize,
+      limit: pagesize,
+    });
     return res;
   }
 }
