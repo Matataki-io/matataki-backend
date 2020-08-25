@@ -25,63 +25,55 @@ class PostDashboardController extends Controller {
     }
   }
 
-  /********************
-   *  阅览数据历史记录  *
-   ********************/
+  /**
+   * 获取该用户发布文章的阅览量历史，单位时间是天。
+   * params.type: 必填。表示获取哪种数据的历史，例如 read 或 like，详情请参考 BROWSE_ALL_TYPES。
+   * query.days: 可选。表示筛选 N 天内的数据，不填则返回全部数据。
+   */
+  async getBrowseHistory() {
+    const ctx = this.ctx;
+    const { days } = ctx.query;
+    const { type } = ctx.params;
+    if (!BROWSE_ALL_TYPES.includes(type)) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
 
-  // 阅读量历史数据
-  async getBrowseReadHistory() {
-    const res = await this.service.postDashboard.getPostActionHistory(this.ctx.user.id, 'read', parseInt(this.ctx.query.days));
-    this.ctx.body = { ...this.ctx.msg.success, data: res }
-  }
-  
-  // 推荐量历史数据
-  async getBrowseLikeHistory() {
-    const res = await this.service.postDashboard.getPostActionHistory(this.ctx.user.id, 'like', parseInt(this.ctx.query.days));
-    this.ctx.body = { ...this.ctx.msg.success, data: res }
-  }
+    let res;
+    if (BROWSE_DEFAULT_TYPES.includes(type)) { // 默认
+      res = await this.service.postDashboard.getPostActionHistory(ctx.user.id, type, parseInt(days));
+    }
+    else { // 其它情况
+      switch (type) {
+        case BROWSE_ALL_TYPES[4]: // 收藏
+          res = await this.service.postDashboard.getBrowseBookmarkHistory(ctx.user.id, parseInt(days));
+          break;
+        case BROWSE_ALL_TYPES[5]: // 评论
+          res = await this.service.postDashboard.getBrowseCommentHistory(ctx.user.id, parseInt(days));
+          break;
+        case BROWSE_ALL_TYPES[6]: // 支付
+          res = await this.service.postDashboard.getBrowseSaleHistory(ctx.user.id, parseInt(days));
+          break;
+        case BROWSE_ALL_TYPES[7]: // 赞赏
+          res = await this.service.postDashboard.getBrowseRewardHistory(ctx.user.id, parseInt(days));
+          break;
+      }
+    }
 
-  // 分享量历史数据
-  async getBrowseShareHistory() {
-    const res = await this.service.postDashboard.getPostActionHistory(this.ctx.user.id, 'share', parseInt(this.ctx.query.days));
-    this.ctx.body = { ...this.ctx.msg.success, data: res }
-  }
-
-  // 解锁量历史数据
-  async getBrowseUnlockHistory() {
-    const res = await this.service.postDashboard.getPostActionHistory(this.ctx.user.id, 'unlock', parseInt(this.ctx.query.days));
-    this.ctx.body = { ...this.ctx.msg.success, data: res }
-  }
-
-  // 收藏量历史数据
-  async getBrowseBookmarkHistory() {
-    const res = await this.service.postDashboard.getBrowseBookmarkHistory(this.ctx.user.id, parseInt(this.ctx.query.days));
-    this.ctx.body = { ...this.ctx.msg.success, data: res }
-  }
-
-  // 评论量历史数据
-  async getBrowseCommentHistory() {
-    const res = await this.service.postDashboard.getBrowseCommentHistory(this.ctx.user.id, parseInt(this.ctx.query.days));
-    this.ctx.body = { ...this.ctx.msg.success, data: res }
-  }
-
-  // 支付量历史数据
-  async getBrowseSaleHistory() {
-    const res = await this.service.postDashboard.getBrowseSaleHistory(this.ctx.user.id, parseInt(this.ctx.query.days));
-    this.ctx.body = { ...this.ctx.msg.success, data: res }
-  }
-
-  // 赞赏量历史数据
-  async getBrowseRewardHistory() {
-    const res = await this.service.postDashboard.getBrowseRewardHistory(this.ctx.user.id, parseInt(this.ctx.query.days));
-    this.ctx.body = { ...this.ctx.msg.success, data: res }
+    if (res) {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: res
+      };
+    }
+    else ctx.body = ctx.msg.failure;
   }
 
   /**
    * 获取该用户发布的文章排名。
-   * type 必填。表示排名的依据，例如 read 或 like，详情请参考 BROWSE_ALL_TYPES。
-   * days 可选。表示依据 N 天内的数据进行排名，不填则依据全部历史数据排名。
-   * page, pagesize 可选。分页参数，默认 1页 10行。
+   * params.type: 必填。表示排名的依据，例如 read 或 like，详情请参考 BROWSE_ALL_TYPES。
+   * query.days: 可选。表示依据 N 天内的数据进行排名，不填则依据全部历史数据排名。
+   * query.page, pagesize: 可选。分页参数，默认 1页 10行。
    */
   async getBrowsePostRank() {
     const ctx = this.ctx;
@@ -93,10 +85,10 @@ class PostDashboardController extends Controller {
     }
 
     let res;
-    if (BROWSE_DEFAULT_TYPES.includes(type)) {
+    if (BROWSE_DEFAULT_TYPES.includes(type)) { // 默认
       res = await this.service.postDashboard.getBrowsePostActionRank(ctx.user.id, type, parseInt(days), parseInt(page), parseInt(pagesize));
     }
-    else {
+    else { // 其它情况
       switch (type) {
         case BROWSE_ALL_TYPES[4]: // 收藏
           res = await this.service.postDashboard.getBrowseBookmarkRank(ctx.user.id, parseInt(days), parseInt(page), parseInt(pagesize));
