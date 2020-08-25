@@ -610,29 +610,19 @@ module.exports = app => {
   // 浏览
   // 获取统计数据
   router.get('/db/browse/count', passport.authorize, controller.postDashboard.get);
-  // 下面8个API参数和返回值格式都是一样的。带 days 参数可筛选多少天内的数据。
-  // 获取阅读量历史
-  router.get('/db/browse/history/read', passport.authorize, controller.postDashboard.getBrowseReadHistory);
-  // 获取推荐量历史
-  router.get('/db/browse/history/like', passport.authorize, controller.postDashboard.getBrowseLikeHistory);
-  // 获取分享量历史
-  router.get('/db/browse/history/share', passport.authorize, controller.postDashboard.getBrowseShareHistory);
-  // 获取解锁量历史
-  router.get('/db/browse/history/unlock', passport.authorize, controller.postDashboard.getBrowseUnlockHistory);
-  // 获取收藏量历史
-  router.get('/db/browse/history/bookmark', passport.authorize, controller.postDashboard.getBrowseBookmarkHistory);
-  // 获取评论量历史
-  router.get('/db/browse/history/comment', passport.authorize, controller.postDashboard.getBrowseCommentHistory);
-  // 获取支付量历史
-  router.get('/db/browse/history/sale', passport.authorize, controller.postDashboard.getBrowseSaleHistory);
-  // 获取赞赏量历史
-  router.get('/db/browse/history/reward', passport.authorize, controller.postDashboard.getBrowseRewardHistory);
+
+  /**
+   * 获取该用户发布文章的阅览量历史，单位时间是天。
+   * params.type: 必填。表示获取哪种数据的历史，例如 read 或 like，详情请参考 controller/postDashboard.js 中的 BROWSE_ALL_TYPES。
+   * query.days: 可选。表示筛选 N 天内的数据，不填则返回全部数据。
+   */
+  router.get('/db/browse/history/:type', passport.authorize, controller.postDashboard.getBrowseHistory);
 
   /**
    * 获取用户的文章排名。
-   * type 必填。表示排名的依据，例如 read 或 like，详情请参考 postDashboard.js 中的 BROWSE_ALL_TYPES。
-   * days 可选。表示依据 N 天内的数据进行排名，不填则依据全部历史数据排名。
-   * page, pagesize 可选。分页参数，默认 1页 10行。
+   * params.type: 必填。表示排名的依据，例如 read 或 like，详情请参考 controller/postDashboard.js 中的 BROWSE_ALL_TYPES。
+   * query.days: 可选。表示依据 N 天内的数据进行排名，不填则依据全部历史数据排名。
+   * query.page, pagesize: 可选。分页参数，默认 1页 10行。
    */
   router.get('/db/browse/rank/:type', passport.authorize, controller.postDashboard.getBrowsePostRank);
 };
