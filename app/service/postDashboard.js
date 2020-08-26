@@ -543,11 +543,11 @@ class PostDashboardService extends Service {
    * @param {Number} pagesize 【可选】分页：每页条目数
    */
   async getIncomeHistory(userId, tokenId, page = 1, pagesize = 10) {
-    // 打赏历史查询
-    const rewardSql = `
+    // 售出历史查询
+    const saleSql = `
       SELECT
         o.id,
-        'reward' AS type,
+        'sale' AS type,
         o.uid AS user_id,
         o.signid AS post_id,
         p.title AS post_title,
@@ -565,11 +565,11 @@ class PostDashboardService extends Service {
       WHERE
         p.uid = :userId
     `;
-    // 售出历史查询
-    const saleSql = `
+    // 打赏历史查询
+    const rewardSql = `
       SELECT
         a.id,
-        'sale' AS type,
+        'reward' AS type,
         a.from_uid AS user_id,
         a.post_id,
         p.title AS post_title,
@@ -596,9 +596,9 @@ class PostDashboardService extends Service {
         u.username,
         u.nickname
       FROM (
-        ${rewardSql}
-        UNION ALL
         ${saleSql}
+        UNION ALL
+        ${rewardSql}
       ) t1
       LEFT JOIN
         ${TABLE.USERS} u ON u.id = t1.user_id
@@ -638,8 +638,8 @@ class PostDashboardService extends Service {
   async getSumIncome(userId, days) {
     // 时间筛选
     const whereDaye = days ? 'AND TO_DAYS(NOW()) - TO_DAYS(t1.create_time) < :days' : '';
-    // 打赏总收益查询
-    const rewardSql = `
+    // 售出总收益查询
+    const saleSql = `
       SELECT
         IFNULL(t.id, 0) AS token_id,
         SUM(t1.amount) AS amount,
@@ -657,8 +657,8 @@ class PostDashboardService extends Service {
       GROUP BY
         token_id
     `;
-    // 售出总收益查询
-    const saleSql = `
+    // 打赏总收益查询
+    const rewardSql = `
       SELECT
         IFNULL(t1.token_id, 0) AS token_id,
         SUM(t1.amount) AS amount,
@@ -684,9 +684,9 @@ class PostDashboardService extends Service {
         SUM(t2.amount) AS amount,
         t2.decimals
       FROM (
-        ${rewardSql}
-        UNION ALL
         ${saleSql}
+        UNION ALL
+        ${rewardSql}
       ) t2
       GROUP BY
         t2.token_id
