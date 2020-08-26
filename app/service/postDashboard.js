@@ -632,8 +632,8 @@ class PostDashboardService extends Service {
 
   /**
    * 获取用户所有文章的总收益
-   * @param {*} userId 用户 id
-   * @param {*} days 【可选】筛选 N 天内的收益，留空则不筛选。
+   * @param {Number} userId 用户 id
+   * @param {Number} days 【可选】筛选 N 天内的收益，留空则不筛选。
    */
   async getSumIncome(userId, days) {
     // 时间筛选
@@ -695,6 +695,140 @@ class PostDashboardService extends Service {
     `;
     const res = await this.app.mysql.query(sql, { userId, days });
     return res;
+  }
+
+  /**
+   * 获取用户某个 token 的售出收益来源于哪些文章。
+   * @param {Number} userId 用户 id
+   * @param {Number} tokenId Fan票 id
+   * @param {Number} days 【可选】筛选 N 天内的数据
+   * @param {Number} page 【可选】分页：页码
+   * @param {Number} pagesize 【可选】分页：每页条目数
+   */
+  async getSaleIncomeSource(userId, tokenId, days, page = 1, pagesize = 10) {
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(o.create_time) < :days';
+    const listSql = `
+      SELECT
+        p.id AS post_id,
+        p.title AS post_title,
+        IFNULL(t.id, 0) AS token_id,
+        SUM(o.amount) AS amount,
+        o.decimals,
+        o.symbol,
+        p.create_time
+      FROM
+        ${TABLE.ORDERS} o
+      JOIN
+        ${TABLE.POSTS} p ON p.id = o.signid
+      LEFT JOIN
+        ${TABLE.TOKENS} t ON t.symbol = o.symbol
+      WHERE
+        p.uid = :userId
+        AND IFNULL(t.id, 0) = :tokenId
+        ${days ? whereDate : ''}
+      GROUP BY
+        p.id
+      ORDER BY
+        amount DESC, p.create_time
+      LIMIT :offset, :limit;
+    `;
+    const countSql = `
+      SELECT
+        COUNT(*) AS count
+      FROM (
+        SELECT
+          1 AS count
+        FROM
+          ${TABLE.ORDERS} o
+        JOIN
+          ${TABLE.POSTS} p ON p.id = o.signid
+        LEFT JOIN
+          ${TABLE.TOKENS} t ON t.symbol = o.symbol
+        WHERE
+          p.uid = :userId
+          AND IFNULL(t.id, 0) = :tokenId
+          ${days ? whereDate : ''}
+        GROUP BY
+          p.id
+      ) t1;
+    `;
+    const res = await this.app.mysql.query(listSql + countSql, {
+      userId,
+      tokenId,
+      days,
+      offset: (page - 1) * pagesize,
+      limit: pagesize
+    });
+    return {
+      count: res[1][0].count,
+      list: res[0]
+    }
+  }
+
+  /**
+   * 获取用户某个 token 的打赏收益来源于哪些文章，并以金额倒序。
+   * @param {Number} userId 用户 id
+   * @param {Number} tokenId Fan票 id
+   * @param {Number} days 【可选】筛选 N 天内的数据
+   * @param {Number} page 【可选】分页：页码
+   * @param {Number} pagesize 【可选】分页：每页条目数
+   */
+  async getRewardIncomeSource(userId, tokenId, days, page = 1, pagesize = 10) {
+    const whereDate = 'AND TO_DAYS(NOW()) - TO_DAYS(a.create_time) < :days';
+    const listSql = `
+      SELECT
+        p.id AS post_id,
+        p.title AS post_title,
+        IFNULL(a.token_id, 0) AS token_id,
+        SUM(a.amount) AS amount,
+        t.decimals,
+        t.symbol,
+        p.create_time
+      FROM
+        ${TABLE.ASSETS_TOKEN_LOG} a
+      JOIN
+        ${TABLE.POSTS} p ON p.id = a.post_id
+      LEFT JOIN
+        ${TABLE.TOKENS} t ON t.id = a.token_id
+      WHERE
+        p.uid = :userId
+        AND IFNULL(a.token_id, 0) = :tokenId
+        ${days ? whereDate : ''}
+      GROUP BY
+        p.id
+      ORDER BY
+        amount DESC, p.create_time
+      LIMIT :offset, :limit;
+    `;
+    const countSql = `
+      SELECT
+        COUNT(*) AS count
+      FROM (
+        SELECT
+          1 AS count
+        FROM
+          ${TABLE.ASSETS_TOKEN_LOG} a
+        JOIN
+          ${TABLE.POSTS} p ON p.id = a.post_id
+        WHERE
+          p.uid = :userId
+          AND IFNULL(a.token_id, 0) = :tokenId
+          ${days ? whereDate : ''}
+        GROUP BY
+          p.id
+      ) t1;
+    `;
+    const res = await this.app.mysql.query(listSql + countSql, {
+      userId,
+      tokenId,
+      days,
+      offset: (page - 1) * pagesize,
+      limit: pagesize
+    });
+    return {
+      count: res[1][0].count,
+      list: res[0]
+    }
   }
 }
 
