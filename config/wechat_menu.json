@@ -1,0 +1,38 @@
+{
+  "button": [
+    {
+      "name": "瞬Matataki",
+      "sub_button": [{
+          "type": "view",
+          "name": "看文章",
+          "url": "https://matataki.io/article/"
+        },
+        {
+          "type": "view",
+          "name": "看Fan票",
+          "url": "https://matataki.io/token"
+        }
+      ]
+    },
+    {
+      "name": "关于",
+      "sub_button": [
+        {
+          "type": "view",
+          "name": "使用指南",
+          "url": "https://www.yuque.com/matataki/matataki"
+        },
+        {
+          "type": "view",
+          "name": "问题&吐槽",
+          "url": "http://andoromeda.mikecrm.com/a93Le8z"
+        },
+        {
+          "type": "click",
+          "name": "联系我们",
+          "key": "CONTACT_US"
+        }
+      ]
+    }
+  ]
+}

@@ -584,6 +584,9 @@ module.exports = app => {
   router.get('/api/login_by_wx', passport.verify, controller.wechat.loginByWx);
   router.get('/api/bind_by_wx', passport.verify, controller.wechat.bindByWx);
 
+  // 微信菜单 读取配置文件来创建菜单
+  router.get('/api/wechat/creatMenu', passport.verify, controller.wechat.createMenu);
+
   // ---------------- Fan票申请 ----------------------------------------
   // 获取自己相关的 fan票申请
   router.get('/api/minetoken_application', passport.authorize, controller.mineTokenApplication.userApplication);

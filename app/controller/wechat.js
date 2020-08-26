@@ -75,6 +75,20 @@ class WechatController extends Controller {
 
   }
 
+  async createMenu() {
+    const { ctx } = this;
+    const result = await this.service.wechatTnwx.createMenu();
+    if (result.code === 0) {
+      ctx.body = ctx.msg.success;
+      ctx.body.message = result.message;
+      ctx.body.data = result.data;
+    } else {
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = result.message;
+      ctx.body.data = result.data;
+    }
+  }
+
 
 }
 
