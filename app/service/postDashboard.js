@@ -629,6 +629,73 @@ class PostDashboardService extends Service {
       list: res[0]
     }
   }
+
+  /**
+   * 获取用户所有文章的总收益
+   * @param {*} userId 用户 id
+   * @param {*} days 【可选】筛选 N 天内的收益，留空则不筛选。
+   */
+  async getSumIncome(userId, days) {
+    // 时间筛选
+    const whereDaye = days ? 'AND TO_DAYS(NOW()) - TO_DAYS(t1.create_time) < :days' : '';
+    // 打赏总收益查询
+    const rewardSql = `
+      SELECT
+        IFNULL(t.id, 0) AS token_id,
+        SUM(t1.amount) AS amount,
+        t1.decimals,
+        t1.symbol
+      FROM
+        ${TABLE.ORDERS} t1
+      JOIN
+        ${TABLE.POSTS} p ON p.id = t1.signid
+      LEFT JOIN
+        ${TABLE.TOKENS} t ON t.symbol = t1.symbol
+      WHERE
+        p.uid = :userId
+        ${whereDaye}
+      GROUP BY
+        token_id
+    `;
+    // 售出总收益查询
+    const saleSql = `
+      SELECT
+        IFNULL(t1.token_id, 0) AS token_id,
+        SUM(t1.amount) AS amount,
+        t.decimals,
+        t.symbol
+      FROM
+        ${TABLE.ASSETS_TOKEN_LOG} t1
+      JOIN
+        ${TABLE.POSTS} p ON p.id = t1.post_id
+      LEFT JOIN
+        ${TABLE.TOKENS} t ON t.id = t1.token_id
+      WHERE
+        p.uid = :userId
+        ${whereDaye}
+      GROUP BY
+        token_id
+    `;
+    // 合并两个表的数据
+    const sql = `
+      SELECT
+        t2.token_id,
+        t2.symbol,
+        SUM(t2.amount) AS amount,
+        t2.decimals
+      FROM (
+        ${rewardSql}
+        UNION ALL
+        ${saleSql}
+      ) t2
+      GROUP BY
+        t2.token_id
+      ORDER BY
+        t2.symbol;
+    `;
+    const res = await this.app.mysql.query(sql, { userId, days });
+    return res;
+  }
 }
 
 module.exports = PostDashboardService;
