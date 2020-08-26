@@ -126,7 +126,21 @@ class PostDashboardController extends Controller {
     ctx.body = {
       ...ctx.msg.success,
       data: res
-    }
+    };
+  }
+
+  /**
+   * 获取用户所有文章的总收益。
+   * query.days: 可选。筛选 N 天内的收益，留空则不筛选。
+   */
+  async getSumIncome() {
+    const ctx = this.ctx;
+    const { days } = ctx.query;
+    const res = await this.service.postDashboard.getSumIncome(ctx.user.id, parseInt(days));
+    ctx.body = {
+      ...ctx.msg.success,
+      data: res
+    };
   }
 }
 
