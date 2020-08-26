@@ -262,7 +262,7 @@ class PostDashboardService extends Service {
         p.id,
         p.title,
         COUNT(*) AS count,
-        DATE_FORMAT(p.create_time, '%Y-%m-%d') AS create_time
+        p.create_time
       FROM
         ${TABLE.POSTS} p
       JOIN
@@ -321,7 +321,7 @@ class PostDashboardService extends Service {
         p.id,
         p.title,
         COUNT(*) AS count,
-        DATE_FORMAT(p.create_time, '%Y-%m-%d') AS create_time
+        p.create_time
       FROM
         ${TABLE.POSTS} p
       JOIN
@@ -377,7 +377,7 @@ class PostDashboardService extends Service {
         p.id,
         p.title,
         COUNT(*) AS count,
-        DATE_FORMAT(p.create_time, '%Y-%m-%d') AS create_time
+        p.create_time
       FROM
         ${TABLE.POSTS} p
       JOIN
@@ -433,7 +433,7 @@ class PostDashboardService extends Service {
         p.id,
         p.title,
         COUNT(*) AS count,
-        DATE_FORMAT(p.create_time, '%Y-%m-%d') AS create_time
+        p.create_time
       FROM
         ${TABLE.POSTS} p
       JOIN
@@ -491,7 +491,7 @@ class PostDashboardService extends Service {
         p.id,
         p.title,
         COUNT(*) AS count,
-        DATE_FORMAT(p.create_time, '%Y-%m-%d') AS create_time
+        p.create_time
       FROM
         ${TABLE.POSTS} p
       JOIN
@@ -534,6 +534,10 @@ class PostDashboardService extends Service {
       list: res[0]
     };
   }
+
+  /*************
+   *  收益数据  *
+   *************/
 
   /**
    * 获取用户的收益历史（该用户所有文章的付费解锁和打赏收益）。
