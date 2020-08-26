@@ -9,6 +9,7 @@ const {
   OutCustomMsg,
 } = require('tnwx');
 const msg = require('./msg');
+const wechatConfig = require('../../config/wechat_config');
 
 class MsgController extends MsgAdapter {
   // 处理文本消息
@@ -63,7 +64,8 @@ class MsgController extends MsgAdapter {
     } else if (concatUs.includes(inTextMsg.getContent)) {
       const outMsg = new OutImageMsg(inTextMsg);
       // media id is linke wechat qrcode
-      outMsg.setMediaId = 'XMYLH__bL6vE6owOD80pYyaUz8txgFa9qsbV5R7e3H6GT9BNiavIBV74OU1jWpV1';
+      outMsg.setMediaId = wechatConfig.concatUsQRCodeMediaId;
+
       return outMsg;
 
     } else {
@@ -96,7 +98,7 @@ class MsgController extends MsgAdapter {
     if (inMenuEvent.getEventKey === 'CONTACT_US') {
       const outMsg = new OutImageMsg(inMenuEvent);
       // media id is linke wechat qrcode
-      outMsg.setMediaId = 'XMYLH__bL6vE6owOD80pYyaUz8txgFa9qsbV5R7e3H6GT9BNiavIBV74OU1jWpV1';
+      outMsg.setMediaId = wechatConfig.concatUsQRCodeMediaId;
       return outMsg;
     }
 
