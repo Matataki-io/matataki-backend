@@ -5,6 +5,7 @@ const {
   OutTextMsg,
   // ApiConfigKit,
   // OutNewsMsg,
+  OutImageMsg,
   OutCustomMsg,
 } = require('tnwx');
 const msg = require('./msg');
@@ -12,12 +13,13 @@ const msg = require('./msg');
 class MsgController extends MsgAdapter {
   // 处理文本消息
   processInTextMsg(inTextMsg) {
-    console.log('inTextMsg.getContent', inTextMsg);
+
+    console.log('inTextMsg', inTextMsg);
     console.log('inTextMsg.getContent', inTextMsg.getContent);
 
-
     let outMsg;
-    let content = 'IJPay 让支付触手可及 \n\nhttps://gitee.com/javen205/IJPay';
+    // let content = 'IJPay 让支付触手可及 \n\nhttps://gitee.com/javen205/IJPay';
+    let content = '';
 
     // if (inTextMsg.getContent === '极速开发微信公众号') {
     //   // 多公众号支持 分别给不同的公众号发送不同的消息
@@ -47,6 +49,8 @@ class MsgController extends MsgAdapter {
     //   );
     // }
 
+    const concatUs = [ '人工', '客服', '人工客服', '联系', '联系方式' ];
+
     // 明确关键词
     if (inTextMsg.getContent === '帮助') {
       content = msg.help;
@@ -56,6 +60,12 @@ class MsgController extends MsgAdapter {
       content = msg.homePage;
       outMsg = new OutTextMsg(inTextMsg);
       outMsg.setContent(content);
+    } else if (concatUs.includes(inTextMsg.getContent)) {
+      const outMsg = new OutImageMsg(inTextMsg);
+      // media id is linke wechat qrcode
+      outMsg.setMediaId = 'XMYLH__bL6vE6owOD80pYyaUz8txgFa9qsbV5R7e3H6GT9BNiavIBV74OU1jWpV1';
+      return outMsg;
+
     } else {
       // outMsg = new OutTextMsg(inTextMsg);
       // outMsg.setContent(content);
@@ -64,6 +74,32 @@ class MsgController extends MsgAdapter {
       console.log('转发给多客服PC客户端');
     }
     return outMsg;
+  }
+  // 处理图片消息
+  processInImageMsg(inImageMsg) {
+
+    console.log('inImageMsg', inImageMsg);
+    const outMsg = new OutImageMsg(inImageMsg);
+
+    console.log('outMsg', outMsg);
+    console.log('inImageMsg.getMediaId', inImageMsg.getMediaId);
+
+    outMsg.setMediaId = inImageMsg.getMediaId;
+    return outMsg;
+  }
+  // 菜单事件
+  processInMenuEvent(inMenuEvent) {
+
+    console.log('inMenuEvent', inMenuEvent);
+
+    // 菜单事件 联系我们
+    if (inMenuEvent.getEventKey === 'CONTACT_US') {
+      const outMsg = new OutImageMsg(inMenuEvent);
+      // media id is linke wechat qrcode
+      outMsg.setMediaId = 'XMYLH__bL6vE6owOD80pYyaUz8txgFa9qsbV5R7e3H6GT9BNiavIBV74OU1jWpV1';
+      return outMsg;
+    }
+
   }
   // 处理关注、取消关注事件
   processInFollowEvent(inFollowEvent) {
