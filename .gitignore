@@ -16,6 +16,7 @@ config/config.local.js
 config/config.prod*.js
 config/config.unittest.js
 config/apiaccesstoken.js
+config/wechat_config.js
 push.sh
 dist/
 TTD.md

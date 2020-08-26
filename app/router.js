@@ -586,6 +586,7 @@ module.exports = app => {
 
   // 微信菜单 读取配置文件来创建菜单
   router.get('/api/wechat/creatMenu', passport.verify, controller.wechat.createMenu);
+  router.get('/api/wechat/token', passport.verify, controller.wechat.token);
 
   // ---------------- Fan票申请 ----------------------------------------
   // 获取自己相关的 fan票申请

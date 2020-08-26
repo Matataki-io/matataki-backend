@@ -88,7 +88,15 @@ class WechatController extends Controller {
       ctx.body.data = result.data;
     }
   }
-
+  async token() {
+    const { ctx } = this;
+    // init
+    this.service.wechatApi.weChatTnwxInit();
+    // get accesstoken
+    const assessToken = await this.service.wechatApi.getAccessToken();
+    console.log('assessToken', assessToken);
+    ctx.body = ctx.msg.success;
+  }
 
 }
 
