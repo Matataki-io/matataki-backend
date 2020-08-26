@@ -611,8 +611,11 @@ module.exports = app => {
   router.get('/api/mint/detail', passport.authorize, controller.mineToken.getMintDetail);
 
   // -------------------------------- Dashboard -----------------------
-  // 浏览
-  // 获取统计数据
+  // ----- 阅览 -----
+  /**
+   * 获取阅览数据的8项统计数据。
+   * query.days: 可选。筛选 N 天内的统计数据，留空则不筛选。
+   */
   router.get('/db/browse/count', passport.authorize, controller.postDashboard.get);
 
   /**
@@ -630,11 +633,21 @@ module.exports = app => {
    */
   router.get('/db/browse/rank/:type', passport.authorize, controller.postDashboard.getBrowsePostRank);
 
+  // ----- 收益 -----
   /**
    * 获取用户所有文章的总收益。
    * query.days: 可选。筛选 N 天内的收益，留空则不筛选。
    */
   router.get('/db/income/sum',passport.authorize, controller.postDashboard.getSumIncome);
+
+  /**
+   * 获取用户某个 token 的收益来源于哪些文章，并以金额倒序。
+   * params.type: 必填。收益类型，填 sale 或 reward。
+   * query.tokenId: 必填。筛选 Fan票的 id。
+   * query.days: 可选。表示依据 N 天内的数据进行排名，不填则依据全部历史数据排名。
+   * query.page, pagesize: 可选。分页参数，默认 1页 10行。
+   */
+  router.get('/db/income/source/:type', passport.authorize, controller.postDashboard.getIncomeSource);
 
   /**
    * 获取用户的收益历史（该用户所有文章的付费解锁和打赏收益）。

@@ -142,6 +142,36 @@ class PostDashboardController extends Controller {
       data: res
     };
   }
+
+  /**
+   * 获取用户某个 token 的收益来源于哪些文章，并以金额倒序。
+   * params.type: 必填。收益类型，填 sale 或 reward。
+   * query.tokenId: 必填。筛选 Fan票的 id。
+   * query.days: 可选。表示依据 N 天内的数据进行排名，不填则依据全部历史数据排名。
+   * query.page, pagesize: 可选。分页参数，默认 1页 10行。
+   */
+  async getIncomeSource() {
+    const ctx = this.ctx;
+    const { tokenId, days, page = 1, pagesize = 10 } = ctx.query;
+    const { type } = ctx.params;
+
+    let res;
+    switch (type) {
+      case 'sale': // 支付
+        res = await this.service.postDashboard.getSaleIncomeSource(ctx.user.id, parseInt(tokenId), parseInt(days), parseInt(page), parseInt(pagesize));
+        break;
+      case 'reward': // 赞赏
+        res = await this.service.postDashboard.getRewardIncomeSource(ctx.user.id, parseInt(tokenId), parseInt(days), parseInt(page), parseInt(pagesize));
+        break;
+      default:
+        ctx.body = ctx.msg.paramsError;
+        return;
+    }
+    ctx.body = {
+      ...ctx.msg.success,
+      data: res
+    };
+  }
 }
 
 module.exports = PostDashboardController;
