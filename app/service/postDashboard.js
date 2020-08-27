@@ -628,6 +628,7 @@ class PostDashboardService extends Service {
       offset: (page - 1) * pagesize,
       limit: pagesize,
     });
+    res[0].forEach(value => value.username = this.ctx.helper.emailMask(value.username));
     return {
       count: res[1][0].count,
       list: res[0]
