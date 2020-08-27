@@ -567,7 +567,8 @@ class PostDashboardService extends Service {
       LEFT JOIN
         ${TABLE.TOKENS} t ON t.symbol = o.symbol
       WHERE
-        p.uid = :userId
+        o.status = 9
+        AND p.uid = :userId
     `;
     // 打赏历史查询
     const rewardSql = `
@@ -589,7 +590,8 @@ class PostDashboardService extends Service {
       LEFT JOIN
         ${TABLE.TOKENS} t ON t.id = a.token_id
       WHERE
-        p.uid = :userId
+        a.type = 'reward_article'
+        AND p.uid = :userId
     `;
     // 筛选特定的 token 类型
     const whereToken = tokenId || tokenId === 0 ? `WHERE t1.token_id = :tokenId` : '';
@@ -657,7 +659,8 @@ class PostDashboardService extends Service {
       LEFT JOIN
         ${TABLE.TOKENS} t ON t.symbol = t1.symbol
       WHERE
-        p.uid = :userId
+        t1.status = 9
+        AND p.uid = :userId
         ${whereDaye}
       GROUP BY
         token_id
@@ -676,7 +679,8 @@ class PostDashboardService extends Service {
       LEFT JOIN
         ${TABLE.TOKENS} t ON t.id = t1.token_id
       WHERE
-        p.uid = :userId
+        t1.type = 'reward_article'
+        AND p.uid = :userId
         ${whereDaye}
       GROUP BY
         token_id
@@ -728,7 +732,8 @@ class PostDashboardService extends Service {
       LEFT JOIN
         ${TABLE.TOKENS} t ON t.symbol = o.symbol
       WHERE
-        p.uid = :userId
+        o.status = 9
+        AND p.uid = :userId
         AND IFNULL(t.id, 0) = :tokenId
         ${days ? whereDate : ''}
       GROUP BY
@@ -750,7 +755,8 @@ class PostDashboardService extends Service {
         LEFT JOIN
           ${TABLE.TOKENS} t ON t.symbol = o.symbol
         WHERE
-          p.uid = :userId
+          o.status = 9
+          AND p.uid = :userId
           AND IFNULL(t.id, 0) = :tokenId
           ${days ? whereDate : ''}
         GROUP BY
@@ -796,7 +802,8 @@ class PostDashboardService extends Service {
       LEFT JOIN
         ${TABLE.TOKENS} t ON t.id = a.token_id
       WHERE
-        p.uid = :userId
+        a.type = 'reward_article'
+        AND p.uid = :userId
         AND IFNULL(a.token_id, 0) = :tokenId
         ${days ? whereDate : ''}
       GROUP BY
@@ -816,7 +823,8 @@ class PostDashboardService extends Service {
         JOIN
           ${TABLE.POSTS} p ON p.id = a.post_id
         WHERE
-          p.uid = :userId
+          a.type = 'reward_article'
+          AND p.uid = :userId
           AND IFNULL(a.token_id, 0) = :tokenId
           ${days ? whereDate : ''}
         GROUP BY
