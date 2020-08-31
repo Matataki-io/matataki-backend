@@ -917,16 +917,30 @@ class MineTokenService extends Service {
     let sql = `
       SELECT p.*
       FROM posts p
-      LEFT JOIN post_minetokens m
-      ON p.id = m.sign_id
-      WHERE (p.assosiate_with = :tokenId OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0
+      LEFT JOIN post_minetokens m ON p.id = m.sign_id
+      LEFT JOIN product_prices c ON c.sign_id = p.id
+      WHERE
+        (
+          p.assosiate_with = :tokenId
+          OR m.token_id = :tokenId
+          OR c.token_id = :tokenId
+        )
+        AND p.channel_id = :channel_id
+        AND p.status = 0
     `;
     let countSql = `
       SELECT count(1) as count
       FROM posts p
-      LEFT JOIN post_minetokens m
-      ON p.id = m.sign_id
-      WHERE (p.assosiate_with = :tokenId OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0
+      LEFT JOIN post_minetokens m ON p.id = m.sign_id
+      LEFT JOIN product_prices c ON c.sign_id = p.id
+      WHERE
+        (
+          p.assosiate_with = :tokenId
+          OR m.token_id = :tokenId
+          OR c.token_id = :tokenId
+        )
+        AND p.channel_id = :channel_id
+        AND p.status = 0
     `;
 
     if (filter === 1) {
