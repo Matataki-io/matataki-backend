@@ -4,6 +4,8 @@ const axios = require('axios');
 const FormData = require('form-data');
 const Service = require('egg').Service;
 
+const IpfsUrl = 'https://ipfs.smartsignature.io'
+
 class ipfs extends Service {
   constructor(ctx, app) {
     super(ctx, app);
@@ -14,17 +16,10 @@ class ipfs extends Service {
       protocol,
     });
   }
-  cat(hash) {
-    return new Promise((resolve, reject) => {
-      this.ipfs.cat(hash, (err, result) => {
-        if (err) {
-          this.logger.error('ipfs.cat error: %j', err);
-          reject(err);
-        } else {
-          resolve(result);
-        }
-      });
-    });
+  async cat(hash) {
+    const { site } = this.config.ipfs_service;
+    const { data } = await axios.post(`${site}/api/v0/cat/${hash}`);
+    return JSON.stringify(data);
   }
   add(data) {
     return new Promise((resolve, reject) => {
@@ -47,7 +42,7 @@ class ipfs extends Service {
     const fd = new FormData();
     fd.append('', file);
     try {
-      const { data } = await axios.post('https://ipfs.smartsignature.io/api/v0/add', fd, {
+      const { data } = await axios.post(`${IpfsUrl}/api/v0/add`, fd, {
         auth: { username, password },
         headers: fd.getHeaders(),
         timeout: 1000 * 10
@@ -56,6 +51,10 @@ class ipfs extends Service {
     } catch (error) {
       if (error.message.indexOf('timeout') > -1) {
         this.logger.error('uploadToAws failed', 'server down, retry with public node');
+        await this.service.system.notification.pushTextToDingTalk(
+          "ipfs", 
+          `（👷IPFS系统警告）监测到 ${IpfsUrl} 的上传接口无法访问，请工程师登录 AWS 检查 EC2 东京节点的健康状态，如果无响应请重启机器。 (AWS: https://aws.amazon.com/)`
+        );
         return this.uploadToPublic(file);
       } else {
         this.logger.error('uploadToAws failed', error);

@@ -379,6 +379,15 @@ class MineTokenService extends Service {
           fromWallet.private_key, toWallet.public_key, amount);
         transactionHash = transferAction.transactionHash;
       } catch (error) {
+        await this.service.system.notification.pushMarkdownToDingtalk(
+          "ipfs", 
+          `监测到失败的转账交易`, 
+          `### ⚠️ Matataki 后端系统监测到失败的转账交易⚠️ 
+          From: ${from} (${fromWallet.public_key})
+
+          To: ${to} (${toWallet.public_key})
+
+          Amount: ${amount}`)
         this.logger.error('transferFrom::syncBlockchain', error);
       }
 
@@ -908,16 +917,30 @@ class MineTokenService extends Service {
     let sql = `
       SELECT p.*
       FROM posts p
-      LEFT JOIN post_minetokens m
-      ON p.id = m.sign_id
-      WHERE (p.assosiate_with = :tokenId OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0
+      LEFT JOIN post_minetokens m ON p.id = m.sign_id
+      LEFT JOIN product_prices c ON c.sign_id = p.id
+      WHERE
+        (
+          p.assosiate_with = :tokenId
+          OR m.token_id = :tokenId
+          OR c.token_id = :tokenId
+        )
+        AND p.channel_id = :channel_id
+        AND p.status = 0
     `;
     let countSql = `
       SELECT count(1) as count
       FROM posts p
-      LEFT JOIN post_minetokens m
-      ON p.id = m.sign_id
-      WHERE (p.assosiate_with = :tokenId OR m.token_id = :tokenId) AND p.channel_id = :channel_id AND p.status = 0
+      LEFT JOIN post_minetokens m ON p.id = m.sign_id
+      LEFT JOIN product_prices c ON c.sign_id = p.id
+      WHERE
+        (
+          p.assosiate_with = :tokenId
+          OR m.token_id = :tokenId
+          OR c.token_id = :tokenId
+        )
+        AND p.channel_id = :channel_id
+        AND p.status = 0
     `;
 
     if (filter === 1) {

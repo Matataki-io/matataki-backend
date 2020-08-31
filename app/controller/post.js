@@ -26,160 +26,46 @@ class PostController extends Controller {
   async publish() {
     const ctx = this.ctx;
     const {
-      author = '',
-      title = '',
+      author,
+      title,
       data,
-      fissionFactor = 2000,
+      fissionFactor,
       cover,
-      is_original = 0,
-      platform = 'eos',
-      tags = [],
-      assosiateWith = 0,
-      commentPayPoint = 0,
-      shortContent = null,
-      cc_license = null,
-      // 新字段，requireToken 和 requireBuy 对应老接口的 data
-      requireToken = null,
-      requireBuy = null,
-      // 持币编辑相关字段
-      editRequireToken = null,
-      editRequireBuy = null,
-      ipfs_hide = false,
+      is_original,
+      platform,
+      tags,
+      assosiateWith,
+      commentPayPoint,
+      shortContent,
+      cc_license,
+      requireToken,
+      requireBuy,
+      editRequireToken,
+      editRequireBuy,
+      ipfs_hide,
     } = ctx.request.body;
-    // 修改requireBuy为数组
-    const isEncrypt = Boolean(requireToken && requireToken.length > 0) || Boolean(requireBuy && requireBuy.length > 0);
 
-    // 检查Fan票协作者权限
-    if (requireToken) {
-      for (let i = 0; i < requireToken.length; i++) {
-        if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireToken[i].tokenId)) {
-          ctx.body = ctx.msg.notCollaborator;
-          return;
-        }
-      }
-    }
-    if (requireBuy) {
-      for (let i = 0; i < requireBuy.length; i++) {
-        // 需要注意CNY的情况下 tokenId 是 0
-        if (requireBuy[i].tokenId && !await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireBuy[i].tokenId)) {
-          ctx.body = ctx.msg.notCollaborator;
-          return;
-        }
-      }
-    }
-    if (editRequireToken) {
-      for (let i = 0; i < editRequireToken.length; i++) {
-        if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, editRequireToken[i].tokenId)) {
-          ctx.body = ctx.msg.notCollaborator;
-          return;
-        }
-      }
-    }
-
-    // 只清洗文章文本的标识
-    data.content = this.service.extmarkdown.toIpfs(data.content);
-    const articleContent = await this.service.post.wash(data.content);
-    // 设置短摘要
-    const short_content
-      = shortContent
-      || (await this.service.extmarkdown.shortContent(articleContent));
-
-    const {
-      metadataHash,
-      htmlHash,
-    } = await this.service.post.uploadArticleToIpfs({
-      isEncrypt,
+    const result = await ctx.service.post.fullPublish(
+      ctx.user,
+      author,
+      title,
       data,
-      title,
-      displayName: this.user.displayName,
-      description: short_content,
-    });
-    // 无 hash 则上传失败
-    if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
-    ctx.logger.info('debug info', title, isEncrypt);
-
-    if (fissionFactor > 2000) {
-      ctx.body = ctx.msg.postPublishParamsError; // msg: 'fissionFactor should >= 2000',
-      return;
-    }
-
-    // 评论需要支付的积分
-    const comment_pay_point = parseInt(commentPayPoint);
-    // if (comment_pay_point > 99999 || comment_pay_point < 1) {
-    //   ctx.body = ctx.msg.pointCommentSettingError;
-    //   return;
-    // }
-
-    const id = await ctx.service.post.publish(
-      {
-        author,
-        username: ctx.user.username,
-        title,
-        hash: metadataHash,
-        is_original,
-        fission_factor: fissionFactor,
-        create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-        assosiate_with: assosiateWith,
-        cover, // 封面url
-        platform,
-        uid: ctx.user.id,
-        is_recommend: 0,
-        category_id: 0,
-        short_content,
-        comment_pay_point,
-        cc_license,
-        ipfs_hide,
-      },
-      { metadataHash, htmlHash }
+      fissionFactor,
+      cover,
+      is_original,
+      platform,
+      tags,
+      assosiateWith,
+      commentPayPoint,
+      shortContent,
+      cc_license,
+      requireToken,
+      requireBuy,
+      editRequireToken,
+      editRequireBuy,
+      ipfs_hide
     );
-
-    // 记录付费信息
-    if (requireToken) {
-      await this.service.post.addMineTokens(ctx.user.id, id, requireToken);
-    }
-
-    // 超过 0 元才算数，0元则无视
-    if (requireBuy && requireBuy.length > 0) {
-      const price = requireBuy[0].amount;
-      const tokenId = requireBuy[0].tokenId;
-      await this.service.post.addArticlePay(ctx.user.id, id, price, tokenId);
-    }
-
-    // 记录持币编辑信息
-    if (editRequireToken) {
-      await this.service.post.addEditMineTokens(
-        ctx.user.id,
-        id,
-        editRequireToken
-      );
-    }
-
-    // 记录购买编辑权限信息
-    if (editRequireBuy && editRequireBuy.price > 0) {
-      await this.service.post.addPrices(
-        ctx.user.id,
-        id,
-        editRequireBuy.price,
-        1
-      );
-    }
-
-    // 添加文章到elastic search
-    await this.service.search.importPost(
-      id,
-      ctx.user.id,
-      title,
-      articleContent
-    );
-
-    await ctx.service.post.create_tags(id, tags);
-
-    if (id > 0) {
-      ctx.body = ctx.msg.success;
-      ctx.body.data = id;
-    } else {
-      ctx.body = ctx.msg.postPublishError; // todo 可以再细化失败的原因
-    }
+    ctx.body = result;
   }
 
   // 编辑文章， 处理逻辑和发布相似
@@ -349,7 +235,7 @@ class PostController extends Controller {
 
         if (ipfs_hide !== undefined) updateRow.ipfs_hide = ipfs_hide;
 
-        if (assosiateWith !== null) updateRow.assosiate_with = assosiateWith;
+        updateRow.assosiate_with = assosiateWith || 0;
 
         // if (is_original) {
         //   updateRow.is_original = is_original;
@@ -777,6 +663,67 @@ class PostController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = post;
   }
+  async pInfo() {
+    const ctx = this.ctx;
+    const id = ctx.params.id;
+    let postIpfsBody = {};
+
+    const post = await this.service.post.getById(id);
+
+    // 啥也没有 直接返回
+    if (!post) {
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+    // 有内容继续往后走
+    // 同步 catchPost 方法
+    if (post.uid !== ctx.user.id) {
+      const permission = await this.hasPermission(post, ctx.user.id);
+
+      if (!permission) {
+
+        // 没有权限 返回信息
+        postIpfsBody = ctx.msg.postNoPermission;
+
+        ctx.body = ctx.msg.success;
+        ctx.body.data = {
+          p: post,
+          ipfs: postIpfsBody,
+        };
+        return;
+      }
+    }
+
+    // 从ipfs获取内容
+    const catchRequest = await this.service.post.ipfsCatch(post.hash);
+
+    if (catchRequest) {
+      let data = JSON.parse(catchRequest.toString());
+      if (data.iv) {
+        // 是加密的数据，开始解密
+        data = JSON.parse(this.service.cryptography.decrypt(data));
+      }
+      if (ctx.query.edit) {
+        data.content = this.service.extmarkdown.toEdit(data.content);
+      } else {
+        data.content = await this.service.extmarkdown.transform(data.content, {
+          userId: ctx.user.id,
+        });
+      }
+      // 字符串转为json对象
+      postIpfsBody = Object.assign(postIpfsBody, ctx.msg.success);
+      postIpfsBody.data = data;
+    } else {
+      // IPFS获取失败 返回失败的信息
+      postIpfsBody = ctx.msg.ipfsCatchFailed;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = {
+      p: post,
+      ipfs: postIpfsBody,
+    };
+  }
 
   async getIpfsById() {
     const { ctx } = this;
@@ -842,6 +789,7 @@ class PostController extends Controller {
         + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
         [ post.id, 1 ]
       );
+      await this.service.postDashboard.addActionLog({ ...ctx.user }.id, post.id, 'read');
 
       const updateSuccess = result.affectedRows !== 0;
 
@@ -1167,6 +1115,8 @@ class PostController extends Controller {
         ctx.body = ctx.msg.postNoPermission;
         return;
       }
+      // 记录文章解锁行为
+      if (post.require_holdtokens) this.service.postDashboard.addActionLog(ctx.user.id, post.id, 'unlock', true);
     }
     // 从ipfs获取内容
     const catchRequest = await this.service.post.ipfsCatch(hash);
@@ -1525,6 +1475,16 @@ class PostController extends Controller {
     }
 
     ctx.body = ctx.msg.ipfsCatchFailed;
+  }
+
+  /** 记录文章分享行为 */
+  async shareCount() {
+    const { ctx } = this;
+    const { id } = ctx.params;
+    const post = await this.service.post.get(id);
+    if (!post || post.status === 1) return ctx.body = ctx.msg.postNotFound;
+    const res = await this.service.postDashboard.addActionLog({ ...ctx.user }.id, id, 'share');
+    ctx.body = res ? ctx.msg.success : ctx.msg.failure;
   }
 }
 

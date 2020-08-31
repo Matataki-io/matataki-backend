@@ -51,6 +51,165 @@ class PostService extends Service {
     return parsedContent;
   }
 
+
+  async fullPublish (
+    user,
+    author = '',
+    title = '',
+    data,
+    fissionFactor = 2000,
+    cover,
+    is_original = 0,
+    platform = 'eos',
+    tags = [],
+    assosiateWith = 0,
+    commentPayPoint = 0,
+    shortContent = null,
+    cc_license = null,
+    // 新字段，requireToken 和 requireBuy 对应老接口的 data
+    requireToken = null,
+    requireBuy = null,
+    // 持币编辑相关字段
+    editRequireToken = null,
+    editRequireBuy = null,
+    ipfs_hide = false,
+  ) {
+    const ctx = this.ctx;
+    // 修改requireBuy为数组
+    const isEncrypt = Boolean(requireToken && requireToken.length > 0) || Boolean(requireBuy && requireBuy.length > 0);
+
+    // 检查Fan票协作者权限
+    if (requireToken) {
+      for (let i = 0; i < requireToken.length; i++) {
+        if (!await this.service.token.mineToken.isItCollaborator(user.id, requireToken[i].tokenId)) {
+          return ctx.msg.notCollaborator;
+        }
+      }
+    }
+    if (requireBuy) {
+      for (let i = 0; i < requireBuy.length; i++) {
+        // 需要注意CNY的情况下 tokenId 是 0
+        if (requireBuy[i].tokenId && !await this.service.token.mineToken.isItCollaborator(user.id, requireBuy[i].tokenId)) {
+          return ctx.msg.notCollaborator;
+        }
+      }
+    }
+    if (editRequireToken) {
+      for (let i = 0; i < editRequireToken.length; i++) {
+        if (!await this.service.token.mineToken.isItCollaborator(user.id, editRequireToken[i].tokenId)) {
+          return ctx.msg.notCollaborator;
+        }
+      }
+    }
+
+    // 只清洗文章文本的标识
+    data.content = this.service.extmarkdown.toIpfs(data.content);
+    const articleContent = await this.wash(data.content);
+    // 设置短摘要
+    const short_content
+      = shortContent
+      || (await this.service.extmarkdown.shortContent(articleContent));
+
+    const {
+      metadataHash,
+      htmlHash,
+    } = await this.uploadArticleToIpfs({
+      isEncrypt,
+      data,
+      title,
+      displayName: ctx.helper.emailMask(user.nickname || user.username),
+      description: short_content,
+      uid: user.id
+    });
+    // 无 hash 则上传失败
+    if (!metadataHash || !htmlHash) return ctx.msg.ipfsUploadFailed;
+    ctx.logger.info('debug info', title, isEncrypt);
+
+    if (fissionFactor > 2000) {
+      return ctx.msg.postPublishParamsError; // msg: 'fissionFactor should >= 2000',
+    }
+
+    // 评论需要支付的积分
+    const comment_pay_point = parseInt(commentPayPoint);
+    // if (comment_pay_point > 99999 || comment_pay_point < 1) {
+    //   ctx.body = ctx.msg.pointCommentSettingError;
+    //   return;
+    // }
+
+    const id = await this.publish(
+      {
+        author,
+        username: user.username,
+        title,
+        hash: metadataHash,
+        is_original,
+        fission_factor: fissionFactor,
+        create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        assosiate_with: assosiateWith,
+        cover, // 封面url
+        platform,
+        uid: user.id,
+        is_recommend: 0,
+        category_id: 0,
+        short_content,
+        comment_pay_point,
+        cc_license,
+        ipfs_hide,
+      },
+      { metadataHash, htmlHash }
+    );
+
+    // 记录付费信息
+    if (requireToken) {
+      await this.addMineTokens(user.id, id, requireToken);
+    }
+
+    // 超过 0 元才算数，0元则无视
+    if (requireBuy && requireBuy.length > 0) {
+      const price = requireBuy[0].amount;
+      const tokenId = requireBuy[0].tokenId;
+      await this.addArticlePay(user.id, id, price, tokenId);
+    }
+
+    // 记录持币编辑信息
+    if (editRequireToken) {
+      await this.service.post.addEditMineTokens(
+        user.id,
+        id,
+        editRequireToken
+      );
+    }
+
+    // 记录购买编辑权限信息
+    if (editRequireBuy && editRequireBuy.price > 0) {
+      await this.addPrices(
+        user.id,
+        id,
+        editRequireBuy.price,
+        1
+      );
+    }
+
+    // 添加文章到elastic search
+    await this.service.search.importPost(
+      id,
+      user.id,
+      title,
+      articleContent
+    );
+
+    await this.create_tags(id, tags);
+
+    if (id > 0) {
+      return {
+        ...ctx.msg.success,
+        data: id
+      }
+    } else return ctx.msg.postPublishError; // todo 可以再细化失败的原因
+  }
+
+
+
   async publish(data, { metadataHash, htmlHash }) {
     try {
       const result = await this.app.mysql.insert('posts', data);
