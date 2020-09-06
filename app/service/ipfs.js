@@ -1,6 +1,6 @@
 'use strict';
 const IPFS = require('ipfs-mini');
-const axios = require('axios');
+const axios = require('axios').default;
 const FormData = require('form-data');
 const Service = require('egg').Service;
 
@@ -45,6 +45,7 @@ class ipfs extends Service {
       const { data } = await axios.post(`${IpfsUrl}/api/v0/add`, fd, {
         auth: { username, password },
         headers: fd.getHeaders(),
+        params: { pin: "true" },
         timeout: 1000 * 10
       });
       return data.Hash;
@@ -72,7 +73,8 @@ class ipfs extends Service {
     fd.append('file', file);
     const { data } = await axios.post('https://ipfs.infura.io:5001/api/v0/add', fd, {
         headers: fd.getHeaders(),
-        timeout: 1000 * 15
+        timeout: 1000 * 15,
+        params: { pin: "true" }
       });
     return data.Hash;
   }
