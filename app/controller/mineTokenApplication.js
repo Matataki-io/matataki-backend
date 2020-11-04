@@ -82,6 +82,14 @@ class MineTokenApplicationController extends Controller {
   async verify() {
     const { ctx } = this;
     const { symbol = '' } = ctx.request.body;
+    const pattern = /^[A-Za-z0-9]+$/gi;
+    if (!pattern.test(symbol)) {
+      ctx.body = {
+        ...ctx.msg.failure,
+        message: 'Please enter numbers and letters',
+      };
+      return;
+    }
     const result = await this.ctx.service.mineTokenApplication.verify(symbol);
     if (result.code === 0) {
       ctx.body = ctx.msg.success;
