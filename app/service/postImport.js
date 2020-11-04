@@ -595,7 +595,7 @@ class PostImportService extends Service {
             const _src = _imgElement[i].attribs.src;
             const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.jpg';
             const imgUpUrl = await this.uploadArticleImage(_src, parsedCoverUpload);
-            if (i === 0 && !cover) {
+            if (i === 0 && !cover && imgUpUrl) {
               cover = imgUpUrl;
             }
             if (imgUpUrl) {
