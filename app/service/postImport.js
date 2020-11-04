@@ -539,6 +539,7 @@ class PostImportService extends Service {
   async handleBihu(url) {
     const BIHUAPI = 'https://be02.bihu.com/bihube-pc/api/content/show/getArticle2';
     const BIHUOSS = 'https://oss-cdn2.bihu-static.com';
+    const SSIMG = 'https://ssimg.frontenduse.top';
 
     const KEY = '/article/';
     const IDX = url.indexOf(KEY);
@@ -583,6 +584,25 @@ class PostImportService extends Service {
         if (coverUrl) {
           const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.jpg';
           cover = await this.uploadArticleImage(coverUrl, parsedCoverUpload);
+        }
+
+        // 处理图片
+        if (content) {
+          const $ = cheerio.load(content);
+          const _imgElement = $('img').toArray();
+          for (let i = 0; i < _imgElement.length; i++) {
+            console.log(_imgElement[i].attribs.src);
+            const _src = _imgElement[i].attribs.src;
+            const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.jpg';
+            const imgUpUrl = await this.uploadArticleImage(_src, parsedCoverUpload);
+            if (i === 0 && !cover) {
+              cover = imgUpUrl;
+            }
+            if (imgUpUrl) {
+              _imgElement[i].attribs.src = `${SSIMG}${imgUpUrl}`;
+            }
+          }
+          content = $('body').html();
         }
 
         return {
