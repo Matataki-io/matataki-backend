@@ -61,8 +61,6 @@ module.exports = {
   passwordWrong: 10017,
   // 签名过期
   signatureExpired: 10018,
-  // twitter授权token失效
-  invalidTwitterOauthToken: 10019,
 
   // post相关
   postNotFound: 10100,
@@ -137,6 +135,11 @@ module.exports = {
   // direct trade
   marketNotExist: 11300,
   notInTheFuture: 11400,
+  // twitter 相关
+  // twitter授权token失效
+  invalidTwitterOauthToken: 11500,
+  // 未获取 twitter 授权
+  twitterNotAuthorized: 11501,
 
   returnObj(lang) {
 
@@ -226,6 +229,7 @@ module.exports = {
       marketNotExist: { code: this.marketNotExist, message: 'The market does not exist.' },
       notInTheFuture: { code: this.notInTheFuture, message: 'Not in the future, At least two minutes later' },
       invalidTwitterOauthToken: {code: this.invalidTwitterOauthToken, message: 'The Twitter authorization request has expired. Please try again.'},
+      twitterNotAuthorized: {code: this.twitterNotAuthorized, message: 'Twitter not authorized'},
 
     };
 
@@ -316,6 +320,7 @@ module.exports = {
       marketNotExist: { code: this.marketNotExist, message: '市场不存在' },
       notInTheFuture: { code: this.notInTheFuture, message: '请填写未来的时间，至少是两分钟后' },
       invalidTwitterOauthToken: {code: this.invalidTwitterOauthToken, message: 'Twitter 授权申请已过期，请重试。'},
+      twitterNotAuthorized: {code: this.twitterNotAuthorized, message: '该账户未获取 Twitter 授权'},
     };
 
     let message;
