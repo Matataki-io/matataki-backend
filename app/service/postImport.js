@@ -582,7 +582,7 @@ class PostImportService extends Service {
         const coverUrl = data.imgList[0].name ? `${BIHUOSS}/${data.imgList[0].name}` : '';
         let cover = '';
         if (coverUrl) {
-          const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.jpg';
+          const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
           cover = await this.uploadArticleImage(coverUrl, parsedCoverUpload);
         }
 
@@ -593,7 +593,7 @@ class PostImportService extends Service {
           for (let i = 0; i < _imgElement.length; i++) {
             console.log(_imgElement[i].attribs.src);
             const _src = _imgElement[i].attribs.src;
-            const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.jpg';
+            const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
             const imgUpUrl = await this.uploadArticleImage(_src, parsedCoverUpload);
             if (i === 0 && !cover && imgUpUrl) {
               cover = imgUpUrl;
