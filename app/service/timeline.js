@@ -5,7 +5,6 @@ class TimelineService extends Service {
   async getTwitterTimeline(userId, page = 1, pagesize = 20) {
     const credential = await this.app.mysql.get('user_twitter_credential', { user_id: userId })
     if (!credential) return { code: 1 }
-    console.log('授权信息：', credential)
     
     const cb = new codebird()
     cb.setUseProxy(true)

@@ -506,7 +506,10 @@ class AuthController extends Controller {
       }
     }
     else {
-      ctx.body = ctx.msg.failure
+      ctx.body = {
+        ...ctx.msg.failure,
+        data: reply
+      }
     }
   }
 
@@ -518,7 +521,12 @@ class AuthController extends Controller {
       if (res.code === 0) ctx.body = ctx.msg.success
       else ctx.body = ctx.msg.invalidTwitterOauthToken;
     }
-    else ctx.body = ctx.msg.failure;
+    else {
+      ctx.body = {
+        ...ctx.msg.failure,
+        data: reply
+      }
+    };
   }
 
   async twitterDeauthorize() {
