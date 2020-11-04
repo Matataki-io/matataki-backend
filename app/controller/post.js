@@ -1029,6 +1029,10 @@ class PostController extends Controller {
     const archiveMatch = makeMatch(/https?:\/\/(www\.)?archive\.is\/.+/, x =>
       this.service.postImport.handleArchive(x)
     );
+    // 币乎
+    const bihuMatch = makeMatch(/https:\/\/(www\.)?bihu\.com\/.+/, x =>
+      this.service.postImport.handleBihu(x)
+    );
 
     const result
       = (await wechatMatch)
@@ -1039,7 +1043,8 @@ class PostController extends Controller {
       || (await mattersMatch)
       || (await zhihuMatch)
       || (await weiboMatch)
-      || (await archiveMatch);
+      || (await archiveMatch)
+      || (await bihuMatch);
 
     if (result === 1) {
       this.logger.info(
