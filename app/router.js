@@ -47,6 +47,11 @@ module.exports = app => {
   router.get('/login/facebook/prepare', passport.verify, controller.auth.facebookPrepareForAuth);
   router.post('/login/facebook', passport.verify, controller.auth.facebookAuth);
 
+  // twitter 授权
+  router.get('/authorize/twitter/prepare', passport.authorize, controller.auth.twitterRequestToken);
+  router.post('/authorize/twitter', passport.authorize, controller.auth.twitterAccessToken);
+  router.delete('/authorize/twitter', passport.authorize, controller.auth.twitterDeauthorize);
+
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
   // router.post('/publish', passport.authorize, controller.post.publish);
@@ -655,5 +660,8 @@ module.exports = app => {
    * query.page, pagesize: 可选。分页参数，默认 1页 10行。
    */
   router.get('/db/income/history', passport.authorize, controller.postDashboard.getIncomeHistory);
+
+  // -------------------------------- 获取 twitter 时间线 -----------------------
+  router.get('/timeline/twitter', passport.authorize, controller.timeline.getTwitterTimeline);
   
 };

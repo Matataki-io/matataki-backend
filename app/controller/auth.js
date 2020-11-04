@@ -494,6 +494,49 @@ class AuthController extends Controller {
         break;
     }
   }
+
+  async twitterRequestToken() {
+    const { ctx } = this;
+    const { callbackUrl } = ctx.request.query;
+    const reply = await this.service.auth.twitterRequestToken(callbackUrl);
+    if (reply && reply.oauth_token) {
+      ctx.body = {
+        ...ctx.msg.success,
+        data: reply.oauth_token
+      }
+    }
+    else {
+      ctx.body = {
+        ...ctx.msg.failure,
+        data: reply
+      }
+    }
+  }
+
+  async twitterAccessToken() {
+    const { ctx } = this;
+    const { oauthToken, oauthVerifier } = ctx.request.body;
+    const res = await this.service.auth.twitterAccessToken(ctx.user.id, oauthToken, oauthVerifier);
+    if (res) {
+      if (res.code === 0) ctx.body = ctx.msg.success
+      else ctx.body = ctx.msg.invalidTwitterOauthToken;
+    }
+    else {
+      ctx.body = {
+        ...ctx.msg.failure,
+        data: reply
+      }
+    };
+  }
+
+  async twitterDeauthorize() {
+    const { ctx } = this;
+    const res = await this.service.auth.twitterDeauthorize(ctx.user.id)
+    ctx.body = {
+      ...ctx.msg.success,
+      data: res
+    }
+  }
 }
 
 module.exports = AuthController;
