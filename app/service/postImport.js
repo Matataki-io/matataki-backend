@@ -597,7 +597,10 @@ class PostImportService extends Service {
       let cover = '';
       if (coverUrl) {
         const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
-        cover = await this.uploadArticleImage(coverUrl, parsedCoverUpload);
+        const coverResult = await this.uploadArticleImage(coverUrl, parsedCoverUpload);
+        if (coverResult) {
+          cover = coverResult;
+        }
       }
 
       // 处理图片
