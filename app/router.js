@@ -662,6 +662,13 @@ module.exports = app => {
   router.get('/db/income/history', passport.authorize, controller.postDashboard.getIncomeHistory);
 
   // -------------------------------- 获取 twitter 时间线 -----------------------
+  // get home timeline
   router.get('/timeline/twitter', passport.authorize, controller.timeline.getTwitterTimeline);
+  // get user timeline
+  router.get('/timeline/twitter/user', passport.verify, controller.timeline.getTwitterUserTimeline);
+  // 设置是否开启自己的 user timeline
+  router.post('/timeline/twitter/user', passport.authorize, controller.timeline.setTwitterUserTimeLineSwitch);
+  // 获取 twitter 用户信息
+  router.get('/twitter/userinfo', passport.verify, controller.timeline.getTwitterUserInfo);
   
 };
