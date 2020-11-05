@@ -537,15 +537,20 @@ class PostImportService extends Service {
     }
   }
   async handleBihu(url) {
+    this.logger.info('bihu url is: ', url);
+
     const BIHUAPI = 'https://be02.bihu.com/bihube-pc/api/content/show/getArticle2';
     const BIHUOSS = 'https://oss-cdn2.bihu-static.com';
     const SSIMG = 'https://ssimg.frontenduse.top';
+    const BIHUSHORTCONTENT = 'https://be02.bihu.com/bihube-pc/bihu/shortContent';
 
-    const KEY = '/article/';
-    const IDX = url.indexOf(KEY);
-    const ID = parseInt(url.slice(IDX + KEY.length));
+    let KEY = '';
+    const KEYArticle = '/article/';
+    const KEYShort = '/shortContent/';
 
-    try {
+    // 处理文章
+    const handleArticle = async ID => {
+      // 获取文章信息
       const result = await axios({
         method: 'POST',
         url: BIHUAPI,
@@ -554,7 +559,7 @@ class PostImportService extends Service {
         },
       });
 
-      this.logger.info('url, id, result', url, ID, result.data.data);
+      this.logger.info('article result', url, ID, result.data.data);
 
       let title = '';
       // 文章信息
@@ -565,62 +570,133 @@ class PostImportService extends Service {
       }
 
       const { data } = result.data;
-      // 文章
-      if (data.articleType === 1) {
-        const resultContent = await axios({
-          method: 'GET',
-          url: `${BIHUOSS}/${data.content}`,
-        });
-
-        // 获取内容
-        let content = '';
-        if (resultContent.status === 200 && resultContent.data) {
-          content = resultContent.data;
-        }
-
-        // 封面处理
-        const coverUrl = data.imgList[0].name ? `${BIHUOSS}/${data.imgList[0].name}` : '';
-        let cover = '';
-        if (coverUrl) {
-          const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
-          cover = await this.uploadArticleImage(coverUrl, parsedCoverUpload);
-        }
-
-        // 处理图片
-        if (content) {
-          const $ = cheerio.load(content);
-          const _imgElement = $('img').toArray();
-          for (let i = 0; i < _imgElement.length; i++) {
-            console.log(_imgElement[i].attribs.src);
-            const _src = _imgElement[i].attribs.src;
-            const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
-            const imgUpUrl = await this.uploadArticleImage(_src, parsedCoverUpload);
-            if (i === 0 && !cover && imgUpUrl) {
-              cover = imgUpUrl;
-            }
-            if (imgUpUrl) {
-              _imgElement[i].attribs.src = `${SSIMG}${imgUpUrl}`;
-            }
-          }
-          content = $('body').html();
-        }
-
-        return {
-          title,
-          cover,
-          content,
-        };
-      } else if (data.articleType === 0) {
-        // 链接文章
+      // 按照链接文章处理 比如： https://bihu.com/article/1064119248
+      if (data.articleType === 0) {
         return {
           title,
           cover: '',
           content: data.content,
         };
       }
+      // 其他全部按照文章来处理 目前有 1 2
+      // articleType === 1 https://bihu.com/article/1071410180
+      // articleType === 2 https://bihu.com/article/1761774697
+      const resultContent = await axios({
+        method: 'GET',
+        url: `${BIHUOSS}/${data.content}`,
+      });
 
-      throw new Error('other error', data);
+      // 获取内容
+      let content = '';
+      if (resultContent.status === 200 && resultContent.data) {
+        content = resultContent.data;
+      }
 
+      // 封面处理
+      const coverUrl = data.imgList[0].name ? `${BIHUOSS}/${data.imgList[0].name}` : '';
+      let cover = '';
+      if (coverUrl) {
+        const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
+        cover = await this.uploadArticleImage(coverUrl, parsedCoverUpload);
+      }
+
+      // 处理图片
+      if (content) {
+        const $ = cheerio.load(content);
+        const _imgElement = $('img').toArray();
+        for (let i = 0; i < _imgElement.length; i++) {
+          console.log(_imgElement[i].attribs.src);
+          const _src = _imgElement[i].attribs.src;
+          const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
+          const imgUpUrl = await this.uploadArticleImage(_src, parsedCoverUpload);
+          if (i === 0 && !cover && imgUpUrl) {
+            cover = imgUpUrl;
+          }
+          if (imgUpUrl) {
+            _imgElement[i].attribs.src = `${SSIMG}${imgUpUrl}`;
+          }
+        }
+        content = $('body').html();
+      }
+
+      return {
+        title,
+        cover,
+        content,
+      };
+    };
+
+    // 处理微文
+    const handleShortContent = async ID => {
+      // 获取内容
+      const result = await axios({
+        method: 'GET',
+        url: `${BIHUSHORTCONTENT}/${ID}`,
+      });
+
+      let content = '';
+      if (result.status === 200 && result.data.data) {
+        content = result.data.data.content;
+      } else {
+        throw new Error('result error', result);
+      }
+
+      const { data } = result.data;
+      let cover = '';
+      if (data.snapimage) {
+        // 微文的图片
+        const snapimageResult = data.snapimage.split(',');
+        let imgMd = '';
+        for (let i = 0; i < snapimageResult.length; i++) {
+          // 处理图片
+          const url = snapimageResult[i];
+          const coverUrl = url ? `${BIHUOSS}/${url}` : '';
+          if (coverUrl) {
+            const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
+            const imgUrl = await this.uploadArticleImage(coverUrl, parsedCoverUpload);
+            if (imgUrl) {
+              imgMd += `![imgUrl](${SSIMG}/${imgUrl})`;
+            }
+
+            // 第一张当封面
+            if (i === 0 && imgUrl) {
+              cover = imgUrl;
+            }
+          }
+        }
+        // 添加到尾部
+        content += imgMd;
+      }
+      return {
+        title: '',
+        cover,
+        content,
+      };
+    };
+
+    // 判断是文章还是微文
+    if (url.indexOf(KEYArticle) !== -1) {
+      KEY = KEYArticle;
+    } else if (url.indexOf(KEYShort) !== -1) {
+      KEY = KEYShort;
+    } else {
+      throw new Error('other url', url);
+    }
+
+    // 获取 ID
+    const IDX = url.indexOf(KEY);
+    const ID = parseInt(url.slice(IDX + KEY.length));
+    if (!ID) {
+      throw new Error('not article id error', url);
+    }
+
+    try {
+      if (KEY === KEYArticle) {
+        return await handleArticle(ID);
+      } else if (KEY === KEYShort) {
+        return await handleShortContent(ID);
+      }
+      throw new Error('not match key', KEY);
     } catch (e) {
       this.logger.error('PostImportService:: handleBihu error:', e);
       return null;
