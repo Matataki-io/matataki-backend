@@ -36,7 +36,6 @@ class TimelineService extends Service {
     cb.setConsumerKey(this.config.twitterConsumerKey.key, this.config.twitterConsumerKey.secret)
   
     const reply = await new Promise((resolve, reject) => {
-      console.log('twitter screen name是:', screenName)
       const params = {
         screen_name: screenName,
         count: pagesize,
@@ -67,7 +66,6 @@ class TimelineService extends Service {
     cb.setConsumerKey(this.config.twitterConsumerKey.key, this.config.twitterConsumerKey.secret)
 
     const reply = await new Promise((resolve, reject) => {
-      console.log('screenName:', screenName)
       cb.__call("users_show", { screen_name: screenName }, function (reply, rate, err) {
         if (err) {
           reject('error response or timeout exceeded' + err.error)

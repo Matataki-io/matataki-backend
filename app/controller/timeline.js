@@ -31,7 +31,6 @@ class TimelineController extends Controller {
       return
     }
     const res = await this.service.timeline.getTwitterUserTimeline(accountInfo.data.account, parseInt(page), parseInt(pagesize), parseInt(maxId));
-    console.log('res结果：', accountInfo.data.account, res)
     if (!res.code) {
       ctx.body = {
         ...ctx.msg.success,
