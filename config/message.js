@@ -135,6 +135,19 @@ module.exports = {
   // direct trade
   marketNotExist: 11300,
   notInTheFuture: 11400,
+  // twitter 相关
+  // twitter授权token失效
+  invalidTwitterOauthToken: 11500,
+  // 未获取 twitter 授权
+  twitterNotAuthorized: 11501,
+  // 收到了 twitter API 的错误反馈
+  twitterApiErrorFeedback: 11502,
+  // 推特被锁定
+  twitterIsLocked: 11503,
+  // 未绑定 twitter
+  unboundTwitter: 11504,
+  // 未开启推特时间线
+  twitterTimelineIsNotTurnedOn: 11505,
 
   returnObj(lang) {
 
@@ -223,7 +236,12 @@ module.exports = {
       notCollaborator: { code: this.notCollaborator, message: 'Not a token collaborator' },
       marketNotExist: { code: this.marketNotExist, message: 'The market does not exist.' },
       notInTheFuture: { code: this.notInTheFuture, message: 'Not in the future, At least two minutes later' },
-
+      invalidTwitterOauthToken: {code: this.invalidTwitterOauthToken, message: 'The Twitter authorization request has expired. Please try again.'},
+      twitterNotAuthorized: {code: this.twitterNotAuthorized, message: 'Twitter not authorized'},
+      twitterApiErrorFeedback: {code: this.twitterApiErrorFeedback, message: 'Received Twitter API error feedback'},
+      twitterIsLocked: {code: this.twitterIsLocked, message: 'The user’s twitter are protected and cannot be viewed'},
+      unboundTwitter: {code: this.unboundTwitter, message: 'Unbound Twitter'},
+      twitterTimelineIsNotTurnedOn: {code: this.twitterTimelineIsNotTurnedOn, message: 'Twitter timeline is not turned on'},
     };
 
     const zh = {
@@ -312,6 +330,12 @@ module.exports = {
       notCollaborator: { code: this.notCollaborator, message: '你不是此Fan票的协作者' },
       marketNotExist: { code: this.marketNotExist, message: '市场不存在' },
       notInTheFuture: { code: this.notInTheFuture, message: '请填写未来的时间，至少是两分钟后' },
+      invalidTwitterOauthToken: {code: this.invalidTwitterOauthToken, message: 'Twitter 授权申请已过期，请重试。'},
+      twitterNotAuthorized: {code: this.twitterNotAuthorized, message: '该账户未获取 Twitter 授权'},
+      twitterApiErrorFeedback: {code: this.twitterApiErrorFeedback, message: '收到 Twitter API 错误反馈'},
+      twitterIsLocked: {code: this.twitterIsLocked, message: '用户的推文受到保护，无法查看'},
+      unboundTwitter: {code: this.unboundTwitter, message: '未绑定 Twitter'},
+      twitterTimelineIsNotTurnedOn: {code: this.twitterTimelineIsNotTurnedOn, message: '未开启 Twitter 时间线'},
     };
 
     let message;

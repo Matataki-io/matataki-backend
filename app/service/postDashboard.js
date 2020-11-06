@@ -36,7 +36,7 @@ class PostDashboardService extends Service {
     // 查询主体部分
     const select = {
       bookmark: `SELECT COUNT(*) AS count FROM ${TABLE.BOOKMARKS} WHERE pid IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)`,
-      comment: `SELECT COUNT(*) AS count FROM ${TABLE.COMMENTS} WHERE sign_id IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)`,
+      comment: `SELECT COUNT(*) AS count FROM ${TABLE.COMMENTS} WHERE type = 3 AND sign_id IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)`,
       sale: `SELECT COUNT(*) AS count FROM ${TABLE.ORDERS} WHERE status = 9 AND signid IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)`,
       reward: `SELECT COUNT(*) AS count FROM ${TABLE.ASSETS_TOKEN_LOG} WHERE type = 'reward_article' AND to_uid = :userId`
     }
@@ -187,7 +187,8 @@ class PostDashboardService extends Service {
       FROM
         ${TABLE.COMMENTS}
       WHERE
-        sign_id IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)
+        type = 3
+        AND sign_id IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)
         ${ days ? whereDate : ''}
       GROUP
         BY DATE(create_time);
@@ -383,7 +384,8 @@ class PostDashboardService extends Service {
       JOIN
         ${TABLE.COMMENTS} c ON c.sign_id = p.id
       WHERE
-        p.uid = :userId
+        c.type = 3
+        AND p.uid = :userId
         ${ days ? whereDate : '' }
       GROUP BY
         p.id
@@ -401,7 +403,8 @@ class PostDashboardService extends Service {
         JOIN
           ${TABLE.COMMENTS} c ON c.sign_id = p.id
         WHERE
-          p.uid = :userId
+          c.type = 3
+          AND p.uid = :userId
           ${ days ? whereDate : '' }
         GROUP BY
           p.id
