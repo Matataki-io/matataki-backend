@@ -42,12 +42,8 @@ class TimelineController extends Controller {
     }
     else if (res.code === 2) {
       if (res.reply.error === 'Not authorized.') ctx.body = ctx.msg.twitterIsLocked;
-      else ctx.body = {
-        ...ctx.msg.twitterApiErrorFeedback,
-        data: {
-          screen_name: accountInfo.data.account
-        }
-      };
+      else ctx.body = ctx.msg.twitterApiErrorFeedback;
+      ctx.body.data = { screen_name: accountInfo.data.account };
     }
     else ctx.body = ctx.msg.failure;
   }
