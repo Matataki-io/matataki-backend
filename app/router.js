@@ -643,7 +643,7 @@ module.exports = app => {
    * 获取用户所有文章的总收益。
    * query.days: 可选。筛选 N 天内的收益，留空则不筛选。
    */
-  router.get('/db/income/sum',passport.authorize, controller.postDashboard.getSumIncome);
+  router.get('/db/income/sum', passport.authorize, controller.postDashboard.getSumIncome);
 
   /**
    * 获取用户某个 token 的收益来源于哪些文章，并以金额倒序。
@@ -663,5 +663,14 @@ module.exports = app => {
 
   // -------------------------------- 获取 twitter 时间线 -----------------------
   router.get('/timeline/twitter', passport.authorize, controller.timeline.getTwitterTimeline);
-  
+
+
+  // -------------------------------- 收藏夹 --------------------------------
+  // 创建收藏夹
+  router.post('/favorites/create', passport.authorize, controller.favorites.create);
+  // 保存收藏夹
+  router.post('/favorites/save', passport.authorize, controller.favorites.save);
+  // 获取自己的收藏夹列表
+  router.get('/favorites/list', passport.verify, controller.favorites.list);
+
 };
