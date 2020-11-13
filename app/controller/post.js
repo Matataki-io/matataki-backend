@@ -449,12 +449,17 @@ class PostController extends Controller {
       author = null,
       extra = null,
       filter = 7,
+      showAll = 0, // 0 有效文章 1 隐藏文章
     } = this.ctx.query;
 
     if (typeof channel === 'string') channel = parseInt(channel);
     if (typeof filter === 'string') filter = parseInt(filter);
     const requestUser = ctx.user;
-    const isShowingDeleted = requestUser.isAuthenticated ? Number(author) === requestUser.id : false;
+    // console.log('requestUser', requestUser);
+    // 是否显示隐藏文章 如果是登陆后看自己的文章 并且 查看所有文章
+    const isShowingDeleted = requestUser.isAuthenticated ? Boolean((Number(author) === requestUser.id) && (Number(showAll) !== 0)) : false;
+    // console.log('isShowingDeleted', isShowingDeleted, typeof isShowingDeleted);
+
     const postData = await this.service.post.timeRankSlow(
       parseInt(page),
       parseInt(pagesize),
