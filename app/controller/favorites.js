@@ -23,23 +23,45 @@ class FavoritesController extends Controller {
     const { ctx } = this;
     const { fid = '', pid = '' } = ctx.request.body;
     const result = await ctx.service.favorites.save({ fid, pid });
-
-    if (result.code === 0) {
-      ctx.body = {
-        ...ctx.msg.success,
-      };
-    } else {
-      ctx.body = {
-        ...ctx.msg.failure,
-      };
-      ctx.body.message = result.message;
-    }
+    ctx.body = {
+      ...ctx.msg.success,
+      ...result,
+    };
   }
+  async cancelSave() {
+    const { ctx } = this;
+    const { fid = '', pid = '' } = ctx.request.body;
+    const result = await ctx.service.favorites.cancelSave({ fid, pid });
+    ctx.body = {
+      ...ctx.msg.success,
+      ...result,
+    };
+  }
+
   async list() {
     const { ctx } = this;
-    const { userId } = ctx.query;
+    const { userId = '' } = ctx.query;
     const result = await ctx.service.favorites.list({ userId });
     ctx.body = {
+      ...ctx.msg.success,
+      ...result,
+    };
+  }
+  async post() {
+    const { ctx } = this;
+    const { userId = '', fid = '' } = ctx.query;
+    const result = await ctx.service.favorites.post({ userId, fid });
+    ctx.body = {
+      ...ctx.msg.success,
+      ...result,
+    };
+  }
+  async related() {
+    const { ctx } = this;
+    const { pid = '' } = ctx.query;
+    const result = await ctx.service.favorites.related({ pid });
+    ctx.body = {
+      ...ctx.msg.success,
       ...result,
     };
   }

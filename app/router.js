@@ -670,7 +670,11 @@ module.exports = app => {
   router.post('/favorites/create', passport.authorize, controller.favorites.create);
   // 保存收藏夹
   router.post('/favorites/save', passport.authorize, controller.favorites.save);
+  router.post('/favorites/cancel_save', passport.authorize, controller.favorites.cancelSave);
   // 获取自己的收藏夹列表
   router.get('/favorites/list', passport.verify, controller.favorites.list);
-
+  // 获取自己的收藏夹列表文章
+  router.get('/favorites/post', passport.verify, controller.favorites.post);
+  // 获取文章和自己的收藏夹关系
+  router.get('/favorites/related', passport.verify, controller.favorites.related);
 };
