@@ -45,6 +45,72 @@ class FavoritesService extends Service {
       };
     }
   }
+  // 编辑收藏夹
+  // TODO
+  async edit({ fid, name, brief, status }) {
+    try {
+      this.logger.info('favorites update start', fid, name, brief, status);
+      if (!name || !fid) throw new Error('name or fid not empty');
+
+      const { ctx } = this;
+      const uid = ctx.user.id;
+      const time = moment().format('YYYY-MM-DD HH:mm:ss');
+
+      const row = {
+        name,
+        brief,
+        status,
+        update_time: time,
+      };
+
+      const options = {
+        where: {
+          id: fid,
+          uid,
+        },
+      };
+      const result = await this.app.mysql.update('favorites', row, options);
+      const updateSuccess = result.affectedRows === 1;
+      if (updateSuccess) {
+        return {
+          code: 0,
+        };
+      }
+      throw new Error('favorites update faild', JSON.stringify(result));
+
+    } catch (error) {
+      this.logger.error('FavoritesService update error. %j', error.toString());
+      return {
+        code: -1,
+        message: error.toString(),
+      };
+    }
+  }
+  // 删除收藏夹
+  // TODO
+  async delete({ fid }) {
+    this.logger.info('favorites delete start', fid);
+    if (!fid) throw new Error('fid not empty');
+
+    const { ctx, app } = this;
+    const uid = ctx.user.id;
+    const conn = await app.mysql.beginTransaction();
+    try {
+      await app.mysql.delete('favorites_list', { fid });
+      await app.mysql.delete('favorites', { id: fid, uid });
+      await conn.commit();
+      return {
+        code: 0,
+      };
+    } catch (error) {
+      await conn.rollback();
+      this.logger.error('FavoritesService update error. %j', error.toString());
+      return {
+        code: -1,
+        message: error.toString(),
+      };
+    }
+  }
 
   // 保存到收藏夹
   // TODO
@@ -211,12 +277,17 @@ class FavoritesService extends Service {
       // console.log('userResult', userResult);
 
       // 查询文章列表
-      const postsSql = 'SELECT f.fid, f.pid, f.create_time, p.title, p.short_content, p.cover from favorites_list f LEFT JOIN posts p ON f.pid = p.id  WHERE f.fid = ?;';
+      const postsSql = 'SELECT f.fid, f.pid, f.create_time, p.title, p.short_content, p.cover from favorites_list f LEFT JOIN posts p ON f.pid = p.id  WHERE f.fid = ? ORDER BY create_time DESC;';
       const postsResults = await this.app.mysql.query(postsSql, fid);
       // console.log('postsResults', postsResults);
 
       // 处理邮箱昵称
       const emailMask = this.ctx.helper.emailMask;
+
+      //  查询数量
+      const countSql = 'SELECT COUNT(1) AS count from favorites_list WHERE fid = ?;';
+      const count = await this.app.mysql.query(countSql, fid);
+      // console.log('count', count);
 
       const info = {
         id: favoritesResult.id,
@@ -232,7 +303,7 @@ class FavoritesService extends Service {
         code: 0,
         data: {
           info,
-          count: 0,
+          count: count[0].count || 0,
           list: postsResults,
         },
       };

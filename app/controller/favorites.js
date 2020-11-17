@@ -19,6 +19,24 @@ class FavoritesController extends Controller {
       ctx.body.message = result.message;
     }
   }
+  async edit() {
+    const { ctx } = this;
+    const { fid = '', name = '', brief = '', status = 0 } = ctx.request.body;
+    const result = await ctx.service.favorites.edit({ fid, name, brief, status });
+    ctx.body = {
+      ...ctx.msg.success,
+      ...result,
+    };
+  }
+  async delete() {
+    const { ctx } = this;
+    const { fid = '' } = ctx.request.body;
+    const result = await ctx.service.favorites.delete({ fid });
+    ctx.body = {
+      ...ctx.msg.success,
+      ...result,
+    };
+  }
   async save() {
     const { ctx } = this;
     const { fid = '', pid = '' } = ctx.request.body;

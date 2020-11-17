@@ -668,6 +668,10 @@ module.exports = app => {
   // -------------------------------- 收藏夹 --------------------------------
   // 创建收藏夹
   router.post('/favorites/create', passport.authorize, controller.favorites.create);
+  // 编辑收藏夹
+  router.put('/favorites/edit', passport.authorize, controller.favorites.edit);
+  // 删除收藏夹
+  router.delete('/favorites/delete', passport.authorize, controller.favorites.delete);
   // 保存收藏夹
   router.post('/favorites/save', passport.authorize, controller.favorites.save);
   router.post('/favorites/cancel_save', passport.authorize, controller.favorites.cancelSave);
