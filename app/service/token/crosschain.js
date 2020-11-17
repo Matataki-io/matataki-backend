@@ -37,18 +37,20 @@ class CrossChainService extends Service {
   }
 
   async issueMintPermit(token, to, value) {
-    const { data } = await this.api.post(`/token/${token}/issue`, {
+    const { data } = await this.api.post(`/token/${token}/mint`, {
       to,
       value,
     });
     return data;
   }
 
-  // async burn(tokenAddress, to, amount) {
-  //   const token = PeggedToken.attach(tokenAddress).connect(this.nonceManager);
-  //   const receipt = await token.burn(to, amount);
-  //   this.logger.info('receipt: ', receipt);
-  // }
+  async burn(tokenAddress, to, amount) {
+    const { data } = await this.api.post(`/token/${tokenAddress}/burn`, {
+      to,
+      value: amount,
+    });
+    return data;
+  }
 }
 
 module.exports = CrossChainService;
