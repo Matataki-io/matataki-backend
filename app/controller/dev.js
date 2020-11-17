@@ -33,6 +33,29 @@ class OnlyForDevController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = { result };
   }
+
+  async createPeggedTokenOnBSC() {
+    // @XXX: remove before go mainnet
+    const { ctx } = this;
+    const { name, symbol, decimals } = ctx.request.body;
+    const result = await this.service.token.crosschain._createPeggedTokenOnBsc(name, symbol, Number(decimals));
+    if (result.statusCode !== 201) {
+      ctx.body = ctx.msg.failure;
+      ctx.body.data = { error: 'Something bad happened, please contact Matataki Team ASAP.' };
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result.data.hash;
+  }
+
+  async signMintPermit() {
+    // @XXX: remove before go mainnet
+    const { ctx } = this;
+    const { token, to, value } = ctx.request.body;
+    const result = await this.service.token.crosschain.issueMintPermit(token, to, value);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
 }
 
 module.exports = OnlyForDevController;

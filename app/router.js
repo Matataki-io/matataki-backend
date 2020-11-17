@@ -512,6 +512,8 @@ module.exports = app => {
   // 开发用
   router.get('/_internal/getWallet', passport.apiVerify, controller.dev.getActiveUnderBalanceWallet);
   router.post('/_internal/justAirdrop', passport.apiVerify, controller.dev.justAirDrop);
+  router.post('/_dev/createPeggedTokenOnBSC/fffrrr', passport.verify, controller.dev.createPeggedTokenOnBSC);
+  router.post('/_dev/signMintPermit/ffasfrrr', passport.verify, controller.dev.signMintPermit);
   router.get('/_internal/isTxExistInDB/:txHash', passport.verify, controller.dev.isExistInDB);
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
