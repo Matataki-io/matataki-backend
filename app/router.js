@@ -309,6 +309,8 @@ module.exports = app => {
   router.post('/minetoken/deposit', passport.authorize, controller.mineToken.deposit);
   router.get('/token/myAddress', passport.authorize, controller.user.getHostingAccountPublicKey);
   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
+  router.post('/minetoken/:id/withdrawToBsc', passport.authorize, controller.mineToken.withdrawToBsc);
+  router.get('/minetoken/:id/getBscAddress', passport.verify, controller.mineToken.getBscAddress);
 
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
@@ -512,8 +514,8 @@ module.exports = app => {
   // 开发用
   router.get('/_internal/getWallet', passport.apiVerify, controller.dev.getActiveUnderBalanceWallet);
   router.post('/_internal/justAirdrop', passport.apiVerify, controller.dev.justAirDrop);
-  router.post('/_dev/createPeggedTokenOnBSC/fffrrr', passport.verify, controller.dev.createPeggedTokenOnBSC);
-  router.post('/_dev/signMintPermit/ffasfrrr', passport.verify, controller.dev.signMintPermit);
+  // @todo: remove them when you done
+  router.post('/_dev/ecd29987-bd8d-42ba-9453-04f28aa25612/createPeggedTokenOnBSC/ed87f676-8d4a-4a28-835c-6ac8128342c2', passport.verify, controller.dev.createPeggedTokenOnBSC);
   router.get('/_internal/isTxExistInDB/:txHash', passport.verify, controller.dev.isExistInDB);
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);

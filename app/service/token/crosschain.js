@@ -31,8 +31,10 @@ class CrossChainService extends Service {
     return data;
   }
 
-  async isPeggedTokenExistOnBsc(name, symbol) {
-    const { data } = await this.api.post(`/token/compute/${name}/${symbol}`);
+  async getAddressFromNameAndSymbol(name, symbol) {
+    const { data } = await this.api.get('/token/compute/', { data: {
+      name, symbol,
+    } });
     return data;
   }
 

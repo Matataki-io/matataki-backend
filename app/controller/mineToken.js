@@ -496,6 +496,75 @@ class MineTokenController extends Controller {
     }
   }
 
+  async getBscAddress() {
+    const { ctx } = this;
+    const tokenId = ctx.params.id;
+    const token = await this.service.token.mineToken.get(tokenId);
+    if (!token) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = 'Token not exist';
+      return;
+    }
+    const tokenAddress = await this.service.token.crosschain.getAddressFromNameAndSymbol(token.name, token.symbol);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: tokenAddress.data,
+    };
+  }
+
+  async withdrawToBsc() {
+    const { ctx } = this;
+    const tokenId = ctx.params.id;
+    const { target, amount } = ctx.request.body;
+    if (isNaN(amount) || amount <= 0) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = 'Use legit amount';
+      return;
+    }
+    if (target.slice(0, 2) !== '0x' || target.length !== 42) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = 'Use legit ethereum address';
+      return;
+    }
+    const currentBalance = Number(await ctx.service.token.mineToken.balanceOf(ctx.user.id, tokenId));
+    if (currentBalance < amount) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = "You don't have so much token to do that, please check and try again.";
+      return;
+    }
+
+    const token = await this.service.token.mineToken.get(tokenId);
+    if (!token) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = 'Token not exist';
+      return;
+    }
+    const { data } = await this.service.token.crosschain.getAddressFromNameAndSymbol(token.name, token.symbol);
+    if (!data.isTokenDeployed) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = 'Pegged Token was not deployed.';
+      return;
+    }
+    try {
+      const permit = await this.service.token.mineToken.withdrawToBsc(tokenId, ctx.user.id, target, amount, data.addressLookUpBySymbol);
+      // @todo: 最好把 Permit 存到数据库，方便用户自己上传
+      ctx.body = {
+        ...ctx.msg.success,
+        data: { permit },
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = { error };
+    }
+  }
+
   async withdraw() {
     const { ctx } = this;
     const tokenId = ctx.params.id;
