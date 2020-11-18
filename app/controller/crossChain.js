@@ -21,13 +21,14 @@ class CrossChainController extends Controller {
     // 无任何检测，仅限工程师，请设置好接口的权限！！！
     const { ctx } = this;
     const { id } = ctx.params;
-    const { name, symbol, decimals } = await this.service.token.mineToken.get(id);
+    const token = await this.service.token.mineToken.get(id);
     if (!token) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.message = 'Token not exist';
       return;
     }
+    const { name, symbol, decimals } = token
     const result = await this.service.token.crosschain._createPeggedTokenOnBsc(name, symbol, Number(decimals));
     if (result.statusCode !== 201) {
       ctx.body = ctx.msg.failure;
