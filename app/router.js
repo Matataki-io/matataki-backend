@@ -309,6 +309,21 @@ module.exports = app => {
   router.post('/minetoken/deposit', passport.authorize, controller.mineToken.deposit);
   router.get('/token/myAddress', passport.authorize, controller.user.getHostingAccountPublicKey);
   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
+  // 出入站 跨链版
+
+  // 仅限工程师使用的 API
+  router.post('/minetoken/crosschain/_dev/createPeggedTokenOnBSC/', passport.apiAuthorize, controller.crossChain.createPeggedTokenOnBSCForAdmin);
+  router.post('/minetoken/crosschain/:id/_dev/createPeggedToken/BSC/', passport.apiAuthorize, controller.crossChain.createPeggedTokenOnBSCForAdminById);
+  router.post('/minetoken/crosschain/_dev/permit/mint/', passport.apiVerify, controller.crossChain.signMintPermit);
+
+  // 不写入数据的，无需权限
+  router.get('/minetoken/crosschain/:tokenOnBsc/:walletOnBsc/', passport.verify, controller.crossChain.getMintPermitNonceOf);
+  router.get('/minetoken/crosschain/:id/getBscAddress', passport.verify, controller.crossChain.getBscAddress);
+  router.get('/minetoken/crosschain/:tokenOnBsc/:walletOnBsc/:nonce', passport.verify, controller.crossChain.isPermitUsed);
+
+  // 有权限要求的API
+  router.post('/minetoken/crosschain/:id/withdrawToBsc', passport.authorize, controller.crossChain.withdrawToBsc);
+  router.get('/minetoken/crosschain/permit', passport.authorize, controller.crossChain.getMyIssuedPermit);
 
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
@@ -662,6 +677,7 @@ module.exports = app => {
   router.get('/db/income/history', passport.authorize, controller.postDashboard.getIncomeHistory);
 
   // -------------------------------- 获取 twitter 时间线 -----------------------
+  // get home timeline
   router.get('/timeline/twitter', passport.authorize, controller.timeline.getTwitterTimeline);
 
 
@@ -681,4 +697,11 @@ module.exports = app => {
   router.get('/favorites/post', passport.verify, controller.favorites.post);
   // 获取文章和自己的收藏夹关系
   router.get('/favorites/related', passport.verify, controller.favorites.related);
+
+  // get user timeline
+  router.get('/timeline/twitter/user', passport.verify, controller.timeline.getTwitterUserTimeline);
+  // 设置是否开启自己的 user timeline
+  router.post('/timeline/twitter/user', passport.authorize, controller.timeline.setTwitterUserTimeLineSwitch);
+  // 获取 twitter 用户信息
+  router.get('/twitter/userinfo', passport.verify, controller.timeline.getTwitterUserInfo);
 };

@@ -20,6 +20,7 @@ services:
     volumes:
       - /usr/local/smart-signature/ss-backend-config/config.prod.js:/usr/src/app/config/config.default.js
       - /usr/local/smart-signature/ss-backend-config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
+      - /usr/local/smart-signature/ss-backend-config/wechat_config.js:/usr/src/app/config/wechat_config.js
     ports:
       - 7653:7001
     networks:
@@ -34,6 +35,7 @@ services:
     volumes:
       - /usr/local/smart-signature/ss-backend-config/config.prod.js:/usr/src/app/config/config.default.js
       - /usr/local/smart-signature/ss-backend-config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
+      - /usr/local/smart-signature/ss-backend-config/wechat_config.js:/usr/src/app/config/wechat_config.js
     ports:
       - 7654:7001
     networks:
@@ -48,6 +50,7 @@ services:
     volumes:
       - /usr/local/smart-signature/ss-backend-config/config.local.js:/usr/src/app/config/config.default.js
       - /usr/local/smart-signature/ss-backend-config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
+      - /usr/local/smart-signature/ss-backend-config/wechat_config.js:/usr/src/app/config/wechat_config.js
     ports:
       - 7652:7001
     networks:
