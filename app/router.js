@@ -516,6 +516,7 @@ module.exports = app => {
   router.post('/_internal/justAirdrop', passport.apiVerify, controller.dev.justAirDrop);
   // @todo: remove them when you done
   router.post('/_dev/ecd29987-bd8d-42ba-9453-04f28aa25612/createPeggedTokenOnBSC/ed87f676-8d4a-4a28-835c-6ac8128342c2', passport.verify, controller.dev.createPeggedTokenOnBSC);
+  router.post('/_dev/ecd29987-bd8d-42ba-9453-04f28aa25612/mint/ed87f676-8d4a-4a28-835c-6ac8128342c2', passport.verify, controller.dev.signMintPermit);
   router.get('/_internal/isTxExistInDB/:txHash', passport.verify, controller.dev.isExistInDB);
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
