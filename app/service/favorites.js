@@ -191,7 +191,7 @@ class FavoritesService extends Service {
       const uid = ctx.user.id;
 
       // 查询自己的
-      if (uid) {
+      if (uid && Number(uid) === Number(userId)) {
         results = await this.app.mysql.select('favorites', {
           where: { uid },
           columns: [ 'id', 'name', 'brief', 'status' ],
@@ -241,7 +241,7 @@ class FavoritesService extends Service {
     }
   }
   // 获取自己的收藏夹列表文章
-  async post({ userId, fid }) {
+  async post({ userId, fid, page, pagesize }) {
     try {
       this.logger.info('favorites get post start');
       const { ctx } = this;
@@ -263,7 +263,7 @@ class FavoritesService extends Service {
 
       // console.log('favoritesResult', favoritesResult);
       // 不是公开文章并且没有登陆
-      if (favoritesResult !== 0 && !uid) {
+      if (Number(favoritesResult.status) !== 0 && !uid) {
         throw new Error('favorites Permission denied');
       }
 
@@ -277,8 +277,11 @@ class FavoritesService extends Service {
       // console.log('userResult', userResult);
 
       // 查询文章列表
-      const postsSql = 'SELECT f.fid, f.pid, f.create_time, p.title, p.short_content, p.cover from favorites_list f LEFT JOIN posts p ON f.pid = p.id  WHERE f.fid = ? ORDER BY create_time DESC;';
-      const postsResults = await this.app.mysql.query(postsSql, fid);
+      const postsSql = `SELECT f.fid, f.pid, f.create_time, p.title, p.short_content, p.cover
+      from favorites_list f LEFT JOIN posts p ON f.pid = p.id WHERE f.fid = ?
+      ORDER BY f.create_time DESC LIMIT ?, ?;`;
+      const sqlPage = (page - 1) * pagesize;
+      const postsResults = await this.app.mysql.query(postsSql, [ fid, Number(sqlPage), Number(pagesize) ]);
       // console.log('postsResults', postsResults);
 
       // 处理邮箱昵称

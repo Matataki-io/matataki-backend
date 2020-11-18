@@ -67,8 +67,8 @@ class FavoritesController extends Controller {
   }
   async post() {
     const { ctx } = this;
-    const { userId = '', fid = '' } = ctx.query;
-    const result = await ctx.service.favorites.post({ userId, fid });
+    const { userId = '', fid = '', page = 1, pagesize = 20 } = ctx.query;
+    const result = await ctx.service.favorites.post({ userId, fid, page, pagesize });
     ctx.body = {
       ...ctx.msg.success,
       ...result,
