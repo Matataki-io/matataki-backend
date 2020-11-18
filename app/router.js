@@ -309,8 +309,21 @@ module.exports = app => {
   router.post('/minetoken/deposit', passport.authorize, controller.mineToken.deposit);
   router.get('/token/myAddress', passport.authorize, controller.user.getHostingAccountPublicKey);
   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
-  router.post('/minetoken/:id/withdrawToBsc', passport.authorize, controller.mineToken.withdrawToBsc);
-  router.get('/minetoken/:id/getBscAddress', passport.verify, controller.mineToken.getBscAddress);
+  // 出入站 跨链版
+
+  // 仅限工程师使用的 API
+  router.post('/minetoken/crosschain/_dev/createPeggedTokenOnBSC/', passport.apiAuthorize, controller.crossChain.createPeggedTokenOnBSCForAdmin);
+  router.post('/minetoken/crosschain/:id/_dev/createPeggedToken/BSC/', passport.apiAuthorize, controller.crossChain.createPeggedTokenOnBSCForAdminById);
+  router.post('/minetoken/crosschain/_dev/permit/mint/', passport.apiVerify, controller.crossChain.signMintPermit);
+
+  // 不写入数据的，无需权限
+  router.get('/minetoken/crosschain/:tokenOnBsc/:walletOnBsc/', passport.verify, controller.crossChain.getMintPermitNonceOf);
+  router.get('/minetoken/crosschain/:id/getBscAddress', passport.verify, controller.crossChain.getBscAddress);
+  router.get('/minetoken/crosschain/:tokenOnBsc/:walletOnBsc/:nonce', passport.verify, controller.crossChain.isPermitUsed);
+
+  // 有权限要求的API
+  router.post('/minetoken/crosschain/:id/withdrawToBsc', passport.authorize, controller.crossChain.withdrawToBsc);
+  router.get('/minetoken/crosschain/permit', passport.authorize, controller.crossChain.getMyIssuedPermit);
 
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
@@ -514,9 +527,6 @@ module.exports = app => {
   // 开发用
   router.get('/_internal/getWallet', passport.apiVerify, controller.dev.getActiveUnderBalanceWallet);
   router.post('/_internal/justAirdrop', passport.apiVerify, controller.dev.justAirDrop);
-  // @todo: remove them when you done
-  router.post('/_dev/ecd29987-bd8d-42ba-9453-04f28aa25612/createPeggedTokenOnBSC/ed87f676-8d4a-4a28-835c-6ac8128342c2', passport.verify, controller.dev.createPeggedTokenOnBSC);
-  router.post('/_dev/ecd29987-bd8d-42ba-9453-04f28aa25612/mint/ed87f676-8d4a-4a28-835c-6ac8128342c2', passport.verify, controller.dev.signMintPermit);
   router.get('/_internal/isTxExistInDB/:txHash', passport.verify, controller.dev.isExistInDB);
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);

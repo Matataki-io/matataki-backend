@@ -52,7 +52,8 @@ class OnlyForDevController extends Controller {
     // @XXX: remove before go mainnet
     const { ctx } = this;
     const { token, to, value } = ctx.request.body;
-    const result = await this.service.token.crosschain.issueMintPermit(token, to, value);
+    const latestNonce = await this.service.token.crosschain.getNonceOf(token, to);
+    const result = await this.service.token.crosschain.issueMintPermit(token, to, value, latestNonce);
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
   }

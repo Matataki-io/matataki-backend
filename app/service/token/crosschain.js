@@ -13,6 +13,15 @@ const axios = require('axios').default;
 class CrossChainService extends Service {
   constructor(ctx, app) {
     super(ctx, app);
+    this.app.mysql.queryFromat = function(query, values) {
+      if (!values) return query;
+      return query.replace(/\:(\w+)/g, function(txt, key) {
+        if (values.hasOwnProperty(key)) {
+          return this.escape(values[key]);
+        }
+        return txt;
+      }.bind(this));
+    };
     const { endpoint, accessToken } = this.config.nextApi;
     this.api = axios.create({
       baseURL: endpoint,
@@ -38,10 +47,50 @@ class CrossChainService extends Service {
     return data;
   }
 
-  async issueMintPermit(token, to, value) {
+  /**
+   * getNonceOfFromDB, 从Mint合约获得 Nonce
+   * 只返回最新一个可用的 nonce
+   * @param {string} token 其他区块链的代币地址
+   * @param {string} to 其他区块链的钱包地址
+   */
+  async getNonceOf(token, to) {
+    const { data } = await this.api.get(`/token/${token}/noncesOf/${to}`);
+    return data.data.nonce;
+  }
+
+  /**
+   * getNonceOfFromDB, 从数据库获得 Nonce
+   * 可以在没上传之前继续发行，但使用时需要先上传 Nonce 低的 Permit
+   * @param {string} token 其他区块链的代币地址
+   * @param {string} to 其他区块链的钱包地址
+   */
+  async getNonceOfFromDB(token, to) {
+    const result = await this.app.mysql.select('pegged_assets_permit', { where: { token, to }, orders: [[ 'id', 'desc' ]] });
+    if (result.length === 0) return 0;
+    return result[0].nonce + 1;
+  }
+
+  /**
+   * 获取我发行的 Permit
+   * @param {number} uid 用户 UID
+   */
+  async getMyIssuedPermits(uid) {
+    const result = await this.app.mysql.select('pegged_assets_permit', { where: { forUid: uid } });
+    return result.map(({
+      token, to, value, nonce, deadline, r, s, v,
+    }) => ({ token, to, value, nonce, deadline: Number(deadline), sig: { r, s, v } }));
+  }
+
+  async isPermitUsed(token, to, nonce) {
+    const { data } = await this.api.get(`/token/${token}/isPermitUsed/${to}/${nonce}`);
+    return data.data.isPermitUsed;
+  }
+
+  async issueMintPermit(token, to, value, nonce) {
     const { data } = await this.api.post(`/token/${token}/mint`, {
       to,
       value,
+      nonce,
     });
     return data;
   }
