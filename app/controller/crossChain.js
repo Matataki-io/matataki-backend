@@ -22,6 +22,12 @@ class CrossChainController extends Controller {
     const { ctx } = this;
     const { id } = ctx.params;
     const { name, symbol, decimals } = await this.service.token.mineToken.get(id);
+    if (!token) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = 'Token not exist';
+      return;
+    }
     const result = await this.service.token.crosschain._createPeggedTokenOnBsc(name, symbol, Number(decimals));
     if (result.statusCode !== 201) {
       ctx.body = ctx.msg.failure;
