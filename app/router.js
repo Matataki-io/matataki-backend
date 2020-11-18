@@ -658,7 +658,7 @@ module.exports = app => {
    * 获取用户所有文章的总收益。
    * query.days: 可选。筛选 N 天内的收益，留空则不筛选。
    */
-  router.get('/db/income/sum',passport.authorize, controller.postDashboard.getSumIncome);
+  router.get('/db/income/sum', passport.authorize, controller.postDashboard.getSumIncome);
 
   /**
    * 获取用户某个 token 的收益来源于哪些文章，并以金额倒序。
@@ -679,11 +679,29 @@ module.exports = app => {
   // -------------------------------- 获取 twitter 时间线 -----------------------
   // get home timeline
   router.get('/timeline/twitter', passport.authorize, controller.timeline.getTwitterTimeline);
+
+
+  // -------------------------------- 收藏夹 --------------------------------
+  // 创建收藏夹
+  router.post('/favorites/create', passport.authorize, controller.favorites.create);
+  // 编辑收藏夹
+  router.put('/favorites/edit', passport.authorize, controller.favorites.edit);
+  // 删除收藏夹
+  router.delete('/favorites/delete', passport.authorize, controller.favorites.delete);
+  // 保存收藏夹
+  router.post('/favorites/save', passport.authorize, controller.favorites.save);
+  router.post('/favorites/cancel_save', passport.authorize, controller.favorites.cancelSave);
+  // 获取自己的收藏夹列表
+  router.get('/favorites/list', passport.verify, controller.favorites.list);
+  // 获取自己的收藏夹列表文章
+  router.get('/favorites/post', passport.verify, controller.favorites.post);
+  // 获取文章和自己的收藏夹关系
+  router.get('/favorites/related', passport.verify, controller.favorites.related);
+
   // get user timeline
   router.get('/timeline/twitter/user', passport.verify, controller.timeline.getTwitterUserTimeline);
   // 设置是否开启自己的 user timeline
   router.post('/timeline/twitter/user', passport.authorize, controller.timeline.setTwitterUserTimeLineSwitch);
   // 获取 twitter 用户信息
   router.get('/twitter/userinfo', passport.verify, controller.timeline.getTwitterUserInfo);
-  
 };
