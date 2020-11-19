@@ -1035,7 +1035,7 @@ class PostController extends Controller {
       this.service.postImport.handleArchive(x)
     );
     // 币乎
-    const bihuMatch = makeMatch(/https:\/\/(www\.)?bihu\.com\/.+/, x =>
+    const bihuMatch = makeMatch(/https:\/\/(.*)?bihu\.com\/.+/, x =>
       this.service.postImport.handleBihu(x)
     );
 
