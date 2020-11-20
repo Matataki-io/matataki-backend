@@ -496,6 +496,7 @@ class MineTokenController extends Controller {
     }
   }
 
+
   async withdraw() {
     const { ctx } = this;
     const tokenId = ctx.params.id;
