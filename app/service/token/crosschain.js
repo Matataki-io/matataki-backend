@@ -1,4 +1,7 @@
 'use strict';
+
+const { EnumForPeggedAssetDeposit } = require('../../constant/Enums');
+
 const Service = require('egg').Service;
 const axios = require('axios').default;
 // const { IPeggedToken, IPeggedTokenFactory, IPeggedTokenMinter } = require('../ethers/interfaces');
@@ -101,6 +104,36 @@ class CrossChainService extends Service {
       value: amount,
     });
     return data;
+  }
+
+  async requestToDeposit(tokenId, uid, txHash) {
+    const token = await this.app.mysql.get('pegged_assets', { tokenId });
+    if (!token) throw new Error('No such token.');
+    const isSameTxHashExist = await this.app.mysql.get('pegged_assets_deposit', { burnTx: txHash });
+    if (isSameTxHashExist) throw new Error('Tx existed already');
+    const { data } = await this.api.get(`/token/${token.contractAddress}/event/burn/${uid}/${txHash}`);
+    const { atBlock, confirmation, amount } = data.event;
+    const status = confirmation >= 6 ? EnumForPeggedAssetDeposit.BURN_EVENT_CONFIRMED : EnumForPeggedAssetDeposit.BURN_EVENT_CREATED;
+    await this.app.mysql.insert(
+      'pegged_assets_deposit',
+      { uid, fromChain: 'bsc', burnTx: txHash, value: amount, atBlock, status }
+    );
+  }
+
+  async checkNotConfirmedDeposit() {
+    const notConfirmedDeposit = await this.app.mysql.select(
+      'pegged_assets_deposit',
+      { where: { status: EnumForPeggedAssetDeposit.BURN_EVENT_CREATED } }
+    );
+    const theirTxHash = notConfirmedDeposit.map(tx => tx.burnTx);
+    const { data } = await this.api.get('/blockchain/getTransactions', {
+      txHashes: theirTxHash,
+    });
+    const filteredTxs = data.filter(e => e !== null && e.confirmations >= 6);
+    const goodTxs = filteredTxs.map(e => e.hash);
+    const rowsToUpdate = notConfirmedDeposit.filter(r => goodTxs.indexOf(r.burnTx) > -1);
+    const updatedRows = rowsToUpdate.map(r => ({ ...r, status: EnumForPeggedAssetDeposit.BURN_EVENT_CONFIRMED }));
+    await this.app.mysql.updateRows('pegged_assets_deposit', updatedRows);
   }
 }
 
