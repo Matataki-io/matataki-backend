@@ -314,15 +314,15 @@ module.exports = app => {
   // 仅限工程师使用的 API
   router.post('/minetoken/crosschain/_dev/createPeggedTokenOnBSC/', passport.apiAuthorize, controller.crossChain.createPeggedTokenOnBSCForAdmin);
   router.post('/minetoken/crosschain/:id/_dev/createPeggedToken/BSC/', passport.apiAuthorize, controller.crossChain.createPeggedTokenOnBSCForAdminById);
-  router.post('/minetoken/crosschain/_dev/permit/mint/', passport.apiVerify, controller.crossChain.signMintPermit);
 
   // 不写入数据的，无需权限
-  router.get('/minetoken/crosschain/:tokenOnBsc/:walletOnBsc/', passport.verify, controller.crossChain.getMintPermitNonceOf);
+  // router.get('/minetoken/crosschain/:tokenOnBsc/:walletOnBsc/', passport.verify, controller.crossChain.getMintPermitNonceOf);
   router.get('/minetoken/crosschain/:id/getBscAddress', passport.verify, controller.crossChain.getBscAddress);
   router.get('/minetoken/crosschain/:tokenOnBsc/:walletOnBsc/:nonce', passport.verify, controller.crossChain.isPermitUsed);
 
   // 有权限要求的API
   router.post('/minetoken/crosschain/:id/withdrawToBsc', passport.authorize, controller.crossChain.withdrawToBsc);
+  router.post('/minetoken/crosschain/:id/depositFromBsc', passport.authorize, controller.crossChain.depositFromBsc);
   router.get('/minetoken/crosschain/permit', passport.authorize, controller.crossChain.getMyIssuedPermit);
 
   // 查询当前用户的token余额

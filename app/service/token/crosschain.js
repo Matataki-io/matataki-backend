@@ -4,6 +4,8 @@ const { EnumForPeggedAssetDeposit } = require('../../constant/Enums');
 
 const Service = require('egg').Service;
 const axios = require('axios').default;
+const consts = require('../consts');
+
 // const { IPeggedToken, IPeggedTokenFactory, IPeggedTokenMinter } = require('../ethers/interfaces');
 
 
@@ -106,18 +108,35 @@ class CrossChainService extends Service {
     return data;
   }
 
+  async fetchDepositEventBy(contractAddress, uid, txHash) {
+    const { data } = await this.api.get(`/token/${contractAddress}/event/burn/${uid}/${txHash}`);
+    return data.data.event;
+  }
+
   async requestToDeposit(tokenId, uid, txHash) {
+    // 寻找跨链Fan票
+    this.logger.info('requestToDeposit::tokenId', tokenId);
     const token = await this.app.mysql.get('pegged_assets', { tokenId });
-    if (!token) throw new Error('No such token.');
-    const isSameTxHashExist = await this.app.mysql.get('pegged_assets_deposit', { burnTx: txHash });
+    this.logger.info('requestToDeposit::token', token);
+    if (!token) throw new Error('No such crosschain token.');
+
+    // 查询这个存入有没有在数据库入账
+    const isSameTxHashExist = await this.isDepositExistInDB(txHash);
     if (isSameTxHashExist) throw new Error('Tx existed already');
-    const { data } = await this.api.get(`/token/${token.contractAddress}/event/burn/${uid}/${txHash}`);
-    const { atBlock, confirmation, amount } = data.event;
+
+    const data = await this.fetchDepositEventBy(token.contractAddress, uid, txHash);
+    // 防止冒用
+    if (data.uid !== uid) throw new Error("You're the one who spend deposit request");
+    const { atBlock, confirmation, amount } = data;
+    // 确认区块大于6就认可为正常
     const status = confirmation >= 6 ? EnumForPeggedAssetDeposit.BURN_EVENT_CONFIRMED : EnumForPeggedAssetDeposit.BURN_EVENT_CREATED;
+    const obj = { uid: data.uid, fromChain: 'bsc', burnTx: txHash, value: amount, atBlock, status, tokenId, rinkebyHash: null }
     await this.app.mysql.insert(
       'pegged_assets_deposit',
-      { uid, fromChain: 'bsc', burnTx: txHash, value: amount, atBlock, status }
+      // 以防万一
+      obj
     );
+    return obj;
   }
 
   async checkNotConfirmedDeposit() {
@@ -126,14 +145,40 @@ class CrossChainService extends Service {
       { where: { status: EnumForPeggedAssetDeposit.BURN_EVENT_CREATED } }
     );
     const theirTxHash = notConfirmedDeposit.map(tx => tx.burnTx);
-    const { data } = await this.api.get('/blockchain/getTransactions', {
-      txHashes: theirTxHash,
-    });
+    const data = await this.getBscTransactionsReceipt(theirTxHash);
     const filteredTxs = data.filter(e => e !== null && e.confirmations >= 6);
     const goodTxs = filteredTxs.map(e => e.hash);
     const rowsToUpdate = notConfirmedDeposit.filter(r => goodTxs.indexOf(r.burnTx) > -1);
     const updatedRows = rowsToUpdate.map(r => ({ ...r, status: EnumForPeggedAssetDeposit.BURN_EVENT_CONFIRMED }));
     await this.app.mysql.updateRows('pegged_assets_deposit', updatedRows);
+  }
+
+  async isDepositExistInDB(txHash) {
+    const isSameTxHashExist = await this.app.mysql.get('pegged_assets_deposit', { burnTx: txHash });
+    return Boolean(isSameTxHashExist);
+  }
+
+  async handleConfirmed() {
+    const confirmedDeposit = await this.app.mysql.get(
+      'pegged_assets_deposit',
+      { status: EnumForPeggedAssetDeposit.BURN_EVENT_CONFIRMED }
+    );
+    // Do the transfer logic here
+    const uidOfInAndOut = this.config.tokenInAndOut.specialAccount.uid;
+    const dbConnection = await this.app.mysql.beginTransaction();
+    const { txHash } = await this.service.token.mineToken.transferFrom(
+      confirmedDeposit.tokenId, uidOfInAndOut, confirmedDeposit.uid, confirmedDeposit.value, this.clientIP,
+      consts.mineTokenTransferTypes.crosschainBscTransferIn, dbConnection, `Deposit from BSC, bsc tx hash is ${confirmedDeposit.burnTx}`);
+    await dbConnection.commit();
+    const transferedDeposit = { ...confirmedDeposit, status: EnumForPeggedAssetDeposit.RINKEBY_DEPOSIT_CREATED, rinkebyHash: txHash };
+    await this.app.mysql.update('pegged_assets_deposit', transferedDeposit);
+  }
+
+  async getBscTransactionsReceipt(txHashes) {
+    const { data } = await this.api.post('/blockchain/getTransactions', {
+      txHashes,
+    });
+    return data.data;
   }
 }
 

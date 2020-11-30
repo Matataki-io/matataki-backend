@@ -91,6 +91,54 @@ class CrossChainController extends Controller {
     }
   }
 
+  async depositFromBsc() {
+    const { ctx } = this;
+    const tokenId = ctx.params.id;
+    const { txHash } = ctx.request.body;
+    try {
+      // 检查是不是合法 Token
+      const token = await this.service.token.mineToken.get(tokenId);
+      if (!token) throw new Error('No Such token found in the database. Please contact Matataki Support.');
+
+      // 拿到 receipt
+      const [ receipt ] = await this.service.token.crosschain.getBscTransactionsReceipt([ txHash ]);
+      // 检查这个交易是不是失败交易，以防万一
+      if (!receipt) {
+        throw new Error("Didn't found this transaction on BSC network. please check your hash.");
+      }
+
+      if (receipt.status !== 1) {
+        throw new Error('This is a reverted transaction, not a successful deposit.');
+      }
+
+      // 检查这个交易是不是已经在数据库入账了
+      const isDepositExistInDB = await this.service.token.crosschain.isDepositExistInDB(txHash);
+      this.logger.info('isDepositExistInDB', isDepositExistInDB);
+      if (isDepositExistInDB) {
+        throw new Error('This transaction is already in the database, please check your txHash and try again.');
+      }
+      // @todo: handle the deposit logic
+      this.logger.info('depositFromBsc::token', token);
+      const result = await this.service.token.crosschain.requestToDeposit(token.id, ctx.user.id, txHash);
+      this.logger.info('res', result);
+      ctx.body = {
+        ...ctx.msg.success,
+        message: 'Deposit from BSC OK',
+        data: {
+          tokenId: token.id,
+          amount: result.value,
+          transactionHash: txHash,
+        },
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = error;
+      ctx.body.message = error.message;
+    }
+  }
+
+
   async getMyIssuedPermit() {
     const { ctx } = this;
     const permits = await this.service.token.crosschain.getMyIssuedPermits(ctx.user.id);
