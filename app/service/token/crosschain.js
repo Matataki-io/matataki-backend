@@ -144,12 +144,20 @@ class CrossChainService extends Service {
       'pegged_assets_deposit',
       { where: { status: EnumForPeggedAssetDeposit.BURN_EVENT_CREATED } }
     );
+    // Stop if null
+    if (!notConfirmedDeposit || notConfirmedDeposit.length === 0) return;
+
     const theirTxHash = notConfirmedDeposit.map(tx => tx.burnTx);
     const data = await this.getBscTransactionsReceipt(theirTxHash);
+    this.logger.info('getBscTransactionsReceipt', data);
     const filteredTxs = data.filter(e => e !== null && e.confirmations >= 6);
-    const goodTxs = filteredTxs.map(e => e.hash);
+    this.logger.info('filteredTxs', filteredTxs);
+    const goodTxs = filteredTxs.map(e => e.transactionHash);
     const rowsToUpdate = notConfirmedDeposit.filter(r => goodTxs.indexOf(r.burnTx) > -1);
     const updatedRows = rowsToUpdate.map(r => ({ ...r, status: EnumForPeggedAssetDeposit.BURN_EVENT_CONFIRMED }));
+
+    if (updatedRows.length === 0) return; // stop
+    this.logger.info(updatedRows);
     await this.app.mysql.updateRows('pegged_assets_deposit', updatedRows);
   }
 
