@@ -113,14 +113,10 @@ class CrossChainController extends Controller {
 
       // 检查这个交易是不是已经在数据库入账了
       const isDepositExistInDB = await this.service.token.crosschain.isDepositExistInDB(txHash);
-      this.logger.info('isDepositExistInDB', isDepositExistInDB);
       if (isDepositExistInDB) {
         throw new Error('This transaction is already in the database, please check your txHash and try again.');
       }
-      // @todo: handle the deposit logic
-      this.logger.info('depositFromBsc::token', token);
       const result = await this.service.token.crosschain.requestToDeposit(token.id, ctx.user.id, txHash);
-      this.logger.info('res', result);
       ctx.body = {
         ...ctx.msg.success,
         message: 'Deposit from BSC OK',
