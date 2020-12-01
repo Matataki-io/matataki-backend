@@ -113,6 +113,17 @@ class CrossChainService extends Service {
     return data.data.event;
   }
 
+  async listCrosschainTokens() {
+    // 暂时只有 BSC
+    const tokens = await this.app.mysql.select('pegged_assets', { where: { chain: 'bsc' } });
+    return tokens;
+  }
+
+  async isCrosschainToken(tokenAddress) {
+    const token = await this.app.mysql.get('pegged_assets', { contractAddress: tokenAddress });
+    return token;
+  }
+
   async requestToDeposit(tokenId, uid, txHash) {
     // 寻找跨链Fan票
     this.logger.info('requestToDeposit::tokenId', tokenId);

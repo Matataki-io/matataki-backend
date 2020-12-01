@@ -188,6 +188,26 @@ class CrossChainController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = { isPermitUsed: result, nonce, token: tokenOnBsc, forWho: walletOnBsc };
   }
+
+  async getCrosschainTokenList() {
+    const { ctx } = this;
+    const tokens = await this.service.token.crosschain.listCrosschainTokens();
+    ctx.body = ctx.msg.success;
+    ctx.body.data = { tokens };
+  }
+
+  async isCrosschainToken() {
+    const { ctx } = this;
+    const { tokenAddress } = ctx.params;
+    const isCrossChainToken = await this.service.token.crosschain.isCrosschainToken(tokenAddress);
+    if (!isCrossChainToken) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 404;
+    } else {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = { token: isCrossChainToken };
+    }
+  }
 }
 
 module.exports = CrossChainController;

@@ -310,6 +310,8 @@ module.exports = app => {
   router.get('/token/myAddress', passport.authorize, controller.user.getHostingAccountPublicKey);
   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
   // 出入站 跨链版
+  router.get('/minetoken/crosschain/', passport.verify, controller.crossChain.getCrosschainTokenList);
+  router.get('/minetoken/crosschain/isToken/:tokenAddress', passport.verify, controller.crossChain.isCrosschainToken);
 
   // 仅限工程师使用的 API
   router.post('/minetoken/crosschain/_dev/createPeggedTokenOnBSC/', passport.apiAuthorize, controller.crossChain.createPeggedTokenOnBSCForAdmin);
