@@ -91,6 +91,64 @@ class CrossChainController extends Controller {
     }
   }
 
+  async listMyDepositRequest() {
+    const { ctx } = this;
+    if (!ctx.user.id) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.error.message = 'You need to login';
+    }
+    const deposits = await this.service.token.crosschain.listMyDepositRequest(ctx.user.id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: { deposits },
+    };
+  }
+
+  async depositFromBsc() {
+    const { ctx } = this;
+    const tokenId = ctx.params.id;
+    const { txHash } = ctx.request.body;
+    try {
+      // 检查是不是合法 Token
+      const token = await this.service.token.mineToken.get(tokenId);
+      if (!token) throw new Error('No Such token found in the database. Please contact Matataki Support.');
+
+      // 拿到 receipt
+      const [ receipt ] = await this.service.token.crosschain.getBscTransactionsReceipt([ txHash ]);
+      // 检查这个交易是不是失败交易，以防万一
+      if (!receipt) {
+        throw new Error("Didn't found this transaction on BSC network. please check your hash.");
+      }
+
+      if (receipt.status !== 1) {
+        throw new Error('This is a reverted transaction, not a successful deposit.');
+      }
+
+      // 检查这个交易是不是已经在数据库入账了
+      const isDepositExistInDB = await this.service.token.crosschain.isDepositExistInDB(txHash);
+      if (isDepositExistInDB) {
+        throw new Error('This transaction is already in the database, please check your txHash and try again.');
+      }
+      const result = await this.service.token.crosschain.requestToDeposit(token.id, ctx.user.id, txHash);
+      ctx.body = {
+        ...ctx.msg.success,
+        message: 'Deposit from BSC OK',
+        data: {
+          tokenId: token.id,
+          amount: result.value,
+          transactionHash: txHash,
+        },
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = error;
+      ctx.body.message = error.message;
+    }
+  }
+
+
   async getMyIssuedPermit() {
     const { ctx } = this;
     const permits = await this.service.token.crosschain.getMyIssuedPermits(ctx.user.id);
@@ -143,6 +201,26 @@ class CrossChainController extends Controller {
 
     ctx.body = ctx.msg.success;
     ctx.body.data = { isPermitUsed: result, nonce, token: tokenOnBsc, forWho: walletOnBsc };
+  }
+
+  async getCrosschainTokenList() {
+    const { ctx } = this;
+    const tokens = await this.service.token.crosschain.listCrosschainTokens();
+    ctx.body = ctx.msg.success;
+    ctx.body.data = { tokens };
+  }
+
+  async isCrosschainToken() {
+    const { ctx } = this;
+    const { tokenAddress } = ctx.params;
+    const isCrossChainToken = await this.service.token.crosschain.isCrosschainToken(tokenAddress);
+    if (!isCrossChainToken) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 404;
+    } else {
+      ctx.body = ctx.msg.success;
+      ctx.body.data = { token: isCrossChainToken };
+    }
   }
 }
 
