@@ -120,7 +120,7 @@ class CrossChainService extends Service {
   }
 
   async isCrosschainToken(tokenAddress) {
-    const token = await this.app.mysql.get('pegged_assets', { contractAddress: tokenAddress });
+    const token = await this.app.mysql.get('pegged_assets', { contractAddress: tokenAddress.toLowerCase() });
     return token;
   }
 
