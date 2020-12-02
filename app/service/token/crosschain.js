@@ -115,7 +115,7 @@ class CrossChainService extends Service {
 
   async listCrosschainTokens() {
     // 暂时只有 BSC
-    const tokens = await this.app.mysql.select('pegged_assets', { where: { chain: 'bsc' } });
+    const tokens = await this.app.mysql.select('pegged_assets', { where: { chain: 'bsc', orders: [[ 'id', 'desc' ]] } });
     return tokens;
   }
 
