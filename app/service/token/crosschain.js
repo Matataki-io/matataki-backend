@@ -143,7 +143,11 @@ class CrossChainService extends Service {
     const isSameTxHashExist = await this.isDepositExistInDB(txHash);
     if (isSameTxHashExist) throw new Error('Tx existed already');
 
+    this.logger.info('isSameTxHashExist', isSameTxHashExist);
+
     const data = await this.fetchDepositEventBy(token.contractAddress, uid, txHash);
+    this.logger.info('fetchDepositEventBy', data);
+
     // 防止冒用
     if (data.uid !== uid) throw new Error("You're the one who spend deposit request");
     const { atBlock, confirmation, amount } = data;
