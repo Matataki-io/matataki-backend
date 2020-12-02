@@ -91,6 +91,20 @@ class CrossChainController extends Controller {
     }
   }
 
+  async listMyDepositRequest() {
+    const { ctx } = this;
+    if (!ctx.user.id) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.error.message = 'You need to login';
+    }
+    const deposits = await this.service.token.crosschain.listMyDepositRequest(ctx.user.id);
+    ctx.body = {
+      ...ctx.msg.success,
+      data: { deposits },
+    };
+  }
+
   async depositFromBsc() {
     const { ctx } = this;
     const tokenId = ctx.params.id;

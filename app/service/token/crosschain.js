@@ -124,6 +124,14 @@ class CrossChainService extends Service {
     return token;
   }
 
+  async listMyDepositRequest(uid) {
+    const depositsOf = await this.app.mysql.select(
+      'pegged_assets_deposit',
+      { uid }
+    );
+    return depositsOf;
+  }
+
   async requestToDeposit(tokenId, uid, txHash) {
     // 寻找跨链Fan票
     this.logger.info('requestToDeposit::tokenId', tokenId);
