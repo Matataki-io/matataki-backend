@@ -127,7 +127,7 @@ class CrossChainService extends Service {
   async listMyDepositRequest(uid) {
     const depositsOf = await this.app.mysql.select(
       'pegged_assets_deposit',
-      { uid }
+      { where: { uid } }
     );
     return depositsOf;
   }
