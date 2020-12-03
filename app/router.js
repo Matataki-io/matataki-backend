@@ -327,6 +327,7 @@ module.exports = app => {
   router.post('/minetoken/crosschain/:id/withdrawToBsc', passport.authorize, controller.crossChain.withdrawToBsc);
   router.post('/minetoken/crosschain/:id/depositFromBsc', passport.authorize, controller.crossChain.depositFromBsc);
   router.get('/minetoken/crosschain/permit', passport.authorize, controller.crossChain.getMyIssuedPermit);
+  router.get('/minetoken/crosschain-permit/renew/:id/', passport.authorize, controller.crossChain.renewMyWithdrawPermit);
 
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);

@@ -53,8 +53,8 @@ class CrossChainService extends Service {
   }
 
   /**
-   * getNonceOfFromDB, 从Mint合约获得 Nonce
-   * 只返回最新一个可用的 nonce
+   * getNonceOf, 从Mint合约获得 Nonce
+   * 只返回合约里最新一个可用的 nonce
    * @param {string} token 其他区块链的代币地址
    * @param {string} to 其他区块链的钱包地址
    */
@@ -98,6 +98,37 @@ class CrossChainService extends Service {
       nonce,
     });
     return data;
+  }
+
+  async updateUnusedMintPermit(token, to, value, nonce) {
+    if (isNaN(nonce)) throw new Error('Bad nonce parameter');
+    // Check is this Permit was used or not
+    const currentNonce = await this.getNonceOf(token, to);
+    if (currentNonce > Number(nonce)) {
+      throw new Error('This deposit nonce was used. Please try another one.');
+    }
+    // Issue new permit
+    return this.issueMintPermit(token, to, value, nonce);
+  }
+
+  async renewUnusedMintPermit(permitId, forUid) {
+    const permit = await this.app.mysql.get('pegged_assets_permit', { id: permitId, forUid });
+    if (!permit) throw new Error(`Having problem to update Permit #${permitId}, please contact Matataki Support ASAP.`);
+    // Blockchain related Check will be in `updateUnusedMintPermit`
+    const newPermit = await this.updateUnusedMintPermit(
+      permit.token,
+      permit.to,
+      permit.value,
+      permit.nonce
+    );
+    await this.app.mysql.update('pegged_assets_permit', {
+      id: permit.id,
+      deadline: newPermit.deadline,
+      v: newPermit.sig.v,
+      r: newPermit.sig.r,
+      s: newPermit.sig.s,
+    });
+    return newPermit;
   }
 
   async burn(tokenAddress, to, amount) {
