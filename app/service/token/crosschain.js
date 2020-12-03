@@ -82,8 +82,8 @@ class CrossChainService extends Service {
   async getMyIssuedPermits(uid) {
     const result = await this.app.mysql.select('pegged_assets_permit', { where: { forUid: uid }, orders: [[ 'token', 'asc' ], [ 'to', 'desc' ], [ 'nonce', 'desc' ]] });
     return result.map(({
-      token, to, value, nonce, deadline, r, s, v,
-    }) => ({ token, to, value, nonce, deadline: Number(deadline), sig: { r, s, v } }));
+      id, token, to, value, nonce, deadline, r, s, v,
+    }) => ({ id, token, to, value, nonce, deadline: Number(deadline), sig: { r, s, v } }));
   }
 
   async isPermitUsed(token, to, nonce) {
