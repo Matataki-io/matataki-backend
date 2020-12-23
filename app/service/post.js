@@ -5,6 +5,7 @@ const consts = require('./consts');
 const Service = require('egg').Service;
 const _ = require('lodash');
 const moment = require('moment');
+const axios = require('axios').default;
 const fs = require('fs');
 const removemd = require('remove-markdown');
 // const IpfsHttpClientLite = require('ipfs-http-client-lite');
@@ -136,6 +137,8 @@ class PostService extends Service {
     //   return;
     // }
 
+    const create_time = moment().format('YYYY-MM-DD HH:mm:ss')
+
     const id = await this.publish(
       {
         author,
@@ -144,7 +147,7 @@ class PostService extends Service {
         hash: metadataHash,
         is_original,
         fission_factor: fissionFactor,
-        create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        create_time,
         assosiate_with: assosiateWith,
         cover, // 封面url
         platform,
@@ -201,14 +204,20 @@ class PostService extends Service {
     await this.create_tags(id, tags);
 
     if (id > 0) {
+      // 发送同步需要的数据到缓存服务器
+      try {
+        await axios.post(this.config.cacheAPI.uri + '/sync/post/add', { id: id, uid: user.id, timestamp: create_time }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }})
+      }
+      catch (e) {
+        await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }}).catch(err => { return })
+      }
+
       return {
         ...ctx.msg.success,
         data: id
       }
     } else return ctx.msg.postPublishError; // todo 可以再细化失败的原因
   }
-
-
 
   async publish(data, { metadataHash, htmlHash }) {
     try {
@@ -1483,6 +1492,14 @@ class PostService extends Service {
 
       // todo，待验证，修改不改变内容，影响行数应该为0
       const result = await this.app.mysql.update('posts', row, options);
+
+      try {
+        await axios.post(this.config.cacheAPI.uri + '/sync/post/delete', { id: id }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }})
+      }
+      catch (e) {
+        await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }}).catch(err => { return })
+      }
+
       return result.affectedRows === 1;
     } catch (err) {
       this.logger.error('PostService::delete error: %j', err);
