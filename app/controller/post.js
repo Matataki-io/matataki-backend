@@ -8,11 +8,11 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
 
-    this.app.mysql.queryFromat = function (query, values) {
+    this.app.mysql.queryFromat = function(query, values) {
       if (!values) return query;
       return query.replace(
         /\:(\w+)/g,
-        function (txt, key) {
+        function(txt, key) {
           if (values.hasOwnProperty(key)) {
             return this.escape(values[key]);
           }
@@ -26,133 +26,46 @@ class PostController extends Controller {
   async publish() {
     const ctx = this.ctx;
     const {
-      author = '',
-      title = '',
+      author,
+      title,
       data,
-      fissionFactor = 2000,
+      fissionFactor,
       cover,
-      is_original = 0,
-      platform = 'eos',
-      tags = [],
-      assosiateWith = 0,
-      commentPayPoint = 0,
-      shortContent = null,
-      cc_license = null,
-      // 新字段，requireToken 和 requireBuy 对应老接口的 data
-      requireToken = null,
-      requireBuy = null,
-      // 持币编辑相关字段
-      editRequireToken = null,
-      editRequireBuy = null,
-      ipfs_hide = false,
+      is_original,
+      platform,
+      tags,
+      assosiateWith,
+      commentPayPoint,
+      shortContent,
+      cc_license,
+      requireToken,
+      requireBuy,
+      editRequireToken,
+      editRequireBuy,
+      ipfs_hide,
     } = ctx.request.body;
-    // 修改requireBuy为数组
-    const isEncrypt = Boolean(requireToken && requireToken.length > 0) || Boolean(requireBuy && requireBuy.length > 0);
 
-    // 只清洗文章文本的标识
-    data.content = this.service.extmarkdown.toIpfs(data.content);
-    const articleContent = await this.service.post.wash(data.content);
-    // 设置短摘要
-    const short_content
-      = shortContent
-      || (await this.service.extmarkdown.shortContent(articleContent));
-
-    const {
-      metadataHash,
-      htmlHash,
-    } = await this.service.post.uploadArticleToIpfs({
-      isEncrypt,
+    const result = await ctx.service.post.fullPublish(
+      ctx.user,
+      author,
+      title,
       data,
-      title,
-      displayName: this.user.displayName,
-      description: short_content,
-    });
-    // 无 hash 则上传失败
-    if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
-    ctx.logger.info('debug info', title, isEncrypt);
-
-    if (fissionFactor > 2000) {
-      ctx.body = ctx.msg.postPublishParamsError; // msg: 'fissionFactor should >= 2000',
-      return;
-    }
-
-    // 评论需要支付的积分
-    const comment_pay_point = parseInt(commentPayPoint);
-    // if (comment_pay_point > 99999 || comment_pay_point < 1) {
-    //   ctx.body = ctx.msg.pointCommentSettingError;
-    //   return;
-    // }
-
-    const id = await ctx.service.post.publish(
-      {
-        author,
-        username: ctx.user.username,
-        title,
-        hash: metadataHash,
-        is_original,
-        fission_factor: fissionFactor,
-        create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-        assosiate_with: assosiateWith,
-        cover, // 封面url
-        platform,
-        uid: ctx.user.id,
-        is_recommend: 0,
-        category_id: 0,
-        short_content,
-        comment_pay_point,
-        cc_license,
-        ipfs_hide,
-      },
-      { metadataHash, htmlHash }
+      fissionFactor,
+      cover,
+      is_original,
+      platform,
+      tags,
+      assosiateWith,
+      commentPayPoint,
+      shortContent,
+      cc_license,
+      requireToken,
+      requireBuy,
+      editRequireToken,
+      editRequireBuy,
+      ipfs_hide
     );
-
-    // 记录付费信息
-    if (requireToken) {
-      await this.service.post.addMineTokens(ctx.user.id, id, requireToken);
-    }
-
-    // 超过 0 元才算数，0元则无视
-    if (requireBuy && requireBuy.length > 0) {
-      const price = requireBuy[0].amount;
-      const tokenId = requireBuy[0].tokenId;
-      await this.service.post.addArticlePay(ctx.user.id, id, price, tokenId);
-    }
-
-    // 记录持币编辑信息
-    if (editRequireToken) {
-      await this.service.post.addEditMineTokens(
-        ctx.user.id,
-        id,
-        editRequireToken
-      );
-    }
-
-    // 记录购买编辑权限信息
-    if (editRequireBuy && editRequireBuy.price > 0) {
-      await this.service.post.addPrices(
-        ctx.user.id,
-        id,
-        editRequireBuy.price,
-        1
-      );
-    }
-
-    // 添加文章到elastic search
-    await this.service.search.importPost(
-      id,
-      ctx.user.id,
-      title,
-      articleContent
-    );
-
-    await ctx.service.post.create_tags(id, tags);
-
-    if (id > 0) {
-      ctx.body = ctx.msg.success;
-      ctx.body.data = id;
-    } else {
-      ctx.body = ctx.msg.postPublishError; // todo 可以再细化失败的原因
-    }
+    ctx.body = result;
   }
 
   // 编辑文章， 处理逻辑和发布相似
@@ -228,7 +141,37 @@ class PostController extends Controller {
       }
       // 这里判断是否为付费文章，用于决定ipfs是否加密，如果不是作者的则不采用api传入的值。
       isEncrypt = Boolean(post.require_holdtokens > 0 || post.require_buy > 0);
-    } else isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
+    } else {
+      // 如果是作者本人将会执行这部分
+      isEncrypt = Boolean(requireToken.length > 0) || Boolean(requireBuy);
+
+      // 检查Fan票协作者权限
+      if (requireToken) {
+        for (let i = 0; i < requireToken.length; i++) {
+          if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireToken[i].tokenId)) {
+            ctx.body = ctx.msg.notCollaborator;
+            return;
+          }
+        }
+      }
+      if (requireBuy) {
+        for (let i = 0; i < requireBuy.length; i++) {
+          // 需要注意CNY的情况下 tokenId 是 0
+          if (requireBuy[i].tokenId && !await this.service.token.mineToken.isItCollaborator(ctx.user.id, requireBuy[i].tokenId)) {
+            ctx.body = ctx.msg.notCollaborator;
+            return;
+          }
+        }
+      }
+      if (editRequireToken) {
+        for (let i = 0; i < editRequireToken.length; i++) {
+          if (!await this.service.token.mineToken.isItCollaborator(ctx.user.id, editRequireToken[i].tokenId)) {
+            ctx.body = ctx.msg.notCollaborator;
+            return;
+          }
+        }
+      }
+    }
 
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
@@ -292,7 +235,7 @@ class PostController extends Controller {
 
         if (ipfs_hide !== undefined) updateRow.ipfs_hide = ipfs_hide;
 
-        if (assosiateWith !== null) updateRow.assosiate_with = assosiateWith;
+        updateRow.assosiate_with = assosiateWith || 0;
 
         // if (is_original) {
         //   updateRow.is_original = is_original;
@@ -329,13 +272,16 @@ class PostController extends Controller {
         }
 
         // 超过 0 元才算数，0元则无视
-        if (requireBuy && requireBuy.price > 0) {
-          const addPricesResult = await this.service.post.addPrices(
+        if (requireBuy && requireBuy.length > 0) {
+          const price = requireBuy[0].amount;
+          const tokenId = requireBuy[0].tokenId;
+          const addPricesResult = await this.service.post.addArticlePay(ctx.user.id, signId, price, tokenId);
+          /* const addPricesResult = await this.service.post.addPrices(
             ctx.user.id,
             signId,
             requireBuy.price,
             0
-          );
+          ); */
           this.logger.info('controller post edit addPrices Result:', addPricesResult);
         } else {
           await this.service.post.delPrices(ctx.user.id, signId, 0);
@@ -414,21 +360,21 @@ class PostController extends Controller {
     }
 
     // 获取文章解锁、购买状态
-    let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
-    let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
+    const { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+    const purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
     postData.list.forEach(post => {
       // 是自己的文章？
-      post.is_ownpost = post.uid === ctx.user.id
+      post.is_ownpost = post.uid === ctx.user.id;
       // 是否满足持币可见
       if (post.token_amount) {
-        let token = tokens.find(token => token.token_id === post.token_id);
+        const token = tokens.find(token => token.token_id === post.token_id);
         post.token_unlock = !!token && token.amount >= post.token_amount;
       }
       // 是否买过这篇文章
       if (post.pay_price) {
         post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
       }
-    })
+    });
 
     ctx.body = ctx.msg.success;
     ctx.body.data = postData;
@@ -466,23 +412,26 @@ class PostController extends Controller {
       return;
     }
 
+    console.log('postData', postData);
+
     // 这部分是登录之后才会执行的查询
     if (ctx.user && ctx.user.id) {
-      let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
-      let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
+      const { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+      const purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
+
       postData.list.forEach(post => {
         // 是自己的文章？
-        post.is_ownpost = post.uid === ctx.user.id
+        post.is_ownpost = post.uid === ctx.user.id;
         // 是否满足持币可见
         if (post.token_amount) {
-          let token = tokens.find(token => token.token_id === post.token_id);
+          const token = tokens.find(token => token.token_id === post.token_id);
           post.token_unlock = !!token && token.amount >= post.token_amount;
         }
         // 是否买过这篇文章
         if (post.pay_price) {
           post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
         }
-      })
+      });
     }
 
     ctx.body = ctx.msg.success;
@@ -500,12 +449,17 @@ class PostController extends Controller {
       author = null,
       extra = null,
       filter = 7,
+      showAll = 0, // 0 有效文章 1 隐藏文章
     } = this.ctx.query;
 
     if (typeof channel === 'string') channel = parseInt(channel);
     if (typeof filter === 'string') filter = parseInt(filter);
     const requestUser = ctx.user;
-    const isShowingDeleted = requestUser.isAuthenticated ? Number(author) === requestUser.id : false;
+    // console.log('requestUser', requestUser);
+    // 是否显示隐藏文章 如果是登陆后看自己的文章 并且 查看所有文章
+    const isShowingDeleted = requestUser.isAuthenticated ? Boolean((Number(author) === requestUser.id) && (Number(showAll) !== 0)) : false;
+    // console.log('isShowingDeleted', isShowingDeleted, typeof isShowingDeleted);
+
     const postData = await this.service.post.timeRankSlow(
       parseInt(page),
       parseInt(pagesize),
@@ -527,21 +481,21 @@ class PostController extends Controller {
 
     // 这部分是登录之后才会执行的查询
     if (ctx.user && ctx.user.id) {
-      let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
-      let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
+      const { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+      const purchasedPost = await this.service.shop.order.isBuyBySignIdArray(postData.list.map(post => post.id), ctx.user.id);
       postData.list.forEach(post => {
         // 是自己的文章？
-        post.is_ownpost = post.uid === ctx.user.id
+        post.is_ownpost = post.uid === ctx.user.id;
         // 是否满足持币可见
         if (post.token_amount) {
-          let token = tokens.find(token => token.token_id === post.token_id);
+          const token = tokens.find(token => token.token_id === post.token_id);
           post.token_unlock = !!token && token.amount >= post.token_amount;
         }
         // 是否买过这篇文章
         if (post.pay_price) {
           post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
         }
-      })
+      });
     }
 
     ctx.body = ctx.msg.success;
@@ -678,21 +632,21 @@ class PostController extends Controller {
 
     // 这部分是登录之后才会执行的查询
     if (ctx.user && ctx.user.id) {
-      let { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
-      let purchasedPost = await this.service.shop.order.isBuyBySignIdArray(result.list.map(post => post.id), ctx.user.id);
+      const { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
+      const purchasedPost = await this.service.shop.order.isBuyBySignIdArray(result.list.map(post => post.id), ctx.user.id);
       result.list.forEach(post => {
         // 是自己的文章？
-        post.is_ownpost = post.uid === ctx.user.id
+        post.is_ownpost = post.uid === ctx.user.id;
         // 是否满足持币可见
         if (post.token_amount) {
-          let token = tokens.find(token => token.token_id === post.token_id);
+          const token = tokens.find(token => token.token_id === post.token_id);
           post.token_unlock = !!token && token.amount >= post.token_amount;
         }
         // 是否买过这篇文章
         if (post.pay_price) {
           post.pay_unlock = !!purchasedPost.find(buy => buy.signid === post.id);
         }
-      })
+      });
     }
 
     this.ctx.body = ctx.msg.success;
@@ -713,6 +667,67 @@ class PostController extends Controller {
 
     ctx.body = ctx.msg.success;
     ctx.body.data = post;
+  }
+  async pInfo() {
+    const ctx = this.ctx;
+    const id = ctx.params.id;
+    let postIpfsBody = {};
+
+    const post = await this.service.post.getById(id);
+
+    // 啥也没有 直接返回
+    if (!post) {
+      ctx.body = ctx.msg.postNotFound;
+      return;
+    }
+    // 有内容继续往后走
+    // 同步 catchPost 方法
+    if (post.uid !== ctx.user.id) {
+      const permission = await this.hasPermission(post, ctx.user.id);
+
+      if (!permission) {
+
+        // 没有权限 返回信息
+        postIpfsBody = ctx.msg.postNoPermission;
+
+        ctx.body = ctx.msg.success;
+        ctx.body.data = {
+          p: post,
+          ipfs: postIpfsBody,
+        };
+        return;
+      }
+    }
+
+    // 从ipfs获取内容
+    const catchRequest = await this.service.post.ipfsCatch(post.hash);
+
+    if (catchRequest) {
+      let data = JSON.parse(catchRequest.toString());
+      if (data.iv) {
+        // 是加密的数据，开始解密
+        data = JSON.parse(this.service.cryptography.decrypt(data));
+      }
+      if (ctx.query.edit) {
+        data.content = this.service.extmarkdown.toEdit(data.content);
+      } else {
+        data.content = await this.service.extmarkdown.transform(data.content, {
+          userId: ctx.user.id,
+        });
+      }
+      // 字符串转为json对象
+      postIpfsBody = Object.assign(postIpfsBody, ctx.msg.success);
+      postIpfsBody.data = data;
+    } else {
+      // IPFS获取失败 返回失败的信息
+      postIpfsBody = ctx.msg.ipfsCatchFailed;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = {
+      p: post,
+      ipfs: postIpfsBody,
+    };
   }
 
   async getIpfsById() {
@@ -777,8 +792,9 @@ class PostController extends Controller {
       const result = await this.app.mysql.query(
         'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, ont_value_count) VALUES (?, ?, 0, 0, 0, 0)'
         + ' ON DUPLICATE KEY UPDATE real_read_count = real_read_count + 1',
-        [post.id, 1]
+        [ post.id, 1 ]
       );
+      await this.service.postDashboard.addActionLog({ ...ctx.user }.id, post.id, 'read');
 
       const updateSuccess = result.affectedRows !== 0;
 
@@ -1018,6 +1034,10 @@ class PostController extends Controller {
     const archiveMatch = makeMatch(/https?:\/\/(www\.)?archive\.is\/.+/, x =>
       this.service.postImport.handleArchive(x)
     );
+    // 币乎
+    const bihuMatch = makeMatch(/https:\/\/(.*)?bihu\.com\/.+/, x =>
+      this.service.postImport.handleBihu(x)
+    );
 
     const result
       = (await wechatMatch)
@@ -1028,7 +1048,8 @@ class PostController extends Controller {
       || (await mattersMatch)
       || (await zhihuMatch)
       || (await weiboMatch)
-      || (await archiveMatch);
+      || (await archiveMatch)
+      || (await bihuMatch);
 
     if (result === 1) {
       this.logger.info(
@@ -1104,6 +1125,8 @@ class PostController extends Controller {
         ctx.body = ctx.msg.postNoPermission;
         return;
       }
+      // 记录文章解锁行为
+      if (post.require_holdtokens) this.service.postDashboard.addActionLog(ctx.user.id, post.id, 'unlock', true);
     }
     // 从ipfs获取内容
     const catchRequest = await this.service.post.ipfsCatch(hash);
@@ -1462,6 +1485,16 @@ class PostController extends Controller {
     }
 
     ctx.body = ctx.msg.ipfsCatchFailed;
+  }
+
+  /** 记录文章分享行为 */
+  async shareCount() {
+    const { ctx } = this;
+    const { id } = ctx.params;
+    const post = await this.service.post.get(id);
+    if (!post || post.status === 1) return ctx.body = ctx.msg.postNotFound;
+    const res = await this.service.postDashboard.addActionLog({ ...ctx.user }.id, id, 'share');
+    ctx.body = res ? ctx.msg.success : ctx.msg.failure;
   }
 }
 

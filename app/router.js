@@ -47,10 +47,20 @@ module.exports = app => {
   router.get('/login/facebook/prepare', passport.verify, controller.auth.facebookPrepareForAuth);
   router.post('/login/facebook', passport.verify, controller.auth.facebookAuth);
 
+  // twitter 授权
+  router.get('/authorize/twitter/prepare', passport.authorize, controller.auth.twitterRequestToken);
+  router.post('/authorize/twitter', passport.authorize, controller.auth.twitterAccessToken);
+  router.delete('/authorize/twitter', passport.authorize, controller.auth.twitterDeauthorize);
+
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
   // router.post('/publish', passport.authorize, controller.post.publish);
   router.post('/post/publish', passport.authorize, controller.post.publish);
+
+  // 将草稿定时发送为文章
+  router.post('/post/timed/:id', passport.authorize, controller.timedPost.post);
+  // 取消定时发送
+  router.delete('/post/timed/:id', passport.authorize, controller.timedPost.delete);
 
   // Frank(Feb 6th, 2020): 既然放弃了发文签名，我们应该逐步取消掉这个路由了
   // @todo: 准备放弃上传文章到IPFS的路由，合并到上方的publish
@@ -71,7 +81,8 @@ module.exports = app => {
 
   // 通过文章ID获取 IPFS 信息
   router.get('/p/:id/ipfs', passport.verify, controller.post.getIpfsById);
-
+  // 合并获取文章数据接口逻辑 p + ipfs
+  router.get('/pInfo/:id', passport.verify, controller.post.pInfo);
 
   // 按照打赏金额排序的文章列表(新, 可按照币种排序)
   router.get('/posts/amountRanking', passport.verify, controller.post.getAmountRanking);
@@ -114,6 +125,8 @@ module.exports = app => {
   router.post('/post/:id/bookmark', passport.authorize, controller.post.addBookmark);
   // 取消收藏文章
   router.delete('/post/:id/bookmark', passport.authorize, controller.post.removeBookmark);
+  // 文章分享事件上报
+  router.post('/post/:id/shareCount', passport.verify, controller.post.shareCount);
 
   // -------------------------------- 标签系统 --------------------------------
   // 标签列表
@@ -285,6 +298,7 @@ module.exports = app => {
 
   // 创建token
   router.post('/minetoken/create', passport.authorize, controller.mineToken.create);
+  router.post('/_minetoken/_create', passport.apiManagementAuthorize, controller.mineToken._create); // 管理后台调用
   router.post('/minetoken/mint', passport.authorize, controller.mineToken.mint);
   router.post('/minetoken/transfer', passport.authorize, controller.mineToken.transfer);
   router.post('/minetoken/:tokenId/batchTransfer', passport.authorize, controller.mineToken.batchTransfer);
@@ -292,8 +306,28 @@ module.exports = app => {
   router.post('/minetoken/:tokenId/batchTransfer/allowance', passport.authorize, controller.mineToken.approveTokenToBatch);
 
   // token 的出入站
-  router.post('/minetoken/:id/deposit', passport.authorize, controller.mineToken.deposit);
+  router.post('/minetoken/deposit', passport.authorize, controller.mineToken.deposit);
+  router.get('/token/myAddress', passport.authorize, controller.user.getHostingAccountPublicKey);
   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
+  // 出入站 跨链版
+  router.get('/minetoken/crosschain/', passport.verify, controller.crossChain.getCrosschainTokenList);
+  router.get('/minetoken/crosschain/myDeposits', passport.authorize, controller.crossChain.listMyDepositRequest);
+  router.get('/minetoken/crosschain/isToken/:tokenAddress', passport.verify, controller.crossChain.isCrosschainToken);
+
+  // 仅限工程师使用的 API
+  router.post('/minetoken/crosschain/_dev/createPeggedTokenOnBSC/', passport.apiAuthorize, controller.crossChain.createPeggedTokenOnBSCForAdmin);
+  router.post('/minetoken/crosschain/:id/_dev/createPeggedToken/BSC/', passport.apiAuthorize, controller.crossChain.createPeggedTokenOnBSCForAdminById);
+
+  // 不写入数据的，无需权限
+  // router.get('/minetoken/crosschain/:tokenOnBsc/:walletOnBsc/', passport.verify, controller.crossChain.getMintPermitNonceOf);
+  router.get('/minetoken/crosschain/:id/getBscAddress', passport.verify, controller.crossChain.getBscAddress);
+  router.get('/minetoken/crosschain/:tokenOnBsc/:walletOnBsc/:nonce', passport.verify, controller.crossChain.isPermitUsed);
+
+  // 有权限要求的API
+  router.post('/minetoken/crosschain/:id/withdrawToBsc', passport.authorize, controller.crossChain.withdrawToBsc);
+  router.post('/minetoken/crosschain/:id/depositFromBsc', passport.authorize, controller.crossChain.depositFromBsc);
+  router.get('/minetoken/crosschain/permit', passport.authorize, controller.crossChain.getMyIssuedPermit);
+  router.get('/minetoken/crosschain-permit/renew/:id/', passport.authorize, controller.crossChain.renewMyWithdrawPermit);
 
   // 查询当前用户的token余额
   router.get('/minetoken/balance', passport.authorize, controller.mineToken.getBalance);
@@ -338,6 +372,8 @@ module.exports = app => {
   router.delete('/token/collaborator/:id', passport.authorize, controller.token.deleteCollaborator);
   // 获取token协作者列表
   router.get('/token/collaborator', passport.authorize, controller.token.getCollaborators);
+  // 获取自己创建和协作的Fan票列表
+  router.get('/token/bindable', passport.authorize, controller.mineToken.getBindableTokenList);
 
   // 查询当前用户的资产余额
   router.get('/asset/balance', passport.verify, controller.asset.getBalance);
@@ -377,6 +413,8 @@ module.exports = app => {
   router.get('/token/:id/history/amount', passport.verify, controller.mineToken.getAmountHistory);
   // token交易量历史
   router.get('/token/:id/history/volume', passport.verify, controller.mineToken.getVolumeHistory);
+  // token收益历史
+  router.get('/token/:id/history/income', passport.verify, controller.mineToken.getIncomeHistory);
 
   // -------------------------------- exchage计算 display API --------------------------------
   // 获取pool size & supply
@@ -493,6 +531,7 @@ module.exports = app => {
   // 开发用
   router.get('/_internal/getWallet', passport.apiVerify, controller.dev.getActiveUnderBalanceWallet);
   router.post('/_internal/justAirdrop', passport.apiVerify, controller.dev.justAirDrop);
+  router.get('/_internal/isTxExistInDB/:txHash', passport.verify, controller.dev.isExistInDB);
   // 账号绑定
   router.post('/account/binding', passport.authorize, controller.account.binding.binding);
   router.post('/account/unbinding', passport.authorize, controller.account.binding.unbinding);
@@ -513,6 +552,10 @@ module.exports = app => {
   router.get('/dev/score', passport.verify, controller.share.getHotArticle);
 
   router.get('/search/token', passport.verify, controller.search.searchToken);
+  // 数据库搜索 token
+  router.get('/search/db/token', passport.verify, controller.search.searchDbToken);
+  // 数据库搜索 token 用户的
+  router.get('/search/db/tokenByUser', passport.authorize, controller.search.searchDbTokenByUser);
   router.get('/search/share', passport.verify, controller.search.searchShare);
   router.get('/search/post', passport.verify, controller.search.search);
   router.get('/search/user', passport.verify, controller.search.searchUser);
@@ -549,6 +592,9 @@ module.exports = app => {
   // 全部标记已读
   router.put('/notify/event/all', passport.authorize, controller.notify.haveReadAll);
 
+  // 通知文章解锁条件内的Fan票流动性不足
+  router.post('/post/InsufficientLiquidity', passport.authorize, controller.notify.postInsufficientLiquidity);
+
   router.post('/test/search', passport.verify, controller.search.importTag);
 
   // -------------------------------- 微信服务号 ---------------------------
@@ -561,4 +607,105 @@ module.exports = app => {
   // 轮询微信扫码登录
   router.get('/api/login_by_wx', passport.verify, controller.wechat.loginByWx);
   router.get('/api/bind_by_wx', passport.verify, controller.wechat.bindByWx);
+
+  // 微信菜单 读取配置文件来创建菜单
+  router.get('/api/wechat/creatMenu', passport.verify, controller.wechat.createMenu);
+  router.get('/api/wechat/token', passport.verify, controller.wechat.token);
+
+  // ---------------- Fan票申请 ----------------------------------------
+  // 获取自己相关的 fan票申请
+  router.get('/api/minetoken_application', passport.authorize, controller.mineTokenApplication.userApplication);
+  // 创建、更新、提交 fan票申请
+  router.post('/api/minetoken_application', passport.authorize, controller.mineTokenApplication.index);
+  // 获取自己相关的 fan票申请调研表单
+  router.get('/api/minetoken_application_survey', passport.authorize, controller.mineTokenApplication.userApplicationSurvey);
+  // fan票表单申请调研表单
+  router.post('/api/minetoken_application_survey', passport.authorize, controller.mineTokenApplication.survey);
+  // fan票提交校验 不能重复 symbol
+  router.post('/api/minetoken_application_verify', passport.verify, controller.mineTokenApplication.verify);
+
+
+  // -------------------------------- 直通车交易 ---------------------------
+  // 创建市场
+  router.post('/trade/direct', passport.authorize, controller.directTrade.create);
+  router.put('/trade/direct', passport.authorize, controller.directTrade.update);
+  router.get('/trade/direct/:id', passport.verify, controller.directTrade.show);
+  router.get('/trade/direct', passport.verify, controller.directTrade.index);
+  router.get('/api/user/market', passport.authorize, controller.directTrade.getMarket);
+  router.get('/api/mint/detail', passport.authorize, controller.mineToken.getMintDetail);
+
+  // -------------------------------- Dashboard -----------------------
+  // ----- 阅览 -----
+  /**
+   * 获取阅览数据的8项统计数据。
+   * query.days: 可选。筛选 N 天内的统计数据，留空则不筛选。
+   */
+  router.get('/db/browse/count', passport.authorize, controller.postDashboard.get);
+
+  /**
+   * 获取该用户发布文章的阅览量历史，单位时间是天。
+   * params.type: 必填。表示获取哪种数据的历史，例如 read 或 like，详情请参考 controller/postDashboard.js 中的 BROWSE_ALL_TYPES。
+   * query.days: 可选。表示筛选 N 天内的数据，不填则返回全部数据。
+   */
+  router.get('/db/browse/history/:type', passport.authorize, controller.postDashboard.getBrowseHistory);
+
+  /**
+   * 获取用户的文章排名。
+   * params.type: 必填。表示排名的依据，例如 read 或 like，详情请参考 controller/postDashboard.js 中的 BROWSE_ALL_TYPES。
+   * query.days: 可选。表示依据 N 天内的数据进行排名，不填则依据全部历史数据排名。
+   * query.page, pagesize: 可选。分页参数，默认 1页 10行。
+   */
+  router.get('/db/browse/rank/:type', passport.authorize, controller.postDashboard.getBrowsePostRank);
+
+  // ----- 收益 -----
+  /**
+   * 获取用户所有文章的总收益。
+   * query.days: 可选。筛选 N 天内的收益，留空则不筛选。
+   */
+  router.get('/db/income/sum', passport.authorize, controller.postDashboard.getSumIncome);
+
+  /**
+   * 获取用户某个 token 的收益来源于哪些文章，并以金额倒序。
+   * params.type: 必填。收益类型，填 sale 或 reward。
+   * query.tokenId: 必填。筛选 Fan票的 id。
+   * query.days: 可选。表示依据 N 天内的数据进行排名，不填则依据全部历史数据排名。
+   * query.page, pagesize: 可选。分页参数，默认 1页 10行。
+   */
+  router.get('/db/income/source/:type', passport.authorize, controller.postDashboard.getIncomeSource);
+
+  /**
+   * 获取用户的收益历史（该用户所有文章的付费解锁和打赏收益）。
+   * query.tokenId: 可选。Fan票 id。筛选特定Fan票，0表示 CNY, undefined 表示不筛选。
+   * query.page, pagesize: 可选。分页参数，默认 1页 10行。
+   */
+  router.get('/db/income/history', passport.authorize, controller.postDashboard.getIncomeHistory);
+
+  // -------------------------------- 获取 twitter 时间线 -----------------------
+  // get home timeline
+  router.get('/timeline/twitter', passport.authorize, controller.timeline.getTwitterTimeline);
+
+
+  // -------------------------------- 收藏夹 --------------------------------
+  // 创建收藏夹
+  router.post('/favorites/create', passport.authorize, controller.favorites.create);
+  // 编辑收藏夹
+  router.put('/favorites/edit', passport.authorize, controller.favorites.edit);
+  // 删除收藏夹
+  router.delete('/favorites/delete', passport.authorize, controller.favorites.delete);
+  // 保存收藏夹
+  router.post('/favorites/save', passport.authorize, controller.favorites.save);
+  router.post('/favorites/cancel_save', passport.authorize, controller.favorites.cancelSave);
+  // 获取自己的收藏夹列表
+  router.get('/favorites/list', passport.verify, controller.favorites.list);
+  // 获取自己的收藏夹列表文章
+  router.get('/favorites/post', passport.verify, controller.favorites.post);
+  // 获取文章和自己的收藏夹关系
+  router.get('/favorites/related', passport.verify, controller.favorites.related);
+
+  // get user timeline
+  router.get('/timeline/twitter/user', passport.verify, controller.timeline.getTwitterUserTimeline);
+  // 设置是否开启自己的 user timeline
+  router.post('/timeline/twitter/user', passport.authorize, controller.timeline.setTwitterUserTimeLineSwitch);
+  // 获取 twitter 用户信息
+  router.get('/twitter/userinfo', passport.verify, controller.timeline.getTwitterUserInfo);
 };

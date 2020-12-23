@@ -115,7 +115,7 @@ class SearchController extends Controller {
     // 还需要记录搜索历史
     await this.service.search.writeLog(word, 3);
 
-    const result = await this.service.search.searchUser(word, page, pagesize, current_user);
+    const result = await this.service.search.searchUser2DB(word, page, pagesize, current_user);
 
     if (!result) {
       ctx.body = ctx.msg.failure;
@@ -166,6 +166,56 @@ class SearchController extends Controller {
     // 记录搜索结果，type：5代表token
     await this.service.search.writeLog(word, 5);
     const result = await this.service.search.searchToken(word, page, pagesize);
+
+    if (!result) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+
+  }
+  async searchDbToken() {
+    const ctx = this.ctx;
+    const { word = 'smart', page = 1, pagesize = 10 } = ctx.query;
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    if (word.length > 50) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    // 记录搜索结果，type：5代表token
+    await this.service.search.writeLog(word, 5);
+    const result = await this.service.search.searchDbToken(word, page, pagesize);
+
+    if (!result) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+
+  }
+  async searchDbTokenByUser() {
+    const ctx = this.ctx;
+    const { word = 'smart', page = 1, pagesize = 10 } = ctx.query;
+    if (isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+
+    if (word.length > 50) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    // 记录搜索结果，type：5代表token
+    await this.service.search.writeLog(word, 5);
+    const result = await this.service.search.searchDbTokenByUser(word, page, pagesize);
 
     if (!result) {
       ctx.body = ctx.msg.failure;

@@ -16,6 +16,7 @@ config/config.local.js
 config/config.prod*.js
 config/config.unittest.js
 config/apiaccesstoken.js
+config/wechat_config.js
 push.sh
 dist/
 TTD.md
@@ -27,5 +28,5 @@ cmd.sh
 scripts/config.local.json
 scripts/article-cart/config.*.json
 scripts/oss-copy/config.local.json
-uploads/
+uploads/*
 posts-zip/*.zip

@@ -81,19 +81,9 @@ class ExchangeService extends Service {
 
   async detail(tokenId) {
     const exchange = await this.getExchange(tokenId);
-    if (!exchange) {
-      return null;
-    }
-
-    const token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
-    const cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
-
-    // exchangeRate = tokenToCnyInput
-    exchange.token_reserve = token_reserve;
-    exchange.cny_reserve = cny_reserve;
-    exchange.number_of_holders = await this.getNumberOfHolders(tokenId);
-    exchange.number_of_liquidity_holders = await this.getNumberOfLiquidityHolders(tokenId);
-
+    if (!exchange) return null;
+    exchange.token_reserve = await this.service.token.mineToken.balanceOf(exchange.exchange_uid, tokenId);
+    exchange.cny_reserve = await this.service.assets.balanceOf(exchange.exchange_uid, 'CNY');
     return exchange;
   }
 
@@ -625,17 +615,22 @@ class ExchangeService extends Service {
     const tokens_bought = order.token_amount;
 
     let res = 0;
+    const { buy_token_output, buy_token_input, add, direct_trade } = consts.exchangeOrderType;
     switch (order.type) {
-      case 'buy_token_output': {
+      case buy_token_output: {
         res = await this.cnyToTokenOutput(userId, tokenId, tokens_bought, cny_sold, order.deadline, order.recipient, conn);
         break;
       }
-      case 'buy_token_input': {
+      case buy_token_input: {
         res = await this.cnyToTokenInput(userId, tokenId, cny_sold, order.min_tokens, order.deadline, order.recipient, conn);
         break;
       }
-      case 'add': {
+      case add: {
         res = await this.addLiquidity(userId, tokenId, order.cny_amount, order.token_amount, order.min_liquidity, order.max_tokens, order.deadline, conn);
+        break;
+      }
+      case direct_trade: {
+        res = await this.service.directTrade.buy(userId, tokenId, order.cny_amount, order.token_amount, conn);
         break;
       }
     }

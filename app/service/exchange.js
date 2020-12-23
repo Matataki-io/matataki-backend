@@ -103,7 +103,7 @@ class ExchangeService extends Service {
     return result;
   }
   // 用户持有的币
-  async getTokenListByUser(id, page = 1, pagesize = 20, order = 0) {
+  async getTokenListByUser(id, page = 1, pagesize = 20, order = 0, search = '') {
     const orderList = [
       'b.create_time DESC',
       'a.amount ASC',
@@ -111,18 +111,43 @@ class ExchangeService extends Service {
     ];
     const orderString = orderList[order] || orderList[0];
 
-    const sql = 'SELECT a.token_id, a.amount, b.symbol, b.name, b.decimals, b.logo, b.uid, u.username, u.nickname, u.avatar '
+    let result = null;
+
+    // 搜索筛选
+    if (search.trim()) {
+      const wd = (search.trim()).toLowerCase();
+      const sql = `SELECT a.token_id, a.amount, b.symbol, b.name, b.decimals, b.logo, b.uid, u.username, u.nickname, u.avatar 
+      FROM assets_minetokens AS a 
+      LEFT JOIN minetokens AS b ON a.token_id = b.id 
+      LEFT JOIN users u ON b.uid = u.id 
+      WHERE a.uid = :id AND a.amount > 0 AND (LOWER(b.name) REGEXP :wd OR LOWER(b.symbol) REGEXP :wd) ORDER BY ${orderString} LIMIT :offset, :limit;
+      SELECT count(1) as count FROM assets_minetokens AS a LEFT JOIN minetokens AS b ON a.token_id = b.id WHERE a.uid = :id AND a.amount > 0 AND (LOWER(b.name) REGEXP :wd OR LOWER(b.symbol) REGEXP :wd);
+      SELECT MAX(amount) AS amount 
+      FROM assets_minetokens AS a 
+      LEFT JOIN minetokens AS b ON a.token_id = b.id 
+      WHERE a.uid = :id AND a.amount > 0 AND (LOWER(b.name) REGEXP :wd OR LOWER(b.symbol) REGEXP :wd);`;
+      result = await this.app.mysql.query(sql, {
+        id,
+        wd,
+        offset: (page - 1) * pagesize,
+        limit: pagesize,
+      });
+    } else {
+      const sql = 'SELECT a.token_id, a.amount, b.symbol, b.name, b.decimals, b.logo, b.uid, u.username, u.nickname, u.avatar '
       + 'FROM assets_minetokens AS a '
       + 'LEFT JOIN minetokens AS b ON a.token_id = b.id '
       + 'LEFT JOIN users u ON b.uid = u.id '
       + `WHERE a.uid = :id AND a.amount > 0 ORDER BY ${orderString} LIMIT :offset, :limit;`
       + 'SELECT count(1) as count FROM assets_minetokens WHERE uid = :id AND amount > 0;'
       + 'SELECT MAX(amount) AS amount FROM assets_minetokens WHERE uid = :id AND amount > 0;';
-    const result = await this.app.mysql.query(sql, {
-      id,
-      offset: (page - 1) * pagesize,
-      limit: pagesize,
-    });
+      result = await this.app.mysql.query(sql, {
+        id,
+        offset: (page - 1) * pagesize,
+        limit: pagesize,
+      });
+    }
+
+
     const tokenChangeObj = await this.service.token.exchange.getAllChangeByDay(1);
     const tokenPriceObj = await this.service.token.exchange.getAllPrice();
     const memberObj = await this.service.token.mineToken.countMember();
@@ -173,7 +198,7 @@ class ExchangeService extends Service {
     }
 
     id = parseInt(id);
-    const sql = `SELECT a.*, b.total_supply, u.username, u.nickname, u.avatar
+    const sql = `SELECT a.*, b.total_supply, u.username, u.nickname, u.avatar, u.is_recommend AS user_is_recommend 
     FROM assets_minetokens AS a
     JOIN minetokens b ON b.id = a.token_id
     JOIN users u ON u.id = a.uid
@@ -191,9 +216,12 @@ class ExchangeService extends Service {
       row.username = this.service.user.maskEmailAddress(row.username);
     });
 
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(result[0], 'uid');
+
     return {
       count: result[1][0].count,
-      list: result[0],
+      list: listFormat,
     };
   }
   async getTokenBySymbol(symbol) {
@@ -270,7 +298,7 @@ class ExchangeService extends Service {
 
     let sql, parameters;
     if (search === '') {
-      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount, ifnull(t6.amount, 0) AS liquidity, ifnull(t7.amount, 0) AS exchange_amount
+      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t2.is_recommend AS user_is_recommend, t4.amount, ifnull(t6.amount, 0) AS liquidity, ifnull(t7.amount, 0) AS exchange_amount
           FROM mineTokens AS t1
           JOIN users AS t2 ON t1.uid = t2.id
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
@@ -292,7 +320,7 @@ class ExchangeService extends Service {
         limit: pagesize,
       };
     } else {
-      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount, t6.amount AS liquidity, t7.amount AS exchange_amount
+      sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t2.is_recommend AS user_is_recommend, t4.amount, t6.amount AS liquidity, t7.amount AS exchange_amount
           FROM mineTokens AS t1
           JOIN users AS t2 ON t1.uid = t2.id
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
@@ -325,9 +353,12 @@ class ExchangeService extends Service {
       row.username = this.service.user.maskEmailAddress(row.username);
     });
 
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(result[0], 'uid');
+
     return {
       count: result[1][0].count,
-      list: result[0],
+      list: listFormat,
     };
   }
   async getFlowDetail(tokenId, page = 1, pagesize = 20) {

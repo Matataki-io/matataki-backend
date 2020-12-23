@@ -25,6 +25,38 @@ class OnlyForDevController extends Controller {
       ctx.body.data = { error };
     }
   }
+
+  async isExistInDB() {
+    const { ctx } = this;
+    const { txHash } = ctx.params;
+    const result = await this.service.token.externalDeposit.isTxNotExistInDB(txHash);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = { result };
+  }
+
+  async createPeggedTokenOnBSC() {
+    // @XXX: remove before go mainnet
+    const { ctx } = this;
+    const { name, symbol, decimals } = ctx.request.body;
+    const result = await this.service.token.crosschain._createPeggedTokenOnBsc(name, symbol, Number(decimals));
+    if (result.statusCode !== 201) {
+      ctx.body = ctx.msg.failure;
+      ctx.body.data = { error: 'Something bad happened, please contact Matataki Team ASAP.' };
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result.data.hash;
+  }
+
+  async signMintPermit() {
+    // @XXX: remove before go mainnet
+    const { ctx } = this;
+    const { token, to, value } = ctx.request.body;
+    const latestNonce = await this.service.token.crosschain.getNonceOf(token, to);
+    const result = await this.service.token.crosschain.issueMintPermit(token, to, value, latestNonce);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
 }
 
 module.exports = OnlyForDevController;

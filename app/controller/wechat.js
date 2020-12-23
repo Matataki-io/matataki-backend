@@ -75,6 +75,28 @@ class WechatController extends Controller {
 
   }
 
+  async createMenu() {
+    const { ctx } = this;
+    const result = await this.service.wechatTnwx.createMenu();
+    if (result.code === 0) {
+      ctx.body = ctx.msg.success;
+      ctx.body.message = result.message;
+      ctx.body.data = result.data;
+    } else {
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = result.message;
+      ctx.body.data = result.data;
+    }
+  }
+  async token() {
+    const { ctx } = this;
+    // init
+    this.service.wechatApi.weChatTnwxInit();
+    // get accesstoken
+    const assessToken = await this.service.wechatApi.getAccessToken();
+    console.log('assessToken', assessToken);
+    ctx.body = ctx.msg.success;
+  }
 
 }
 

@@ -88,6 +88,8 @@ module.exports = {
   draftNotFound: 10201,
   // 无权操作别人的草稿
   notYourDraft: 10202,
+  // 草稿已被锁定
+  draftIsLocked: 10203,
 
   // 广告牌相关
   // 获取统计数据时候出错
@@ -128,6 +130,24 @@ module.exports = {
   publishRatelimit: 11002,
   notFountComment: 11100,
   notEnoughPlaces: 11200,
+  cannotAddFounder: 11201,
+  notCollaborator: 11202,
+  // direct trade
+  marketNotExist: 11300,
+  notInTheFuture: 11400,
+  // twitter 相关
+  // twitter授权token失效
+  invalidTwitterOauthToken: 11500,
+  // 未获取 twitter 授权
+  twitterNotAuthorized: 11501,
+  // 收到了 twitter API 的错误反馈
+  twitterApiErrorFeedback: 11502,
+  // 推特被锁定
+  twitterIsLocked: 11503,
+  // 未绑定 twitter
+  unboundTwitter: 11504,
+  // 未开启推特时间线
+  twitterTimelineIsNotTurnedOn: 11505,
 
   returnObj(lang) {
 
@@ -212,6 +232,16 @@ module.exports = {
       publishRatelimit: { code: this.publishRatelimit, message: 'too many requests' },
       notFountComment: { code: this.notFountComment, message: 'not found comment' },
       notEnoughPlaces: { code: this.notEnoughPlaces, message: 'Not enough places' },
+      cannotAddFounder: { code: this.cannotAddFounder, message: 'Cannot add founder' },
+      notCollaborator: { code: this.notCollaborator, message: 'Not a token collaborator' },
+      marketNotExist: { code: this.marketNotExist, message: 'The market does not exist.' },
+      notInTheFuture: { code: this.notInTheFuture, message: 'Not in the future, At least two minutes later' },
+      invalidTwitterOauthToken: {code: this.invalidTwitterOauthToken, message: 'The Twitter authorization request has expired. Please try again.'},
+      twitterNotAuthorized: {code: this.twitterNotAuthorized, message: 'Twitter not authorized'},
+      twitterApiErrorFeedback: {code: this.twitterApiErrorFeedback, message: 'Received Twitter API error feedback'},
+      twitterIsLocked: {code: this.twitterIsLocked, message: 'The user’s twitter are protected and cannot be viewed'},
+      unboundTwitter: {code: this.unboundTwitter, message: 'Unbound Twitter'},
+      twitterTimelineIsNotTurnedOn: {code: this.twitterTimelineIsNotTurnedOn, message: 'Twitter timeline is not turned on'},
     };
 
     const zh = {
@@ -267,6 +297,7 @@ module.exports = {
 
       draftNotFound: { code: this.draftNotFound, message: '找不到这篇草稿' },
       notYourDraft: { code: this.notYourDraft, message: '无权操作别人的草稿' },
+      draftIsLocked: { code: this.draftIsLocked, message: '草稿已被锁定' },
 
       getStatisticsError: { code: this.getStatisticsError, message: '获取统计信息出错' },
       submitAdErrorOfWrongUser: { code: this.submitAdErrorOfWrongUser, message: '上传广告牌错误, 不是被认可的用户' },
@@ -295,6 +326,16 @@ module.exports = {
       publishRatelimit: { code: this.publishRatelimit, message: '请求过多' },
       notFountComment: { code: this.notFountComment, message: '回复评论不存在' },
       notEnoughPlaces: { code: this.notEnoughPlaces, message: '名额不足' },
+      cannotAddFounder: { code: this.cannotAddFounder, message: '无法添加创始人' },
+      notCollaborator: { code: this.notCollaborator, message: '你不是此Fan票的协作者' },
+      marketNotExist: { code: this.marketNotExist, message: '市场不存在' },
+      notInTheFuture: { code: this.notInTheFuture, message: '请填写未来的时间，至少是两分钟后' },
+      invalidTwitterOauthToken: {code: this.invalidTwitterOauthToken, message: 'Twitter 授权申请已过期，请重试。'},
+      twitterNotAuthorized: {code: this.twitterNotAuthorized, message: '该账户未获取 Twitter 授权'},
+      twitterApiErrorFeedback: {code: this.twitterApiErrorFeedback, message: '收到 Twitter API 错误反馈'},
+      twitterIsLocked: {code: this.twitterIsLocked, message: '用户的推文受到保护，无法查看'},
+      unboundTwitter: {code: this.unboundTwitter, message: '未绑定 Twitter'},
+      twitterTimelineIsNotTurnedOn: {code: this.twitterTimelineIsNotTurnedOn, message: '未开启 Twitter 时间线'},
     };
 
     let message;

@@ -84,15 +84,20 @@ class UserService extends Service {
     let introduction = '';
     let banner = '';
     let create_time;
+    let is_recommend = 0;
 
     const user = await this.service.account.binding.get2({ id });
     // const user = await this.app.mysql.get('users', { id });
+
+    console.log('user', user);
+
     if (user) {
       avatar = user.avatar || '';
       nickname = user.nickname || '';
       introduction = user.introduction || '';
       banner = user.banner || '';
       create_time = user.create_time;
+      is_recommend = user.is_recommend;
     } else {
       return null;
     }
@@ -107,7 +112,8 @@ class UserService extends Service {
       fans: fans[0].fans,
       is_follow,
       create_time,
-      status: user.status
+      is_recommend,
+      status: user.status,
     };
 
     ctx.logger.info('debug info', result);
@@ -164,7 +170,7 @@ class UserService extends Service {
       return userList;
     }
 
-    let sqlcode = 'SELECT id, username, platform, nickname, avatar, introduction FROM users WHERE id IN (:userids);'
+    let sqlcode = 'SELECT id, username, platform, nickname, avatar, introduction, is_recommend FROM users WHERE id IN (:userids);'
       // 粉丝数量
       + 'SELECT fuid, COUNT(*) AS fans FROM follows WHERE status = 1 AND fuid IN (:userids) GROUP BY fuid;'
       // 关注数量
@@ -240,7 +246,7 @@ class UserService extends Service {
 
       ids = await this.app.redis.srandmember('user:recommend', amount);
     }
-    const users = await this.app.mysql.query('SELECT id, username, email, nickname, avatar, introduction FROM users WHERE id IN (:ids);', {
+    const users = await this.app.mysql.query('SELECT id, username, email, nickname, avatar, introduction, is_recommend FROM users WHERE id IN (:ids);', {
       ids,
     });
 
@@ -269,7 +275,10 @@ class UserService extends Service {
       // result.push(info);
     }
 
-    return users;
+    // 返沪用户是否发币
+    const listFormat = await this.service.token.mineToken.formatListReturnTokenInfo(users, 'id');
+
+    return listFormat;
   }
 
   async setProfile(userid, nickname, introduction, accept) {
@@ -287,7 +296,7 @@ class UserService extends Service {
       }
 
       // 普通用户不能以exchange打头
-      if (nickname.toLowerCase().startsWith(this.config.user.virtualUserPrefix)) {
+      if (nickname.toLowerCase().startsWith(this.config.user.virtualUserPrefix) || nickname.toLowerCase().startsWith(this.config.user.tradeUserPrefix)) {
         return nicknameInvalid;
       }
 

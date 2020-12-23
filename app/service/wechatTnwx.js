@@ -1,8 +1,11 @@
 'use strict';
 
 const Service = require('egg').Service;
-const { WeChat } = require('tnwx');
+const { WeChat, MenuApi } = require('tnwx');
 const MsgController = require('../wx/MsgController');
+const fs = require('fs');
+// const wechatMenu = require('../../config/wechat_menu.json');
+const path = require('path');
 
 // 解析二维码
 const xml2js = require('xml2js');
@@ -353,6 +356,33 @@ class WechatService extends Service {
       console.log(e);
       this.logger.error('login by wx', e);
       return false;
+    }
+  }
+
+  async createMenu() {
+    try {
+      const res = await fs.readFileSync(path.join(__dirname, '../../config/wechat_menu.json'));
+
+      const fileData = res.toString();
+
+      // init
+      this.service.wechatApi.weChatTnwxInit();
+
+      // get accesstoken
+      // const assessToken = await this.service.wechatApi.getAccessToken();
+      // console.log('assessToken', assessToken);
+
+      const createRes = await MenuApi.create(fileData);
+
+      return {
+        code: createRes.errcode,
+        message: createRes.errmsg,
+      };
+    } catch (e) {
+      return {
+        code: -1,
+        message: e,
+      };
     }
   }
 

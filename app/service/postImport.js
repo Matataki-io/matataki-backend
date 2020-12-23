@@ -10,6 +10,7 @@ const htmlparser = require('node-html-parser');
 const pretty = require('pretty');
 const turndown = require('turndown');
 const cheerio = require('cheerio'); // 如果是客户端渲染之类的 可以考虑用 puppeteer
+
 class PostImportService extends Service {
 
   // 搬运时候上传图片
@@ -60,7 +61,7 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: handleWechat: error:', err);
       return null;
     }
-    const $ = cheerio.load(rawPage.data,{decodeEntities : false});
+    const $ = cheerio.load(rawPage.data, { decodeEntities: false });
     const mediaContent = $('div.rich_media_content');
 
     // 把图片上传至本站， 并替换链接
@@ -85,21 +86,21 @@ class PostImportService extends Service {
       _imgElement[index].attribs.src = _imgElement[index].attribs['data-src'];
     }
     // 处理视频
-    const videos = $('iframe',mediaContent);
-    for (const video of videos.toArray()){
+    const videos = $('iframe', mediaContent);
+    for (const video of videos.toArray()) {
       try {
-      const vid = $(video).attr('data-mpvid');
-      const url = `https://mp.weixin.qq.com/mp/videoplayer?action=get_mp_video_play_url&preview=0&__biz=&mid=&idx=&vid=${vid}&uin=&key=&pass_ticket=&wxtoken=&appmsg_token=&x5=0&f=json`;
-      const {data} = await axios({
-        url,method : 'GET',
+        const vid = $(video).attr('data-mpvid');
+        const url = `https://mp.weixin.qq.com/mp/videoplayer?action=get_mp_video_play_url&preview=0&__biz=&mid=&idx=&vid=${vid}&uin=&key=&pass_ticket=&wxtoken=&appmsg_token=&x5=0&f=json`;
+        const { data } = await axios({
+          url, method: 'GET',
         });
-      const originSrc = data.url_info[0].url;
-      $(video).after(`<video controls width="100%" name="media">
+        const originSrc = data.url_info[0].url;
+        $(video).after(`<video controls width="100%" name="media">
       <source src="${originSrc}" type="video/mp4"></video>`);
-      $(video).remove();
-    }catch (err){
-      this.logger.error('PostImportService:: handleWechat: error while processing video:', err);
-    }
+        $(video).remove();
+      } catch (err) {
+        this.logger.error('PostImportService:: handleWechat: error while processing video:', err);
+      }
     }
     let parsedContent = '';
     parsedContent = pretty($('div.rich_media_content').html());
@@ -534,6 +535,181 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: handleWeibo: error:', err);
       return null;
     }
+  }
+  async handleBihu(url) {
+    this.logger.info('bihu url is: ', url);
+
+    const BIHUAPI = 'https://be02.bihu.com/bihube-pc/api/content/show/getArticle2';
+    const BIHUOSS = 'https://oss-cdn2.bihu-static.com';
+    const SSIMG = 'https://ssimg.frontenduse.top';
+    const BIHUSHORTCONTENT = 'https://be02.bihu.com/bihube-pc/bihu/shortContent';
+
+    let KEY = '';
+    const KEYArticle = '/article/';
+    const KEYShort = '/shortContent/';
+
+    // 处理文章
+    const handleArticle = async ID => {
+      // 获取文章信息
+      const result = await axios({
+        method: 'POST',
+        url: BIHUAPI,
+        headers: {
+          uuid: '0ec70f2bdaa5665a7ff802ad5162205b',
+        },
+        data: {
+          artId: ID,
+        },
+      });
+
+      console.log('result', result);
+
+      this.logger.info('article result', url, ID, result.data.data);
+
+      let title = '';
+      // 文章信息
+      if (result.status === 200 && result.data.data) {
+        title = result.data.data.title;
+      } else {
+        throw new Error('result error', result);
+      }
+
+      const { data } = result.data;
+      // 按照链接文章处理 比如： https://bihu.com/article/1064119248
+      if (data.articleType === 0) {
+        return {
+          title,
+          cover: '',
+          content: data.content,
+        };
+      }
+      // 其他全部按照文章来处理 目前有 1 2
+      // articleType === 1 https://bihu.com/article/1071410180
+      // articleType === 2 https://bihu.com/article/1761774697
+      const resultContent = await axios({
+        method: 'GET',
+        url: `${BIHUOSS}/${data.content}`,
+      });
+
+      // 获取内容
+      let content = '';
+      if (resultContent.status === 200 && resultContent.data) {
+        content = resultContent.data;
+      }
+
+      // 封面处理
+      const coverUrl = data.imgList[0].name ? `${BIHUOSS}/${data.imgList[0].name}` : '';
+      let cover = '';
+      if (coverUrl) {
+        const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
+        const coverResult = await this.uploadArticleImage(coverUrl, parsedCoverUpload);
+        if (coverResult) {
+          cover = coverResult;
+        }
+      }
+
+      // 处理图片
+      if (content) {
+        const $ = cheerio.load(content);
+        const _imgElement = $('img').toArray();
+        for (let i = 0; i < _imgElement.length; i++) {
+          console.log(_imgElement[i].attribs.src);
+          const _src = _imgElement[i].attribs.src;
+          const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
+          const imgUpUrl = await this.uploadArticleImage(_src, parsedCoverUpload);
+          if (i === 0 && !cover && imgUpUrl) {
+            cover = imgUpUrl;
+          }
+          if (imgUpUrl) {
+            _imgElement[i].attribs.src = `${SSIMG}${imgUpUrl}`;
+          }
+        }
+        content = $('body').html();
+      }
+
+      return {
+        title,
+        cover,
+        content,
+      };
+    };
+
+    // 处理微文
+    const handleShortContent = async ID => {
+      // 获取内容
+      const result = await axios({
+        method: 'GET',
+        url: `${BIHUSHORTCONTENT}/${ID}`,
+      });
+
+      let content = '';
+      if (result.status === 200 && result.data.data) {
+        content = result.data.data.content;
+      } else {
+        throw new Error('result error', result);
+      }
+
+      const { data } = result.data;
+      let cover = '';
+      if (data.snapimage) {
+        // 微文的图片
+        const snapimageResult = data.snapimage.split(',');
+        let imgMd = '';
+        for (let i = 0; i < snapimageResult.length; i++) {
+          // 处理图片
+          const url = snapimageResult[i];
+          const coverUrl = url ? `${BIHUOSS}/${url}` : '';
+          if (coverUrl) {
+            const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
+            const imgUrl = await this.uploadArticleImage(coverUrl, parsedCoverUpload);
+            if (imgUrl) {
+              imgMd += `![imgUrl](${SSIMG}/${imgUrl})`;
+            }
+
+            // 第一张当封面
+            if (i === 0 && imgUrl) {
+              cover = imgUrl;
+            }
+          }
+        }
+        // 添加到尾部
+        content += imgMd;
+      }
+      return {
+        title: '',
+        cover,
+        content,
+      };
+    };
+
+    // 判断是文章还是微文
+    if (url.indexOf(KEYArticle) !== -1) {
+      KEY = KEYArticle;
+    } else if (url.indexOf(KEYShort) !== -1) {
+      KEY = KEYShort;
+    } else {
+      throw new Error('other url', url);
+    }
+
+    // 获取 ID
+    const IDX = url.indexOf(KEY);
+    const ID = parseInt(url.slice(IDX + KEY.length));
+    if (!ID) {
+      throw new Error('not article id error', url);
+    }
+
+    try {
+      if (KEY === KEYArticle) {
+        return await handleArticle(ID);
+      } else if (KEY === KEYShort) {
+        return await handleShortContent(ID);
+      }
+      throw new Error('not match key', KEY);
+    } catch (e) {
+      this.logger.error('PostImportService:: handleBihu error:', e);
+      return null;
+    }
+
   }
 }
 

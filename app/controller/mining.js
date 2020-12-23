@@ -18,11 +18,13 @@ class LikeController extends Controller {
     const { time } = ctx.request.body;
     const result = await this.service.mining.like(ctx.user.id, ctx.params.id, time, ctx.ip);
     if (result === 0) {
-      const points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
+      await this.service.postDashboard.addActionLog(ctx.user.id, ctx.params.id, 'like');
+
       // 为喜欢行为创建一个事件通知
       const { uid } = await this.service.post.get(ctx.params.id);
       this.service.notify.event.sendEvent(ctx.user.id, [uid], 'like', ctx.params.id, 'article');
-
+      
+      const points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
       ctx.body = ctx.msg.success;
       ctx.body.data = points;
     } else {
@@ -37,6 +39,8 @@ class LikeController extends Controller {
     const { time } = ctx.request.body;
     const result = await this.service.mining.dislike(ctx.user.id, ctx.params.id, time, ctx.ip);
     if (result === 0) {
+      await this.service.postDashboard.addActionLog(ctx.user.id, ctx.params.id, 'dislike');
+
       const points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
       ctx.body = ctx.msg.success;
       ctx.body.data = points;

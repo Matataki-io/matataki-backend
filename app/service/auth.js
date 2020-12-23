@@ -14,6 +14,7 @@ const EOS = require('eosjs');
 const OAuth = require('oauth');
 const { createHash, createHmac } = require('crypto');
 const { google } = require('googleapis');
+const codebird = require('../extend/codebird')
 
 class AuthService extends Service {
 
@@ -778,6 +779,111 @@ class AuthService extends Service {
     // return await this.app.mysql.get('users', { username, platform });
   }
 
+  /** 获取 twitter 授权的请求 token */
+  async twitterRequestToken(callbackUrl) {
+    const oauthRequestToken = () => {
+      const cb = new codebird()
+      cb.setUseProxy(true)
+      cb.setConsumerKey(this.config.twitterConsumerKey.key, this.config.twitterConsumerKey.secret)
+      return new Promise((resolve, reject) => {
+        cb.__call('oauth_requestToken', { oauth_callback: callbackUrl }, (reply, rate, err) => {
+          if (err) {
+            reject('error response or timeout exceeded' + err.error)
+            return
+          }
+          if (reply) {
+            if (reply.errors && reply.errors['415']) {
+              reject(reply.errors['415'])
+              return
+            }
+            resolve(reply)
+            return
+          }
+          resolve(null)
+        })
+      })
+    }
+
+    const reply = await oauthRequestToken()
+    if (!reply) return
+  
+    const key = 'twitter:authorizeToken:' + reply.oauth_token
+    await this.app.redis.set(key, reply.oauth_token_secret)
+    await this.app.redis.expire(key, 60 * 5)
+  
+    return reply
+  }
+
+  /** 获取 twitter 授权 token */
+  async twitterAccessToken(userId, oauthToken, oauthVerifier) {
+    const oauthAccessToken = () => {
+      const cb = new codebird()
+      cb.setUseProxy(true)
+      cb.setConsumerKey(this.config.twitterConsumerKey.key, this.config.twitterConsumerKey.secret)
+      cb.setToken(oauthToken, oauthTokenSecret)
+      return new Promise((resolve, reject) => {
+        cb.__call('oauth_accessToken', { oauth_verifier: oauthVerifier }, (reply, rate, err) => {
+            if (err) {
+              reject('error response or timeout exceeded' + err.error)
+              return
+            }
+            if (reply) {
+              resolve(reply)
+              return
+            }
+            resolve()
+          }
+        )
+      })
+    }
+
+    const key = 'twitter:authorizeToken:' + oauthToken
+    const oauthTokenSecret = await this.app.redis.get(key)
+    if (!oauthTokenSecret) return { code: 1 }
+
+    const reply = await oauthAccessToken()
+    if (!reply) return
+
+    await this.app.mysql.query(`
+      INSERT INTO user_twitter_credential (
+        user_id,
+        oauth_token,
+        oauth_token_secret,
+        twitter_id,
+        screen_name,
+        create_time
+      )
+      VALUES (
+        :userId,
+        :oauthToken,
+        :oauthTokenSecret,
+        :twitterId,
+        :screenName,
+        :createTime
+      )
+      ON DUPLICATE KEY UPDATE
+        oauth_token = :oauthToken,
+        oauth_token_secret = :oauthTokenSecret,
+        twitter_id = :twitterId,
+        screen_name = :screenName,
+        create_time = :createTime
+    `, {
+      userId,
+      oauthToken: reply.oauth_token,
+      oauthTokenSecret: reply.oauth_token_secret,
+      twitterId: reply.user_id,
+      screenName: reply.screen_name,
+      createTime: moment().format('YYYY-MM-DD HH:mm:ss')
+    })
+
+    return { code: 0, reply }
+  }
+
+  /** 删除用户的推特授权 token */
+  async twitterDeauthorize(userId) {
+    const { affectedRows } = await this.app.mysql.delete('user_twitter_credential', { user_id: userId })
+    return affectedRows === 1
+  }
 }
 
 module.exports = AuthService;
