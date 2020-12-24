@@ -554,10 +554,15 @@ class PostImportService extends Service {
       const result = await axios({
         method: 'POST',
         url: BIHUAPI,
+        headers: {
+          uuid: '0ec70f2bdaa5665a7ff802ad5162205b',
+        },
         data: {
           artId: ID,
         },
       });
+
+      console.log('result', result);
 
       this.logger.info('article result', url, ID, result.data.data);
 

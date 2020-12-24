@@ -210,6 +210,21 @@ class CrossChainController extends Controller {
     ctx.body.data = { tokens };
   }
 
+  async renewMyWithdrawPermit() {
+    const { ctx } = this;
+    const { id } = ctx.params;
+
+    try {
+      const newPermit = await this.service.token.crosschain.renewUnusedMintPermit(id, ctx.user.id);
+      ctx.body = ctx.msg.success;
+      ctx.body.data = { newPermit };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = error.message;
+      ctx.status = 400;
+    }
+  }
+
   async isCrosschainToken() {
     const { ctx } = this;
     const { tokenAddress } = ctx.params;
