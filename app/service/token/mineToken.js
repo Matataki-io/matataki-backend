@@ -3,7 +3,6 @@ const _ = require('lodash');
 const moment = require('moment');
 const Service = require('egg').Service;
 const Token = require('../ethereum/Token');
-const Sentry = require('../../sentry');
 const consts = require('../consts');
 
 class MineTokenService extends Service {
@@ -248,7 +247,7 @@ class MineTokenService extends Service {
       this.logger.info('Minting token', token, blockchainMintAction);
       transactionHash = blockchainMintAction.transactionHash;
     } catch (error) {
-      Sentry.captureException(error);
+      this.logger.error(error);
       this.logger.error(error);
     }
 
@@ -1337,7 +1336,7 @@ class MineTokenService extends Service {
 
       return list;
     } catch (e) {
-      Sentry.captureException(e);
+      this.logger.error(e);
       this.logger.error('formatListReturnTokenInfo error: ', e);
       return list;
     }

@@ -2,7 +2,6 @@
 
 const Service = require('egg').Service;
 const downloader = require('image-downloader');
-const Sentry = require('../sentry');
 // const FromData = require('form-data');
 const moment = require('moment');
 const md5 = require('crypto-js/md5');
@@ -367,7 +366,7 @@ class PostImportService extends Service {
       return articleObj;
     } catch (error) {
       this.logger.error('handleGaojin::error', error);
-      Sentry.captureException(error);
+      this.logger.error(error);
       return {
         title: '',
         cover: '',

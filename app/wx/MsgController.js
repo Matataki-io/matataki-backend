@@ -9,7 +9,6 @@ const {
   OutCustomMsg,
 } = require('tnwx');
 const msg = require('./msg');
-const Sentry = require('../sentry');
 const wechatConfig = require('../../config/wechat_config');
 
 class MsgController extends MsgAdapter {
@@ -70,7 +69,6 @@ class MsgController extends MsgAdapter {
       // outMsg.setContent(content);
       // 转发给多客服PC客户端
       outMsg = new OutCustomMsg(inTextMsg);
-      this.logger.info('转发给多客服PC客户端');
     }
     return outMsg;
   }
@@ -100,7 +98,6 @@ class MsgController extends MsgAdapter {
       return this.renderOutTextMsg(inFollowEvent, msg.followed);
     // eslint-disable-next-line eqeqeq
     } else if (InFollowEvent.EVENT_INFOLLOW_UNSUBSCRIBE == inFollowEvent.getEvent) {
-      Sentry.captureMessage('取消关注：' + inFollowEvent.getFromUserName);
       return this.renderOutTextMsg(inFollowEvent);
     }
     return this.renderOutTextMsg(inFollowEvent);
@@ -109,15 +106,12 @@ class MsgController extends MsgAdapter {
 
   // 处理扫码事件
   processInQrCodeEvent(inQrCodeEvent) {
-    Sentry.captureMessage('processInQrCodeEvent inQrCodeEvent', inQrCodeEvent);
     if (InQrCodeEvent.EVENT_INQRCODE_SUBSCRIBE === inQrCodeEvent.getEvent) {
-      Sentry.captureMessage('扫码未关注：' + inQrCodeEvent.getFromUserName);
       return this.renderOutTextMsg(
         inQrCodeEvent,
         msg.scanUnfollowed
       );
     } else if (InQrCodeEvent.EVENT_INQRCODE_SCAN === inQrCodeEvent.getEvent) {
-      Sentry.captureMessage('扫码已关注：' + inQrCodeEvent.getFromUserName);
       return this.renderOutTextMsg(inQrCodeEvent, msg.scanFollowed);
     }
     return this.renderOutTextMsg(inQrCodeEvent);

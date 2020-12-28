@@ -1,4 +1,3 @@
-const Sentry = require('../sentry');
 
 module.exports = () => {
   return async function errorHandler(ctx, next) {
@@ -9,7 +8,7 @@ module.exports = () => {
       ctx.app.emit('error', err, ctx);
 
       ctx.logger.error('error handler', err);
-      Sentry.captureException(err);
+      this.logger.error(err);
 
       const status = err.status || 500;
       // 生产环境时 500 错误的详细错误内容不返回给客户端，因为可能包含敏感信息
