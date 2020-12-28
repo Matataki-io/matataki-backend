@@ -6,6 +6,7 @@
     "indent": "error",
     "spaced-comment": "error",
     "default-case": "off",
+    "no-console": "error",
     "no-eval": "error",
     "one-var-declaration-per-line": "off",
     "operator-linebreak": [
