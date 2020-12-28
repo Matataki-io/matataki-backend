@@ -70,7 +70,7 @@ class MsgController extends MsgAdapter {
       // outMsg.setContent(content);
       // 转发给多客服PC客户端
       outMsg = new OutCustomMsg(inTextMsg);
-      this.logger.log('转发给多客服PC客户端');
+      this.logger.info('转发给多客服PC客户端');
     }
     return outMsg;
   }
