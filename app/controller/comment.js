@@ -67,7 +67,6 @@ class CommentController extends Controller {
     }
     // 为评论行为创建一个事件通知
     const { uid } = await this.app.mysql.get('comments', { id: replyId });
-    console.log(ctx.user.id, [ uid ], 'reply', replyId, 'comment', result);
     this.service.notify.event.sendEvent(ctx.user.id, [ uid ], 'reply', replyId, 'comment', result.insertId);
 
     ctx.body = ctx.msg.success;

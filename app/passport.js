@@ -1,6 +1,7 @@
 'use strict';
 const jwt = require('jwt-simple');
 const message = require('../config/message');
+const Sentry = require('./sentry');
 const apiAccessToken = require('../config/apiaccesstoken');
 
 module.exports = {
@@ -65,7 +66,7 @@ module.exports = {
           ctx.user.platform = decoded.platform;
         }
       } catch (err) {
-        console.log(err);
+        Sentry.captureException(err);
       }
     }
 

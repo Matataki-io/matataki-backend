@@ -10,9 +10,7 @@ class DownloaderController extends Controller {
     // const uid = this.ctx.user.id;
     // const { uid } = ctx.params;
     const { token } = ctx.query;
-    console.log('token', token);
     const uid = this.decode(token);
-    console.log('uid', uid);
     if (uid === null) {
       ctx.body = ctx.msg.failure;
       return;

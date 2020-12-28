@@ -155,7 +155,6 @@ class ExchangeService extends Service {
 
 
     _.each(result[0], row => {
-      console.log(row);
       row.member = memberObj[row.id] || '0';
       row.username = this.service.user.maskEmailAddress(row.username);
       row.current_price = tokenPriceObj[row.token_id] || 0;
@@ -362,7 +361,6 @@ class ExchangeService extends Service {
     };
   }
   async getFlowDetail(tokenId, page = 1, pagesize = 20) {
-    console.log(tokenId);
     const sql = 'SELECT * from exchange_orders WHERE token_id = :tokenId LIMIT :offset, :limit;'
       + 'SELECT count(1) as count FROM exchange_orders WHERE token_id = :tokenId;';
     const result = await this.app.mysql.query(sql, {

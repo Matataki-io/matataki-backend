@@ -2,6 +2,7 @@
 
 const Service = require('egg').Service;
 const downloader = require('image-downloader');
+const Sentry = require('../sentry');
 // const FromData = require('form-data');
 const moment = require('moment');
 const md5 = require('crypto-js/md5');
@@ -365,7 +366,8 @@ class PostImportService extends Service {
 
       return articleObj;
     } catch (error) {
-      console.log('error', error);
+      this.logger.error('handleGaojin::error', error);
+      Sentry.captureException(error);
       return {
         title: '',
         cover: '',
@@ -562,8 +564,6 @@ class PostImportService extends Service {
         },
       });
 
-      console.log('result', result);
-
       this.logger.info('article result', url, ID, result.data.data);
 
       let title = '';
@@ -613,7 +613,6 @@ class PostImportService extends Service {
         const $ = cheerio.load(content);
         const _imgElement = $('img').toArray();
         for (let i = 0; i < _imgElement.length; i++) {
-          console.log(_imgElement[i].attribs.src);
           const _src = _imgElement[i].attribs.src;
           const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
           const imgUpUrl = await this.uploadArticleImage(_src, parsedCoverUpload);

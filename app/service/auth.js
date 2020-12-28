@@ -321,7 +321,7 @@ class AuthService extends Service {
       await this.insertLoginLog(currentUser.id, ip);
 
       // const expires = moment().add(7, 'days').valueOf();
-      console.log('currentUser', currentUser);
+      this.logger.info('currentUser', currentUser);
 
       const jwttoken = this.jwtSign(currentUser);
       // jwt.encode({
@@ -715,7 +715,7 @@ class AuthService extends Service {
           createAccount.insertId, username, wallet
         );
       } catch (e) {
-        console.log('service.account.hosting.create error', e);
+        this.logger.error('service.account.hosting.create error', e);
       }
 
       // 初始化新用户公告

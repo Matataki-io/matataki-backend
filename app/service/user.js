@@ -89,7 +89,6 @@ class UserService extends Service {
     const user = await this.service.account.binding.get2({ id });
     // const user = await this.app.mysql.get('users', { id });
 
-    console.log('user', user);
 
     if (user) {
       avatar = user.avatar || '';

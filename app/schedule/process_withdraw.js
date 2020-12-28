@@ -37,7 +37,6 @@ class ProcessWithdraw extends Subscription {
       const isLesshan10Min = moment(withdraw.create_time).add(10, 'm').isAfter(moment());
       if (isLesshan10Min) {
         this.logger.info(withdraw);
-        console.log(withdraw);
         // return;
         if (withdraw.platform === 'eos') {
           await this.eos_transfer(withdraw);
@@ -52,7 +51,6 @@ class ProcessWithdraw extends Subscription {
 
   async refund(withdraw) {
     this.logger.info('Refund withdraw', withdraw);
-    console.log('Refund withdraw', withdraw);
     const conn = await this.app.mysql.beginTransaction();
     try {
       await conn.query(
@@ -64,7 +62,6 @@ class ProcessWithdraw extends Subscription {
 
       await conn.commit();
       this.logger.info('refund success');
-      console.log('refund success');
     } catch (err) {
       await conn.rollback();
       this.ctx.logger.error(err);
@@ -73,7 +70,6 @@ class ProcessWithdraw extends Subscription {
 
   async eos_transfer(w) {
     this.logger.info('ProcessWithdraw EOS', w);
-    console.log('ProcessWithdraw EOS', w);
     const conn = await this.app.mysql.beginTransaction();
 
     try {
@@ -85,7 +81,6 @@ class ProcessWithdraw extends Subscription {
       }
 
       this.logger.info('withdraw', withdraw, result);
-      console.log('withdraw', withdraw, result);
 
       if (!withdraw) {
         return;
@@ -107,7 +102,6 @@ class ProcessWithdraw extends Subscription {
         },
       }];
       this.logger.info('actions:', actions);
-      console.log('actions:', actions);
 
       const res = await this.eosClient.transaction({
         actions,
@@ -121,7 +115,6 @@ class ProcessWithdraw extends Subscription {
       }, { where: { id: withdraw.id } });
 
       this.logger.info('eos transfer success');
-      console.log('eos transfer success');
 
       await conn.commit();
     } catch (err) {

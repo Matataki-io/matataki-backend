@@ -34,7 +34,6 @@ class AliPayController extends Controller {
     const signResult = await ctx.service.alipay.checkNotifySign(ctx.request.body);
     if (signResult) {
       ctx.logger.info('alipay notify info 1', ctx.request.body);
-      console.log('success');
       ctx.body = 'success';
     }
   }

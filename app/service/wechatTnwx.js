@@ -29,13 +29,11 @@ class WechatService extends Service {
       };
     }
 
-    console.log('userInfoResult', userInfoResult);
 
     // 创建， 设置用户
     const { nickname, headimgurl } = userInfoResult;
     const jwttoken = await this.service.auth.saveWeChatUser(openid, nickname, headimgurl, this.clientIP, 0, 'weixin');
 
-    console.log('jwttoken', jwttoken);
 
     if (jwttoken === null) {
       return ctx.msg.generateTokenError;
@@ -51,22 +49,18 @@ class WechatService extends Service {
     const { ctx } = this;
     const { msgSignature, timestamp, nonce } = ctx.query;
     const msgXml = this.ctx.request.rawBody;
-    console.log('msgXml', msgXml);
 
     // init
     this.service.wechatApi.weChatTnwxInit();
 
     const msgAdapter = new MsgController();
-    // console.log('msgAdapter', msgAdapter);
+    // this.logger.info('msgAdapter', msgAdapter);
 
     ctx.set('Content-Type', 'text/xml');
     const msg = await WeChat.handleMsg(msgAdapter, msgXml, msgSignature, timestamp, nonce);
-    console.log('msg 45 line', msg);
 
     const xmlResult = await parser.parseStringPromise(msgXml);
-    console.log('xmlResult', xmlResult.xml);
     const msgXmlResult = xmlResult.xml;
-    console.log('msgXmlResult: ', msgXmlResult);
 
 
     // 扫码登录
@@ -77,7 +71,6 @@ class WechatService extends Service {
         if (!assessToken) return;
 
         const res = await this.weixinLogin(assessToken, msgXmlResult.FromUserName[0]);
-        console.log('res', res);
 
         if (res.code === 0) {
           await this.app.redis.set(`scene:${msgXmlResult.EventKey[0]}`, res.data, 'EX', 60);
@@ -95,7 +88,6 @@ class WechatService extends Service {
         if (!assessToken) return;
 
         const res = await this.weixinLogin(assessToken, msgXmlResult.FromUserName[0]);
-        console.log('res', res);
 
         if (res.code === 0) {
           await this.app.redis.set(`scene:${eventKey}`, res.data, 'EX', 60);
@@ -116,7 +108,6 @@ class WechatService extends Service {
         };
         const result = await this.ctx.service.account.binding.create(data);
 
-        console.log('result', result);
         if (result) {
           this.app.redis.set(`scene_bind:${eventKey}`, eventKey, 'EX', 60);
         } else {
@@ -144,28 +135,28 @@ class WechatService extends Service {
       } else if (eventKey[0]) { // 478398 如果用户已经关注公众号 纯数字内容 扫码登录
         scanLogin(msgXmlResult);
       } else {
-        console.log('not event key, msgXmlResult: ', msgXmlResult);
+        this.logger.info('not event key, msgXmlResult: ', msgXmlResult);
       }
 
     } else if (msgXmlResult.Event[0] === 'unsubscribe' && msg === 'success') { // 取关了
-      console.log(`${msgXmlResult.FromUserName[0]}取关了`);
+      this.logger.info(`${msgXmlResult.FromUserName[0]}取关了`);
     } else if (msgXmlResult.Event[0] === 'subscribe') { // 关注了
-      console.log(`${msgXmlResult.FromUserName[0]}关注了`);
+      this.logger.info(`${msgXmlResult.FromUserName[0]}关注了`);
 
       if (eventKey[0] === 'qrscene' && eventKey[1] === 'bind') { // qrscene_bind_1053 扫码绑定账号
         scanBind(msgXmlResult, eventKey[2]);
       } else if (eventKey[0] === 'qrscene') { // qrscene_123456 如果用户还未关注公众号 扫码关注登录
         scanFollowLogin(msgXmlResult, eventKey[1]);
       } else {
-        console.log('not event key, msgXmlResult: ', msgXmlResult);
+        this.logger.info('not event key, msgXmlResult: ', msgXmlResult);
       }
 
     } else {
       // 其他事件
-      console.log('other event, msgXmlResult: ', msgXmlResult);
+      this.logger.info('other event, msgXmlResult: ', msgXmlResult);
     }
 
-    console.log('msg 45 line ------------------------------');
+    this.logger.info('msg 45 line ------------------------------');
     return msg;
   }
 
@@ -216,7 +207,7 @@ class WechatService extends Service {
       };
     }
 
-    console.log('ticketResult', ticketResult);
+    this.logger.info('ticketResult', ticketResult);
 
     const [ longUrlError, longUrlResult ] = await this.service.utils.facotryRequst(this.service.wechatApi.longUrlConvertShortUrl, assessToken, this.service.wechatApi.ticketExchangeQRcode(ticketResult.ticket));
     if (longUrlError) {
@@ -227,7 +218,7 @@ class WechatService extends Service {
       };
     }
 
-    console.log('longUrlResult', longUrlResult);
+    this.logger.info('longUrlResult', longUrlResult);
 
     // 没有 url
     if (!longUrlResult.short_url) {
@@ -281,7 +272,7 @@ class WechatService extends Service {
       };
     }
 
-    console.log('qrcodeBind ticketResult', ticketResult);
+    this.logger.info('qrcodeBind ticketResult', ticketResult);
 
     const [ longUrlError, longUrlResult ] = await this.service.utils.facotryRequst(this.service.wechatApi.longUrlConvertShortUrl, assessToken, this.service.wechatApi.ticketExchangeQRcode(ticketResult.ticket));
     if (longUrlError) {
@@ -292,7 +283,7 @@ class WechatService extends Service {
       };
     }
 
-    console.log('qrcodeBind longUrlResult', longUrlResult);
+    this.logger.info('qrcodeBind longUrlResult', longUrlResult);
 
     // 没有 url
     if (!longUrlResult.short_url) {
@@ -323,7 +314,6 @@ class WechatService extends Service {
       const resultToken = await this.app.redis.get(`scene:${scene}`);
       return resultToken ? resultToken : false;
     } catch (e) {
-      console.log(e);
       this.logger.error('login by wx', e);
       return false;
     }
@@ -353,7 +343,6 @@ class WechatService extends Service {
 
 
     } catch (e) {
-      console.log(e);
       this.logger.error('login by wx', e);
       return false;
     }
@@ -370,7 +359,7 @@ class WechatService extends Service {
 
       // get accesstoken
       // const assessToken = await this.service.wechatApi.getAccessToken();
-      // console.log('assessToken', assessToken);
+      // this.logger.info('assessToken', assessToken);
 
       const createRes = await MenuApi.create(fileData);
 

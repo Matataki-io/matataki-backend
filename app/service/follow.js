@@ -56,7 +56,7 @@ class FollowService extends Service {
             .hdel(this.service.notification.userCounterKey(user.id), 'follow')
             .exec();
         } catch (e) {
-          console.error(e);
+          this.logger.error(e);
         }
         return 0;
       }
