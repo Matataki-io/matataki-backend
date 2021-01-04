@@ -14,7 +14,8 @@ const EOS = require('eosjs');
 const OAuth = require('oauth');
 const { createHash, createHmac } = require('crypto');
 const { google } = require('googleapis');
-const codebird = require('../extend/codebird')
+const codebird = require('../extend/codebird');
+const random = require('string-random');
 
 class AuthService extends Service {
 
@@ -274,37 +275,19 @@ class AuthService extends Service {
   // todo：2019-8-27 缺少登录日志
   async saveUser(username, nickname, avatarUrl, ip = '', referral = 0, platform = 'github') {
     try {
-      // let currentUser = await this.app.mysql.get('users', { username, platform });
       let currentUser = await this.service.account.binding.get2({ username, platform });
       // 用户是第一次登录, 先创建
       if (currentUser === null) {
-        // await this.app.mysql.insert('users', {
-        //   username,
-        //   platform,
-        //   create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-        // });
+
         await this.insertUser(username, '', platform, 'ss', ip, '', referral);
 
-        // 若没有昵称, 先把username给nickname
-        if (nickname === null) {
-          nickname = username;
-        }
-
-        // 判断昵称是否重复, 重复就加前缀
-        const duplicatedNickname = await this.service.account.binding.get2({ nickname });
-        // const duplicatedNickname = await this.app.mysql.get('users', { nickname });
-
-        if (duplicatedNickname !== null) {
-          nickname = `${platform}_${nickname}`;
-        }
         const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);
 
-        // 更新昵称
+        // 更新头像
         await this.app.mysql.update('users',
-          { nickname, avatar },
+          { avatar },
           { where: { username, platform } }
         );
-
 
         currentUser = await this.service.account.binding.get2({ username, platform });
         if (platform === 'telegram') { // update telegramUid
@@ -312,7 +295,6 @@ class AuthService extends Service {
             currentUser.id, { telegramUid: username }
           );
         }
-        // currentUser = await this.app.mysql.get('users', { username, platform });
       }
 
       // await this.service.search.importUser(currentUser.id);
@@ -657,6 +639,25 @@ class AuthService extends Service {
     return this.jwtSign(userPw);
   }
 
+  // 生成随机用户昵称
+  async generateRandomNickname() {
+    let nickname = '';
+    const generate = async () => {
+      const _str = random(16);
+      nickname = _str;
+      // 检测有没有重复
+      const _sql = 'SELECT * FROM users WHERE nickname = ?';
+      const userNickname = await this.app.mysql.query(_sql, [ nickname ]);
+      if (userNickname.length) {
+        await generate();
+      }
+      return;
+    };
+    await generate();
+
+    return nickname;
+  }
+
   // 插入用户
   async insertUser(username, email, platform, source, ip, pwd, referral) {
     // 确认推荐人是否存在
@@ -672,10 +673,11 @@ class AuthService extends Service {
     const tran = await this.app.mysql.beginTransaction();
     let createAccount = null;
     try {
+      const nickname = await this.generateRandomNickname();
       createAccount = await tran.query(
-        'INSERT INTO users (username, email, create_time, platform, source, reg_ip, password_hash,referral_uid) '
-        + 'VALUES (:username, :email, :now, :platform, :source, :ip, :password, :referral);',
-        { username, email, ip, platform, source, password: pwd, now, referral: referral_uid }
+        'INSERT INTO users (username, email, nickname, create_time, platform, source, reg_ip, password_hash,referral_uid) '
+        + 'VALUES (:username, :email, :nickname, :now, :platform, :source, :ip, :password, :referral);',
+        { username, email, nickname, ip, platform, source, password: pwd, now, referral: referral_uid }
       );
       this.logger.info('service:: Auth: insertUser: %j', createAccount);
       const account = await this.service.account.binding.create({ uid: createAccount.insertId, account: username, password_hash: pwd, platform, is_main: 1 }, tran);
@@ -782,67 +784,67 @@ class AuthService extends Service {
   /** 获取 twitter 授权的请求 token */
   async twitterRequestToken(callbackUrl) {
     const oauthRequestToken = () => {
-      const cb = new codebird()
-      cb.setUseProxy(true)
-      cb.setConsumerKey(this.config.twitterConsumerKey.key, this.config.twitterConsumerKey.secret)
+      const cb = new codebird();
+      cb.setUseProxy(true);
+      cb.setConsumerKey(this.config.twitterConsumerKey.key, this.config.twitterConsumerKey.secret);
       return new Promise((resolve, reject) => {
         cb.__call('oauth_requestToken', { oauth_callback: callbackUrl }, (reply, rate, err) => {
           if (err) {
-            reject('error response or timeout exceeded' + err.error)
-            return
+            reject('error response or timeout exceeded' + err.error);
+            return;
           }
           if (reply) {
             if (reply.errors && reply.errors['415']) {
-              reject(reply.errors['415'])
-              return
+              reject(reply.errors['415']);
+              return;
             }
-            resolve(reply)
-            return
+            resolve(reply);
+            return;
           }
-          resolve(null)
-        })
-      })
-    }
+          resolve(null);
+        });
+      });
+    };
 
-    const reply = await oauthRequestToken()
-    if (!reply) return
-  
-    const key = 'twitter:authorizeToken:' + reply.oauth_token
-    await this.app.redis.set(key, reply.oauth_token_secret)
-    await this.app.redis.expire(key, 60 * 5)
-  
-    return reply
+    const reply = await oauthRequestToken();
+    if (!reply) return;
+
+    const key = 'twitter:authorizeToken:' + reply.oauth_token;
+    await this.app.redis.set(key, reply.oauth_token_secret);
+    await this.app.redis.expire(key, 60 * 5);
+
+    return reply;
   }
 
   /** 获取 twitter 授权 token */
   async twitterAccessToken(userId, oauthToken, oauthVerifier) {
     const oauthAccessToken = () => {
-      const cb = new codebird()
-      cb.setUseProxy(true)
-      cb.setConsumerKey(this.config.twitterConsumerKey.key, this.config.twitterConsumerKey.secret)
-      cb.setToken(oauthToken, oauthTokenSecret)
+      const cb = new codebird();
+      cb.setUseProxy(true);
+      cb.setConsumerKey(this.config.twitterConsumerKey.key, this.config.twitterConsumerKey.secret);
+      cb.setToken(oauthToken, oauthTokenSecret);
       return new Promise((resolve, reject) => {
         cb.__call('oauth_accessToken', { oauth_verifier: oauthVerifier }, (reply, rate, err) => {
-            if (err) {
-              reject('error response or timeout exceeded' + err.error)
-              return
-            }
-            if (reply) {
-              resolve(reply)
-              return
-            }
-            resolve()
+          if (err) {
+            reject('error response or timeout exceeded' + err.error);
+            return;
           }
-        )
-      })
-    }
+          if (reply) {
+            resolve(reply);
+            return;
+          }
+          resolve();
+        }
+        );
+      });
+    };
 
-    const key = 'twitter:authorizeToken:' + oauthToken
-    const oauthTokenSecret = await this.app.redis.get(key)
-    if (!oauthTokenSecret) return { code: 1 }
+    const key = 'twitter:authorizeToken:' + oauthToken;
+    const oauthTokenSecret = await this.app.redis.get(key);
+    if (!oauthTokenSecret) return { code: 1 };
 
-    const reply = await oauthAccessToken()
-    if (!reply) return
+    const reply = await oauthAccessToken();
+    if (!reply) return;
 
     await this.app.mysql.query(`
       INSERT INTO user_twitter_credential (
@@ -873,16 +875,16 @@ class AuthService extends Service {
       oauthTokenSecret: reply.oauth_token_secret,
       twitterId: reply.user_id,
       screenName: reply.screen_name,
-      createTime: moment().format('YYYY-MM-DD HH:mm:ss')
-    })
+      createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+    });
 
-    return { code: 0, reply }
+    return { code: 0, reply };
   }
 
   /** 删除用户的推特授权 token */
   async twitterDeauthorize(userId) {
-    const { affectedRows } = await this.app.mysql.delete('user_twitter_credential', { user_id: userId })
-    return affectedRows === 1
+    const { affectedRows } = await this.app.mysql.delete('user_twitter_credential', { user_id: userId });
+    return affectedRows === 1;
   }
 }
 
