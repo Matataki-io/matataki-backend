@@ -1,5 +1,5 @@
 const {
-  MsgAdapter,
+  // MsgAdapter,
   InFollowEvent,
   InQrCodeEvent,
   OutTextMsg,
@@ -11,7 +11,7 @@ const {
 const msg = require('./msg');
 const wechatConfig = require('../../config/wechat_config');
 
-class MsgController extends MsgAdapter {
+class MsgController {
   // 处理文本消息
   processInTextMsg(inTextMsg) {
     let outMsg;
