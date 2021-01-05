@@ -273,6 +273,7 @@ class AuthService extends Service {
 
   // github账号登录，创建或登录用户, 发放jwt token
   // todo：2019-8-27 缺少登录日志
+  // wechat、telegram、twitter、google 通用方法
   async saveUser(username, nickname, avatarUrl, ip = '', referral = 0, platform = 'github') {
     try {
       let currentUser = await this.service.account.binding.get2({ username, platform });
@@ -301,10 +302,8 @@ class AuthService extends Service {
 
       // 增加登录日志
       await this.insertLoginLog(currentUser.id, ip);
-
       // const expires = moment().add(7, 'days').valueOf();
       this.logger.info('currentUser', currentUser);
-
       const jwttoken = this.jwtSign(currentUser);
       // jwt.encode({
       //   iss: currentUser.username,
@@ -323,8 +322,9 @@ class AuthService extends Service {
 
   // weChat账号登录，创建或登录用户, 发放jwt token
   // todo：2019-8-27 缺少登录日志
+  // TODO: 需要删除
   async saveWeChatUser(username, _nickname, avatarUrl, ip = '', referral = 0, platform = 'weixin') {
-    let nickname = _nickname; // copy
+    const nickname = _nickname; // copy
     try {
       let currentUser = await this.service.account.binding.get2({ username, platform });
       // 用户是第一次登录, 先创建
@@ -332,36 +332,12 @@ class AuthService extends Service {
         const res = await this.insertUser(username, '', platform, 'ss', ip, '', referral);
         if (res) {
 
-          // 若没有昵称, 先把username给nickname
-          if (nickname === null) {
-            nickname = username;
-          }
-
-          // 判断昵称是否重复, 重复就加前缀
-          const setNickname = async name => {
-            try {
-              const duplicatedNickname = await this.app.mysql.get('users', { nickname: name });
-
-              if (duplicatedNickname !== null) {
-                nickname = `${name}_${this.ctx.helper.randomRange(1, 100000)}`;
-                await setNickname(nickname);
-              }
-            } catch (e) {
-              this.logger.error('setNickname error', e);
-            }
-          };
-
-          await setNickname(nickname);
-
           this.logger.info('saveWeChatUser avatarUrl', avatarUrl);
           const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);
 
-          this.logger.info('saveWeChatUser nickname', nickname);
-          this.logger.info('saveWeChatUser avatar', avatar);
-
           // 更新昵称
           await this.app.mysql.update('users',
-            { nickname, avatar },
+            { avatar },
             { where: { username, platform } }
           );
 
@@ -386,22 +362,18 @@ class AuthService extends Service {
   }
 
   // twitter账号登录，创建或登录用户, 发放jwt token
+  // TODO: 需要删除
   async saveTwitterUser(username, nickname, avatarUrl, ip = '', referral = 0, platform = 'twitter') {
     // 注释方面直接参考上面的saveUser
     try {
       let currentUser = await this.service.account.binding.get2({ username, platform });
       if (currentUser === null) {
         await this.insertUser(username, '', platform, 'ss', ip, '', referral);
-        if (nickname === null) {
-          nickname = username;
-        }
-        const duplicatedNickname = await this.service.account.binding.get2({ nickname });
-        if (duplicatedNickname !== null) {
-          nickname = `${platform}_${nickname}`;
-        }
+
         const avatar = await this.service.user.uploadAvatarFromUrl(avatarUrl);
+
         await this.app.mysql.update('users',
-          { nickname, avatar },
+          { avatar },
           { where: { username, platform } }
         );
         currentUser = await this.service.account.binding.get2({ username, platform });

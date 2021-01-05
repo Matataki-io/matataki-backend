@@ -32,7 +32,7 @@ class WechatService extends Service {
 
     // 创建， 设置用户
     const { nickname, headimgurl } = userInfoResult;
-    const jwttoken = await this.service.auth.saveWeChatUser(openid, nickname, headimgurl, this.clientIP, 0, 'weixin');
+    const jwttoken = await this.service.auth.saveUser(openid, nickname, headimgurl, this.clientIP, 0, 'weixin');
 
 
     if (jwttoken === null) {
