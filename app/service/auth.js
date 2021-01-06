@@ -627,7 +627,7 @@ class AuthService extends Service {
     };
     await generate();
 
-    return nickname;
+    return `USER-${nickname}`;
   }
 
   // 插入用户
