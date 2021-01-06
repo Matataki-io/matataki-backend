@@ -615,7 +615,7 @@ class AuthService extends Service {
   async generateRandomNickname() {
     let nickname = '';
     const generate = async () => {
-      const _str = random(16);
+      const _str = random(10);
       nickname = _str;
       // 检测有没有重复
       const _sql = 'SELECT * FROM users WHERE nickname = ?';
