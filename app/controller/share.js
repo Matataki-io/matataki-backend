@@ -14,7 +14,7 @@ class ShareController extends Controller {
       return;
     }
     // ref_sign_id title summary cover url
-    const { author, content, platform, refs } = ctx.request.body;
+    const { author, content, platform, refs, media } = ctx.request.body;
     this.logger.info('controller.share params', { author, content, platform, refs });
     if (!Array.isArray(refs)) {
       ctx.body = ctx.msg.paramsError;
@@ -47,7 +47,7 @@ class ShareController extends Controller {
       uid: ctx.user.id,
       is_recommend: 0,
       category_id: 0,
-    }, refs);
+    }, refs, media);
 
     this.logger.info('controller.share id', id);
 
