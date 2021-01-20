@@ -12,11 +12,9 @@ class OrderController extends Controller {
 
     if (!signId) {
       this.logger.info('create order', signId);
-      console.log('create order', signId);
       return this.response(403, 'signId required');
     }
     this.logger.info('create order');
-    console.log('create order');
     if (!contract) {
       return this.response(403, 'contract required');
     }

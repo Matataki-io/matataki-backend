@@ -65,7 +65,7 @@ module.exports = {
           ctx.user.platform = decoded.platform;
         }
       } catch (err) {
-        console.log(err);
+        this.logger.error(err);
       }
     }
 

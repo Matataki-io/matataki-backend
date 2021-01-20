@@ -241,7 +241,6 @@ class PostController extends Controller {
         //   updateRow.is_original = is_original;
         // }
 
-        // console.log("cover!!!", cover , typeof cover);
 
         // 修改 post 的 hash, title
         await conn.update('posts', updateRow, { where: { id: signId } });
@@ -412,8 +411,6 @@ class PostController extends Controller {
       return;
     }
 
-    console.log('postData', postData);
-
     // 这部分是登录之后才会执行的查询
     if (ctx.user && ctx.user.id) {
       const { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
@@ -449,12 +446,15 @@ class PostController extends Controller {
       author = null,
       extra = null,
       filter = 7,
+      showAll = 0, // 0 有效文章 1 隐藏文章
     } = this.ctx.query;
 
     if (typeof channel === 'string') channel = parseInt(channel);
     if (typeof filter === 'string') filter = parseInt(filter);
     const requestUser = ctx.user;
-    const isShowingDeleted = requestUser.isAuthenticated ? Number(author) === requestUser.id : false;
+    // 是否显示隐藏文章 如果是登陆后看自己的文章 并且 查看所有文章
+    const isShowingDeleted = requestUser.isAuthenticated ? Boolean((Number(author) === requestUser.id) && (Number(showAll) !== 0)) : false;
+
     const postData = await this.service.post.timeRankSlow(
       parseInt(page),
       parseInt(pagesize),
@@ -1030,7 +1030,7 @@ class PostController extends Controller {
       this.service.postImport.handleArchive(x)
     );
     // 币乎
-    const bihuMatch = makeMatch(/https:\/\/(www\.)?bihu\.com\/.+/, x =>
+    const bihuMatch = makeMatch(/https:\/\/(.*)?bihu\.com\/.+/, x =>
       this.service.postImport.handleBihu(x)
     );
 

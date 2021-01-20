@@ -21,7 +21,7 @@ class WechatService extends Service {
   async getAccessToken() {
     try {
       const assessTokenRes = await AccessTokenApi.getAccessToken();
-      console.log('assessTokenRes', assessTokenRes);
+      this.logger.info('assessTokenRes', assessTokenRes);
       if (assessTokenRes && assessTokenRes.access_token) {
         return assessTokenRes.access_token;
       }

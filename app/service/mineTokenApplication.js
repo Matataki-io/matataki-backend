@@ -16,7 +16,7 @@ class MineTokenApplicationService extends Service {
       return (result.affectedRows === 1) ? { code: 0 } : { code: -1 };
 
     } catch (err) {
-      console.log('minetoken application create error', err);
+      this.logger.info('minetoken application create error', err);
       await conn.rollback();
       return { code: -1 };
     }
@@ -34,7 +34,7 @@ class MineTokenApplicationService extends Service {
       return (result.affectedRows === 1) ? { code: 0 } : { code: -1 };
 
     } catch (err) {
-      console.log('minetoken application create error', err);
+      this.logger.info('minetoken application create error', err);
       await conn.rollback();
       return { code: -1 };
     }
@@ -55,7 +55,7 @@ class MineTokenApplicationService extends Service {
       }
       return { code: -1 };
     } catch (e) {
-      console.log(e);
+      this.logger.error(e);
       return { code: -1 };
     }
   }
@@ -74,7 +74,7 @@ class MineTokenApplicationService extends Service {
       }
       return { code: -1 };
     } catch (e) {
-      console.log(e);
+      this.logger.error(e);
       return { code: -1 };
     }
   }
@@ -91,7 +91,7 @@ class MineTokenApplicationService extends Service {
     try {
 
       const applicationResult = await this.app.mysql.get('minetokens_application', { uid });
-      console.log('applicationResult', applicationResult);
+      this.logger.info('applicationResult', applicationResult);
 
       // 除开创建以外 提交 取消 重新申请没有记录数据直接返回
       if (type !== 'draft' && !applicationResult) {
@@ -164,7 +164,7 @@ class MineTokenApplicationService extends Service {
       return { code: -1, message: '非法参数' };
 
     } catch (e) {
-      console.log('minetoken application error', e);
+      this.logger.info('minetoken application error', e);
       return { code: -1 };
     }
 
@@ -187,7 +187,7 @@ class MineTokenApplicationService extends Service {
     try {
 
       const applicationResult = await conn.get('minetokens_survey', { uid });
-      console.log('applicationResult', applicationResult);
+      this.logger.info('applicationResult', applicationResult);
 
       const data = {
         uid,
@@ -226,7 +226,7 @@ class MineTokenApplicationService extends Service {
       return (result.affectedRows === 1) ? { code: 0 } : { code: -1 };
 
     } catch (e) {
-      console.log('minetoken survey error', e);
+      this.logger.info('minetoken survey error', e);
       await conn.rollback();
       return { code: -1 };
     }
@@ -247,7 +247,7 @@ class MineTokenApplicationService extends Service {
       }
       return { code: 0 };
     } catch (e) {
-      console.log(e);
+      this.logger.error(e);
       return { code: -1 };
     }
   }

@@ -48,7 +48,7 @@ ${refMdStr}`);
         }
       }
     }
-    console.log('service downloader promiseZip start');
+    this.logger.info('service downloader promiseZip start');
     return new Promise((resolve, reject) => {
       // zip.folder("nested").file("hello.txt", "Hello World\n");
 

@@ -94,15 +94,11 @@ class VerifyOrder extends Subscription {
         }
 
         this.logger.info('user,', user);
-        console.log('user,', user);
         // this.logger.info('reffer,', reffer);
         // console.log('reffer,', reffer);
         this.logger.info('contract,', row);
-        console.log('contract,', row);
         this.logger.info('mysql', order);
-        console.log('mysql', order);
         this.logger.info('verifyPass', verifyPass);
-        console.log('verifyPass', verifyPass);
 
         if (verifyPass) {
           await this.passVerify(order);
@@ -110,12 +106,10 @@ class VerifyOrder extends Subscription {
 
       } else {
         this.logger.info('table row not found');
-        console.log('table row not found');
       }
 
     } catch (err) {
       this.logger.error('get table row err', err);
-      console.log('get table row err', err);
     }
 
   }

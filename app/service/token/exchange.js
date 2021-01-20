@@ -1269,7 +1269,6 @@ class ExchangeService extends Service {
       } else {
         const first_price = first_price_item.type === 'buy' ? first_price_item.sold_amount / first_price_item.bought_amount : first_price_item.bought_amount / first_price_item.sold_amount;
         const last_price = item.type === 'buy' ? item.sold_amount / item.bought_amount : item.bought_amount / item.sold_amount;
-        console.log(first_price, last_price);
         if (first_price === 0) {
           priceChangeObj[item.id] = 0;
         } else {
@@ -1286,7 +1285,6 @@ class ExchangeService extends Service {
     WHERE a.symbol = 'CNY' AND e.token_id = am.token_id
     ORDER BY e.token_id;`;
     const result = await this.app.mysql.query(sql);
-    console.log(result);
     const priceObj = {};
     for (const item of result) {
       if (item.token_reserve <= 0) {

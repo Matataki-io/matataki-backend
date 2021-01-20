@@ -118,7 +118,6 @@ class CommentService extends Service {
     if (!post) {
       return null;
     }
-    console.log('post.channel_id', post.channel_id);
     let sql;
     if (post.channel_id === 1) {
       sql = 'SELECT c.id, c.uid, c.comment,c.create_time, u.username, u.nickname, u.avatar FROM comments c  '

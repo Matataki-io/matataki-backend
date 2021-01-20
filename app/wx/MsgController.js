@@ -1,5 +1,5 @@
 const {
-  MsgAdapter,
+  // MsgAdapter,
   InFollowEvent,
   InQrCodeEvent,
   OutTextMsg,
@@ -11,13 +11,9 @@ const {
 const msg = require('./msg');
 const wechatConfig = require('../../config/wechat_config');
 
-class MsgController extends MsgAdapter {
+class MsgController {
   // 处理文本消息
   processInTextMsg(inTextMsg) {
-
-    console.log('inTextMsg', inTextMsg);
-    console.log('inTextMsg.getContent', inTextMsg.getContent);
-
     let outMsg;
     // let content = 'IJPay 让支付触手可及 \n\nhttps://gitee.com/javen205/IJPay';
     let content = '';
@@ -73,27 +69,19 @@ class MsgController extends MsgAdapter {
       // outMsg.setContent(content);
       // 转发给多客服PC客户端
       outMsg = new OutCustomMsg(inTextMsg);
-      console.log('转发给多客服PC客户端');
     }
     return outMsg;
   }
   // 处理图片消息
   processInImageMsg(inImageMsg) {
 
-    console.log('inImageMsg', inImageMsg);
     const outMsg = new OutImageMsg(inImageMsg);
-
-    console.log('outMsg', outMsg);
-    console.log('inImageMsg.getMediaId', inImageMsg.getMediaId);
 
     outMsg.setMediaId = inImageMsg.getMediaId;
     return outMsg;
   }
   // 菜单事件
   processInMenuEvent(inMenuEvent) {
-
-    console.log('inMenuEvent', inMenuEvent);
-
     // 菜单事件 联系我们
     if (inMenuEvent.getEventKey === 'CONTACT_US') {
       const outMsg = new OutImageMsg(inMenuEvent);
@@ -105,14 +93,11 @@ class MsgController extends MsgAdapter {
   }
   // 处理关注、取消关注事件
   processInFollowEvent(inFollowEvent) {
-    console.log('processInFollowEvent inFollowEvent', inFollowEvent);
-
     // eslint-disable-next-line eqeqeq
     if (InFollowEvent.EVENT_INFOLLOW_SUBSCRIBE == inFollowEvent.getEvent) {
       return this.renderOutTextMsg(inFollowEvent, msg.followed);
     // eslint-disable-next-line eqeqeq
     } else if (InFollowEvent.EVENT_INFOLLOW_UNSUBSCRIBE == inFollowEvent.getEvent) {
-      console.error('取消关注：' + inFollowEvent.getFromUserName);
       return this.renderOutTextMsg(inFollowEvent);
     }
     return this.renderOutTextMsg(inFollowEvent);
@@ -121,15 +106,12 @@ class MsgController extends MsgAdapter {
 
   // 处理扫码事件
   processInQrCodeEvent(inQrCodeEvent) {
-    console.log('processInQrCodeEvent inQrCodeEvent', inQrCodeEvent);
     if (InQrCodeEvent.EVENT_INQRCODE_SUBSCRIBE === inQrCodeEvent.getEvent) {
-      console.debug('扫码未关注：' + inQrCodeEvent.getFromUserName);
       return this.renderOutTextMsg(
         inQrCodeEvent,
         msg.scanUnfollowed
       );
     } else if (InQrCodeEvent.EVENT_INQRCODE_SCAN === inQrCodeEvent.getEvent) {
-      console.debug('扫码已关注：' + inQrCodeEvent.getFromUserName);
       return this.renderOutTextMsg(inQrCodeEvent, msg.scanFollowed);
     }
     return this.renderOutTextMsg(inQrCodeEvent);

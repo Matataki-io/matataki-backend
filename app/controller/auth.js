@@ -229,7 +229,7 @@ class AuthController extends Controller {
       name,
       profile_image_url,
     } = loginResult;
-    const jwttoken = await this.service.auth.saveTwitterUser(screen_name, name, profile_image_url, this.clientIP, 0, 'twitter');
+    const jwttoken = await this.service.auth.saveUser(screen_name, name, profile_image_url, this.clientIP, 0, 'twitter');
     if (jwttoken === null) {
       ctx.body = ctx.msg.generateTokenError;
       return;
@@ -263,7 +263,7 @@ class AuthController extends Controller {
       name,
       picture,
     } = loginResult;
-    const jwttoken = await this.service.auth.saveTwitterUser(email, name, picture, this.clientIP, 0, 'google');
+    const jwttoken = await this.service.auth.saveUser(email, name, picture, this.clientIP, 0, 'google');
     if (jwttoken === null) {
       ctx.body = ctx.msg.generateTokenError;
       return;
@@ -297,7 +297,7 @@ class AuthController extends Controller {
       name,
       picture: { data: { url: picture } },
     } = loginResult;
-    const jwttoken = await this.service.auth.saveTwitterUser(`fb_${id}`, name, picture, this.clientIP, 0, 'facebook');
+    const jwttoken = await this.service.auth.saveUser(`fb_${id}`, name, picture, this.clientIP, 0, 'facebook');
     if (jwttoken === null) {
       ctx.body = ctx.msg.generateTokenError;
       return;
@@ -502,14 +502,13 @@ class AuthController extends Controller {
     if (reply && reply.oauth_token) {
       ctx.body = {
         ...ctx.msg.success,
-        data: reply.oauth_token
-      }
-    }
-    else {
+        data: reply.oauth_token,
+      };
+    } else {
       ctx.body = {
         ...ctx.msg.failure,
-        data: reply
-      }
+        data: reply,
+      };
     }
   }
 
@@ -518,24 +517,23 @@ class AuthController extends Controller {
     const { oauthToken, oauthVerifier } = ctx.request.body;
     const res = await this.service.auth.twitterAccessToken(ctx.user.id, oauthToken, oauthVerifier);
     if (res) {
-      if (res.code === 0) ctx.body = ctx.msg.success
+      if (res.code === 0) ctx.body = ctx.msg.success;
       else ctx.body = ctx.msg.invalidTwitterOauthToken;
-    }
-    else {
+    } else {
       ctx.body = {
         ...ctx.msg.failure,
-        data: reply
-      }
-    };
+        data: reply,
+      };
+    }
   }
 
   async twitterDeauthorize() {
     const { ctx } = this;
-    const res = await this.service.auth.twitterDeauthorize(ctx.user.id)
+    const res = await this.service.auth.twitterDeauthorize(ctx.user.id);
     ctx.body = {
       ...ctx.msg.success,
-      data: res
-    }
+      data: res,
+    };
   }
 }
 

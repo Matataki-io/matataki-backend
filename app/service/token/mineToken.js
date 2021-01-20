@@ -247,7 +247,8 @@ class MineTokenService extends Service {
       this.logger.info('Minting token', token, blockchainMintAction);
       transactionHash = blockchainMintAction.transactionHash;
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
+      this.logger.error(error);
     }
 
     const tokenId = token.id;
@@ -1193,6 +1194,39 @@ class MineTokenService extends Service {
     return transactionHash;
   }
 
+  /**
+   * withdrawToBsc, 提取饭票到 BSC 的以太坊地址
+   * @param {number} tokenId 饭票的ID
+   * @param {number} sender 发送方的UID
+   * @param {string} target 目标 BSC 钱包地址
+   * @param {number} amount 数额
+   * @param {string} tokenAddressOnBsc Pegged 代币在BSC上的地址
+   */
+  async withdrawToBsc(tokenId, sender, target, amount, tokenAddressOnBsc) {
+    const uidOfInAndOut = this.config.tokenInAndOut.specialAccount.uid;
+    // Update DB
+    const dbConnection = await this.app.mysql.beginTransaction();
+    // const latestNonce = await this.service.token.crosschain.getNonceOf(tokenAddressOnBsc, target);
+    const latestNonce = await this.service.token.crosschain.getNonceOfFromDB(tokenAddressOnBsc, target);
+    const permit = await this.service.token.crosschain.issueMintPermit(tokenAddressOnBsc, target, amount, latestNonce);
+    await dbConnection.insert('pegged_assets_permit', {
+      type: 'mint',
+      nonce: latestNonce,
+      token: tokenAddressOnBsc,
+      to: target,
+      value: amount,
+      deadline: permit.deadline,
+      v: permit.sig.v,
+      r: permit.sig.r,
+      s: permit.sig.s,
+      forUid: sender,
+    });
+    await this.transferFrom(tokenId, sender, uidOfInAndOut, amount, this.clientIP,
+      consts.mineTokenTransferTypes.crosschainBscTransferOut, dbConnection, `Withdraw to BSC, address: ${target}`);
+    await dbConnection.commit();
+    return permit;
+  }
+
   async setTokenTags(id, tags) {
     if (tags && tags.length > 0) {
       const minetokenTags = [];
@@ -1302,7 +1336,8 @@ class MineTokenService extends Service {
 
       return list;
     } catch (e) {
-      console.log('formatListReturnTokenInfo error: ', e);
+      this.logger.error(e);
+      this.logger.error('formatListReturnTokenInfo error: ', e);
       return list;
     }
   }

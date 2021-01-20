@@ -101,7 +101,7 @@ class AlipayService extends Service {
    */
   async refund(outTradeNo, refundAmount) {
     const { ctx } = this;
-    console.log('outTradeNo', outTradeNo);
+    this.logger.info('outTradeNo', outTradeNo);
     const result = await ctx.alipaySdk.exec('alipay.trade.refund', {
       // notifyUrl: '',
       bizContent: {

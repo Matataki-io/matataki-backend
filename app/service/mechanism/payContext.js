@@ -10,7 +10,6 @@ class PayContextService extends Service {
 
     const results = await this.app.mysql.query(`select * from orders where status=0 and create_time>'${expire}' limit 10`);
     this.logger.info(results);
-    console.log(results);
     if (results.length === 0) { return; }
 
     const order = results[0];
@@ -100,7 +99,6 @@ class PayContextService extends Service {
         if (!is_shipped) {
           await conn.rollback();
           this.logger.info(`发货失败，sign_id: ${post.id}, order_id: ${payment.id}`);
-          console.log(`发货失败，sign_id: ${post.id}, order_id: ${payment.id}`);
           return;
         }
       }

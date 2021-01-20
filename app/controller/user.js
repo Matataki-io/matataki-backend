@@ -308,7 +308,6 @@ class UserController extends Controller {
           sign_data = `${toaddress.slice(0, 12)} ${toaddress.slice(12, 24)} ${toaddress.slice(24, 36)} ${contract.slice(0, 12)} ${contract.slice(12, 24)} ${contract.slice(24, 36)} ${symbol} ${amount}`;
         }
         this.logger.info('debug for withdraw', ctx.user.platform, sign_data, publickey, sign);
-        console.log('debug for withdraw', ctx.user.platform, sign_data, publickey, sign);
         await this.eos_signature_verify(ctx.user.username, sign_data, sign, publickey);
       } else if (ctx.user.platform === 'ont') {
 
@@ -331,7 +330,6 @@ class UserController extends Controller {
       }
     } catch (err) {
       this.logger.error('signature_verify error', err);
-      console.log('signature_verify error', err);
       ctx.body = ctx.msg.postPublishSignVerifyError; // err.message;
       return;
     }
