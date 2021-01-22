@@ -289,7 +289,7 @@ class UserService extends Service {
     const row = {};
 
     if (nickname) {
-      // \s*\@\/\\\[\]   空格 @ . /\[]
+      // \s*\@\.\/\\\[\]   空格 @ . /\[]
       const nicknameCheck = /^[\u4E00-\u9FFF\u3400-\u4DFF\u3131-\uD79Dぁ-んァ-ンa-zA-Z0-9\s*\@\.\/\\\[\]]{1,50}$/;
       if (!nicknameCheck.test(nickname)) {
         return nicknameInvalid;
