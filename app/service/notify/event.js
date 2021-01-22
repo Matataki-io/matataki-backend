@@ -15,6 +15,7 @@ const ACTION_TYPES = [
   'follow', // 关注
   'annouce', // 宣布
   'transfer', // 转账
+  'at', // @ 艾特
 ];
 
 /** 对象类型 */
@@ -27,6 +28,7 @@ const OBJECT_TYPES = [
   'tokenWallet', // Token 钱包
   'cnyWallet', // CNY 钱包
   'collaborator', // 协作者
+  'share', // 分享
 ];
 
 const isValidActionAndObject = (action, objectType) => ACTION_TYPES.includes(action) && OBJECT_TYPES.includes(objectType);
