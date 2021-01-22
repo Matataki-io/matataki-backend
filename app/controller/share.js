@@ -14,7 +14,7 @@ class ShareController extends Controller {
       return;
     }
     // ref_sign_id title summary cover url
-    const { author, content, platform, refs, media } = ctx.request.body;
+    const { author, content, platform, refs, media, receivingIds } = ctx.request.body;
     this.logger.info('controller.share params', { author, content, platform, refs });
     if (!Array.isArray(refs)) {
       ctx.body = ctx.msg.paramsError;
@@ -50,6 +50,18 @@ class ShareController extends Controller {
     }, refs, media);
 
     this.logger.info('controller.share id', id);
+
+    // 添加到通知
+    if (id > 0 && receivingIds.length > 0) {
+      const receivingIdsFilter = receivingIds.filter(i => Number.isInteger(Number(i)));
+      await this.service.notify.event.sendEvent(
+        ctx.user.id,
+        receivingIdsFilter,
+        'at',
+        id,
+        'share'
+      );
+    }
 
     // 添加分享到elastic search
     await this.service.search.importShare({ id, content });

@@ -81,9 +81,9 @@ class ShareService extends Service {
         conn.insert('dynamic_media', media.map(item => {
           return {
             ...item,
-            post_id: result.insertId
-          }
-        }))
+            post_id: result.insertId,
+          };
+        }));
       }
 
       conn.commit();
@@ -157,7 +157,7 @@ class ShareService extends Service {
     }
     // 媒体
     const mediaList = await this.getMedia(postids);
-    for (let i = 0; i< mediaList.length; i++) {
+    for (let i = 0; i < mediaList.length; i++) {
       const id = mediaList[i].post_id;
       id2posts[id].media.push(mediaList[i]);
     }
@@ -222,7 +222,7 @@ class ShareService extends Service {
     }
     // 媒体
     const mediaList = await this.getMedia(postids);
-    for (let i = 0; i< mediaList.length; i++) {
+    for (let i = 0; i < mediaList.length; i++) {
       const id = mediaList[i].post_id;
       id2posts[id].media.push(mediaList[i]);
     }
@@ -281,9 +281,9 @@ class ShareService extends Service {
   }
 
   async getMedia(ids) {
-    const sql = `SELECT * FROM dynamic_media WHERE post_id IN(:ids);`
-    const res = await this.app.mysql.query(sql, { ids })
-    return res
+    const sql = 'SELECT * FROM dynamic_media WHERE post_id IN(:ids);';
+    const res = await this.app.mysql.query(sql, { ids });
+    return res;
   }
 }
 

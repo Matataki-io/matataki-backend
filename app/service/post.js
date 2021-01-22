@@ -53,7 +53,7 @@ class PostService extends Service {
   }
 
 
-  async fullPublish (
+  async fullPublish(
     user,
     author = '',
     title = '',
@@ -73,7 +73,7 @@ class PostService extends Service {
     // 持币编辑相关字段
     editRequireToken = null,
     editRequireBuy = null,
-    ipfs_hide = false,
+    ipfs_hide = false
   ) {
     const ctx = this.ctx;
     // 修改requireBuy为数组
@@ -120,7 +120,7 @@ class PostService extends Service {
       title,
       displayName: ctx.helper.emailMask(user.nickname || user.username),
       description: short_content,
-      uid: user.id
+      uid: user.id,
     });
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) return ctx.msg.ipfsUploadFailed;
@@ -137,7 +137,7 @@ class PostService extends Service {
     //   return;
     // }
 
-    const create_time = moment().format('YYYY-MM-DD HH:mm:ss')
+    const create_time = moment().format('YYYY-MM-DD HH:mm:ss');
 
     const id = await this.publish(
       {
@@ -206,17 +206,16 @@ class PostService extends Service {
     if (id > 0) {
       // 发送同步需要的数据到缓存服务器
       try {
-        await axios.post(this.config.cacheAPI.uri + '/sync/post/add', { id: id, uid: user.id, timestamp: create_time }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }})
-      }
-      catch (e) {
-        await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }}).catch(err => { return })
+        await axios.post(this.config.cacheAPI.uri + '/sync/post/add', { id, uid: user.id, timestamp: create_time }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
+      } catch (e) {
+        await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
       }
 
       return {
         ...ctx.msg.success,
-        data: id
-      }
-    } else return ctx.msg.postPublishError; // todo 可以再细化失败的原因
+        data: id,
+      };
+    } return ctx.msg.postPublishError; // todo 可以再细化失败的原因
   }
 
   async publish(data, { metadataHash, htmlHash }) {
@@ -377,6 +376,24 @@ class PostService extends Service {
     const posts = await this.app.mysql.query(
       `SELECT p.id, p.title, p.short_content, p.cover,
       prc.real_read_count, prc.likes
+      FROM posts p
+      LEFT JOIN post_read_count prc
+      ON p.id = prc.post_id
+      WHERE p.id IN (:idList);`,
+      { idList }
+    );
+
+    if (posts === null) return [];
+    return posts;
+  }
+  /**
+   * 通过分享ID获取简略信息
+   * @idList []
+   */
+  async getByIdArrayShare(idList) {
+    const posts = await this.app.mysql.query(
+      `SELECT p.id, p.short_content,
+      prc.real_read_count
       FROM posts p
       LEFT JOIN post_read_count prc
       ON p.id = prc.post_id
@@ -1494,10 +1511,9 @@ class PostService extends Service {
       const result = await this.app.mysql.update('posts', row, options);
 
       try {
-        await axios.post(this.config.cacheAPI.uri + '/sync/post/delete', { id: id }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }})
-      }
-      catch (e) {
-        await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }}).catch(err => { return })
+        await axios.post(this.config.cacheAPI.uri + '/sync/post/delete', { id }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
+      } catch (e) {
+        await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
       }
 
       return result.affectedRows === 1;
