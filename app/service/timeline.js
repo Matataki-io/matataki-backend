@@ -121,7 +121,7 @@ class TimelineService extends Service {
       throw "No telegram binding";
 
     const telegramId = user.account;
-    const url = typeof offset !== "number" ?
+    const url = isNaN(offset) ?
       `https://kvky64xgs5.execute-api.ap-northeast-1.amazonaws.com/Prod/posts/owner/${telegramId}` :
       `https://kvky64xgs5.execute-api.ap-northeast-1.amazonaws.com/Prod/posts/owner/${telegramId}?offset=${offset}`;
     const { data } = await axios.get(url);
