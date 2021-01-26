@@ -140,6 +140,7 @@ class ShareService extends Service {
         list: posts,
       };
     }
+
     const refResult = await this.getRef(postids);
     const refs = refResult[0],
       beRefs = refResult[1],
@@ -235,7 +236,7 @@ class ShareService extends Service {
   async getRef(postids) {
     const refResult = await this.app.mysql.query(
       `SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
-      t2.channel_id,
+      t2.channel_id, t2.short_content_share,
       t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
       t4.real_read_count, t4.likes, t4.dislikes,
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
@@ -256,7 +257,7 @@ class ShareService extends Service {
       WHERE t1.sign_id IN ( :postids ) AND t1.status = 0;
 
       SELECT t1.sign_id, t1.ref_sign_id, t1.create_time, t1.number,
-      t2.channel_id, t2.title, t2.short_content AS summary, t2.cover,
+      t2.channel_id, t2.title, t2.short_content AS summary, t2.cover, t2.short_content_share,
       t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
       t4.real_read_count, t4.likes, t4.dislikes,
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,

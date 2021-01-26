@@ -226,6 +226,25 @@ class SearchController extends Controller {
     ctx.body.data = result;
 
   }
+  async searchDbTag() {
+    const ctx = this.ctx;
+    const { word = '', page = 1, pagesize = 10 } = ctx.query;
+    if (!word || isNaN(parseInt(page)) || isNaN(parseInt(pagesize))) {
+      ctx.body = ctx.msg.paramsError;
+      return;
+    }
+    // 记录搜索结果，type：6代表 tag
+    await this.service.search.writeLog(word, 6);
+    const result = await this.service.search.searchDbTag(word, page, pagesize);
+
+    if (!result) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
 
   async recommand() {
     const ctx = this.ctx;
