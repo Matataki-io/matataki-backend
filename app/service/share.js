@@ -1,6 +1,7 @@
 'use strict';
 const Service = require('egg').Service;
 const moment = require('moment');
+const axios = require('axios').default;
 const SHARE_CHANNEL_ID = 3;
 
 class ShareService extends Service {
@@ -87,6 +88,15 @@ class ShareService extends Service {
       }
 
       conn.commit();
+
+      try {
+        await axios.post(this.config.cacheAPI.uri + '/sync/post/add', { id: result.insertId, uid: this.ctx.user.id, timestamp: data.create_time }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }})
+      }
+      catch (e) {
+        this.ctx.logger.error(e)
+        await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }}).catch(err => { return })
+      }
+
       return signId;
     } catch (err) {
       await conn.rollback();
