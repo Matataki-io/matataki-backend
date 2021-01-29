@@ -90,7 +90,8 @@ class ShareService extends Service {
       conn.commit();
 
       try {
-        await axios.post(this.config.cacheAPI.uri + '/sync/post/add', { id: result.insertId, uid: this.ctx.user.id, timestamp: data.create_time }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }})
+        const timestamp = moment(data.create_time, 'YYYY-MM-DD HH:mm:ss').format()
+        await axios.post(this.config.cacheAPI.uri + '/sync/post/add', { id: result.insertId, uid: this.ctx.user.id, timestamp }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }})
       }
       catch (e) {
         this.ctx.logger.error(e)
