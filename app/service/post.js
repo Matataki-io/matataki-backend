@@ -428,6 +428,9 @@ class PostService extends Service {
     // 持币编辑
     post.editTokens = await this.getEditMineTokens(id);
     post.username = this.service.user.maskEmailAddress(post.username);
+    // 媒体
+    if (post.channel_id === 3) post.media = await this.service.share.getMedia([id]) || []
+
     return post;
   }
 
@@ -560,7 +563,7 @@ class PostService extends Service {
     const prices = await this.app.mysql.query(`
       SELECT p.token_id, p.platform, p.price, p.decimals, p.stock_quantity, m.symbol, m.logo, m.name
       FROM product_prices p
-      LEFT JOIN minetokens m 
+      LEFT JOIN minetokens m
       ON p.token_id = m.id
       WHERE p.sign_id = ? AND p.status = 1 AND p.category = ?;
     `, [ signId, category ]);
@@ -659,22 +662,22 @@ class PostService extends Service {
     }
     const sql = `
     SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
-    b.nickname, b.avatar, b.is_recommend AS user_is_recommend, 
+    b.nickname, b.avatar, b.is_recommend AS user_is_recommend,
     c.real_read_count AS \`read\`, c.likes,
 
     t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
     t7.id as token_id, t6.amount as token_amount, t7.name as token_name, t7.symbol as token_symbol, t7.decimals  as token_decimals
 
     FROM posts a
-    LEFT JOIN users b ON a.uid = b.id 
-    LEFT JOIN post_read_count c ON a.id = c.post_id 
+    LEFT JOIN users b ON a.uid = b.id
+    LEFT JOIN post_read_count c ON a.id = c.post_id
 
     LEFT JOIN product_prices t5
     ON a.id = t5.sign_id
     LEFT JOIN post_minetokens t6
     ON a.id = t6.sign_id
     LEFT JOIN minetokens t7
-    ON t7.id = t6.token_id 
+    ON t7.id = t6.token_id
 
     WHERE a.uid IN (:uids) AND a.\`status\` = 0 AND a.channel_id = :channel
     ORDER BY a.create_time DESC
@@ -844,26 +847,26 @@ class PostService extends Service {
       };
     }
     const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
-      b.nickname, b.avatar, b.is_recommend AS user_is_recommend, 
+      b.nickname, b.avatar, b.is_recommend AS user_is_recommend,
       c.real_read_count AS \`read\`, c.likes,
 
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
       t7.id as token_id, t6.amount as token_amount, t7.name as token_name, t7.symbol as token_symbol, t7.decimals  as token_decimals
 
       FROM posts a
-      LEFT JOIN users b ON a.uid = b.id 
-      LEFT JOIN post_read_count c ON a.id = c.post_id 
+      LEFT JOIN users b ON a.uid = b.id
+      LEFT JOIN post_read_count c ON a.id = c.post_id
 
       LEFT JOIN product_prices t5
       ON a.id = t5.sign_id AND t5.category = 0
       LEFT JOIN post_minetokens t6
       ON a.id = t6.sign_id
       LEFT JOIN minetokens t7
-      ON t7.id = t6.token_id 
+      ON t7.id = t6.token_id
 
       WHERE a.id IN (:postids)
       ORDER BY FIELD(a.id, :postids);
-      
+
       SELECT COUNT(*) AS count FROM posts a
       WHERE a.\`status\` = 0 AND a.channel_id = :channel;`;
 
@@ -977,16 +980,16 @@ class PostService extends Service {
       t7.id as token_id, t6.amount as token_amount, t7.name as token_name, t7.symbol as token_symbol, t7.decimals  as token_decimals
 
       FROM posts a
-      LEFT JOIN users b ON a.uid = b.id 
-      LEFT JOIN post_read_count c ON a.id = c.post_id 
+      LEFT JOIN users b ON a.uid = b.id
+      LEFT JOIN post_read_count c ON a.id = c.post_id
       LEFT JOIN product_prices t5
       ON a.id = t5.sign_id AND t5.category = 0
       LEFT JOIN post_minetokens t6
       ON a.id = t6.sign_id
       LEFT JOIN minetokens t7
-      ON t7.id = t6.token_id 
+      ON t7.id = t6.token_id
 
-      ${wheresql} 
+      ${wheresql}
       ORDER BY a.time_down ASC, a.id DESC LIMIT :start, :end;
       SELECT COUNT(*) AS count FROM posts a
       ${wheresql};`;
@@ -1057,22 +1060,22 @@ class PostService extends Service {
       return [];
     }
     const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
-      b.nickname, b.avatar, b.is_recommend AS user_is_recommend, 
+      b.nickname, b.avatar, b.is_recommend AS user_is_recommend,
       c.real_read_count AS \`read\`, c.likes,
 
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
       t7.id as token_id, t6.amount as token_amount, t7.name as token_name, t7.symbol as token_symbol, t7.decimals  as token_decimals
 
       FROM posts a
-      LEFT JOIN users b ON a.uid = b.id 
-      LEFT JOIN post_read_count c ON a.id = c.post_id 
+      LEFT JOIN users b ON a.uid = b.id
+      LEFT JOIN post_read_count c ON a.id = c.post_id
 
       LEFT JOIN product_prices t5
       ON a.id = t5.sign_id AND t5.category = 0
       LEFT JOIN post_minetokens t6
       ON a.id = t6.sign_id
       LEFT JOIN minetokens t7
-      ON t7.id = t6.token_id 
+      ON t7.id = t6.token_id
 
       WHERE a.id IN (:postids)
       ORDER BY FIELD(a.id, :postids);`;
