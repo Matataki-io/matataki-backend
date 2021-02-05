@@ -82,9 +82,9 @@ class ShareService extends Service {
         conn.insert('dynamic_media', media.map(item => {
           return {
             ...item,
-            post_id: result.insertId
-          }
-        }))
+            post_id: result.insertId,
+          };
+        }));
       }
 
       conn.commit();
@@ -118,7 +118,7 @@ class ShareService extends Service {
   async timeRank(page = 1, pagesize = 20, author = null) {
     let wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = 3 ';
     if (author) wheresql += ' AND a.uid = :author ';
-    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.short_content_share,
       b.nickname, b.avatar,
       c.real_read_count AS \`read\`, c.likes
       FROM posts a
@@ -151,6 +151,7 @@ class ShareService extends Service {
         list: posts,
       };
     }
+
     const refResult = await this.getRef(postids);
     const refs = refResult[0],
       beRefs = refResult[1],
@@ -168,7 +169,7 @@ class ShareService extends Service {
     }
     // 媒体
     const mediaList = await this.getMedia(postids);
-    for (let i = 0; i< mediaList.length; i++) {
+    for (let i = 0; i < mediaList.length; i++) {
       const id = mediaList[i].post_id;
       id2posts[id].media.push(mediaList[i]);
     }
@@ -185,7 +186,7 @@ class ShareService extends Service {
         list: [],
       };
     }
-    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.short_content_share,
       b.nickname, b.avatar,
       c.real_read_count AS \`read\`, c.likes
       FROM posts a
@@ -233,7 +234,7 @@ class ShareService extends Service {
     }
     // 媒体
     const mediaList = await this.getMedia(postids);
-    for (let i = 0; i< mediaList.length; i++) {
+    for (let i = 0; i < mediaList.length; i++) {
       const id = mediaList[i].post_id;
       id2posts[id].media.push(mediaList[i]);
     }
@@ -246,7 +247,7 @@ class ShareService extends Service {
   async getRef(postids) {
     const refResult = await this.app.mysql.query(
       `SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
-      t2.channel_id,
+      t2.channel_id, t2.short_content_share,
       t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
       t4.real_read_count, t4.likes, t4.dislikes,
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
@@ -267,7 +268,7 @@ class ShareService extends Service {
       WHERE t1.sign_id IN ( :postids ) AND t1.status = 0;
 
       SELECT t1.sign_id, t1.ref_sign_id, t1.create_time, t1.number,
-      t2.channel_id, t2.title, t2.short_content AS summary, t2.cover,
+      t2.channel_id, t2.title, t2.short_content AS summary, t2.cover, t2.short_content_share,
       t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
       t4.real_read_count, t4.likes, t4.dislikes,
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
@@ -292,9 +293,9 @@ class ShareService extends Service {
   }
 
   async getMedia(ids) {
-    const sql = `SELECT * FROM dynamic_media WHERE post_id IN(:ids);`
-    const res = await this.app.mysql.query(sql, { ids })
-    return res
+    const sql = 'SELECT * FROM dynamic_media WHERE post_id IN(:ids);';
+    const res = await this.app.mysql.query(sql, { ids });
+    return res;
   }
 }
 

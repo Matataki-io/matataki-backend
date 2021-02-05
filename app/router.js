@@ -556,6 +556,8 @@ module.exports = app => {
   router.get('/search/db/token', passport.verify, controller.search.searchDbToken);
   // 数据库搜索 token 用户的
   router.get('/search/db/tokenByUser', passport.authorize, controller.search.searchDbTokenByUser);
+  // 数据库搜索 tag
+  router.get('/search/db/tag', passport.verify, controller.search.searchDbTag);
   router.get('/search/share', passport.verify, controller.search.searchShare);
   router.get('/search/post', passport.verify, controller.search.search);
   router.get('/search/user', passport.verify, controller.search.searchUser);
@@ -684,7 +686,6 @@ module.exports = app => {
   // get home timeline
   router.get('/timeline/twitter', passport.authorize, controller.timeline.getTwitterTimeline);
 
-
   // -------------------------------- 收藏夹 --------------------------------
   // 创建收藏夹
   router.post('/favorites/create', passport.authorize, controller.favorites.create);
@@ -708,4 +709,6 @@ module.exports = app => {
   router.post('/timeline/twitter/user', passport.authorize, controller.timeline.setTwitterUserTimeLineSwitch);
   // 获取 twitter 用户信息
   router.get('/twitter/userinfo', passport.verify, controller.timeline.getTwitterUserInfo);
+
+  router.get('/timeline/telegram_channel', passport.verify, controller.timeline.getTelegramChannelTimeline);
 };

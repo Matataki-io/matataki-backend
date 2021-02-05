@@ -535,6 +535,29 @@ class SearchService extends Service {
       count,
     };
   }
+  async searchDbTag(keyword, page, pagesize) {
+    const pi = parseInt(page);
+    const pz = parseInt(pagesize);
+    const wd = keyword.toLowerCase();
+    const wehreSql = 'WHERE LOWER(name) REGEXP :wd';
+    const _sql = `SELECT id, name FROM tags ${wehreSql} LIMIT :start, :end;
+                  SELECT COUNT(1) AS count FROM tags ${wehreSql};`;
+    try {
+      const result = await this.app.mysql.query(_sql, { wd, start: (pi - 1) * pz, end: pz });
+      const list = result[0];
+      const count = result[1][0].count;
+      return {
+        list,
+        count,
+      };
+    } catch (e) {
+      this.logger.error('searchDbTag error', e.toString());
+      return {
+        list: [],
+        count: 0,
+      };
+    }
+  }
   async importShare({ id, content }) {
     this.logger.error('SearchService:: importShare: start ', { id, content });
 
