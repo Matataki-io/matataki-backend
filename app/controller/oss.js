@@ -17,9 +17,7 @@ class AliOssController extends Controller {
   async uploadImage() {
     const { ctx } = this;
     const { folder } = ctx.query;
-    console.log(ctx.request.files);
     const file = ctx.request.files[0];
-    console.log(file);
     const filetype = file.filename.split('.');
     // 没有上传到指定文件夹
     if (!fileFolder[folder]) {

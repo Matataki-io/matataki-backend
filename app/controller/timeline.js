@@ -71,6 +71,25 @@ class TimelineController extends Controller {
     else if (res.code === 2) ctx.body = ctx.msg.twitterApiErrorFeedback;
     else ctx.body = ctx.msg.failure;
   }
+
+  async getTelegramChannelTimeline() {
+    const { userId, offset } = this.ctx.query;
+    try {
+      const res = await this.service.timeline.getTelegramChannelTimeline(userId, parseInt(offset, 10));
+
+      this.ctx.body = {
+        ...this.ctx.msg.success,
+        data: res,
+      };
+    } catch (e) {
+      if (e.response) {
+        this.ctx.status = e.response.status;
+        this.ctx.body = e;
+      }
+
+      throw e;
+    }
+  }
 }
 
 module.exports = TimelineController;

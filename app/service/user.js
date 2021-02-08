@@ -89,7 +89,6 @@ class UserService extends Service {
     const user = await this.service.account.binding.get2({ id });
     // const user = await this.app.mysql.get('users', { id });
 
-    console.log('user', user);
 
     if (user) {
       avatar = user.avatar || '';
@@ -290,7 +289,8 @@ class UserService extends Service {
     const row = {};
 
     if (nickname) {
-      const nicknameCheck = /^[\u4E00-\u9FFF\u3400-\u4DFF\u3131-\uD79Dぁ-んァ-ンa-zA-Z0-9]{1,50}$/;
+      // \s*\@\.\/\\\[\]   空格 @ . /\[]
+      const nicknameCheck = /^[\u4E00-\u9FFF\u3400-\u4DFF\u3131-\uD79Dぁ-んァ-ンa-zA-Z0-9\s*\@\.\/\\\[\]]{1,50}$/;
       if (!nicknameCheck.test(nickname)) {
         return nicknameInvalid;
       }
@@ -305,7 +305,7 @@ class UserService extends Service {
         return nicknameDuplicated;
       }
 
-      row.nickname = nickname;
+      row.nickname = nickname.trim();
     }
 
     if (introduction !== null) {

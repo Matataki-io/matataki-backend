@@ -49,7 +49,6 @@ class ConfirmWithdraw extends Subscription {
 
   async refund(withdraw) {
     this.logger.info('Refund withdraw', withdraw);
-    console.log('Refund withdraw', withdraw);
     const conn = await this.app.mysql.beginTransaction();
     try {
       await conn.query(
@@ -61,7 +60,6 @@ class ConfirmWithdraw extends Subscription {
 
       await conn.commit();
       this.logger.info('refund success');
-      console.log('refund success');
     } catch (err) {
       await conn.rollback();
       this.ctx.logger.error(err);
@@ -77,11 +75,9 @@ class ConfirmWithdraw extends Subscription {
 
       if (last_irreversible_block >= block_num && trx.trx.receipt.status == 'executed') {
         this.logger.info('交易已确认', last_irreversible_block - block_num, trx.trx.receipt.status);
-        console.log('交易已确认', last_irreversible_block - block_num, trx.trx.receipt.status);
         await this.do_confirm(withdraw);
       } else {
         this.logger.info('交易未确认', last_irreversible_block - block_num, trx.trx.receipt.status);
-        console.log('交易未确认', last_irreversible_block - block_num, trx.trx.receipt.status);
       }
     } catch (err) {
       this.ctx.logger.error(err);
@@ -99,14 +95,12 @@ class ConfirmWithdraw extends Subscription {
         const result = data.Result;
         if (result.Payer === this.ctx.app.config.ont.withdraw_account && result.Hash === withdraw.trx) {
           this.logger.info('交易已确认', withdraw);
-          console.log('交易已确认', withdraw);
           await this.do_confirm(withdraw);
           return;
         }
       }
     }
     this.logger.info('交易未确认', withdraw);
-    console.log('交易未确认', withdraw);
   }
 
   async do_confirm(withdraw) {
@@ -120,7 +114,6 @@ class ConfirmWithdraw extends Subscription {
       // );
 
       this.logger.info('do_confirm transfer success');
-      console.log('do_confirm transfer success');
     } catch (err) {
       this.ctx.logger.error(err);
     }

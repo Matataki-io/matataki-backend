@@ -65,7 +65,6 @@ class Web3Service extends Service {
     value = 0,
     gasLimit = 500000,
   }) {
-    console.info('sendTransaction to: ', to);
     let privateKey = _privateKey.slice(0, 2) === '0x' ? _privateKey.slice(2) : _privateKey;
     // privateKey 转化为 Buffer 用于签署 tx
     privateKey = Buffer.from(privateKey, 'hex');
@@ -85,7 +84,6 @@ class Web3Service extends Service {
       to,
       data: encodeABI,
     };
-    console.info('sendTx txObject:', txObject);
     const tx = new Transaction(txObject, { chain: runningNetwork });
     tx.sign(privateKey);
     return web3.eth.sendSignedTransaction(`0x${tx.serialize().toString('hex')}`);

@@ -1,6 +1,7 @@
 'use strict';
 const Service = require('egg').Service;
 const moment = require('moment');
+const axios = require('axios').default;
 const SHARE_CHANNEL_ID = 3;
 
 class ShareService extends Service {
@@ -31,7 +32,7 @@ class ShareService extends Service {
     }
 
     try {
-      const sql = ` INSERT INTO post_references (sign_id, ref_sign_id, url, title, summary, number, create_time, status, cover) 
+      const sql = ` INSERT INTO post_references (sign_id, ref_sign_id, url, title, summary, number, create_time, status, cover)
                   SELECT :sign_id, :ref_sign_id, :url, :title, :summary, (SELECT IFNULL(MAX(number), 0) + 1 FROM post_references WHERE sign_id=:sign_id), :time, 0, :cover
                   ON DUPLICATE KEY UPDATE title = :title, summary = :summary, create_time = :time, status = 0, cover = :cover; `;
       await conn.query(sql, {
@@ -44,7 +45,7 @@ class ShareService extends Service {
       return -1;
     }
   }
-  async create(data, refs) {
+  async create(data, refs, media) {
     const conn = await this.app.mysql.beginTransaction();
     try {
       const result = await conn.insert('posts', {
@@ -75,7 +76,28 @@ class ShareService extends Service {
           return -1;
         }
       }
+
+      // 媒体存储
+      if (media && media.length) {
+        conn.insert('dynamic_media', media.map(item => {
+          return {
+            ...item,
+            post_id: result.insertId,
+          };
+        }));
+      }
+
       conn.commit();
+
+      try {
+        const timestamp = moment(data.create_time, 'YYYY-MM-DD HH:mm:ss').format()
+        await axios.post(this.config.cacheAPI.uri + '/sync/post/add', { id: result.insertId, uid: this.ctx.user.id, timestamp }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }})
+      }
+      catch (e) {
+        this.ctx.logger.error(e)
+        await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` }}).catch(err => { return })
+      }
+
       return signId;
     } catch (err) {
       await conn.rollback();
@@ -96,13 +118,13 @@ class ShareService extends Service {
   async timeRank(page = 1, pagesize = 20, author = null) {
     let wheresql = 'WHERE a.\`status\` = 0 AND a.channel_id = 3 ';
     if (author) wheresql += ' AND a.uid = :author ';
-    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
-      b.nickname, b.avatar, 
-      c.real_read_count AS \`read\`, c.likes 
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.short_content_share,
+      b.nickname, b.avatar,
+      c.real_read_count AS \`read\`, c.likes
       FROM posts a
-      LEFT JOIN users b ON a.uid = b.id 
-      LEFT JOIN post_read_count c ON a.id = c.post_id 
-      ${wheresql} 
+      LEFT JOIN users b ON a.uid = b.id
+      LEFT JOIN post_read_count c ON a.id = c.post_id
+      ${wheresql}
       ORDER BY a.time_down ASC, a.id DESC LIMIT :start, :end;
       SELECT COUNT(*) AS count FROM posts a
       ${wheresql};`;
@@ -119,6 +141,7 @@ class ShareService extends Service {
       const row = posts[i];
       posts[i].refs = [];
       posts[i].beRefs = [];
+      posts[i].media = [];
       id2posts[row.id] = row;
       postids.push(row.id);
     }
@@ -128,6 +151,7 @@ class ShareService extends Service {
         list: posts,
       };
     }
+
     const refResult = await this.getRef(postids);
     const refs = refResult[0],
       beRefs = refResult[1],
@@ -143,6 +167,12 @@ class ShareService extends Service {
       const id = beRefs[i].ref_sign_id;
       id2posts[id].beRefs.push(beRefs[i]);
     }
+    // 媒体
+    const mediaList = await this.getMedia(postids);
+    for (let i = 0; i < mediaList.length; i++) {
+      const id = mediaList[i].post_id;
+      id2posts[id].media.push(mediaList[i]);
+    }
     return {
       count,
       list: posts,
@@ -156,15 +186,15 @@ class ShareService extends Service {
         list: [],
       };
     }
-    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
-      b.nickname, b.avatar, 
-      c.real_read_count AS \`read\`, c.likes 
+    const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.short_content_share,
+      b.nickname, b.avatar,
+      c.real_read_count AS \`read\`, c.likes
       FROM posts a
-      LEFT JOIN users b ON a.uid = b.id 
-      LEFT JOIN post_read_count c ON a.id = c.post_id 
+      LEFT JOIN users b ON a.uid = b.id
+      LEFT JOIN post_read_count c ON a.id = c.post_id
       WHERE a.id IN (:postids)
       ORDER BY FIELD(a.id, :postids);
-      
+
       SELECT COUNT(*) AS count FROM posts a
       WHERE a.\`status\` = 0 AND a.channel_id = 3;`;
     const queryResult = await this.app.mysql.query(
@@ -202,6 +232,13 @@ class ShareService extends Service {
       const id = beRefs[i].ref_sign_id;
       id2posts[id].beRefs.push(beRefs[i]);
     }
+    // 媒体
+    const mediaList = await this.getMedia(postids);
+    for (let i = 0; i < mediaList.length; i++) {
+      const id = mediaList[i].post_id;
+      id2posts[id].media.push(mediaList[i]);
+    }
+
     return {
       count,
       list: posts,
@@ -210,7 +247,7 @@ class ShareService extends Service {
   async getRef(postids) {
     const refResult = await this.app.mysql.query(
       `SELECT t1.sign_id, t1.ref_sign_id, t1.url, t1.title, t1.summary, t1.cover, t1.create_time, t1.number,
-      t2.channel_id,
+      t2.channel_id, t2.short_content_share,
       t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
       t4.real_read_count, t4.likes, t4.dislikes,
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
@@ -227,11 +264,11 @@ class ShareService extends Service {
       LEFT JOIN post_minetokens t6
       ON t1.ref_sign_id = t6.sign_id
       LEFT JOIN minetokens t7
-      ON t7.id = t6.token_id 
+      ON t7.id = t6.token_id
       WHERE t1.sign_id IN ( :postids ) AND t1.status = 0;
 
       SELECT t1.sign_id, t1.ref_sign_id, t1.create_time, t1.number,
-      t2.channel_id, t2.title, t2.short_content AS summary, t2.cover, 
+      t2.channel_id, t2.title, t2.short_content AS summary, t2.cover, t2.short_content_share,
       t3.username, t3.nickname, t3.platform, t3.avatar, t3.id uid,
       t4.real_read_count, t4.likes, t4.dislikes,
       t5.platform as pay_platform, t5.symbol as pay_symbol, t5.price as pay_price, t5.decimals as pay_decimals, t5.stock_quantity as pay_stock_quantity,
@@ -248,11 +285,17 @@ class ShareService extends Service {
       LEFT JOIN post_minetokens t6
       ON t1.sign_id = t6.sign_id
       LEFT JOIN minetokens t7
-      ON t7.id = t6.token_id 
+      ON t7.id = t6.token_id
       WHERE t1.ref_sign_id IN ( :postids ) AND t1.status = 0;`,
       { postids }
     );
     return refResult;
+  }
+
+  async getMedia(ids) {
+    const sql = 'SELECT * FROM dynamic_media WHERE post_id IN(:ids);';
+    const res = await this.app.mysql.query(sql, { ids });
+    return res;
   }
 }
 

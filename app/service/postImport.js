@@ -61,8 +61,24 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: handleWechat: error:', err);
       return null;
     }
-    const $ = cheerio.load(rawPage.data, { decodeEntities: false });
-    const mediaContent = $('div.rich_media_content');
+
+    // remove tag attr
+    const removeTagAttr = (content, tag, attr) => {
+      const _$ = cheerio.load(content);
+      const _content = _$('#img-content');
+      const _html = _content.find(tag).toArray();
+      _html.forEach(node => {
+        if (node.attribs[attr]) {
+          node.attribs[attr] = 'remove';
+        }
+      });
+      return _content.html();
+    };
+
+    // 因为 cheerio decode 导致 某些attar属性里面的字符转换渲染出来的html不对 所以删除有问题的自定义属性
+    const source = removeTagAttr(rawPage.data, 'span', 'data-shimo-docs');
+    const $ = cheerio.load(source, { decodeEntities: false });
+    const mediaContent = $('#rich_media_content ');
 
     // 把图片上传至本站， 并替换链接
     // TBD: 仍然有出现图片未被替换的问题
@@ -365,7 +381,8 @@ class PostImportService extends Service {
 
       return articleObj;
     } catch (error) {
-      console.log('error', error);
+      this.logger.error('handleGaojin::error', error);
+      this.logger.error(error);
       return {
         title: '',
         cover: '',
@@ -562,8 +579,6 @@ class PostImportService extends Service {
         },
       });
 
-      console.log('result', result);
-
       this.logger.info('article result', url, ID, result.data.data);
 
       let title = '';
@@ -613,7 +628,6 @@ class PostImportService extends Service {
         const $ = cheerio.load(content);
         const _imgElement = $('img').toArray();
         for (let i = 0; i < _imgElement.length; i++) {
-          console.log(_imgElement[i].attribs.src);
           const _src = _imgElement[i].attribs.src;
           const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
           const imgUpUrl = await this.uploadArticleImage(_src, parsedCoverUpload);

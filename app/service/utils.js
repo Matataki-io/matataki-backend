@@ -14,7 +14,7 @@ class UtilsService extends Service {
       }
       return [ null, res.data ];
     } catch (e) {
-      console.log('facotryRequst error', e);
+      this.logger.error('facotryRequst error', e);
       return [ e, null ];
     }
   }

@@ -476,7 +476,7 @@
      */
 
     var __call = function (fn, params, callback, app_only_auth) {
-      console.log(fn)
+      //console.log(fn)
       if (typeof params === "undefined") {
         params = {};
       }
@@ -545,7 +545,7 @@
             for (j = 0; j < 26; j++) {
               method_template = method_template.split(String.fromCharCode(65 + j)).join("_" + String.fromCharCode(97 + j));
             }
-            console.warn("To call the templated method \"" + method_template + "\", specify the parameter value for \"" + param_l + "\".");
+            //console.warn("To call the templated method \"" + method_template + "\", specify the parameter value for \"" + param_l + "\".");
           }
           method = method.split(param).join(apiparams[param_l]);
           delete apiparams[param_l];
@@ -586,7 +586,7 @@
         params.screen_name = null;
       }
       if (_oauth_token === null) {
-        console.warn("To get the authenticate URL, the OAuth token must be set.");
+        //console.warn("To get the authenticate URL, the OAuth token must be set.");
       }
       var url = _endpoint_oauth + "oauth/authenticate?oauth_token=" + _url(_oauth_token);
       if (params.force_login === true) {
@@ -612,7 +612,7 @@
         params.screen_name = null;
       }
       if (_oauth_token === null) {
-        console.warn("To get the authorize URL, the OAuth token must be set.");
+        //console.warn("To get the authorize URL, the OAuth token must be set.");
       }
       var url = _endpoint_oauth + "oauth/authorize?oauth_token=" + _url(_oauth_token);
       if (params.force_login === true) {
@@ -633,7 +633,7 @@
 
     var oauth2_token = function (callback) {
       if (_oauth_consumer_key === null) {
-        console.warn("To obtain a bearer token, the consumer key must be set.");
+        //console.warn("To obtain a bearer token, the consumer key must be set.");
       }
 
       if (typeof callback === "undefined") {
@@ -768,7 +768,7 @@
         var b = _oauth_consumer_secret + "&" + (null !== _oauth_token_secret ?
           _oauth_token_secret : "");
         if (_oauth_consumer_secret === null) {
-          console.warn("To generate a hash, the consumer secret must be set.");
+          //console.warn("To generate a hash, the consumer secret must be set.");
         }
         var c = q(b);
         if (c.length > 16) {
@@ -873,7 +873,7 @@
           if (typeof a !== "function") {
             return _url(c) + "=" + _url(a);
           }
-          console.warn("There was an error processing for http_build_query().");
+          //console.warn("There was an error processing for http_build_query().");
         } else {
           return "";
         }
@@ -907,7 +907,7 @@
         length = 8;
       }
       if (length < 1) {
-        console.warn("Invalid nonce length.");
+        //console.warn("Invalid nonce length.");
       }
       var nonce = "";
       for (var i = 0; i < length; i++) {
@@ -989,7 +989,7 @@
         append_to_get = false;
       }
       if (_oauth_consumer_key === null) {
-        console.warn("To generate a signature, the consumer key must be set.");
+        //console.warn("To generate a signature, the consumer key must be set.");
       }
       var sign_params = {
         consumer_key: _oauth_consumer_key,
@@ -1067,7 +1067,7 @@
           return httpmethod;
         }
       }
-      console.warn("Can't find HTTP method to use for \"" + method + "\".");
+      //console.warn("Can't find HTTP method to use for \"" + method + "\".");
     };
 
     /**
@@ -1234,7 +1234,7 @@
         try {
           xml = new ActiveXObject("Microsoft.XMLHTTP");
         } catch (e) {
-          console.error("ActiveXObject object not defined.");
+          //console.error("ActiveXObject object not defined.");
         }
         // now, consider RequireJS and/or Node.js objects
       } else if (typeof require === "function"
@@ -1250,7 +1250,7 @@
             var XMLHttpRequest = require("xhr2");
             xml = new XMLHttpRequest();
           } catch (e2) {
-            console.error("xhr2 object not defined, cancelling.");
+            //console.error("xhr2 object not defined, cancelling.");
           }
         }
       }
@@ -1304,9 +1304,9 @@
           url_with_params += "?" + _http_build_query(params);
         }
         if (!app_only_auth) {
-          console.log(httpmethod)
-          console.log(url)
-          console.log(params)
+          //console.log(httpmethod)
+          //console.log(url)
+          //console.log(params)
           authorization = _sign(httpmethod, url, params);
         }
 
@@ -1334,9 +1334,9 @@
             callback(reply, rate);
           };
           params.callback = callback_name;
-          console.log(httpmethod)
-          console.log(url)
-          console.log(params)
+          //console.log(httpmethod)
+          //console.log(url)
+          //console.log(params)
           url_with_params = url + "?" + _sign(httpmethod, url, params, true);
           var tag = document.createElement("script");
           tag.type = "text/javascript";
@@ -1357,22 +1357,22 @@
         xml.open(httpmethod, url_with_params, true);
       } else {
         if (_use_jsonp) {
-          console.warn("Sending POST requests is not supported for IE7-9.");
+          //console.warn("Sending POST requests is not supported for IE7-9.");
           return;
         }
         if (multipart) {
           if (!app_only_auth) {
-            console.log(httpmethod)
-            console.log(url)
-            console.log(params)
+            //console.log(httpmethod)
+            //console.log(url)
+            //console.log(params)
             authorization = _sign(httpmethod, url, {});
           }
           params = _buildMultipart(method, params);
         } else {
           if (!app_only_auth) {
-            console.log(httpmethod)
-            console.log(url)
-            console.log(params)
+            //console.log(httpmethod)
+            //console.log(url)
+            //console.log(params)
             authorization = _sign(httpmethod, url, params);
           }
           params = _http_build_query(params);
@@ -1399,7 +1399,7 @@
         if (_oauth_consumer_key === null
           && _oauth_bearer_token === null
         ) {
-          console.warn("To make an app-only auth API request, consumer key or bearer token must be set.");
+          //console.warn("To make an app-only auth API request, consumer key or bearer token must be set.");
         }
         // automatically fetch bearer token, if necessary
         if (_oauth_bearer_token === null) {

@@ -192,7 +192,6 @@ class DraftService extends Service {
       return false;
 
     } catch (e) {
-      console.log(e);
       this.ctx.logger.error(e);
       return false;
     }
@@ -241,7 +240,6 @@ class DraftService extends Service {
       };
 
     } catch (e) {
-      console.log(e);
       this.ctx.logger.error(e);
       return {
         code: -1,
@@ -264,7 +262,7 @@ class DraftService extends Service {
       };
 
     } catch (e) {
-      console.log(e);
+      log(e);
       this.ctx.logger.error(e);
       return {
         code: -1,

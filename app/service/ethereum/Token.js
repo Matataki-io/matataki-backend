@@ -48,7 +48,7 @@ class Token {
     gasLimit = 500000,
   }) {
     // 处理0x开头的私钥
-    console.info('sendTransaction to: ', this.contractAddress);
+    this.logger.info('sendTransaction to: ', this.contractAddress);
     let privateKey = _privateKey.slice(0, 2) === '0x' ? _privateKey.slice(2) : _privateKey;
     // privateKey 转化为 Buffer 用于签署 tx
     privateKey = Buffer.from(privateKey, 'hex');
@@ -68,7 +68,6 @@ class Token {
       to: this.contractAddress,
       data: encodeABI,
     };
-    console.info('sendTx txObject:', txObject);
     const tx = new Transaction(txObject, { chain: runningNetwork });
     tx.sign(privateKey);
     return web3.eth.sendSignedTransaction(`0x${tx.serialize().toString('hex')}`);
@@ -101,7 +100,6 @@ class Token {
     */
   _mint(from, to, amount) {
     // 开发ing，先硬编码
-    console.info(this.address);
     const encodeABI = this.contract.methods.mint(to, amount).encodeABI();
     return this.sendTransaction(from, encodeABI, { gasLimit: 100000 });
   }

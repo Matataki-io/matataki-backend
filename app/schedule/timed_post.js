@@ -39,13 +39,11 @@ class TimedPost extends Subscription {
     // console.log(taskList);
     taskList.forEach(async key => {
       const value = await this.app.redis.hget(RedisKey, key);
-      if(value <= now.getTime()) {
-        console.log(`发布了：${key}`);
+      if (value <= now.getTime()) {
         try {
           this.initMsg();
           this.ctx.service.timedPost.post(key);
-        }
-        catch (e) {
+        } catch (e) {
           this.logger.error(e);
         }
       }

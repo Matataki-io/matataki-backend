@@ -58,7 +58,6 @@ class BaseController extends Controller {
 
   checkAuth(username) {
     this.logger.info('checkAuth..', username);
-    console.log('checkAuth..', username);
 
     const token = this.ctx.request.header['x-access-token'];
     if (!token) {
@@ -80,7 +79,6 @@ class BaseController extends Controller {
       return decoded.iss;
     } catch (err) {
       this.logger.error('access token decode err', err);
-      console.log('access token decode err', err);
       throw err;
     }
   }

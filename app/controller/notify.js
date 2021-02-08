@@ -26,6 +26,7 @@ class NotificationController extends Controller {
     const assetsLogIdSet = new Set();
     const minetokensLogIdSet = new Set();
     const tokenIdSet = new Set();
+    const shareIdSet = new Set();
     // 遍历
     eventList.list.forEach(item => {
       userIdSet.add(item.user_id);
@@ -68,6 +69,9 @@ class NotificationController extends Controller {
         case 'collaborator': // 协作者
           tokenIdSet.add(item.remark);
           break;
+        case 'share': // 分享
+          shareIdSet.add(item.object_id);
+          break;
       }
     });
 
@@ -82,6 +86,7 @@ class NotificationController extends Controller {
       assetsLog: assetsLogIdSet.size ? await this.service.assets.getByIdArray([ ...assetsLogIdSet ]) : [],
       minetokensLog: minetokensLogIdSet.size ? await this.service.token.mineToken.getLogByIdArray([ ...minetokensLogIdSet ]) : [],
       tokens: tokenIdSet.size ? await this.service.token.mineToken.getByIdArray([ ...tokenIdSet ]) : [],
+      shares: shareIdSet.size ? await this.service.post.getByIdArrayShare([ ...shareIdSet ]) : [],
     };
   }
 
@@ -184,7 +189,7 @@ class NotificationController extends Controller {
     const { postId, tokenId } = ctx.request.body;
     const result = await this.service.notify.announcement.postInsufficientLiquidity(postId, tokenId);
     ctx.body = result ? ctx.msg.success : ctx.msg.failure;
-    if (result) ctx.body.data = result
+    if (result) ctx.body.data = result;
   }
 }
 

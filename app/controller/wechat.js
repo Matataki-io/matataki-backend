@@ -94,7 +94,7 @@ class WechatController extends Controller {
     this.service.wechatApi.weChatTnwxInit();
     // get accesstoken
     const assessToken = await this.service.wechatApi.getAccessToken();
-    console.log('assessToken', assessToken);
+    this.logger.info('assessToken', assessToken);
     ctx.body = ctx.msg.success;
   }
 

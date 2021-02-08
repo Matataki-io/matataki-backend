@@ -241,7 +241,6 @@ class PostController extends Controller {
         //   updateRow.is_original = is_original;
         // }
 
-        // console.log("cover!!!", cover , typeof cover);
 
         // 修改 post 的 hash, title
         await conn.update('posts', updateRow, { where: { id: signId } });
@@ -412,8 +411,6 @@ class PostController extends Controller {
       return;
     }
 
-    console.log('postData', postData);
-
     // 这部分是登录之后才会执行的查询
     if (ctx.user && ctx.user.id) {
       const { list: tokens } = await this.service.exchange.getTokenListByUser(ctx.user.id, 1, 65535);
@@ -455,10 +452,8 @@ class PostController extends Controller {
     if (typeof channel === 'string') channel = parseInt(channel);
     if (typeof filter === 'string') filter = parseInt(filter);
     const requestUser = ctx.user;
-    // console.log('requestUser', requestUser);
     // 是否显示隐藏文章 如果是登陆后看自己的文章 并且 查看所有文章
     const isShowingDeleted = requestUser.isAuthenticated ? Boolean((Number(author) === requestUser.id) && (Number(showAll) !== 0)) : false;
-    // console.log('isShowingDeleted', isShowingDeleted, typeof isShowingDeleted);
 
     const postData = await this.service.post.timeRankSlow(
       parseInt(page),

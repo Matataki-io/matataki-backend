@@ -56,7 +56,7 @@ class TimedPostService extends Service {
   /** 发布文章 */
   async post(draftId) {
     const result = await this.service.draft.postDraft(draftId);
-    console.log(`发布结果：`, result);
+    this.logger.info('发布结果：', result);
     if (result && result.code === 0) this.postSuccess(result);
     else this.postFailure(result);
     await this.endTask(draftId, !!result.code);

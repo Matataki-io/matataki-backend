@@ -171,7 +171,6 @@ class TokenController extends Controller {
   async tokenFlow() {
     const { ctx } = this;
     const { tokenId, pagesize = 10, page = 1 } = ctx.query;
-    console.log(ctx.user);
     // user id
     const user_id = ctx.user.id;
     const result = await ctx.service.exchange.getUserFlowDetail(user_id, tokenId, parseInt(page), parseInt(pagesize));
