@@ -29,6 +29,7 @@ class ShareController extends Controller {
       author,
       content,
       refs,
+      media,
     }));
     this.logger.info('controller.share hash', hash);
     if (!hash) {
