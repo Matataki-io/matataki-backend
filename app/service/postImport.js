@@ -491,7 +491,7 @@ class PostImportService extends Service {
   async handleWeibo(url) {
     try {
       const { data } = await axios({
-        url: 'http://headl3ss-par53r.smartsignature.io:7333/get-weibo',
+        url: 'http://headl3ss-par53r.mttk.net:7333/get-weibo',
         method: 'post',
         data: { url },
       });
