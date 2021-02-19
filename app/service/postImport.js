@@ -488,44 +488,45 @@ class PostImportService extends Service {
       return null;
     }
   }
-  async handleWeibo(url) {
-    try {
-      const { data } = await axios({
-        url: 'http://headl3ss-par53r.mttk.net:7333/get-weibo',
-        method: 'post',
-        data: { url },
-      });
-      const $ = cheerio.load(data);
-      const title = $('div.title').text();
-      const parsedTitleImage = $('img');
-      const parsedContent = $('div.WB_editor_iframe_new');
-      const parsedImages = $('img', parsedContent);
-      let coverLocation = null;
-      if (parsedTitleImage) {
-        const originSrc = parsedTitleImage.attr('src');
-        coverLocation = await this.uploadArticleImage(originSrc,
-          this.generateFileName('weibo', originSrc));
-      }
-      for (const image of parsedImages.toArray()) {
-        const originSrc = $(image).attr('src');
-        if (originSrc) {
-          const uploadUrl = 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
-            this.generateFileName('weibo', originSrc));
-          $(image).attr('src', uploadUrl);
-        }
-      }
-      const turndownService = new turndown();
-      const articleContent = turndownService.turndown(parsedContent.html());
-      return {
-        title,
-        cover: coverLocation,
-        content: articleContent,
-      };
-    } catch (err) {
-      this.logger.error('PostImportService:: handleWeibo: error:', err);
-      return null;
-    }
-  }
+  // @deprecated: 这个 Headless 微博文章爬虫已经失效了，暂时屏蔽这个功能 - Frank Feb.19 2021
+  // async handleWeibo(url) {
+  //   try {
+  //     const { data } = await axios({
+  //       url: 'http://headl3ss-par53r.mttk.net:7333/get-weibo',
+  //       method: 'post',
+  //       data: { url },
+  //     });
+  //     const $ = cheerio.load(data);
+  //     const title = $('div.title').text();
+  //     const parsedTitleImage = $('img');
+  //     const parsedContent = $('div.WB_editor_iframe_new');
+  //     const parsedImages = $('img', parsedContent);
+  //     let coverLocation = null;
+  //     if (parsedTitleImage) {
+  //       const originSrc = parsedTitleImage.attr('src');
+  //       coverLocation = await this.uploadArticleImage(originSrc,
+  //         this.generateFileName('weibo', originSrc));
+  //     }
+  //     for (const image of parsedImages.toArray()) {
+  //       const originSrc = $(image).attr('src');
+  //       if (originSrc) {
+  //         const uploadUrl = 'https://ssimg.frontenduse.top' + await this.uploadArticleImage(originSrc,
+  //           this.generateFileName('weibo', originSrc));
+  //         $(image).attr('src', uploadUrl);
+  //       }
+  //     }
+  //     const turndownService = new turndown();
+  //     const articleContent = turndownService.turndown(parsedContent.html());
+  //     return {
+  //       title,
+  //       cover: coverLocation,
+  //       content: articleContent,
+  //     };
+  //   } catch (err) {
+  //     this.logger.error('PostImportService:: handleWeibo: error:', err);
+  //     return null;
+  //   }
+  // }
   // handle Archive 获取archive.is的微信文章
   async handleArchive(url) {
     try {
@@ -549,7 +550,7 @@ class PostImportService extends Service {
         content: articleContent,
       };
     } catch (err) {
-      this.logger.error('PostImportService:: handleWeibo: error:', err);
+      this.logger.error('PostImportService:: handleArchive: error:', err);
       return null;
     }
   }

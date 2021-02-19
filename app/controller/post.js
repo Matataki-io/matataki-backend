@@ -1021,11 +1021,12 @@ class PostController extends Controller {
       /https:\/\/zhuanlan\.zhihu\.com\/p\/\d+/,
       x => this.service.postImport.handleZhihu(x)
     );
+    // @deprecated: 这个 Headless 微博文章爬虫已经失效了，暂时屏蔽这个功能 - Frank Feb.19 2021
     // 微博PC端文章
-    const weiboMatch = makeMatch(
-      /https:\/\/(www\.)?weibo\.com\/ttarticle\/p\/show.+/,
-      x => this.service.postImport.handleWeibo(x)
-    );
+    // const weiboMatch = makeMatch(
+    //   /https:\/\/(www\.)?weibo\.com\/ttarticle\/p\/show.+/,
+    //   x => this.service.postImport.handleWeibo(x)
+    // );
     const archiveMatch = makeMatch(/https?:\/\/(www\.)?archive\.is\/.+/, x =>
       this.service.postImport.handleArchive(x)
     );
@@ -1042,7 +1043,7 @@ class PostController extends Controller {
       || (await gaojinMatch)
       || (await mattersMatch)
       || (await zhihuMatch)
-      || (await weiboMatch)
+      // || (await weiboMatch)
       || (await archiveMatch)
       || (await bihuMatch);
 
