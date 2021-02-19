@@ -53,7 +53,7 @@ async function catcher() {
     // 取内容失败， 多数是无效的ipfs哈希引起， 会掠过， 不会退出
     try {
       articleRawContent = await axios({
-        url: `https://api.smartsignature.io/ipfs/catJSON/${currentHash}`,
+        url: `https://api.mttk.net/ipfs/catJSON/${currentHash}`,
         method: 'get',
         timeout: 4000,
       });
