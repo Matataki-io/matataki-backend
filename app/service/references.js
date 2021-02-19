@@ -5,10 +5,10 @@ const Service = require('egg').Service;
 const path=require('path');
 const htmlparser = require('node-html-parser');
 
-const domains = [ 'https://wwwtest.smartsignature.io/p/', 'https://wwwtest.smartsignature.io/p/', 'https://test.frontenduse.top/p/',
+const domains = [ 'https://test.matataki.io/p/', 'https://test.frontenduse.top/p/',
   'https://matataki.io/p/', 'https://www.matataki.io/p/', 'https://smartsignature.frontenduse.top/p/' ];
 
-const matatakiUrlReg = /http(?:s)?:\/\/(?:\w+.)?(?:smartsignature.io|matataki.(?:io|cn)|frontenduse.top)\/(?:p|share)\/(\d+)/;
+const matatakiUrlReg = /http(?:s)?:\/\/(?:\w+.)?(?:mttk.net|matataki.(?:io|cn)|frontenduse.top)\/(?:p|share)\/(\d+)/;
 
 class ReferencesService extends Service {
   // 是否是内部的文章
