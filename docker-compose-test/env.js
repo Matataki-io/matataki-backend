@@ -18,7 +18,7 @@ module.exports = {
   },
   production: {
     NODE: 'production',
-    VUE_APP_API: 'https://api.smartsignature.io',
+    VUE_APP_API: 'https://api.mttk.net',
     VUE_APP_URL: 'https://matataki.io',
     VUE_APP_SIGNATURE_CONTRACT: 'signature.bp',
     VUE_APP_SCRIPT_HASH: '36df9722fc0ff5fa3979f2a844a012cabe1d4c56',

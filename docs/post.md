@@ -6,18 +6,18 @@
 - 请求方式： GET
 - Header： 默认
 - 参数：
-  
-| 参数名 | 类型 | 是否必须 | 说明 | 位置 |
-|---|---|---|---|---|
-| page | int | Flase | 页码 | Query |
-| pagesize | int | Fasle | 每页的条数 | Query |
-| channel | int | False | 文章的频道， 1为普通文章， 2为商品 | Query |
-| extra | string | False | 额外的信息， 以逗号隔开 | Query |
+
+| 参数名   | 类型   | 是否必须 | 说明                                 | 位置  |
+| -------- | ------ | -------- | ------------------------------------ | ----- |
+| page     | int    | Flase    | 页码                                 | Query |
+| pagesize | int    | Fasle    | 每页的条数                           | Query |
+| channel  | int    | False    | 文章的频道， 1 为普通文章， 2 为商品 | Query |
+| extra    | string | False    | 额外的信息， 以逗号隔开              | Query |
 
 - 请求示例：
 
 ```
-curl -X GET 'http://apitest.smartsignature.io/posts/followedPosts?pagesize=2&extra=short_content&channel=2&page=2' 
+curl -X GET 'http://apitest.mttk.net/posts/followedPosts?pagesize=2&extra=short_content&channel=2&page=2'
 ```
 
 - 返回示例：
@@ -58,21 +58,22 @@ curl -X GET 'http://apitest.smartsignature.io/posts/followedPosts?pagesize=2&ext
 - 请求方式： GET
 - Header： 默认
 - 参数：
-  
-| 参数名 | 类型 | 是否必须 | 说明 | 位置 |
-|---|---|---|---|---|
-| word | string | True | 搜索关键词 | Query |
-| channel | int | False | 文章的频道， 1为文章， 2为商品， 没有则为全部 | Query |
-| page | int | False | 页码 | Query |
-| pagesize | int | False | 每页的条目数 | Query |
+
+| 参数名   | 类型   | 是否必须 | 说明                                            | 位置  |
+| -------- | ------ | -------- | ----------------------------------------------- | ----- |
+| word     | string | True     | 搜索关键词                                      | Query |
+| channel  | int    | False    | 文章的频道， 1 为文章， 2 为商品， 没有则为全部 | Query |
+| page     | int    | False    | 页码                                            | Query |
+| pagesize | int    | False    | 每页的条目数                                    | Query |
 
 - 请求示例：
 
 ```
-curl -X GET 'https://apitest.smartsignature.io/posts/search?type=post&word=%E4%BB%B7%E5%80%BC&channel=1&page=1&pagesize=10'
+curl -X GET 'https://apitest.mttk.net/posts/search?type=post&word=%E4%BB%B7%E5%80%BC&channel=1&page=1&pagesize=10'
 ```
 
 - 返回示例：
+
 ```
 {
     "code": 0,
@@ -108,4 +109,3 @@ curl -X GET 'https://apitest.smartsignature.io/posts/search?type=post&word=%E4%B
     }
 }
 ```
-
