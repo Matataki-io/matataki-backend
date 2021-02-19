@@ -2,36 +2,37 @@
 
 #### 发布文章
 
-* POST /post/publish
-* 响应状态码：200
+- POST /post/publish
+- 响应状态码：200
 
-* curl -d "author=tengavinwood&title=xxxxx&publickey=EOS8QP2Z6tApaUYPEC6hm9f1pZrSEMmZ7n5SsvjzA3VTnRXUyra9E&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy&sign=SIG_K1_KZU9PyXP8YAePjCfCcmBjGHARkvTVDjKpKvVgS6XL8o2FXTXUdhP3rqrL38dJYgJo2WNBdYubsY9LKTo47RUUE4N3ZHjZQ&shortContent=aaa" -X POST https://api.smartsignature.io/post/publish
+- curl -d "author=tengavinwood&title=xxxxx&publickey=EOS8QP2Z6tApaUYPEC6hm9f1pZrSEMmZ7n5SsvjzA3VTnRXUyra9E&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy&sign=SIG_K1_KZU9PyXP8YAePjCfCcmBjGHARkvTVDjKpKvVgS6XL8o2FXTXUdhP3rqrL38dJYgJo2WNBdYubsY9LKTo47RUUE4N3ZHjZQ&shortContent=aaa" -X POST https://api.mttk.net/post/publish
 
-* 增加参数：commentPayPoint 评论需要花的积分
-
+- 增加参数：commentPayPoint 评论需要花的积分
 
 #### 获取文章列表
 
-* GET /posts/timeRanking
+- GET /posts/timeRanking
 
-* 参数
-* page: 页数，默认第一页
-* pagesize: 每页的数量， 默认20
-* author: 作者id，默认返回全部author的文章，传入author参数，则只返回指定author的文章。
-* channel: 频道id, 1为普通文章, 2为商品文章, 不带则不筛选, 返回所有文章
-* extra: 需要额外返回的项目， 以逗号分割， 如short_content,others,aaaabc
-* filter: 过滤
-  * 1: 免费
-  * 2: 需要持票
-  * 4: 需要购买
-  * 3,5,6,7: 以上的组合
+- 参数
+- page: 页数，默认第一页
+- pagesize: 每页的数量， 默认 20
+- author: 作者 id，默认返回全部 author 的文章，传入 author 参数，则只返回指定 author 的文章。
+- channel: 频道 id, 1 为普通文章, 2 为商品文章, 不带则不筛选, 返回所有文章
+- extra: 需要额外返回的项目， 以逗号分割， 如 short_content,others,aaaabc
+- filter: 过滤
 
-* curl -X GET https://api.smartsignature.io/posts/timeRanking
-* curl -X GET https://api.smartsignature.io/posts/timeRanking?page=2
-* curl -X GET https://api.smartsignature.io/posts/timeRanking?author=998
-* curl -X GET https://api.smartsignature.io/posts/timeRanking?channel=1&extra=short_content,others
+  - 1: 免费
+  - 2: 需要持票
+  - 4: 需要购买
+  - 3,5,6,7: 以上的组合
 
-* 返回内容
+- curl -X GET https://api.mttk.net/posts/timeRanking
+- curl -X GET https://api.mttk.net/posts/timeRanking?page=2
+- curl -X GET https://api.mttk.net/posts/timeRanking?author=998
+- curl -X GET https://api.mttk.net/posts/timeRanking?channel=1&extra=short_content,others
+
+- 返回内容
+
 ```$xslt
 {
     "code": 0,
@@ -59,17 +60,17 @@
 
 #### 获取按照赞赏次数排行的文章列表
 
-* GET /posts/supportsRanking
+- GET /posts/supportsRanking
 
-* 参数
-* page: 页数，默认第一页
-* pagesize: 每页的数量， 默认20
-* channel: 频道id, 1为普通文章, 2为商品文章, 不带则不筛选, 返回所有文章
-* extra: 需要额外返回的项目， 以逗号分割， 如short_content,others,aaaabc
+- 参数
+- page: 页数，默认第一页
+- pagesize: 每页的数量， 默认 20
+- channel: 频道 id, 1 为普通文章, 2 为商品文章, 不带则不筛选, 返回所有文章
+- extra: 需要额外返回的项目， 以逗号分割， 如 short_content,others,aaaabc
 
-* curl -X GET https://api.smartsignature.io/posts/supportsRanking
-* curl -X GET https://api.smartsignature.io/posts/supportsRanking?page=2
-* curl -X GET https://api.smartsignature.io/posts/supportsRanking?channel=1
+- curl -X GET https://api.mttk.net/posts/supportsRanking
+- curl -X GET https://api.mttk.net/posts/supportsRanking?page=2
+- curl -X GET https://api.mttk.net/posts/supportsRanking?channel=1
 
 ```$xslt
 {
@@ -98,17 +99,18 @@
 
 #### 获取推荐文章
 
-* GET /posts/recommend
-* 不分页, 返回最新的数条
+- GET /posts/recommend
+- 不分页, 返回最新的数条
 
-* 参数:
-* channel, URL参数, 区别是普通文章(1)还是商品文章(2), 不带则不筛选
-* amount, URL参数, 返回的推荐数量, 不带则默认为5
+- 参数:
+- channel, URL 参数, 区别是普通文章(1)还是商品文章(2), 不带则不筛选
+- amount, URL 参数, 返回的推荐数量, 不带则默认为 5
 
-* 请求示例
-* curl -x GET https://api.smartsignature.io/posts/recommend?channel=2
+- 请求示例
+- curl -x GET https://api.mttk.net/posts/recommend?channel=2
 
-* 返回示例
+- 返回示例
+
 ```
 {
     "code": 0,
@@ -135,16 +137,16 @@
 }
 ```
 
-#### 获取包含该tag的文章列表
+#### 获取包含该 tag 的文章列表
 
-* GET /posts/getPostByTag
+- GET /posts/getPostByTag
 
-* 参数
-* page: 页数，默认第一页
-* pagesize: 每页的数量， 默认20
-* tagid: 标签的id
-* orderBy: 排序，<?create_time | hot_score>
-* order: 升降序, <?desc | asc>
+- 参数
+- page: 页数，默认第一页
+- pagesize: 每页的数量， 默认 20
+- tagid: 标签的 id
+- orderBy: 排序，<?create_time | hot_score>
+- order: 升降序, <?desc | asc>
 
 响应示例：
 
@@ -194,14 +196,13 @@
 }
 ```
 
-
 #### 获取用户信息
 
- 返回 email, nickname, avatar, avatar, fans 数和 follow 数 , is_follow 是否关注，
+返回 email, nickname, avatar, avatar, fans 数和 follow 数 , is_follow 是否关注，
 
-* GET /user/:username
-* 响应状态码：200
-* 响应体：
+- GET /user/:username
+- 响应状态码：200
+- 响应体：
 
 ```
 {"username":"minakokojima", "email": "251815992@qq.com", "nickname":"岛娘", "avatar": "QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT","follows":4,"fans":5, is_follow: false }
@@ -209,13 +210,13 @@
 
 请求示例:
 
-* curl -X GET https://api.smartsignature.io/user/minakokojima
+- curl -X GET https://api.mttk.net/user/minakokojima
 
 #### 获取用户个人主页的统计信息 (need access token)
 
-* GET /user/stats
-* 正常状态码: 200
-* 响应体:
+- GET /user/stats
+- 正常状态码: 200
+- 响应体:
 
 ```$xslt
 {
@@ -239,71 +240,72 @@
 }
 ```
 
-
 #### 文章分享上报
 
-* POST /share
-* 响应状态码：200
+- POST /share
+- 响应状态码：200
 
 参数
-* user: 分享的用户
-* hash: 文章的唯一hash
+
+- user: 分享的用户
+- hash: 文章的唯一 hash
 
 请求示例:
 
-* curl -d "user=joetothemoon&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy" -X POST https://api.smartsignature.io/share
+- curl -d "user=joetothemoon&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy" -X POST https://api.mttk.net/share
 
 #### 文章支持上报
 
-* POST /vote
-* 响应状态码：200
+- POST /vote
+- 响应状态码：200
 
 参数:
 
-* user: 分享的用户
-* hash: 文章的唯一hash
+- user: 分享的用户
+- hash: 文章的唯一 hash
 
 请求示例:
-* curl -d "user=joetothemoon&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy" -X POST https://api.smartsignature.io/vote
+
+- curl -d "user=joetothemoon&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy" -X POST https://api.mttk.net/vote
 
 #### IPFS add
 
-* POST /ipfs/add
-* 响应状态码：200
+- POST /ipfs/add
+- 响应状态码：200
 
 #### IPFS addJSON
 
-* POST /ipfs/addJSON
-* 响应状态码：200
-
+- POST /ipfs/addJSON
+- 响应状态码：200
 
 #### IPFS cat
 
-* GET /ipfs/cat
-* 响应状态码：200
+- GET /ipfs/cat
+- 响应状态码：200
 
 #### IPFS catJSON
 
-* GET /ipfs/catJSON
-* 响应状态码：200
-
+- GET /ipfs/catJSON
+- 响应状态码：200
 
 请求示例:
 
-* curl -d "user=joetothemoon&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy" -X POST https://api.smartsignature.io/ipfs/add
-* curl -d "data=xxxx" -X POST https://api.smartsignature.io/ipfs/addJSON
-* curl -X GET https://api.smartsignature.io/ipfs/cat/QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy
-* curl -X GET https://api.smartsignature.io/ipfs/catJSON/QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy
+- curl -d "user=joetothemoon&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy" -X POST https://api.mttk.net/ipfs/add
+- curl -d "data=xxxx" -X POST https://api.mttk.net/ipfs/addJSON
+- curl -X GET https://api.mttk.net/ipfs/cat/QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy
+- curl -X GET https://api.mttk.net/ipfs/catJSON/QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy
 
-#### 上传文章至IPFS（新） （需要token）
+#### 上传文章至 IPFS（新） （需要 token）
+
 POST /post/ipfs
 
 示例：
-curl -d "data" -H "x-access-token: your_access_token" -X POST https://apitest.smartsignature.io/post/ipfs
+curl -d "data" -H "x-access-token: your_access_token" -X POST https://apitest.mttk.net/post/ipfs
 
 响应内容：
-成功时候httpstaus为200， code为0
-会携带内容的hash返回
+成功时候 httpstaus 为 200， code 为 0
+会携带内容的 hash 返回
+
 ```
 {
     "code": 0,
@@ -312,65 +314,70 @@ curl -d "data" -H "x-access-token: your_access_token" -X POST https://apitest.sm
 }
 ```
 
-#### 从IPFS获取文章
+#### 从 IPFS 获取文章
+
 GET /post/ipfs/:hash
 
 示例：
-* curl https://apitest.smartsignature.io/post/ipfs/Qm00000000
+
+- curl https://apitest.mttk.net/post/ipfs/Qm00000000
 
 响应内容：
 
 {
-  "code": 0,
-  "data": {
-    "title": "title",
-    "author": "fromnrttolax",
-    "desc": "whatever",
-    "content": "content"
-  }
+"code": 0,
+"data": {
+"title": "title",
+"author": "fromnrttolax",
+"desc": "whatever",
+"content": "content"
+}
 }
 
 #### 关注
 
-* POST /follow/follow
-* 响应状态码：200
+- POST /follow/follow
+- 响应状态码：200
 
 参数：
-* username: 当前用户
-* followed: 关注的用户
+
+- username: 当前用户
+- followed: 关注的用户
 
 请求示例:
-* curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.smartsignature.io/follow/follow
+
+- curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.mttk.net/follow/follow
 
 #### 取消关注
 
-* POST /follow/unfollow
-* 响应状态码：200
+- POST /follow/unfollow
+- 响应状态码：200
 
 参数：
-* username: 当前用户
-* followed: 关注的用户
+
+- username: 当前用户
+- followed: 关注的用户
 
 请求示例:
-* curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.smartsignature.io/follow/unfollow
 
+- curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.mttk.net/follow/unfollow
 
 #### Auth (请求获取 access token)
 
-* POST /login/auth
-* 响应状态码：200
+- POST /login/auth
+- 响应状态码：200
 
 参数：
-* username: 用户
-* publickey: 用户签名用的公钥
-* sign: 签名
-* platform: 账号平台，例如：'eos'，非必填
-* source: 登录来源，例如：'ss'，非必填
-* referral: 邀请人uid，非必填
 
+- username: 用户
+- publickey: 用户签名用的公钥
+- sign: 签名
+- platform: 账号平台，例如：'eos'，非必填
+- source: 登录来源，例如：'ss'，非必填
+- referral: 邀请人 uid，非必填
 
 成功得到 access_token 后
-在后续请求的请求头中带上access_token： req.header['x-access-token']
+在后续请求的请求头中带上 access_token： req.header['x-access-token']
 
 demo:
 
@@ -457,14 +464,16 @@ request({
 ```
 
 #### 验证用户是否存在
-* GET /login/verify
 
-* 参数（使用URL query 格式）：
-* email： 用户名， 使用邮箱注册的就是邮箱
+- GET /login/verify
 
-* 请求示例： curl https://apitest.smartsignature.io/login/verify?email=1@0.0
+- 参数（使用 URL query 格式）：
+- email： 用户名， 使用邮箱注册的就是邮箱
 
-* 响应示例（data为true说明用户存在， false说明不存在）：
+- 请求示例： curl https://apitest.mttk.net/login/verify?email=1@0.0
+
+- 响应示例（data 为 true 说明用户存在， false 说明不存在）：
+
 ```
 {
     "code": 0,
@@ -474,14 +483,16 @@ request({
 ```
 
 #### 使用邮箱获取验证码
-* GET /login/captcha
 
-* 参数（使用URL query 格式）:
-* email: 用户的邮箱
+- GET /login/captcha
 
-* 请求示例：curl https://apitest.smartsignature.io/login/captcha?email=0@gmail.com
+- 参数（使用 URL query 格式）:
+- email: 用户的邮箱
 
-* 响应示例：
+- 请求示例：curl https://apitest.mttk.net/login/captcha?email=0@gmail.com
+
+- 响应示例：
+
 ```
 {
     "code": 0,
@@ -489,30 +500,33 @@ request({
 }
 ```
 
-* 错误原因：邮箱格式不对， 邮箱已经注册
+- 错误原因：邮箱格式不对， 邮箱已经注册
 
 #### 使用邮箱注册
-* POST /login/regist
 
-* 参数（位于body中）：
-* email: 获取验证码使用的邮箱
-* captcha: 对应的验证码， 字符串格式
-* password: 密码， 或者密码的哈希值
+- POST /login/regist
 
-* 请求示例： curl -d "email=1@example.com&captcha=000000&password=pw&referral=123" -X POST https://apitest.smartsignature.io/login/regist
+- 参数（位于 body 中）：
+- email: 获取验证码使用的邮箱
+- captcha: 对应的验证码， 字符串格式
+- password: 密码， 或者密码的哈希值
 
-* 出错原因: 验证码错误， 此邮箱没有获取过验证码
+- 请求示例： curl -d "email=1@example.com&captcha=000000&password=pw&referral=123" -X POST https://apitest.mttk.net/login/regist
+
+- 出错原因: 验证码错误， 此邮箱没有获取过验证码
 
 #### 使用账户密码登陆
-* POST /login/account
 
-* 参数（位于body中）：
-* username：账户名字， 邮箱注册的就是邮箱
-* password： 密码， 或者密码的哈希， 需要和注册时候机制一致
+- POST /login/account
 
-* 请求示例： curl -d "username=1&password=1" -X POST https://apitest.smartsignature.io/login/account
+- 参数（位于 body 中）：
+- username：账户名字， 邮箱注册的就是邮箱
+- password： 密码， 或者密码的哈希， 需要和注册时候机制一致
 
-* 响应示例（data里面是token）：
+- 请求示例： curl -d "username=1&password=1" -X POST https://apitest.mttk.net/login/account
+
+- 响应示例（data 里面是 token）：
+
 ```
 {
     "code": 0,
@@ -520,7 +534,8 @@ request({
     "data": "token"
 }
 ```
-* 出错原因：用户不存在， 密码错误
+
+- 出错原因：用户不存在， 密码错误
 
 #### 文章阅读上报
 
@@ -528,49 +543,51 @@ request({
 
 文章被阅读次数统计 #51
 
-新增 阅读次数统计的api :
-带上access_token请求，会记录读者名字：
+新增 阅读次数统计的 api :
+带上 access_token 请求，会记录读者名字：
 
-curl -H "x-access-token: your_access_token" -X POST http://api.smartsignature.io/post/show/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
+curl -H "x-access-token: your_access_token" -X POST http://api.mttk.net/post/show/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
 或者直接调用，算作匿名用户：
 
-curl -X POST http://api.smartsignature.io/post/show/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
+curl -X POST http://api.mttk.net/post/show/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
 阅读次数字段为 read ，在获取单篇文章的返回数据里 ：
 ex：
-http://api.smartsignature.io/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
-
+http://api.mttk.net/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
 #### 获取打赏列表(打赏队列)
 
-* GET /shares
+- GET /shares
 
-* 参数 :
-* page: 页数，默认第一页
-* user: 指定用户
-* signid: 指定文章
+- 参数 :
+- page: 页数，默认第一页
+- user: 指定用户
+- signid: 指定文章
 
-获取打赏列表，支持使用user和signid进行筛选。
+获取打赏列表，支持使用 user 和 signid 进行筛选。
 
 #### 添加评论 (need access_token)
 
-* POST /post/comment
-* 响应状态码：200
+- POST /post/comment
+- 响应状态码：200
 
 参数：
-* comment: 留言内容
-* sign_id: 文章id
+
+- comment: 留言内容
+- sign_id: 文章 id
 
 请求示例:
-* curl -d "comment=this is comment&sign_id=1" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTM3NDQ2MzM0NjF9.hLHem3JxZrJxDDwDiYrs4YLKLT7Y5g0Bz_h7bDTu5zY"  -X POST https://api.smartsignature.io/post/comment
 
+- curl -d "comment=this is comment&sign_id=1" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTM3NDQ2MzM0NjF9.hLHem3JxZrJxDDwDiYrs4YLKLT7Y5g0Bz_h7bDTu5zY" -X POST https://api.mttk.net/post/comment
 
 #### 获取评论列表
-* GET /comment/comments
-* 响应状态码： 200
-curl https://apitest.smartsignature.io/comments?signid=100591
-响应示例：
+
+- GET /comment/comments
+- 响应状态码： 200
+  curl https://apitest.mttk.net/comments?signid=100591
+  响应示例：
+
 ```
 {
   "code": 0,
@@ -594,20 +611,19 @@ curl https://apitest.smartsignature.io/comments?signid=100591
 }
 ```
 
-
-
 #### 获取支持过的文章列表
 
-* GET /posts/supported
+- GET /posts/supported
 
-* 参数 :
-* page: 页数，默认第一页
-* user: 指定用户的id
+- 参数 :
+- page: 页数，默认第一页
+- user: 指定用户的 id
 
-获取支持过的文章列表，支持使用user进行筛选。
+获取支持过的文章列表，支持使用 user 进行筛选。
 
 请求示例:
-* curl -X GET https://api.smartsignature.io/posts/supported?page=2&user=998
+
+- curl -X GET https://api.mttk.net/posts/supported?page=2&user=998
 
 成功返回示例:
 
@@ -638,19 +654,18 @@ curl https://apitest.smartsignature.io/comments?signid=100591
 
 #### 获取关注列表
 
-* GET /follow/follows
+- GET /follow/follows
 
-* 参数 :
-* page: 页数，默认第一页
-* user: 指定用户
+- 参数 :
+- page: 页数，默认第一页
+- user: 指定用户
 
-ps: 如果有传 access token, 服务端会检索 access token所属用户，是否已经关注了 列表中的人 ， 字段 is_follow
+ps: 如果有传 access token, 服务端会检索 access token 所属用户，是否已经关注了 列表中的人 ， 字段 is_follow
 
-根据 is_follow， 去表示UI界面上 “关注” 按钮的状态。
-
+根据 is_follow， 去表示 UI 界面上 “关注” 按钮的状态。
 
 请求示例:
-curl https://api.smartsignature.io/follow/follows?user=xiaotiandada | jq
+curl https://api.mttk.net/follow/follows?user=xiaotiandada | jq
 
 ```
 {
@@ -700,18 +715,17 @@ curl https://api.smartsignature.io/follow/follows?user=xiaotiandada | jq
 
 #### 获取粉丝列表
 
-* GET /follow/fans
+- GET /follow/fans
 
-* 参数 :
-* page: 页数，默认第一页
-* user: 指定用户
+- 参数 :
+- page: 页数，默认第一页
+- user: 指定用户
 
-ps: 如果有传 access token, 服务端会检索 access token所属用户，是否已经关注了 列表中的人 ， 字段 is_follow
-根据 is_follow， 去表示UI界面上 “关注” 按钮的状态。
+ps: 如果有传 access token, 服务端会检索 access token 所属用户，是否已经关注了 列表中的人 ， 字段 is_follow
+根据 is_follow， 去表示 UI 界面上 “关注” 按钮的状态。
 
 请求示例:
-curl https://api.smartsignature.io/follow/fans?user=xiaotiandada | jq
-
+curl https://api.mttk.net/follow/fans?user=xiaotiandada | jq
 
 ```
 {
@@ -763,19 +777,16 @@ curl https://api.smartsignature.io/follow/fans?user=xiaotiandada | jq
 
 ```
 
-
 #### 获取资产明细
 
-* GET /assets
+- GET /assets
 
-* 参数 :
-* page: 页数，默认第一页
-* user: 指定用户
-
+- 参数 :
+- page: 页数，默认第一页
+- user: 指定用户
 
 请求示例:
-curl https://api.smartsignature.io/assets?user=gaojin.game | jq
-
+curl https://api.mttk.net/assets?user=gaojin.game | jq
 
 ```
 
@@ -930,18 +941,18 @@ curl https://api.smartsignature.io/assets?user=gaojin.game | jq
 
 ```
 
-
 #### 获取单篇文章的信息
 
 新增, read: 阅读次数， ups: 被打赏次数, value: 被打赏总金额
 
-* GET /post/:hash
-* 响应状态码：200
+- GET /post/:hash
+- 响应状态码：200
 
 请求示例:
-curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiyLF8cW1 | jq
+curl https://api.mttk.net/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiyLF8cW1 | jq
 
-* 响应体：
+- 响应体：
+
 ```
 {
   "id": 225,
@@ -965,16 +976,15 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 
 #### ~~获取打赏次数排行榜~~
 
-* GET /getSupportTimesRanking
+- GET /getSupportTimesRanking
 
-* 参数
-* page: 页数，默认第一页
+- 参数
+- page: 页数，默认第一页
 
 请求示例：
 
-* curl -X GET https://api.smartsignature.io/getSupportTimesRanking
-* curl -X GET https://api.smartsignature.io/getSupportTimesRanking?page=2
-
+- curl -X GET https://api.mttk.net/getSupportTimesRanking
+- curl -X GET https://api.mttk.net/getSupportTimesRanking?page=2
 
 返回示例：
 
@@ -1047,19 +1057,17 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 
 ```
 
-
 #### ~~获取打赏金额排行榜~~
 
-* GET /getSupportAmountRanking
+- GET /getSupportAmountRanking
 
-* 参数
-* page: 页数，默认第一页
+- 参数
+- page: 页数，默认第一页
 
 请求示例：
 
-* curl -X GET https://api.smartsignature.io/getSupportAmountRanking
-* curl -X GET https://api.smartsignature.io/getSupportAmountRanking?page=2
-
+- curl -X GET https://api.mttk.net/getSupportAmountRanking
+- curl -X GET https://api.mttk.net/getSupportAmountRanking?page=2
 
 返回示例：
 
@@ -1114,31 +1122,28 @@ curl https://api.smartsignature.io/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiy
 
 ```
 
-
 #### 修改昵称 (need access_token)
 
-* POST /user/setNickname
-* 响应状态码：201
+- POST /user/setNickname
+- 响应状态码：201
 
 参数：
-* nickname: 昵称
+
+- nickname: 昵称
 
 请求示例:
-* curl -d "nickname=joenick" -H "x-access-token: access-token"  -X POST https://api.smartsignature.io/user/setNickname
 
-
-
+- curl -d "nickname=joenick" -H "x-access-token: access-token" -X POST https://api.mttk.net/user/setNickname
 
 #### 获取单篇文章的信息 （短链接 issues）
 
-
-* GET /p/:id
-* 响应状态码：200
+- GET /p/:id
+- 响应状态码：200
 
 请求示例:
-curl https://api.smartsignature.io/p/123 | jq
+curl https://api.mttk.net/p/123 | jq
 
-* 响应体：
+- 响应体：
 
 ```
 {
@@ -1191,13 +1196,16 @@ curl https://api.smartsignature.io/p/123 | jq
 	}
 }
 ```
-#### 上传并设置头像（阿里云oss版本）（need access token）
-* POST /user/uploadAvatar
-* 响应状态码： 200
 
-* 数据： form-data 格式的图片数据， 支持jpg，png，gif等
+#### 上传并设置头像（阿里云 oss 版本）（need access token）
 
-* 响应示例：
+- POST /user/uploadAvatar
+- 响应状态码： 200
+
+- 数据： form-data 格式的图片数据， 支持 jpg，png，gif 等
+
+- 响应示例：
+
 ```
 {
   "code": 0,
@@ -1205,13 +1213,14 @@ curl https://api.smartsignature.io/p/123 | jq
 }
 ```
 
-#### 上传图片（阿里云oss版本）（need access token）
-* POST /post/uploadImage
-* 响应状态码： 200
+#### 上传图片（阿里云 oss 版本）（need access token）
 
-* 数据： form-data 格式的图片数据， 支持jpg，png，gif等
+- POST /post/uploadImage
+- 响应状态码： 200
 
-* 响应会带文章的文件名和地址， 示例：
+- 数据： form-data 格式的图片数据， 支持 jpg，png，gif 等
+
+- 响应会带文章的文件名和地址， 示例：
 
 ```
 {
@@ -1223,21 +1232,23 @@ curl https://api.smartsignature.io/p/123 | jq
 }
 ```
 
-#### 获取图片（阿里云oss版本）
-* GET /image/:filename  请注意填写正确的域名
+#### 获取图片（阿里云 oss 版本）
 
-* 响应状态码：200
+- GET /image/:filename 请注意填写正确的域名
+
+- 响应状态码：200
 
 请求示例：
 https://ssimg.frontenduse.top/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.png
 
-#### ~~上传图像到ipfs服务器~~
+#### ~~上传图像到 ipfs 服务器~~
 
-* POST /ipfs/upload
-* 响应状态码：200
+- POST /ipfs/upload
+- 响应状态码：200
 
 参数：
-* avatar:
+
+- avatar:
 
 上传示例：
 
@@ -1255,7 +1266,7 @@ https://ssimg.frontenduse.top/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.
 </script>
 
 <body>
-  <form action=" https://apitest.smartsignature.io/ipfs/upload" method="post" enctype="multipart/form-data">
+  <form action=" https://apitest.mttk.net/ipfs/upload" method="post" enctype="multipart/form-data">
     <fieldset>
       <legend>Upload photo</legend>
       <input type="file" name="avatar" id="avatar">
@@ -1275,7 +1286,7 @@ https://ssimg.frontenduse.top/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.
 
 ```
 
-返回图片的ipfs hash：
+返回图片的 ipfs hash：
 
 ```
 {"code":200,"hash":"QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT"}
@@ -1284,40 +1295,40 @@ https://ssimg.frontenduse.top/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.
 
 #### ~~展示上传的图片~~
 
-* GET /image/:hash
-* 响应状态码：200
+- GET /image/:hash
+- 响应状态码：200
 
 请求示例：
 
-https://apitest.smartsignature.io/image/QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT
-
-
+https://apitest.mttk.net/image/QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT
 
 #### 设置头像 (need access_token)
 
-* POST /user/setAvatar
-* 响应状态码：201
+- POST /user/setAvatar
+- 响应状态码：201
 
 参数：
-* avatar: 头像的ipfs hash
+
+- avatar: 头像的 ipfs hash
 
 请求示例:
 
-* curl -d "avatar=QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT" -H "x-access-token: access-token"  -X POST https://api.smartsignature.io/user/setAvatar
-
+- curl -d "avatar=QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT" -H "x-access-token: access-token" -X POST https://api.mttk.net/user/setAvatar
 
 #### 设置用户的个性签名（自我介绍）(need access_token)
 
-* POST /user/setIntroduction
-* 成功响应状态码：200
-* 失败响应状态码：400,401,500
+- POST /user/setIntroduction
+- 成功响应状态码：200
+- 失败响应状态码：400,401,500
 
-Body参数（application/x-www-form-urlencoded）：
-* introduction：用户的个性签名文字，不超过20个字
+Body 参数（application/x-www-form-urlencoded）：
+
+- introduction：用户的个性签名文字，不超过 20 个字
 
 成功请求示例：
 
-* curl -d "introduction=" -H "x-access-token:access-token" -X POST https://api.smartsignature.io/user/setIntroduction
+- curl -d "introduction=" -H "x-access-token:access-token" -X POST https://api.mttk.net/user/setIntroduction
+
 ```
 {
     "status": 200,
@@ -1326,6 +1337,7 @@ Body参数（application/x-www-form-urlencoded）：
 ```
 
 失败请求示例：
+
 ```
 {
     "status": 401,
@@ -1335,15 +1347,16 @@ Body参数（application/x-www-form-urlencoded）：
 
 #### 删除文章(隐藏) (need access_token)
 
-* DELETE /post/:id
-* 响应状态码：200
-* id: 需要删除的文章的id
+- DELETE /post/:id
+- 响应状态码：200
+- id: 需要删除的文章的 id
 
 请求示例:
 
-* curl  -H "x-access-token: access-token"  -X DELETE https://api.smartsignature.io/post/100010
+- curl -H "x-access-token: access-token" -X DELETE https://api.mttk.net/post/100010
 
 成功返回示例:
+
 ```$xslt
 {
     "code": 0,
@@ -1351,19 +1364,18 @@ Body参数（application/x-www-form-urlencoded）：
 }
 ```
 
-
 #### 编辑文章 (need access_token)
 
-* POST /post/edit
-* 响应状态码：201
+- POST /post/edit
+- 响应状态码：201
 
-参数: (和publish相比，多了一个signId)
+参数: (和 publish 相比，多了一个 signId)
 
-1. signId: 文章的id, 必传
+1. signId: 文章的 id, 必传
 2. author: 作者，必传
 3. title: 标题，可选
 4. publickey 签名时的公钥，必传
-5. hash:  新文章内容的ipfs hash，必传
+5. hash: 新文章内容的 ipfs hash，必传
 6. sign: 签名, 必传
 7.
 
@@ -1371,27 +1383,26 @@ Body参数（application/x-www-form-urlencoded）：
 
 ```
 
-curl -H "x-access-token: access-token" -d "signId=1&author=joetothemoon&title=ddasdasd&publickey=EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C&hash=QmPtcBBEU5JdVy3yBtUfRMx7F2UDQs9V3KdqrcmGppc5VX&sign=SIG_K1_KdWVRnpoYUh1XH1QhhyisAoqGysSLmue46r1J2pJjgSMN9944YADea3WSBnW2ify9BVsk2ipRVAXqRkaxkKernojX9Mfed" -X POST https://api.smartsignature.io/post/edit
+curl -H "x-access-token: access-token" -d "signId=1&author=joetothemoon&title=ddasdasd&publickey=EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C&hash=QmPtcBBEU5JdVy3yBtUfRMx7F2UDQs9V3KdqrcmGppc5VX&sign=SIG_K1_KdWVRnpoYUh1XH1QhhyisAoqGysSLmue46r1J2pJjgSMN9944YADea3WSBnW2ify9BVsk2ipRVAXqRkaxkKernojX9Mfed" -X POST https://api.mttk.net/post/edit
 
 ```
-
 
 #### draft list
 
-* GET /draft/drafts
-* 响应状态码：201
+- GET /draft/drafts
+- 响应状态码：201
 
-* 参数
-* page: 页数，默认第一页
+- 参数
+- page: 页数，默认第一页
 
-* 请求示例
-
-```
-curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io/draft/drafts
+- 请求示例
 
 ```
+curl -H "x-access-token: access-token"  -X GET https://apitest.mttk.net/draft/drafts
 
-* 返回示例：
+```
+
+- 返回示例：
 
 ```
 
@@ -1411,44 +1422,42 @@ curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io
 
 #### create draft
 
-* POST /draft/save
-* 响应状态码：201
+- POST /draft/save
+- 响应状态码：201
 
-* 参数
-* title: 标题
-* content: 内容
-* cover: 封面
-* fissionFactor: 列变参数
+- 参数
+- title: 标题
+- content: 内容
+- cover: 封面
+- fissionFactor: 列变参数
 
-* 请求示例
+- 请求示例
 
 ```
 
-curl -H "x-access-token: access-token" -d "title=112121&content=223312122" -X POST https://apitest.smartsignature.io/draft/save
+curl -H "x-access-token: access-token" -d "title=112121&content=223312122" -X POST https://apitest.mttk.net/draft/save
 
 ```
 
 #### update draft
 
-* POST /draft/save
-* 响应状态码：201
+- POST /draft/save
+- 响应状态码：201
 
-* 参数
-* id : 草稿id
-* title: 标题
-* content: 内容
-
-
+- 参数
+- id : 草稿 id
+- title: 标题
+- content: 内容
 
 #### get draft by id
 
-* GET /draft/:id
-* 响应状态码：200
+- GET /draft/:id
+- 响应状态码：200
 
-* 请求示例
+- 请求示例
 
 ```
-curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io/draft/1
+curl -H "x-access-token: access-token"  -X GET https://apitest.mttk.net/draft/1
 
 ```
 
@@ -1469,42 +1478,42 @@ curl -H "x-access-token: access-token"  -X GET https://apitest.smartsignature.io
 
 #### delete draft by id
 
-* DELETE /draft/:id
-* 响应状态码：200
+- DELETE /draft/:id
+- 响应状态码：200
 
-* 请求示例
+- 请求示例
 
 ```
-curl -H "x-access-token: access-token"  -X DELETE https://apitest.smartsignature.io/draft/1
+curl -H "x-access-token: access-token"  -X DELETE https://apitest.mttk.net/draft/1
 
 ```
 
 #### support 跨链打赏
 
-* POST /support/support
-* 响应状态码：201
+- POST /support/support
+- 响应状态码：201
 
-* 参数
-* signId : 文章id
-* contract: 打赏货币的合约名
-* symbol: 货币符号
-* amount: 打赏数量（ 无精度的，如1EOS，就传10000 ）
-* platform: 平台 eos或ont
-* referrer: 推荐人
+- 参数
+- signId : 文章 id
+- contract: 打赏货币的合约名
+- symbol: 货币符号
+- amount: 打赏数量（ 无精度的，如 1EOS，就传 10000 ）
+- platform: 平台 eos 或 ont
+- referrer: 推荐人
 
-* 请求示例：
+- 请求示例：
 
 ```
 curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referrer=joetothemoon" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTc5NzE5MDUwNTR9.9BxHyx9T1Tw-_a8-yX-cNO72R45YEIrRuzJh5jMI3ko"  -X POST http://localhost:7001/support/support
 
 ```
 
-#### tokens 个人资产列表  (need access_token)
+#### tokens 个人资产列表 (need access_token)
 
-返回EOS、ONT的待提现、历史总打赏收入、历史总创作收入、总支出、以及流水数据
+返回 EOS、ONT 的待提现、历史总打赏收入、历史总创作收入、总支出、以及流水数据
 
-* GET /user/tokens
-* 响应状态码：200
+- GET /user/tokens
+- 响应状态码：200
 
 响应示例
 
@@ -1548,9 +1557,10 @@ curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referr
 
 #### 个人资产明细(need access token)
 
-* GET /user/balance
-* 响应状态码： 200
-* 响应示例：
+- GET /user/balance
+- 响应状态码： 200
+- 响应示例：
+
 ```
 {
     "code": 0,
@@ -1574,22 +1584,20 @@ curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referr
 }
 ```
 
-
 #### 资产提现
 
+- POST /user/withdraw
+- 响应状态码：201
 
-* POST /user/withdraw
-* 响应状态码：201
-
-* 参数
-* contract : 提现币种的合约地址
-* symbol: 提现币种的符号
-* amount: 提现数量（ 1 EOS和1 ONT都是 传10000的格式）
-* platform: 平台（eos or ont）
-* toaddress: 提现地址
-* memo: 转账备注（可放空）
-* publickey: 签名公钥
-* sign: 签名
+- 参数
+- contract : 提现币种的合约地址
+- symbol: 提现币种的符号
+- amount: 提现数量（ 1 EOS 和 1 ONT 都是 传 10000 的格式）
+- platform: 平台（eos or ont）
+- toaddress: 提现地址
+- memo: 转账备注（可放空）
+- publickey: 签名公钥
+- sign: 签名
 
 sign 的签名内容：
 
@@ -1602,7 +1610,7 @@ let sign_data = `${toaddress} ${contract} ${symbol} ${amount}`;
 
 ```
 
-* EOS提现请求示例：
+- EOS 提现请求示例：
 
 ```
 
@@ -1610,7 +1618,7 @@ curl -d "sign=SIG_K1_Kbx5MbeSZhHZhHnfhA7KD2YEZLfGbvhrWejwgHyzXQa4gvHfdCiAdMgiUJQ
 
 ```
 
-* ONT提现请求示例：
+- ONT 提现请求示例：
 
 ```
 
@@ -1618,14 +1626,13 @@ curl -d "sign=01b07c90984e0385b19f62f29f93b037a8a3c3a9d2d434229c5da315e31bdc1f57
 
 ```
 
-
 #### 获取已经购买的商品列表(need access token)
 
-* GET /support/products
-* 响应状态码: 200
-* URL参数: page 第几页； pagesize 每页显示数量
+- GET /support/products
+- 响应状态码: 200
+- URL 参数: page 第几页； pagesize 每页显示数量
 
-* 请求示例: curl -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9......" http://localhost:7001/support/products?page=1&pagesize=4
+- 请求示例: curl -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9......" http://localhost:7001/support/products?page=1&pagesize=4
 
 ```
 
@@ -1658,15 +1665,14 @@ curl -d "sign=01b07c90984e0385b19f62f29f93b037a8a3c3a9d2d434229c5da315e31bdc1f57
 
 ```
 
-
 #### get tags 获取可用标签列表
 
-* GET /tag/tags
-* 响应状态码：200
+- GET /tag/tags
+- 响应状态码：200
 
-* 参数： type， 带则返回某个类型下的tags， 否则返回所有的tags
+- 参数： type， 带则返回某个类型下的 tags， 否则返回所有的 tags
 
-* 请求示例
+- 请求示例
 
 curl http://localhost:7001/tag/tags
 curl http://localhost:7001/tag/tags?type=product
@@ -1697,98 +1703,93 @@ curl http://localhost:7001/tag/tags?type=product
 
 ```
 
-在publish一篇文章的时候，tags 参数是tag id join ',' 后传到后端。例如:
+在 publish 一篇文章的时候，tags 参数是 tag id join ',' 后传到后端。例如:
 
 tags=1,2,3,4
 
-
-
 #### get post by tag
 
-根据tagid 查找文章
+根据 tagid 查找文章
 
-* GET /posts/getPostByTag
-* 响应状态码：200
+- GET /posts/getPostByTag
+- 响应状态码：200
 
-* 请求示例
+- 请求示例
 
 curl http://localhost:7001/posts/getPostByTag?tagid=1&page=2
 
-
 #### 转移文章所有权
 
-* POST /post/transferOwner
-* 响应状态码：201
+- POST /post/transferOwner
+- 响应状态码：201
 
-* 参数
-* signid : 要转移的文章的id
-* uid: 接收者的user id
+- 参数
+- signid : 要转移的文章的 id
+- uid: 接收者的 user id
 
-curl -d "signid=1&uid=10" -X POST  http://127.0.0.1:7001/post/transferOwner
+curl -d "signid=1&uid=10" -X POST http://127.0.0.1:7001/post/transferOwner
 
 #### 转移草稿所有权
 
-* POST /draft/transferOwner
-* 响应状态码：201
+- POST /draft/transferOwner
+- 响应状态码：201
 
-* 参数
-* draftid : 要转移的草稿的id
-* uid: 接收者的user id
+- 参数
+- draftid : 要转移的草稿的 id
+- uid: 接收者的 user id
 
-curl -d "draftid=1&uid=10" -X POST  http://127.0.0.1:7001/draft/transferOwner
-
+curl -d "draftid=1&uid=10" -X POST http://127.0.0.1:7001/draft/transferOwner
 
 #### 用户搜索
 
-* GET /user/search
-* 响应状态码：200
+- GET /user/search
+- 响应状态码：200
 
-* 参数
-* q : 搜索的字段：昵称或用户名
+- 参数
+- q : 搜索的字段：昵称或用户名
 
-curl -X GET  http://127.0.0.1:7001/user/search?q=xiaotiandada
+curl -X GET http://127.0.0.1:7001/user/search?q=xiaotiandada
 
 #### 购买商品
 
+- POST /order/order
+- 响应状态码：201
 
-* POST /order/order
-* 响应状态码：201
+- 参数
+- signId : 文章 id
+- contract: 打赏货币的合约名
+- symbol: 货币符号
+- amount: 货币数量（ 无精度的，如 1EOS，就传 10000 ）
+- platform: 平台 eos 或 ont
+- referrer: 推荐人
+- num: 商品数量
 
-* 参数
-* signId : 文章id
-* contract: 打赏货币的合约名
-* symbol: 货币符号
-* amount: 货币数量（ 无精度的，如1EOS，就传10000 ）
-* platform: 平台 eos或ont
-* referrer: 推荐人
-* num: 商品数量
+- 请求示例：
 
-* 请求示例：
 ```
 curl -d "num=10&signId=100418&contract=eosio.token&symbol=EOS&amount=1&platform=eos&referrer=65" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NjE2MDQ4MjY2NjYsInBsYXRmb3JtIjoiZW9zIiwiaWQiOjE3MH0.Ph73nBjvsz-3Sj79JhotA-tGSYxXHkXyvTrRkH5xDo0" -X POST  http://localhost:7001/order/order/create
 ```
-* 返回示例：
-{
-	"code": 0,
-	"message": "成功",
-	"data": {
-		"orderId": 23
-	}
-}
+
+- 返回示例：
+  {
+  "code": 0,
+  "message": "成功",
+  "data": {
+  "orderId": 23
+  }
+  }
 
 购买流程:
 
-1. 前端调用后端的 order/create， 参数和打赏差不多，多了一个num（商品数量），成功后返回一个 orderid，
-2. 拿到ordreid后， 转账给合约，格式就是 buy orderid 推荐人 , 比如（buy 1 xiaotiandada）
+1. 前端调用后端的 order/create， 参数和打赏差不多，多了一个 num（商品数量），成功后返回一个 orderid，
+2. 拿到 ordreid 后， 转账给合约，格式就是 buy orderid 推荐人 , 比如（buy 1 xiaotiandada）
 3. 后端验证了后，处理发货（现在留空了）
-4. 修改order状态
-
-
+4. 修改 order 状态
 
 #### 橙皮书人次统计
 
-* GET /ads/statistics
-* 响应状态码：200
+- GET /ads/statistics
+- 响应状态码：200
 
 ```
 {
@@ -1802,21 +1803,19 @@ curl -d "num=10&signId=100418&contract=eosio.token&symbol=EOS&amount=1&platform=
 
 ```
 
-curl -X GET  http://localhost:7001/ads/statistics
-
-
+curl -X GET http://localhost:7001/ads/statistics
 
 #### 橙皮书 广告上传（最高出价者才能调用成功）
 
-* POST /ads/submit
-* 响应状态码：200
+- POST /ads/submit
+- 响应状态码：200
 
-* 参数 （预留字段，没有的话可以不传）
-* title : 广告标题
-* url: 广告图片url
-* link: 广告点击跳转链接
-* content: 广告文案
-* hash： (文章link的hash) 上传全局广告的话，hash不用传
+- 参数 （预留字段，没有的话可以不传）
+- title : 广告标题
+- url: 广告图片 url
+- link: 广告点击跳转链接
+- content: 广告文案
+- hash： (文章 link 的 hash) 上传全局广告的话，hash 不用传
 
 ```
 {
@@ -1826,17 +1825,14 @@ curl -X GET  http://localhost:7001/ads/statistics
 
 ```
 
-curl -d "title=牛逼" -H "x-access-token: xxxx" -X POST  http://localhost:7001/ads/submit
-
-
+curl -d "title=牛逼" -H "x-access-token: xxxx" -X POST http://localhost:7001/ads/submit
 
 #### 橙皮书 广告获取
 
-* GET /ads/ad
-* 响应状态码：200
+- GET /ads/ad
+- 响应状态码：200
 
-查询参数: hash (文章link的hash) ,获取全局广告的话，hash不用传
-
+查询参数: hash (文章 link 的 hash) ,获取全局广告的话，hash 不用传
 
 ```
 {
@@ -1853,20 +1849,22 @@ curl -d "title=牛逼" -H "x-access-token: xxxx" -X POST  http://localhost:7001/
 }
 ```
 
-curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb703954f7b4612abc5daf48d8d56b277
-
+curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb703954f7b4612abc5daf48d8d56b277
 
 #### 文章搬运功能（need access token）
 
-* POST /posts/importer
-* 参数： 需要获取的页面URL， 带协议名称， 如
+- POST /posts/importer
+- 参数： 需要获取的页面 URL， 带协议名称， 如
+
 ```
 {
   "url": "https://www.chainnews.com/articles/133376386310.htm"
 }
 ```
-* 正常响应状态码：200
-* 响应数据：文章的题目， 封面， 内容
+
+- 正常响应状态码：200
+- 响应数据：文章的题目， 封面， 内容
+
 ```
 {
     "code": 0,
@@ -1878,9 +1876,11 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
     }
 }
 ```
+
 ### 积分系统
 
 积分类型：
+
 ```
  pointTypes: {
     reading: 'reading', // 用户阅读
@@ -1892,10 +1892,12 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 ```
 
 #### 客户端打开文章后提交，表示开始阅读
-* POST /posts/:id/reading
-* 响应状态码：200
-* 参数：无
-* 返回值：
+
+- POST /posts/:id/reading
+- 响应状态码：200
+- 参数：无
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -1904,15 +1906,19 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 ```
 
 #### 阅读后点击推荐
-* POST /posts/:id/like
-* 响应状态码：200
-* 参数：
+
+- POST /posts/:id/like
+- 响应状态码：200
+- 参数：
+
 ```
 {
   "time": 111
 }
 ```
-* 返回值：
+
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -1921,15 +1927,19 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 ```
 
 #### 阅读后点击不推荐
-* POST /posts/:id/dislike
-* 响应状态码：200
-* 参数：
+
+- POST /posts/:id/dislike
+- 响应状态码：200
+- 参数：
+
 ```
 {
   "time": 111
 }
 ```
-* 返回值：
+
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -1938,13 +1948,17 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 ```
 
 #### 获取我的积分
-* GET /user/points
-* 响应状态码：200
-* 参数：
+
+- GET /user/points
+- 响应状态码：200
+- 参数：
+
 ```
 ?page=1&pagesize=10
 ```
-* 返回值：
+
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -1971,11 +1985,13 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 ```
 
 #### 获取任务状态
-* GET /user/pointStatus
-* 响应状态码：200
-* 参数：无
-* 请求头：x-access-token
-* 返回值：
+
+- GET /user/pointStatus
+- 响应状态码：200
+- 参数：无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -1998,16 +2014,19 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 
 #### 领取任务积分
 
-* POST /user/claimTaskPoint
-* 响应状态码：200
-* 参数：
+- POST /user/claimTaskPoint
+- 响应状态码：200
+- 参数：
+
 ```
 {
   "type": "login"，取值范围："login"表示领取登录积分，"profile"表示领取完善资料积分
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2015,20 +2034,22 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 }
 ```
 
+#### 赞赏提交交易 hash
 
-#### 赞赏提交交易hash
+- POST /support/saveTxhash
+- 响应状态码：200
+- 参数：
 
-* POST /support/saveTxhash
-* 响应状态码：200
-* 参数：
 ```
 {
 	"supportId": 437619,
   "txhash": "0x111"
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2036,20 +2057,22 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 }
 ```
 
+#### 订单提交交易 hash
 
-#### 订单提交交易hash
+- POST /order/saveTxhash
+- 响应状态码：200
+- 参数：
 
-* POST /order/saveTxhash
-* 响应状态码：200
-* 参数：
 ```
 {
 	"orderId": 437619,
   "txhash": "0x111"
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2057,19 +2080,22 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 }
 ```
 
-
 #### 积分评论
-* POST /comment/comment
-* 响应状态码： 200
-* 参数：
+
+- POST /comment/comment
+- 响应状态码： 200
+- 参数：
+
 ```
 {
   "signId": 100748,
   "comment": "sfdsfdsfdsf"
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2077,10 +2103,12 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 }
 ```
 
-#### 创建我的token
-* POST /minetoken/create
-* 响应状态码： 200
-* 参数：
+#### 创建我的 token
+
+- POST /minetoken/create
+- 响应状态码： 200
+- 参数：
+
 ```
 {
 	"name": "chenhao token",
@@ -2090,8 +2118,10 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
   "introduction":"sfdsfdsf"
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2099,17 +2129,21 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 }
 ```
 
-#### 发行我的token
-* POST /minetoken/mint
-* 响应状态码： 200
-* 参数：
+#### 发行我的 token
+
+- POST /minetoken/mint
+- 响应状态码： 200
+- 参数：
+
 ```
 {
 	"amount": 100000
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2117,10 +2151,12 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 }
 ```
 
-#### 转移token
-* POST /minetoken/transfer
-* 响应状态码： 200
-* 参数：
+#### 转移 token
+
+- POST /minetoken/transfer
+- 响应状态码： 200
+- 参数：
+
 ```
 {
   "tokenId": 5,
@@ -2128,8 +2164,10 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 	"amount": 200
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2137,15 +2175,19 @@ curl -X GET  http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb
 }
 ```
 
-#### 查询当前用户token余额
-* GET /minetoken/balance
-* 响应状态码： 200
-* 参数：
+#### 查询当前用户 token 余额
+
+- GET /minetoken/balance
+- 响应状态码： 200
+- 参数：
+
 ```
 tokenId=5
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -2154,17 +2196,21 @@ tokenId=5
 }
 ```
 
-#### 创建交易对，前提条件是先查到tokenId
-* POST /exchange/create
-* 响应状态码： 200
-* 参数：
+#### 创建交易对，前提条件是先查到 tokenId
+
+- POST /exchange/create
+- 响应状态码： 200
+- 参数：
+
 ```
 {
 	"tokenId": 5
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2173,11 +2219,13 @@ tokenId=5
 ```
 
 #### 获取交易对信息，应该还会有调整
-* GET /exchange/create?tokenId=5
-* 响应状态码： 200
-* 参数：无
-* 请求头：x-access-token
-* 返回值：
+
+- GET /exchange/create?tokenId=5
+- 响应状态码： 200
+- 参数：无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -2192,12 +2240,14 @@ tokenId=5
 }
 ```
 
-#### 获取token详情
-* GET /token/detail
-* 响应状态码： 200
-* 参数：无
-* 请求头：x-access-token
-* 返回值：
+#### 获取 token 详情
+
+- GET /token/detail
+- 响应状态码： 200
+- 参数：无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 // 用户发行了token，data为对象，没有发行token，data为null
 {
@@ -2216,12 +2266,14 @@ tokenId=5
 }
 ```
 
-#### 获取token的持仓用户列表
-* GET /token/userlist
-* 响应状态码： 200
-* 参数：page || 1, pagesize || 10
-* 请求头：x-access-token
-* 返回值：
+#### 获取 token 的持仓用户列表
+
+- GET /token/userlist
+- 响应状态码： 200
+- 参数：page || 1, pagesize || 10
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
     "code": 0,
@@ -2244,15 +2296,17 @@ tokenId=5
 }
 ```
 
-#### 获取用户的持仓token列表
-* GET /token/tokenlist
-* 响应状态码： 200
-* 参数：
-  * page: 1
-  * pagesize: 10
-  * order: 0 - 时间降序 / 1 - 持仓量升序 / 2 - 持仓量降序
-* 请求头：x-access-token
-* 返回值：
+#### 获取用户的持仓 token 列表
+
+- GET /token/tokenlist
+- 响应状态码： 200
+- 参数：
+  - page: 1
+  - pagesize: 10
+  - order: 0 - 时间降序 / 1 - 持仓量升序 / 2 - 持仓量降序
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
     "code": 0,
@@ -2277,11 +2331,12 @@ tokenId=5
 }
 ```
 
+#### token 兑换 token
 
-#### token兑换token
-* POST /exchange/tokenToTokenInput
-* 响应状态码： 200
-* 参数：
+- POST /exchange/tokenToTokenInput
+- 响应状态码： 200
+- 参数：
+
 ```
 {
   "inTokenId": 8,
@@ -2292,8 +2347,10 @@ tokenId=5
   "outTokenId": 12
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2301,10 +2358,12 @@ tokenId=5
 }
 ```
 
-#### token兑换cny
-* POST /exchange/tokenToCnyInput
-* 响应状态码： 200
-* 参数：
+#### token 兑换 cny
+
+- POST /exchange/tokenToCnyInput
+- 响应状态码： 200
+- 参数：
+
 ```
 {
   "tokenId": 8,
@@ -2314,8 +2373,10 @@ tokenId=5
   "recipient": 1048
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2324,9 +2385,11 @@ tokenId=5
 ```
 
 #### 移除流动性
-* POST /exchange/removeLiquidity
-* 响应状态码： 200
-* 参数：
+
+- POST /exchange/removeLiquidity
+- 响应状态码： 200
+- 参数：
+
 ```
 {
   "tokenId": 8,
@@ -2336,8 +2399,10 @@ tokenId=5
   "deadline": 1600000000
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2346,9 +2411,11 @@ tokenId=5
 ```
 
 #### 增加文章持币阅读
-* POST /post/addMineTokens
-* 响应状态码： 200
-* 参数：
+
+- POST /post/addMineTokens
+- 响应状态码： 200
+- 参数：
+
 ```
 {
 	"signId": 100783,
@@ -2363,8 +2430,10 @@ tokenId=5
 	]
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2373,11 +2442,13 @@ tokenId=5
 ```
 
 #### 买入粉丝币-流水明细
-* GET /token/tokenflow
-* 响应状态码： 200
-* 参数：page || 1, pagesize || 10, tokenId
-* 请求头：x-access-token
-* 返回值：
+
+- GET /token/tokenflow
+- 响应状态码： 200
+- 参数：page || 1, pagesize || 10, tokenId
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
     "code": 0,
@@ -2410,11 +2481,13 @@ tokenId=5
 ```
 
 #### 我的粉丝币-流水明细
-* GET /token/usertokenflow
-* 响应状态码： 200
-* 参数：page || 1, pagesize || 10
-* 请求头：x-access-token
-* 返回值：
+
+- GET /token/usertokenflow
+- 响应状态码： 200
+- 参数：page || 1, pagesize || 10
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2449,16 +2522,20 @@ tokenId=5
 ```
 
 #### 当前用户视角查看文章属性
-* POST /post/currentProfile
-* 响应状态码： 200
-* 参数：
+
+- POST /post/currentProfile
+- 响应状态码： 200
+- 参数：
+
 ```
 {
 	"id": 100783
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -2505,13 +2582,14 @@ tokenId=5
 }
 ```
 
+#### 查看用户的 token 日志
 
-#### 查看用户的token日志
-* GET /token/userlogs
-* 响应状态码： 200
-* 参数：page=1&pagesize=10&tokenId=15
-* 请求头：x-access-token
-* 返回值：
+- GET /token/userlogs
+- 响应状态码： 200
+- 参数：page=1&pagesize=10&tokenId=15
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -2559,13 +2637,14 @@ tokenId=5
 }
 ```
 
+#### 查看 token 日志，以发币人视角
 
-#### 查看token日志，以发币人视角
-* GET /token/tokenlogs
-* 响应状态码： 200
-* 参数：page=1&pagesize=10
-* 请求头：x-access-token
-* 返回值：
+- GET /token/tokenlogs
+- 响应状态码： 200
+- 参数：page=1&pagesize=10
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -2611,16 +2690,19 @@ tokenId=5
 }
 ```
 
+#### 查询当前用户 CNY 资产余额
 
-#### 查询当前用户CNY资产余额
-* GET /asset/balance
-* 响应状态码： 200
-* 参数：
+- GET /asset/balance
+- 响应状态码： 200
+- 参数：
+
 ```
 symbol=CNY
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -2630,11 +2712,13 @@ symbol=CNY
 ```
 
 #### 粉丝币详情
-* GET /minetoken/:id
-* 响应状态码： 200
-* 参数：:id
-* 请求头：x-access-token
-* 返回值：
+
+- GET /minetoken/:id
+- 响应状态码： 200
+- 参数：:id
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -2683,10 +2767,12 @@ symbol=CNY
 }
 ```
 
-#### 修改token详情
-* PUT /minetoken/:tokenId
-* 响应状态码： 200
-* 参数：
+#### 修改 token 详情
+
+- PUT /minetoken/:tokenId
+- 响应状态码： 200
+- 参数：
+
 ```
 {
 	"name": "chenhao vnt token",
@@ -2695,8 +2781,10 @@ symbol=CNY
   "introduction": "sfdsfdsf"
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2704,10 +2792,12 @@ symbol=CNY
 }
 ```
 
-#### 修改token资源
-* PUT /minetoken/:tokenId/resources
-* 响应状态码： 200
-* 参数：
+#### 修改 token 资源
+
+- PUT /minetoken/:tokenId/resources
+- 响应状态码： 200
+- 参数：
+
 ```
 {
 	"websites": ["a.com", "b.com", "c.com"],
@@ -2742,8 +2832,10 @@ symbol=CNY
 	]
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2751,12 +2843,14 @@ symbol=CNY
 }
 ```
 
-#### 查看token资源
-* GET /minetoken/:tokenId/resources
-* 响应状态码： 200
-* 参数：
-* 请求头：x-access-token
-* 返回值：
+#### 查看 token 资源
+
+- GET /minetoken/:tokenId/resources
+- 响应状态码： 200
+- 参数：
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -2795,11 +2889,12 @@ symbol=CNY
 }
 ```
 
+#### 查看所有 token 列表
 
-#### 查看所有token列表
-* GET /token/all
-* 响应状态码： 200
-* 参数：
+- GET /token/all
+- 响应状态码： 200
+- 参数：
+
 ```
 ?page=1&pagesize=10&sort=symbol-asc&search=空气币
 sort说明：
@@ -2808,8 +2903,10 @@ id-desc：id（时间）倒序
 symbol-asc：字母顺序
 symbol-desc：字母倒序
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -2869,11 +2966,12 @@ symbol-desc：字母倒序
 }
 ```
 
-
 #### 添加/修改文章引用
-* PUT /posts/:signId/references
-* 响应状态码： 200
-* 参数：
+
+- PUT /posts/:signId/references
+- 响应状态码： 200
+- 参数：
+
 ```
 {
   "url": "https://www.jianshu.com/p/41071a1eea",
@@ -2881,8 +2979,10 @@ symbol-desc：字母倒序
   "summary": "dddttt"
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2891,11 +2991,13 @@ symbol-desc：字母倒序
 ```
 
 #### 删除文章引用
-* DELETE /posts/:signId/references/:number
-* 响应状态码： 200
-* 参数：无
-* 请求头：x-access-token
-* 返回值：
+
+- DELETE /posts/:signId/references/:number
+- 响应状态码： 200
+- 参数：无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2903,12 +3005,14 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 根据文章Id、number获取文章引用
-* GET /posts/:signId/references/:number
-* 响应状态码： 200
-* 参数：无
-* 请求头：x-access-token
-* 返回值：
+#### 根据文章 Id、number 获取文章引用
+
+- GET /posts/:signId/references/:number
+- 响应状态码： 200
+- 参数：无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -2924,11 +3028,13 @@ symbol-desc：字母倒序
 ```
 
 #### 获取文章引用列表
-* GET /posts/:signId/references?pagesize=20&page=1
-* 响应状态码： 200
-* 参数：无
-* 请求头：x-access-token
-* 返回值：
+
+- GET /posts/:signId/references?pagesize=20&page=1
+- 响应状态码： 200
+- 参数：无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -2953,11 +3059,13 @@ symbol-desc：字母倒序
 ```
 
 #### 草稿发布时发布引用的文章
-* POST /drafts/:draftId/references/publish
-* 响应状态码： 200
-* 参数：无
-* 请求头：x-access-token
-* 返回值：
+
+- POST /drafts/:draftId/references/publish
+- 响应状态码： 200
+- 参数：无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2966,9 +3074,11 @@ symbol-desc：字母倒序
 ```
 
 #### 添加/修改草稿引用
-* PUT /drafts/:signId/references
-* 响应状态码： 200
-* 参数：
+
+- PUT /drafts/:signId/references
+- 响应状态码： 200
+- 参数：
+
 ```
 {
   "url": "https://www.jianshu.com/p/41071a1eea",
@@ -2976,8 +3086,10 @@ symbol-desc：字母倒序
   "summary": "dddttt"
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2986,11 +3098,13 @@ symbol-desc：字母倒序
 ```
 
 #### 删除草稿引用
-* DELETE /drafts/:signId/references/:number
-* 响应状态码： 200
-* 参数：无
-* 请求头：x-access-token
-* 返回值：
+
+- DELETE /drafts/:signId/references/:number
+- 响应状态码： 200
+- 参数：无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
@@ -2998,12 +3112,14 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 根据草稿Id、number获取文章引用
-* GET /drafts/:draftId/references/:number
-* 响应状态码： 200
-* 参数：无
-* 请求头：x-access-token
-* 返回值：
+#### 根据草稿 Id、number 获取文章引用
+
+- GET /drafts/:draftId/references/:number
+- 响应状态码： 200
+- 参数：无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -3019,11 +3135,13 @@ symbol-desc：字母倒序
 ```
 
 #### 获取草稿引用列表
-* GET /drafts/:signId/references?pagesize=20&page=1
-* 响应状态码： 200
-* 参数：无
-* 请求头：x-access-token
-* 返回值：
+
+- GET /drafts/:signId/references?pagesize=20&page=1
+- 响应状态码： 200
+- 参数：无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -3047,17 +3165,21 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 解析引用网址的title
-* POST /posts/extractRefTitle
-* 响应状态码： 200
-* 参数：
+#### 解析引用网址的 title
+
+- POST /posts/extractRefTitle
+- 响应状态码： 200
+- 参数：
+
 ```
 {
   "url": "https://www.jianshu.com/p/6030071a1eea"
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -3069,13 +3191,14 @@ symbol-desc：字母倒序
 }
 ```
 
-
 #### 查看本文被引用的文章列表
-* GET /posts/:signId/posts?pagesize=20&page=1
-* 响应状态码： 200
-* 参数：无
-* 请求头：x-access-token
-* 返回值：
+
+- GET /posts/:signId/posts?pagesize=20&page=1
+- 响应状态码： 200
+- 参数：无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
 	"code": 0,
@@ -3091,261 +3214,293 @@ symbol-desc：字母倒序
 ```
 
 #### 设置用户网站和社交帐号信息
-* PUT /user/links
-* 响应状态码： 200
-* 请求头：x-access-token
-* 参数：
+
+- PUT /user/links
+- 响应状态码： 200
+- 请求头：x-access-token
+- 参数：
+
 ```json
 {
-	"websites": [
-		"https://matataki.io/",
-		"https://www.google.com/",
-		"https://www.jianshu.com"
-	],
-	"socialAccounts": {
-		// 以下属性可省略
-		"wechat": "xxx",
+  "websites": [
+    "https://matataki.io/",
+    "https://www.google.com/",
+    "https://www.jianshu.com"
+  ],
+  "socialAccounts": {
+    // 以下属性可省略
+    "wechat": "xxx",
     "qq": "12345678", // 字符串
     "weibo": "yyy",
     "github": "zzz",
-		"telegram": "aaa",
-		"twitter": "bbb",
+    "telegram": "aaa",
+    "twitter": "bbb",
     "facebook": "ccc",
     "email": "ddd"
-	}
+  }
 }
 ```
-* 返回值：
+
+- 返回值：
+
 ```json
 {
-	"code": 0,
-	"message": "成功"
+  "code": 0,
+  "message": "成功"
 }
 ```
 
 #### 获取用户网站和社交帐号信息
-* GET /user/:id/links
-* 响应状态码： 200
-* 参数：无
-* 返回值：
+
+- GET /user/:id/links
+- 响应状态码： 200
+- 参数：无
+- 返回值：
+
 ```json
 {
-	"code": 0,
-	"message": "成功",
-	"websites": [
-		"https://matataki.io/",
-		"https://www.google.com/",
-		"https://www.jianshu.com"
-	],
-	"socialAccounts": [
-		{
-			"type": "wechat",
-			"value": "xxx"
-		},
-		{
-			"type": "qq",
-			"value": "12345678"
-		},
-		{
-			"type": "weibo",
-			"value": "yyy"
-		},
-		{
-			"type": "github",
-			"value": "zzz"
-		},
-		{
-			"type": "telegram",
-			"value": "aaa"
-		},
-		{
-			"type": "twitter",
-			"value": "bbb"
-		},
-		{
-			"type": "facebook",
-			"value": "ccc"
-		},
-		{
-			"type": "email",
-			"value": "ddd"
-		}
-	]
+  "code": 0,
+  "message": "成功",
+  "websites": [
+    "https://matataki.io/",
+    "https://www.google.com/",
+    "https://www.jianshu.com"
+  ],
+  "socialAccounts": [
+    {
+      "type": "wechat",
+      "value": "xxx"
+    },
+    {
+      "type": "qq",
+      "value": "12345678"
+    },
+    {
+      "type": "weibo",
+      "value": "yyy"
+    },
+    {
+      "type": "github",
+      "value": "zzz"
+    },
+    {
+      "type": "telegram",
+      "value": "aaa"
+    },
+    {
+      "type": "twitter",
+      "value": "bbb"
+    },
+    {
+      "type": "facebook",
+      "value": "ccc"
+    },
+    {
+      "type": "email",
+      "value": "ddd"
+    }
+  ]
 }
 ```
 
 #### 设置文章价格
-* PUT /posts/:signId/prices
-* 响应状态码： 200
-* 请求头：x-access-token
-* 参数：
+
+- PUT /posts/:signId/prices
+- 响应状态码： 200
+- 请求头：x-access-token
+- 参数：
+
 ```json
 {
-  "price":10000 //单位：元*10000
+  "price": 10000 //单位：元*10000
 }
 ```
-* 返回值：
+
+- 返回值：
+
 ```json
 {
-	"code": 0,
-	"message": "成功"
+  "code": 0,
+  "message": "成功"
 }
 ```
 
 #### 创建订单
-* PUT /orders/
-* 响应状态码： 200
-* 请求头：x-access-token
-* 参数：
+
+- PUT /orders/
+- 响应状态码： 200
+- 请求头：x-access-token
+- 参数：
+
 ```json
 {
-	"items": [{
-			"signId": 100891,
-			"type": "buy_post"
-		},
-		{
-			"tokenId": 15,
-			"type": "buy_token_output",
+  "items": [
+    {
+      "signId": 100891,
+      "type": "buy_post"
+    },
+    {
+      "tokenId": 15,
+      "type": "buy_token_output",
       "amount": 100000
-		}
+    }
   ],
   "useBalance": 1 //1使用余额，0不使用
 }
 ```
-* 返回值：
+
+- 返回值：
+
 ```json
 {
-	"code": 0,
+  "code": 0,
   "message": "成功",
-  "data":"423IJODm4wt6UX8OR7kT3YFotspTTph" //订单号
+  "data": "423IJODm4wt6UX8OR7kT3YFotspTTph" //订单号
 }
 ```
 
 #### 修改订单
-* PUT /orders/:tradeNo
-* 响应状态码： 200
-* 请求头：x-access-token
-* 参数：
+
+- PUT /orders/:tradeNo
+- 响应状态码： 200
+- 请求头：x-access-token
+- 参数：
+
 ```json
 {
   "useBalance": 1 //1使用余额，0不使用
 }
 ```
-* 返回值：
+
+- 返回值：
+
 ```json
 {
-	"code": 0,
+  "code": 0,
   "message": "成功"
 }
 ```
 
 #### 获取订单
-* GET /orders/:tradeNo
-* 响应状态码： 200
-* 参数：无
-* 返回值：
+
+- GET /orders/:tradeNo
+- 响应状态码： 200
+- 参数：无
+- 返回值：
+
 ```json
 {
-	"code": 0,
-	"message": "成功",
-	"data": {
-		"trade_no": "423IJODm4wt6UX8OR7kT3YFotspTTph",
-		"total": 10011, //订单总金额
-		"amount": 10011, //需要支付的金额
-		"create_time": "2019-11-14T10:05:07.000Z",
-		"status": 3,
-		"use_balance": 0 //是否使用余额
-	}
+  "code": 0,
+  "message": "成功",
+  "data": {
+    "trade_no": "423IJODm4wt6UX8OR7kT3YFotspTTph",
+    "total": 10011, //订单总金额
+    "amount": 10011, //需要支付的金额
+    "create_time": "2019-11-14T10:05:07.000Z",
+    "status": 3,
+    "use_balance": 0 //是否使用余额
+  }
 }
 ```
 
 #### 修改订单
-* POST /orders/handleAmount0
-* 响应状态码： 200
-* 请求头：x-access-token
-* 参数：
+
+- POST /orders/handleAmount0
+- 响应状态码： 200
+- 请求头：x-access-token
+- 参数：
+
 ```json
 {
   "tradeNo": "gNB4I55jhN30B673xspeE07gEJLVPgv"
 }
 ```
-* 返回值：
+
+- 返回值：
+
 ```json
 {
-	"code": 0,
+  "code": 0,
   "message": "成功"
 }
 ```
 
 #### 收藏文章
-* POST /post/:id/bookmark
-* 响应状态码：
-	* 201：成功新建收藏
-	* 404：文章不存在
-	* 409：已经收藏了
-* 参数：无
-* 返回值：
+
+- POST /post/:id/bookmark
+- 响应状态码：
+  - 201：成功新建收藏
+  - 404：文章不存在
+  - 409：已经收藏了
+- 参数：无
+- 返回值：
+
 ```json
 {
-	"code": 0,
-	"message": "成功"
+  "code": 0,
+  "message": "成功"
 }
 ```
 
 #### 取消收藏文章
-* DELETE /post/:id/bookmark
-* 响应状态码：
-	* 204：成功取消收藏
-	* 404：文章不存在 / 没有收藏过该文章
-* 参数：无
-* 返回值：（204 时无）
+
+- DELETE /post/:id/bookmark
+- 响应状态码：
+  - 204：成功取消收藏
+  - 404：文章不存在 / 没有收藏过该文章
+- 参数：无
+- 返回值：（204 时无）
 
 #### 获取收藏文章
-* GET /user/bookmarks
-* 响应状态码：200
-* 请求头：x-access-token
-* 参数
-	* page: 页数，默认第一页
-	* pagesize: 每页的数量， 默认20
-	* order: 1 - 收藏时间倒序 / 2 - 发布时间顺序
-* 返回值：
+
+- GET /user/bookmarks
+- 响应状态码：200
+- 请求头：x-access-token
+- 参数
+  - page: 页数，默认第一页
+  - pagesize: 每页的数量， 默认 20
+  - order: 1 - 收藏时间倒序 / 2 - 发布时间顺序
+- 返回值：
+
 ```json
 {
-	"code": 0,
-	"message": "成功",
-	"data": {
-		"count": 1,
-		"list": [
-			{
-					"id": 3,
-					"uid": 170,
-					"author": "test2",
-					"title": "test2",
-					"hash": "QmXDPpYHtDxef4byTKCspino4nYxKp9MHW9PTiL98fA1qv",
-					"create_time": "2019-03-15T07:23:03.000Z",
-					"cover": null,
-					"require_holdtokens": 0,
-					"nickname": "nicknameNo2",
-					"avatar": "",
-					"read": 0,
-					"eosvalue": 1,
-					"ups": 1,
-					"ontvalue": 0,
-					"tags": [],
-					"sale": 0,
-					"likes": 0
-			}
-		]
-	}
+  "code": 0,
+  "message": "成功",
+  "data": {
+    "count": 1,
+    "list": [
+      {
+        "id": 3,
+        "uid": 170,
+        "author": "test2",
+        "title": "test2",
+        "hash": "QmXDPpYHtDxef4byTKCspino4nYxKp9MHW9PTiL98fA1qv",
+        "create_time": "2019-03-15T07:23:03.000Z",
+        "cover": null,
+        "require_holdtokens": 0,
+        "nickname": "nicknameNo2",
+        "avatar": "",
+        "read": 0,
+        "eosvalue": 1,
+        "ups": 1,
+        "ontvalue": 0,
+        "tags": [],
+        "sale": 0,
+        "likes": 0
+      }
+    ]
+  }
 }
 ```
 
 #### 获取购买的文章列表
-* GET /order/products?pagesize=20&page=1&platform=cny
-* 响应状态码： 200
-* 参数：pagesize,page,platform
-* 请求头：x-access-token
-* 返回值：
+
+- GET /order/products?pagesize=20&page=1&platform=cny
+- 响应状态码： 200
+- 参数：pagesize,page,platform
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
     "code": 0,
@@ -3376,7 +3531,9 @@ symbol-desc：字母倒序
 ```
 
 #### 图片上传
-* POST /oss/uploadImage?folder=folderOption
+
+- POST /oss/uploadImage?folder=folderOption
+
 ```
 const folderOption = {
   avatar: 'avatar', // 头像
@@ -3387,10 +3544,12 @@ const folderOption = {
   coin: 'coin', // fan票
 };
 ```
-* 响应状态码： 200
-* 参数：pagesize,page,platform
-* 请求头：x-access-token
-* 返回值：
+
+- 响应状态码： 200
+- 参数：pagesize,page,platform
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
     "code": 0,
@@ -3400,8 +3559,9 @@ const folderOption = {
 ```
 
 #### 账号绑定
-* POST /account/binding
-* 参数：
+
+- POST /account/binding
+- 参数：
 
 ```
 // platform：eos、ont
@@ -3435,8 +3595,8 @@ const folderOption = {
 }
 ```
 
-* 请求头：x-access-token
-* 返回值：
+- 请求头：x-access-token
+- 返回值：
 
 ```
 {
@@ -3446,8 +3606,10 @@ const folderOption = {
 ```
 
 #### 账号解绑
-* POST /account/unbinding
-* 参数：
+
+- POST /account/unbinding
+- 参数：
+
 ```
 {
 	"account": "xxxx",
@@ -3455,17 +3617,22 @@ const folderOption = {
   "password_hash": "xxx" //如果平台是email，则需要这个字段
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
   "message": "成功"
 }
 ```
+
 #### 更换主账号
-* POST /account/changeMainAccount
-* 参数：
+
+- POST /account/changeMainAccount
+- 参数：
+
 ```
 {
 	"account": "xxxx",
@@ -3473,19 +3640,24 @@ const folderOption = {
   "password_hash": "xxx" //如果平台是email，则需要这个字段
 }
 ```
-* 请求头：x-access-token
-* 返回值：
+
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   "code": 0,
   "message": "成功"
 }
 ```
+
 #### 获取绑定账号列表
-* GET /account/list
-* 参数： 无
-* 请求头：x-access-token
-* 返回值：
+
+- GET /account/list
+- 参数： 无
+- 请求头：x-access-token
+- 返回值：
+
 ```
 {
   code: 0,
@@ -3496,131 +3668,144 @@ const folderOption = {
 
 #### 获取 Fan 票相关创作
 
-* GET /minetoken/:id/related
+- GET /minetoken/:id/related
 
-* 参数
-* id: Fan 票 Id
-* page: 页数，默认第一页
-* pagesize: 每页的数量， 默认 10
-* filter: 过滤
-  * 1: 不需要购买
-  * 2: 需要购买
-  * 3: 全部
-* onlyCreator: number(0/1)，只看创始人，默认0
+- 参数
+- id: Fan 票 Id
+- page: 页数，默认第一页
+- pagesize: 每页的数量， 默认 10
+- filter: 过滤
+  - 1: 不需要购买
+  - 2: 需要购买
+  - 3: 全部
+- onlyCreator: number(0/1)，只看创始人，默认 0
 
-* sort: 排序
-  * popular-desc: 按热度排序
-  * time-desc: 按时间排序
+- sort: 排序
 
-* 返回内容
+  - popular-desc: 按热度排序
+  - time-desc: 按时间排序
+
+- 返回内容
+
 ```json
 {
-    "code": 0,
-    "message": "成功",
-    "data": [
-        {
-            "id": 101120,
-            "uid": 1105,
-            "author": "guanchao71@hotmail.com",
-            "title": "测试权限文章",
-            "short_content": "xxxxx",
-            "hash": "QmZcWMUwzsBpkdvdiFackaWJSnYpmT3Bw3FgugTqg8rMsY",
-            "create_time": "2019-12-16T13:56:43.000Z",
-            "cover": "/image/2019/12/16/382f30d51333360e3e3a0b94fbcff1ca.jpg",
-            "require_holdtokens": 1,
-            "require_buy": 0,
-            "nickname": "林可 @matataki.io",
-            "avatar": "/avatar/2019/11/07/740fd91594538dbe1f016bd301e7e234.jpg",
-            "read": 29,
-            "eosvalue": 0,
-            "ups": 0,
-            "ontvalue": 0,
-            "tags": [],
-            "sale": 0,
-            "likes": 0
-        }
-    ]
+  "code": 0,
+  "message": "成功",
+  "data": [
+    {
+      "id": 101120,
+      "uid": 1105,
+      "author": "guanchao71@hotmail.com",
+      "title": "测试权限文章",
+      "short_content": "xxxxx",
+      "hash": "QmZcWMUwzsBpkdvdiFackaWJSnYpmT3Bw3FgugTqg8rMsY",
+      "create_time": "2019-12-16T13:56:43.000Z",
+      "cover": "/image/2019/12/16/382f30d51333360e3e3a0b94fbcff1ca.jpg",
+      "require_holdtokens": 1,
+      "require_buy": 0,
+      "nickname": "林可 @matataki.io",
+      "avatar": "/avatar/2019/11/07/740fd91594538dbe1f016bd301e7e234.jpg",
+      "read": 29,
+      "eosvalue": 0,
+      "ups": 0,
+      "ontvalue": 0,
+      "tags": [],
+      "sale": 0,
+      "likes": 0
+    }
+  ]
 }
 ```
 
 #### 创建分享
-* POST /share
-* 响应状态码： 200
-* 请求头：x-access-token
-* 参数：
+
+- POST /share
+- 响应状态码： 200
+- 请求头：x-access-token
+- 参数：
+
 ```json
 {
-	"author": "shellteo@163.com",
-	"content": "很不错啊这篇文章！牛逼！",
-	"platform": "email",
-	"refs": [{
-		"url": "https://www.jianshu.com/p/83da7a020b4f",
-		"title":"我背单词这些年",
-		"summary":"给你说个APP，你可别告诉别人。我使用墨墨已经一年多了，然后我现在说一下我对这个软件的使用感受",
-		"cover":"http://upload-images.jianshu.io/upload_images/16543274-7308458b2f0ca74d.jpg"
-	},{
-		"url":"https://sspai.com/post/40787",
-		"title":"真正提高效率：自定义你的 Touch Bar - 少数派",
-		"summary":"自 Touch Bar 在 MacBook Pro 上问世以来，对其最大的争议就是它并不能很好地提高工作效率，幸好我们可以通过 BetterTouchTool 对 TouchBar 进行深度定制，达到真正提高工作效率。",
-		"cover":"https://cdn.sspai.com/2017/09/06/06cd4b16169f0299814d880b84697ea1.jpg"
-	}]
+  "author": "shellteo@163.com",
+  "content": "很不错啊这篇文章！牛逼！",
+  "platform": "email",
+  "refs": [
+    {
+      "url": "https://www.jianshu.com/p/83da7a020b4f",
+      "title": "我背单词这些年",
+      "summary": "给你说个APP，你可别告诉别人。我使用墨墨已经一年多了，然后我现在说一下我对这个软件的使用感受",
+      "cover": "http://upload-images.jianshu.io/upload_images/16543274-7308458b2f0ca74d.jpg"
+    },
+    {
+      "url": "https://sspai.com/post/40787",
+      "title": "真正提高效率：自定义你的 Touch Bar - 少数派",
+      "summary": "自 Touch Bar 在 MacBook Pro 上问世以来，对其最大的争议就是它并不能很好地提高工作效率，幸好我们可以通过 BetterTouchTool 对 TouchBar 进行深度定制，达到真正提高工作效率。",
+      "cover": "https://cdn.sspai.com/2017/09/06/06cd4b16169f0299814d880b84697ea1.jpg"
+    }
+  ]
 }
 ```
-* 返回内容：
+
+- 返回内容：
+
 ```json
 {
-    "code": 0,
-    "message": "成功",
-    "data": 101235
+  "code": 0,
+  "message": "成功",
+  "data": 101235
 }
 ```
 
 #### 分享列表
-* GET /share
-* 响应状态码： 200
-* 参数：
-  - type(time|hot)，默认time，排序类型
+
+- GET /share
+- 响应状态码： 200
+- 参数：
+  - type(time|hot)，默认 time，排序类型
   - page
   - pagesize
-* 返回内容：
+- 返回内容：
+
 ```json
 {
   "code": 0,
   "message": "成功",
   "data": {
-      "count": 5,
-      "list": [
-          {
-              "id": 101235,
-              "uid": 1042,
-              "author": "shellteo@163.com",
-              "title": "很不错啊这篇文章！牛逼！",
-              "hash": "QmahykZ5NCDMZ3syhWYSXojyBLxc7eqvkQQpqLaZmjGPT3",
-              "create_time": "2020-01-06T06:20:36.000Z",
-              "cover": null,
-              "require_holdtokens": 0,
-              "require_buy": 0,
-              "nickname": "zxppppp",
-              "avatar": "/avatar/2019/10/16/9eff045272a135e771b60f5bb3badd89.png",
-              "read": 0,
-              "likes": 0,
-              "refs": [], // 引用数组
-              "beRefs": [] // 被引用数组
-          },
-      ]
+    "count": 5,
+    "list": [
+      {
+        "id": 101235,
+        "uid": 1042,
+        "author": "shellteo@163.com",
+        "title": "很不错啊这篇文章！牛逼！",
+        "hash": "QmahykZ5NCDMZ3syhWYSXojyBLxc7eqvkQQpqLaZmjGPT3",
+        "create_time": "2020-01-06T06:20:36.000Z",
+        "cover": null,
+        "require_holdtokens": 0,
+        "require_buy": 0,
+        "nickname": "zxppppp",
+        "avatar": "/avatar/2019/10/16/9eff045272a135e771b60f5bb3badd89.png",
+        "read": 0,
+        "likes": 0,
+        "refs": [], // 引用数组
+        "beRefs": [] // 被引用数组
+      }
+    ]
   }
 }
 ```
 
 #### 分享详情
 
-### ES搜索
-* 统一请求方法： GET
-* 统一请求参数：
+### ES 搜索
+
+- 统一请求方法： GET
+- 统一请求参数：
   - word
   - page = 1
   - pagesize = 10
-* 统一返回json: 
+- 统一返回 json:
+
 ```
 {
     "code": 0,
@@ -3631,23 +3816,33 @@ const folderOption = {
     }
 }
 ```
+
 #### 搜索文章
+
 url: /search/post
+
 #### 搜索用户
+
 url: /search/user
+
 #### 搜索分享
+
 url: /search/share
-#### 搜索Fan票
+
+#### 搜索 Fan 票
+
 url: /search/token
 
-# ！！！拿文章数据使用getByPostIds方法，传入postids即可！！！
+# ！！！拿文章数据使用 getByPostIds 方法，传入 postids 即可！！！
 
 #### 常用候选列表
-* GET /history/user?type=post
-* 响应状态码： 200
-* 参数：
-  - type，{'post'|'token'} 转让文章常用候选列表｜转赠token常用候选列表
-* 返回内容：
+
+- GET /history/user?type=post
+- 响应状态码： 200
+- 参数：
+  - type，{'post'|'token'} 转让文章常用候选列表｜转赠 token 常用候选列表
+- 返回内容：
+
 ```json
 {
   "code": 0,
@@ -3693,134 +3888,139 @@ url: /search/token
 }
 ```
 
+### 获取最热的 k 个标签
 
-### 获取最热的k个标签
-* GET /tags/hotest?pagesize=3&page=0
-* 响应状态码： 200
-* 参数:
+- GET /tags/hotest?pagesize=3&page=0
+- 响应状态码： 200
+- 参数:
   - pagesize,返回的数量
-  - page,偏移量，从0开始
-* 返回内容：
+  - page,偏移量，从 0 开始
+- 返回内容：
+
 ```json
 {
-    "code": 0, 
-    "message": "成功", 
-    "data": [
-        {
-            "id": 111, 
-            "name": "娱乐", 
-            "create_time": "0000-00-00 00:00:00", 
-            "type": "post", 
-            "num": 1
-        }, 
-        {
-            "id": 113, 
-            "name": "游戏", 
-            "create_time": "2020-05-21T04:09:06.000Z", 
-            "type": "post", 
-            "num": 1
-        }
-    ]
+  "code": 0,
+  "message": "成功",
+  "data": [
+    {
+      "id": 111,
+      "name": "娱乐",
+      "create_time": "0000-00-00 00:00:00",
+      "type": "post",
+      "num": 1
+    },
+    {
+      "id": 113,
+      "name": "游戏",
+      "create_time": "2020-05-21T04:09:06.000Z",
+      "type": "post",
+      "num": 1
+    }
+  ]
 }
 ```
 
 ### 获取某篇文章的标签
-* GET /tags/get_by_post?id=12345
-* 响应状态码： 200
-* 参数:
-  - id,文章的id
-* 返回内容：
+
+- GET /tags/get_by_post?id=12345
+- 响应状态码： 200
+- 参数:
+  - id,文章的 id
+- 返回内容：
+
 ```json
 {
-    "code": 0, 
-    "message": "成功", 
-    "data": [
-        {
-            "id": 113, 
-            "name": "游戏", 
-            "create_time": "2020-05-21T04:09:06.000Z", 
-            "type": "post", 
-            "num": 1
-        }
-    ]
+  "code": 0,
+  "message": "成功",
+  "data": [
+    {
+      "id": 113,
+      "name": "游戏",
+      "create_time": "2020-05-21T04:09:06.000Z",
+      "type": "post",
+      "num": 1
+    }
+  ]
 }
 ```
 
 ### 获取某个标签下的所有文章
-* GET /tags/post?id=1&pagesize=2&page=0
-* 响应状态码： 200
-* 参数:
-  - id,标签的id
+
+- GET /tags/post?id=1&pagesize=2&page=0
+- 响应状态码： 200
+- 参数:
+  - id,标签的 id
   - pagesize,返回的数量
-  - page,偏移量，从0开始
-* 返回内容：所有文章的id
+  - page,偏移量，从 0 开始
+- 返回内容：所有文章的 id
+
 ```json
 {
-    "code": 0,
-    "message": "成功",
-    "data": [
-        {
-            "id": 1,
-            "username": "joetothemoon",
-            "author": "dd",
-            "title": "ddasdasd",
-            "short_content": "ddd",
-            "hash": "QmPtcBBEU5JdVy3yBtUfRMx7F2UDQs9V3KdqrcmGppc5VX",
-            "sign": "SIG_K1_KdWVRnpoYUh1XH1QhhyisAoqGysSLmue46r1J2pJjgSMN9944YADea3WSBnW2ify9BVsk2ipRVAXqRkaxkKernojX9Mfed",
-            "public_key": "EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C",
-            "status": 1,
-            "onchain_status": 1,
-            "create_time": "2019-03-15T15:13:09.000Z",
-            "fission_factor": 2000,
-            "cover": "",
-            "platform": "eos",
-            "is_original": null,
-            "channel_id": 1,
-            "fission_rate": 100,
-            "referral_rate": 0,
-            "uid": 170,
-            "is_recommend": 0,
-            "category_id": 0,
-            "hot_score": -814.6,
-            "comment_pay_point": 5,
-            "time_down": 1,
-            "require_holdtokens": 0,
-            "require_buy": 0,
-            "cc_license": null,
-            "editor_require_holdtokens": 0,
-            "ipfs_hide": 0
-        },
-        {
-            "id": 100482,
-            "username": "AS8aW2K4MNhPk9Wn93QQVYvYLF1QV9wNBt",
-            "author": "AS8aW2K4MNhPk9Wn93QQVYvYLF1QV9wNBt",
-            "title": "333333332",
-            "short_content": null,
-            "hash": "Qmbj7WJQMNcmWCziXFALRJ8N5a7rWCaJqyTNoLDDgL7FEf",
-            "sign": "SIG_K1_K1AgU8prp4P63FhxUKskXXRtt5B4ftqugMNfsQgjZxr59fUR7M94z8JSbEzaVboWhU4CEKeMfwEdoibwfoHojqpMCiHrdd",
-            "public_key": "EOS8BSbjn1TmusYbVf4GH2Khe31csTYssfguiTJAGtmDPsYVhAzqc",
-            "status": 0,
-            "onchain_status": 0,
-            "create_time": "2019-06-11T16:53:44.000Z",
-            "fission_factor": 2000,
-            "cover": "",
-            "platform": "ont",
-            "is_original": 0,
-            "channel_id": 1,
-            "fission_rate": 100,
-            "referral_rate": 0,
-            "uid": 234,
-            "is_recommend": 0,
-            "category_id": 0,
-            "hot_score": 3.58,
-            "comment_pay_point": 5,
-            "time_down": 0,
-            "require_holdtokens": 0,
-            "require_buy": 0,
-            "cc_license": null,
-            "editor_require_holdtokens": 0,
-            "ipfs_hide": 0
-        }
-    ]
+  "code": 0,
+  "message": "成功",
+  "data": [
+    {
+      "id": 1,
+      "username": "joetothemoon",
+      "author": "dd",
+      "title": "ddasdasd",
+      "short_content": "ddd",
+      "hash": "QmPtcBBEU5JdVy3yBtUfRMx7F2UDQs9V3KdqrcmGppc5VX",
+      "sign": "SIG_K1_KdWVRnpoYUh1XH1QhhyisAoqGysSLmue46r1J2pJjgSMN9944YADea3WSBnW2ify9BVsk2ipRVAXqRkaxkKernojX9Mfed",
+      "public_key": "EOS5nUuGx9iuHsWE5vqVpd75QgDx6mEK87ShPdpVVHVwqdY4xwg9C",
+      "status": 1,
+      "onchain_status": 1,
+      "create_time": "2019-03-15T15:13:09.000Z",
+      "fission_factor": 2000,
+      "cover": "",
+      "platform": "eos",
+      "is_original": null,
+      "channel_id": 1,
+      "fission_rate": 100,
+      "referral_rate": 0,
+      "uid": 170,
+      "is_recommend": 0,
+      "category_id": 0,
+      "hot_score": -814.6,
+      "comment_pay_point": 5,
+      "time_down": 1,
+      "require_holdtokens": 0,
+      "require_buy": 0,
+      "cc_license": null,
+      "editor_require_holdtokens": 0,
+      "ipfs_hide": 0
+    },
+    {
+      "id": 100482,
+      "username": "AS8aW2K4MNhPk9Wn93QQVYvYLF1QV9wNBt",
+      "author": "AS8aW2K4MNhPk9Wn93QQVYvYLF1QV9wNBt",
+      "title": "333333332",
+      "short_content": null,
+      "hash": "Qmbj7WJQMNcmWCziXFALRJ8N5a7rWCaJqyTNoLDDgL7FEf",
+      "sign": "SIG_K1_K1AgU8prp4P63FhxUKskXXRtt5B4ftqugMNfsQgjZxr59fUR7M94z8JSbEzaVboWhU4CEKeMfwEdoibwfoHojqpMCiHrdd",
+      "public_key": "EOS8BSbjn1TmusYbVf4GH2Khe31csTYssfguiTJAGtmDPsYVhAzqc",
+      "status": 0,
+      "onchain_status": 0,
+      "create_time": "2019-06-11T16:53:44.000Z",
+      "fission_factor": 2000,
+      "cover": "",
+      "platform": "ont",
+      "is_original": 0,
+      "channel_id": 1,
+      "fission_rate": 100,
+      "referral_rate": 0,
+      "uid": 234,
+      "is_recommend": 0,
+      "category_id": 0,
+      "hot_score": 3.58,
+      "comment_pay_point": 5,
+      "time_down": 0,
+      "require_holdtokens": 0,
+      "require_buy": 0,
+      "cc_license": null,
+      "editor_require_holdtokens": 0,
+      "ipfs_hide": 0
+    }
+  ]
 }
 ```
