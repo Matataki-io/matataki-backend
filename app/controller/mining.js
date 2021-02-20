@@ -21,9 +21,10 @@ class LikeController extends Controller {
       await this.service.postDashboard.addActionLog(ctx.user.id, ctx.params.id, 'like');
 
       // 为喜欢行为创建一个事件通知
-      const { uid } = await this.service.post.get(ctx.params.id);
-      this.service.notify.event.sendEvent(ctx.user.id, [uid], 'like', ctx.params.id, 'article');
-      
+      const { uid, channel_id } = await this.service.post.get(ctx.params.id);
+      const objectType = channel_id === 3 ? 'share' : 'article'
+      this.service.notify.event.sendEvent(ctx.user.id, [uid], 'like', ctx.params.id, objectType);
+
       const points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
       ctx.body = ctx.msg.success;
       ctx.body.data = points;
