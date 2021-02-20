@@ -112,6 +112,11 @@ class NotificationController extends Controller {
       const posts = await this.service.post.getByIdArray([ parseInt(objectId) ]);
       if (posts !== null && posts.length > 0) eventList.post = posts[0];
     }
+    // 如果是文章类，则获取文章的简要信息
+    if (objectType === 'share') {
+      const posts = await this.service.post.getByIdArrayShare([ parseInt(objectId) ]);
+      if (posts !== null && posts.length > 0) eventList.post = posts[0];
+    }
     if (objectType === 'comment') {
       const comments = await this.service.comment.getByIdArray([ parseInt(objectId) ]);
       if (comments !== null && comments.length > 0) eventList.comment = comments[0];
