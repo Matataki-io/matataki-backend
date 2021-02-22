@@ -48,7 +48,6 @@ class Token {
     gasLimit = 500000,
   }) {
     // 处理0x开头的私钥
-    this.logger.info('sendTransaction to: ', this.contractAddress);
     let privateKey = _privateKey.slice(0, 2) === '0x' ? _privateKey.slice(2) : _privateKey;
     // privateKey 转化为 Buffer 用于签署 tx
     privateKey = Buffer.from(privateKey, 'hex');
