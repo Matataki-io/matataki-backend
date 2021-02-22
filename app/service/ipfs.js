@@ -4,7 +4,7 @@ const axios = require('axios').default;
 const FormData = require('form-data');
 const Service = require('egg').Service;
 
-const IpfsUrl = 'https://ipfs.smartsignature.io'
+const IpfsUrl = 'https://ipfs-direct.mttk.net';
 
 class ipfs extends Service {
   constructor(ctx, app) {

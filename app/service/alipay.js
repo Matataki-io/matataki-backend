@@ -84,7 +84,7 @@ class AlipayService extends Service {
       bizContent: {
         outTradeNo,
         productCode: 'QUICK_WAP_WAY',
-        quit_url: 'https://test.smartsignature.io/',
+        quit_url: 'https://test.mttk.net/',
         totalAmount,
         subject,
       },

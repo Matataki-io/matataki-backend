@@ -15,7 +15,7 @@
 	<h1>
 		<span style="color:#337FE5;">{{ username }} 您好</span><span> </span> 
 	</h1>
-<strong><span style="font-family:Microsoft YaHei;">感谢您近期在 <a href="https://smartsignature.io" target="_blank">瞬Matataki</a> 上的交易！</span></strong><br />
+<strong><span style="font-family:Microsoft YaHei;">感谢您近期在 <a href="https://matataki.io" target="_blank">瞬Matataki</a> 上的交易！</span></strong><br />
 <br />
 <span style="font-family:Microsoft YaHei;"> 您购买的 {{ productamount }}份 {{ productname }}&nbsp; 已添加到您的 瞬Matataki 购买记录中。</span><br />
 <span style="font-family:Microsoft YaHei;"> 您可以在 瞬Matataki 中对应的商品页面中找到相应的商品信息。</span><br />

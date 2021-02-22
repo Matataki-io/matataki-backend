@@ -1,26 +1,29 @@
 # Users API 文档
 
 ### 推荐作者（用户）
+
 - 路径：/users/recommend
 - 请求方式： GET
-- Header： 
+- Header：
 
-| 参数名 | 类型 | 是否必须 | 说明 |
-|---|---|---|---|
-| x-access-token | string | False | 用户的Token， 无则用户均显示未关注 |
+| 参数名         | 类型   | 是否必须 | 说明                                |
+| -------------- | ------ | -------- | ----------------------------------- |
+| x-access-token | string | False    | 用户的 Token， 无则用户均显示未关注 |
 
 - 请求参数：
 
-| 参数名 | 类型 | 是否必须 | 说明 | 位置 |
-|---|---|---|---|---|
-| amount | int | False | 数量限制 | Query |
+| 参数名 | 类型 | 是否必须 | 说明     | 位置  |
+| ------ | ---- | -------- | -------- | ----- |
+| amount | int  | False    | 数量限制 | Query |
 
 - 请求示例：
+
 ```
 curl -X GET -H 'x-access-token: ey' 'http://localhost:7001/users/recommend?amount=4'
 ```
 
 - 返回示例：
+
 ```
 {
     "code": 0,
@@ -39,29 +42,31 @@ curl -X GET -H 'x-access-token: ey' 'http://localhost:7001/users/recommend?amoun
 ```
 
 ### 全文搜索功能
+
 - 路径：/users/search
 - 请求方式： GET
-- Header： 
+- Header：
 
-| 参数名 | 类型 | 是否必须 | 说明 |
-|---|---|---|---|
-| x-access-token | string | False | 用户的Token， 无则用户均显示未关注 |
+| 参数名         | 类型   | 是否必须 | 说明                                |
+| -------------- | ------ | -------- | ----------------------------------- |
+| x-access-token | string | False    | 用户的 Token， 无则用户均显示未关注 |
 
 - 请求参数：
 
-| 参数名 | 类型 | 是否必须 | 说明 | 位置 |
-|---|---|---|---|---|
-| word | string | True | 搜索关键词 | Query |
-| page | int | False | 页码 | Query |
-| pagesize | int | False | 每页的条目数 | Query |
+| 参数名   | 类型   | 是否必须 | 说明         | 位置  |
+| -------- | ------ | -------- | ------------ | ----- |
+| word     | string | True     | 搜索关键词   | Query |
+| page     | int    | False    | 页码         | Query |
+| pagesize | int    | False    | 每页的条目数 | Query |
 
 - 请求示例：
 
 ```
-curl -X GET -H 'x-access-token: AAA' 'https://apitest.smartsignature.io/users/search?word=t&page=1&pagesize=10' 
+curl -X GET -H 'x-access-token: AAA' 'https://apitest.mttk.net/users/search?word=t&page=1&pagesize=10'
 ```
 
 - 返回示例：
+
 ```
 {
     "code": 0,

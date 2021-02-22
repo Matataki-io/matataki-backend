@@ -1,17 +1,18 @@
 const Service = require('egg').Service;
 const codebird = require('../extend/codebird')
+const axios = require('axios');
 
 class TimelineService extends Service {
   /** twitter home timeline */
   async getTwitterTimeline(userId, page = 1, pagesize = 20) {
     const credential = await this.app.mysql.get('user_twitter_credential', { user_id: userId })
     if (!credential) return { code: 1 }
-    
+
     const cb = new codebird()
     cb.setUseProxy(true)
     cb.setConsumerKey(this.config.twitterConsumerKey.key, this.config.twitterConsumerKey.secret)
     cb.setToken(credential.oauth_token, credential.oauth_token_secret)
-  
+
     const reply = await new Promise((resolve, reject) => {
       cb.__call("statuses_homeTimeline", { count: pagesize, page }, function (reply, rate, err) {
         if (err) {
@@ -25,7 +26,7 @@ class TimelineService extends Service {
         reject('reply is empty')
       })
     })
-  
+
     return reply.error ? { code: 2, reply } : { code: 0, reply }
   }
 
@@ -34,7 +35,7 @@ class TimelineService extends Service {
     const cb = new codebird()
     cb.setUseProxy(true)
     cb.setConsumerKey(this.config.twitterConsumerKey.key, this.config.twitterConsumerKey.secret)
-  
+
     const reply = await new Promise((resolve, reject) => {
       const params = {
         screen_name: screenName,
@@ -55,7 +56,7 @@ class TimelineService extends Service {
         reject('reply is empty')
       })
     })
-  
+
     return reply.error ? { code: 2, reply } : { code: 0, reply }
   }
 
@@ -78,7 +79,7 @@ class TimelineService extends Service {
         reject('reply is empty')
       })
     })
-  
+
     return reply.error ? { code: 2, reply } : { code: 0, reply }
   }
 
@@ -112,6 +113,20 @@ class TimelineService extends Service {
     `
     const { affectedRows } = await this.app.mysql.query(sql, { userId, timelineSwitch: timelineSwitch ? 1 : 0 })
     return affectedRows === 1
+  }
+
+  async getTelegramChannelTimeline(userId, offset) {
+    const user = await this.app.mysql.get('user_accounts', { uid: userId, platform: 'telegram' });
+    if (!user)
+      throw "No telegram binding";
+
+    const telegramId = user.account;
+    const url = isNaN(offset) ?
+      `https://kvky64xgs5.execute-api.ap-northeast-1.amazonaws.com/Prod/posts/owner/${telegramId}` :
+      `https://kvky64xgs5.execute-api.ap-northeast-1.amazonaws.com/Prod/posts/owner/${telegramId}?offset=${offset}`;
+    const { data } = await axios.get(url);
+
+    return data;
   }
 }
 

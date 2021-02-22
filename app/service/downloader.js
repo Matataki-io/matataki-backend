@@ -30,7 +30,7 @@ class DownloaderService extends Service {
     });
     const id2Obj = await this.getRefs(posts);
 
-    const website = this.config.env === 'test' ? 'https://wwwtest.smartsignature.io/p' : 'https://www.matataki.io/p';
+    const website = this.config.env === 'test' ? 'https://test.matataki.io/p' : 'https://www.matataki.io/p';
     for (const item of posts) {
       const _refMdStr = id2Obj[item.id.toString()];
       const refMdStr = _refMdStr ? ` ## 已引用 ${_refMdStr} ` : '';

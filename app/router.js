@@ -686,7 +686,6 @@ module.exports = app => {
   // get home timeline
   router.get('/timeline/twitter', passport.authorize, controller.timeline.getTwitterTimeline);
 
-
   // -------------------------------- 收藏夹 --------------------------------
   // 创建收藏夹
   router.post('/favorites/create', passport.authorize, controller.favorites.create);
@@ -710,4 +709,6 @@ module.exports = app => {
   router.post('/timeline/twitter/user', passport.authorize, controller.timeline.setTwitterUserTimeLineSwitch);
   // 获取 twitter 用户信息
   router.get('/twitter/userinfo', passport.verify, controller.timeline.getTwitterUserInfo);
+
+  router.get('/timeline/telegram_channel', passport.verify, controller.timeline.getTelegramChannelTimeline);
 };
