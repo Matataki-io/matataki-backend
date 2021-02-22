@@ -392,12 +392,22 @@ class PostService extends Service {
    */
   async getByIdArrayShare(idList) {
     const posts = await this.app.mysql.query(
-      `SELECT p.id, p.short_content,
-      prc.real_read_count
-      FROM posts p
-      LEFT JOIN post_read_count prc
-      ON p.id = prc.post_id
-      WHERE p.id IN (:idList);`,
+      `
+        SELECT
+          p.id, p.short_content,
+          t2.username, t2.nickname, t2.platform, t2.avatar, t2.id uid,
+          t3.real_read_count, t3.likes, t3.dislikes,
+          COUNT(t4.id) AS media_count, t4.type AS media_type, t4.url AS media_url
+        FROM posts p
+          LEFT JOIN users t2
+          ON p.uid = t2.id
+          LEFT JOIN post_read_count t3
+          ON p.id = t3.post_id
+          LEFT JOIN dynamic_media t4
+          ON p.id = t4.post_id
+        WHERE p.channel_id = 3 AND p.id IN (:idList)
+        GROUP BY p.id;
+      `,
       { idList }
     );
 
