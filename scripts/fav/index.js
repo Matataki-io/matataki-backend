@@ -12,7 +12,7 @@ const init = async () => {
     password: config.mysql_password,
     database: config.mysql_db,
     multipleStatements: true,
-    // ssl: {},
+    ssl: {},
   });
 
   const [ rows, fields ] = await mysql.execute('SELECT * FROM post_bookmarks;');

@@ -476,30 +476,32 @@
   dependencies:
     defer-to-connect "^1.0.1"
 
-"@tnwx/accesstoken@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tnwx/accesstoken/-/accesstoken-2.5.0.tgz#65d464bb50aebe7e6da95fc168f91f75e34f7262"
-  integrity sha512-OQMHRbPfFmgnRjK6y1gtOhYlv7mAa5WewNnEV0w8X3aZ534gGJKVPV6Y0FU39fRa/TmFgCt/8mLVwlk1G4kwbA==
+"@tnwx/accesstoken@^2.4.0", "@tnwx/accesstoken@^2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@tnwx/accesstoken/-/accesstoken-2.5.1.tgz#62140fb0951858b2a952735d69fe32376bf22fd9"
+  integrity sha512-Zt3LOOIC6HZ7ZjABOvYj4+TWpybSrvYU7/T0ZYY0pVhfeBrulCLw1nq53ipp9FBF2i8pQb4Sg23jlPp+gem4LA==
   dependencies:
-    "@tnwx/cache" "^2.5.0"
-    "@tnwx/kits" "^2.5.0"
+    "@tnwx/cache" "^2.5.1"
+    "@tnwx/kits" "^2.5.1"
 
-"@tnwx/cache@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tnwx/cache/-/cache-2.5.0.tgz#986c8b3629edcca5d9efaba7f998072ef519306c"
-  integrity sha512-dg8DbpgTEaWObwW0PKRpeIsknxKY+52/oEZUCBra6a6go3yLv+8A5G8NY/eISnmBbwSpa4Q+R3bEo5scGTyG1w==
+"@tnwx/cache@^2.4.0", "@tnwx/cache@^2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@tnwx/cache/-/cache-2.5.1.tgz#80d1ce0374bba25148f31dd3f69a439eed229465"
+  integrity sha512-fD1zhtBgKgTo1qYxGKKnScn6MZCAM0w7hvAEcxrJbPv8Oe9oc0hqioUir8t9+Il4tMYCveupcVtOkv1qlhnhLw==
 
-"@tnwx/commons@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tnwx/commons/-/commons-2.5.0.tgz#17c2f9e5cd497211a2bebd57727aa6766bf7410d"
-  integrity sha512-D+CdO4ILVjw8NhEOSHzJC4z6wSF2KoLrQwvc1e0sXwgMA271dGaA6Lte/koAvHrP9ytre8IYwZmziKmfAKBnsA==
+"@tnwx/commons@^2.4.0", "@tnwx/commons@^2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@tnwx/commons/-/commons-2.5.1.tgz#3f4551757076272deae63c6ff1c5545918caf0f5"
+  integrity sha512-xjuTT+RhHln8kLDvyi7mM11YdhyMNl0MWtjFUYbX1C6YpGv3seg6fn7Ri42HXwU2Na379Ec2LOALNDk79sOKvw==
   dependencies:
-    "@tnwx/accesstoken" "^2.5.0"
+    "@tnwx/accesstoken" "^2.5.1"
+    "@tnwx/cache" "^2.5.1"
+    "@tnwx/kits" "^2.5.1"
 
-"@tnwx/kits@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tnwx/kits/-/kits-2.5.0.tgz#a0466c2298bb1f90b55084a8cdd465bcb87767c8"
-  integrity sha512-3sk4UH/pBbTRLPJwz1VbaHtUjFhe3pVy6iIfH3O6oaisPI5gzYryL2vG0/v5qHt9CEY9UN9Cy0cEH3YSEhjmyA==
+"@tnwx/kits@^2.4.0", "@tnwx/kits@^2.5.1":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@tnwx/kits/-/kits-2.5.1.tgz#1fc90301f86d97d21dec5d18f08d70e5725f7f33"
+  integrity sha512-cdALY6IOXsin2VcyQj0uOUr4dN4vIYaZjo9wtehfD6b+hqBldh3MLnCLULp8RmQo1lxu6APiJorHVvfGls0J1w==
   dependencies:
     axios "^0.19.0"
     concat-stream "^2.0.0"
@@ -508,48 +510,48 @@
     uuid "^3.3.3"
     xml2js "^0.4.22"
 
-"@tnwx/miniprogram@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tnwx/miniprogram/-/miniprogram-2.5.0.tgz#9c6bc1b1cd01d0ae9d56060e11f1ef7994e62d80"
-  integrity sha512-zfFcdap+AJWOly65fvLM7tQ5aXVG75MJH74H+gIm4Q3LGM5YeJx7sITyFKi+rnRwrmp0OqKVjVmtD65JjEjRQw==
+"@tnwx/miniprogram@^2.4.0":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@tnwx/miniprogram/-/miniprogram-2.5.1.tgz#e34a4ccfb43fc8eea5f24d6355ee86ba9b66f250"
+  integrity sha512-NNyw77acx5n7N5oKV3W27EpgVmdiBz60JVbKs/d4QSHy3kdCvs/+xKnvONazH3v79rYmEFcDul3WdcytjubDzg==
   dependencies:
-    "@tnwx/accesstoken" "^2.5.0"
+    "@tnwx/accesstoken" "^2.5.1"
 
-"@tnwx/opencp@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tnwx/opencp/-/opencp-2.5.0.tgz#1e44b391d07bcd4cc31ef45985bdeab5dd818408"
-  integrity sha512-N/VuegwKawq8Z0WgGXV/46ANwm3NGc/G/0sef+leCT014AtIUMp0B+m4S74jcar5Vpq/op9NJ1P0pdeffzv9Bg==
+"@tnwx/opencp@^2.4.0":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@tnwx/opencp/-/opencp-2.5.1.tgz#29a4ed7bb09a0b2acbba306a6d4240e9225b16ad"
+  integrity sha512-7ncv4pOGq0jpeVVr6f6sEC4sIL4E5DDTVjIBRVfKsLFLjEFEBj6pLAWv1P2j3UrgzqojW5xLwFe3mJNQuqim6g==
   dependencies:
-    "@tnwx/accesstoken" "^2.5.0"
+    "@tnwx/accesstoken" "^2.5.1"
 
-"@tnwx/openmp@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tnwx/openmp/-/openmp-2.5.0.tgz#48db3a7f6b7d54f68be505c04ac1e3ccaf306126"
-  integrity sha512-ku83k4JvqO3tjECJQcDeu+toHvf1w8b1Pgwo0/32rBCEwcDfIqXpzhrzSJhpeziQoOqMhErogWRfCXZhZmPtQQ==
+"@tnwx/openmp@^2.4.0":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@tnwx/openmp/-/openmp-2.5.1.tgz#3c7ad10e8b7f453f6aa444c7a062f6d2f5c94535"
+  integrity sha512-u0/sAXWV+KuvbhG18xLDpZtqVDfMkYcI+/ZKeb1swOIRdDi8oG6wV8JdbEeZ4SiZ7OZ3YaKpU0f+czn/9sxSaA==
   dependencies:
-    "@tnwx/commons" "^2.5.0"
+    "@tnwx/commons" "^2.5.1"
 
-"@tnwx/wxcp@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tnwx/wxcp/-/wxcp-2.5.0.tgz#7d6ccd8fc5f3dcf8b3ce0fc6f146b9a1e041f1ac"
-  integrity sha512-faeFspUiwDku1aI0LbKAV1W49IXCGLPYqC5XA6ujw621PNpkb9l+cJRRpeudKoB+mu0PrsIOiIJ41jatZ1zTzg==
+"@tnwx/wxcp@^2.4.0":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@tnwx/wxcp/-/wxcp-2.5.1.tgz#1894b672742d0e86618eb7ba74e79de6537be466"
+  integrity sha512-FYoGbgmwkzF87fYSPkWTouxYaD5lSgJ1kREO4vqRxvS2DP3b8Qd8IaFAY0Ov7/8y1JH0att7T0uc5LH7Vyx5Nw==
   dependencies:
-    "@tnwx/commons" "^2.5.0"
+    "@tnwx/commons" "^2.5.1"
 
-"@tnwx/wxmp@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tnwx/wxmp/-/wxmp-2.5.0.tgz#899103ad10d918d712ec33e796110a78b45c7872"
-  integrity sha512-kSln4ReB3WeO/bo1MOKazdK/6e8tbrVoXrO1iTU6ip4wyP9CZWQedJ+gU8YWbWbWhFiG7AXUugBQokxLpaBI0g==
+"@tnwx/wxmp@^2.4.0":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@tnwx/wxmp/-/wxmp-2.5.1.tgz#e563af5a943820d26e34de0d6575fb9bf80a2e09"
+  integrity sha512-k2gRKg89wP4EJ0FdT3tJ/17QOpsmmhuNn7/1ICrHAK8vV4mvQ7WfM6e4hDAW68z13riUV3X8Pug7ApdnRpXsKQ==
   dependencies:
-    "@tnwx/commons" "^2.5.0"
+    "@tnwx/commons" "^2.5.1"
 
-"@tnwx/wxpay@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tnwx/wxpay/-/wxpay-2.5.0.tgz#9a06ff08722d559aac0e0f848c50fbb70d39d4aa"
-  integrity sha512-oVQhRR+R5vg0+TVbo/8Cd6qrCX3D5SOh+I8H6nnSVfRu3NL7oXueNSUb2PHjxaRf+EOLwS2eptVUHuS4X06SLw==
+"@tnwx/wxpay@^2.4.0":
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/@tnwx/wxpay/-/wxpay-2.5.1.tgz#6af402c6257745b35b61b45ebeb0bd2875b902ed"
+  integrity sha512-HDwe/tKAeI9CA7OmpEJ4xioP8jI+SXcWdIlTN7k2v3lBmuxn5g+4nSOXo04ERuRMfygVn9kjonHKdIyL1p1D2g==
   dependencies:
-    "@tnwx/cache" "^2.5.0"
-    "@tnwx/kits" "^2.5.0"
+    "@tnwx/cache" "^2.5.1"
+    "@tnwx/kits" "^2.5.1"
 
 "@types/accepts@*", "@types/accepts@^1.3.5":
   version "1.3.5"
@@ -10521,21 +10523,21 @@ tmp@^0.0.33:
   dependencies:
     os-tmpdir "~1.0.2"
 
-tnwx@^2.4.5:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/tnwx/-/tnwx-2.5.0.tgz#965c16c8959ac4280bc9d23f8cf47cbd5ddb6513"
-  integrity sha512-xQaelbvWf7XBLupc2ihTMb3monE3RktRjDEteXi8dBk2G8NfRWv+/a2Rk9kwivO/5BRQZsINVqIVfyxcTsWENQ==
+tnwx@2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/tnwx/-/tnwx-2.4.0.tgz#95898440576b94f6425b03d451d265dabe303f43"
+  integrity sha512-wnxm09kR/c281OPELBEejIwQSSwZwHmHoiJr2D5i0/rlP/jFxZdQxQGixL9dNBuaNllli+jUikwUwwnyBzlgSg==
   dependencies:
-    "@tnwx/accesstoken" "^2.5.0"
-    "@tnwx/cache" "^2.5.0"
-    "@tnwx/commons" "^2.5.0"
-    "@tnwx/kits" "^2.5.0"
-    "@tnwx/miniprogram" "^2.5.0"
-    "@tnwx/opencp" "^2.5.0"
-    "@tnwx/openmp" "^2.5.0"
-    "@tnwx/wxcp" "^2.5.0"
-    "@tnwx/wxmp" "^2.5.0"
-    "@tnwx/wxpay" "^2.5.0"
+    "@tnwx/accesstoken" "^2.4.0"
+    "@tnwx/cache" "^2.4.0"
+    "@tnwx/commons" "^2.4.0"
+    "@tnwx/kits" "^2.4.0"
+    "@tnwx/miniprogram" "^2.4.0"
+    "@tnwx/opencp" "^2.4.0"
+    "@tnwx/openmp" "^2.4.0"
+    "@tnwx/wxcp" "^2.4.0"
+    "@tnwx/wxmp" "^2.4.0"
+    "@tnwx/wxpay" "^2.4.0"
 
 to-arraybuffer@^1.0.0:
   version "1.0.1"

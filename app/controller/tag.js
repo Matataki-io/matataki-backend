@@ -31,7 +31,7 @@ class TagController extends Controller {
     const resultSet = await pipeline
       .sort(idKey, 'GET', '#', 'GET', 'tag:*->name', 'GET', 'tag:*->type')
       .exec();
-    const [, resultLines] = resultSet[resultSet.length - 1];
+    const [ , resultLines ] = resultSet[resultSet.length - 1];
 
     for (let i = 0; i < resultLines.length / 3; i++) {
       result.push({
@@ -77,6 +77,13 @@ class TagController extends Controller {
     const arr = await this.service.post.getTagsById(id);
     ctx.body = ctx.msg.success;
     ctx.body.data = arr;
+  }
+  async hotestTags() {
+    const { ctx } = this;
+    const { pagesize = 8, day = 14 } = ctx.query;
+    const result = await this.service.tags.hotestTags({ pagesize, day });
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
   }
 }
 

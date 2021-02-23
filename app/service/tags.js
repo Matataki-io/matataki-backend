@@ -102,5 +102,24 @@ class TagService extends Service {
       };
     }
   }
+  async hotestTags({ pagesize, day }) {
+    this.logger.info('hotestTags', pagesize, day);
+
+    try {
+      const sql = `SELECT pt.tid AS id, t.\`name\`, COUNT(t.\`name\`) AS count
+      FROM post_tag pt LEFT JOIN posts p ON pt.sid = p.id LEFT JOIN tags t ON pt.tid = t.id
+      WHERE p.title != '' AND pt.sid != 1 AND pt.sid != 0
+      AND DATE_SUB(CURDATE(), INTERVAL ? DAY) <= DATE(p.create_time)
+      GROUP BY t.\`name\`
+      ORDER BY \`count\` DESC LIMIT 0, ?;`;
+
+      const results = await this.app.mysql.query(sql, [ day, pagesize ]);
+
+      return results;
+    } catch (error) {
+      this.logger.error('hotestTags error', error.toString());
+      return [];
+    }
+  }
 }
 module.exports = TagService;
