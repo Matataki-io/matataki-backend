@@ -115,7 +115,7 @@ class MineTokenController extends Controller {
       exchange.amount_24h = trans_24hour.amount_24h;
     }
     // 获取持仓人数数据
-    exchange = { ...exchange } // 这段代码是为了避免访问未赋值变量时报错
+    exchange = { ...exchange }; // 这段代码是为了避免访问未赋值变量时报错
     exchange.number_of_holders = await ctx.service.token.exchange.getNumberOfHolders(id);
     exchange.number_of_liquidity_holders = await ctx.service.token.exchange.getNumberOfLiquidityHolders(id);
 

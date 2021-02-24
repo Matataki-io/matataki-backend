@@ -156,6 +156,11 @@ class CrossChainService extends Service {
     return token;
   }
 
+  async findTokenById(tokenId) {
+    const token = await this.app.mysql.get('pegged_assets', { tokenId });
+    return token;
+  }
+
   async listMyDepositRequest(uid) {
     const depositsOf = await this.app.mysql.select(
       'pegged_assets_deposit',
