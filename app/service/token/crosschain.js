@@ -144,16 +144,11 @@ class CrossChainService extends Service {
     return data.data.event;
   }
 
-  async listCrosschainTokens() {
+  async listCrosschainTokenIds() {
     // 暂时只有 BSC
     const tokens = await this.app.mysql.select('pegged_assets', { where: { chain: 'bsc' }, orders: [[ 'id', 'desc' ]] });
-    return tokens;
-  }
-
-  async listCrosschainTokenSymbols() {
-    // 暂时只有 BSC
-    const tokens = await this.listCrosschainTokens();
-    return tokens.map(token => token.symbol);
+    const tokenIds = tokens.map(token => token.tokenId);
+    return tokenIds;
   }
 
   async isCrosschainToken(tokenAddress) {
