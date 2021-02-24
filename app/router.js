@@ -311,6 +311,7 @@ module.exports = app => {
   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
   // 出入站 跨链版
   router.get('/minetoken/crosschain/', passport.verify, controller.crossChain.getCrosschainTokenList);
+  router.get('/minetoken/crosschain/symbols', passport.verify, controller.crossChain.getCrosschainTokenSymbolList);
   router.get('/minetoken/crosschain/myDeposits', passport.authorize, controller.crossChain.listMyDepositRequest);
   router.get('/minetoken/crosschain/isToken/:tokenAddress', passport.verify, controller.crossChain.isCrosschainToken);
 

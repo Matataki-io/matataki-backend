@@ -210,6 +210,13 @@ class CrossChainController extends Controller {
     ctx.body.data = { tokens };
   }
 
+  async getCrosschainTokenSymbolList() {
+    const { ctx } = this;
+    const tokens = await this.service.token.crosschain.listCrosschainTokenSymbols();
+    ctx.body = ctx.msg.success;
+    ctx.body.data = { tokens };
+  }
+
   async renewMyWithdrawPermit() {
     const { ctx } = this;
     const { id } = ctx.params;

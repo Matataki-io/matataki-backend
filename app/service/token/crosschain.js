@@ -150,6 +150,12 @@ class CrossChainService extends Service {
     return tokens;
   }
 
+  async listCrosschainTokenSymbols() {
+    // 暂时只有 BSC
+    const tokens = await this.listCrosschainTokens();
+    return tokens.map(token => token.symbol);
+  }
+
   async isCrosschainToken(tokenAddress) {
     const token = await this.app.mysql.get('pegged_assets', { contractAddress: tokenAddress.toLowerCase() });
     return token;
