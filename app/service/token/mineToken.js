@@ -117,18 +117,31 @@ class MineTokenService extends Service {
    * 通过ID获取token信息
    * @param {number} id token的ID
    */
-  get(id) {
-    return this.getToken({ id });
+  async get(id) {
+    const token = await this.getToken({ id });
+    const bsc_pegged_info = await this.service.token.crosschain.findTokenById(id);
+    token.bsc_contract_address = bsc_pegged_info ? bsc_pegged_info.contractAddress : null;
+    return token;
   }
 
   // 获取token
-  getBySymbol(symbol) {
-    return this.getToken({ symbol });
+  async getBySymbol(symbol) {
+    const token = await this.getToken({ symbol });
+    if (token) {
+      const bsc_pegged_info = await this.service.token.crosschain.findTokenById(token.id);
+      token.bsc_contract_address = bsc_pegged_info ? bsc_pegged_info.contractAddress : null;
+    }
+    return token;
   }
 
   // 获取token
-  getByUserId(uid) {
-    return this.getToken({ uid });
+  async getByUserId(uid) {
+    const token = await this.getToken({ uid });
+    if (token) {
+      const bsc_pegged_info = await this.service.token.crosschain.findTokenById(token.id);
+      token.bsc_contract_address = bsc_pegged_info ? bsc_pegged_info.contractAddress : null;
+    }
+    return token;
   }
 
   // 保存网址、社交媒体账号

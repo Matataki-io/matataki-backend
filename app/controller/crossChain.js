@@ -205,9 +205,23 @@ class CrossChainController extends Controller {
 
   async getCrosschainTokenList() {
     const { ctx } = this;
-    const tokens = await this.service.token.crosschain.listCrosschainTokens();
-    ctx.body = ctx.msg.success;
-    ctx.body.data = { tokens };
+    const { pagesize = 10, page = 1, order = 0, search = '' } = ctx.query;
+    // 用户id
+    const user_id = ctx.user.id;
+    // token list
+    const original_result = await this.service.exchange.getTokenListByUser(user_id, parseInt(page), parseInt(pagesize), parseInt(order), search);
+
+    const tokenIds = await this.service.token.crosschain.listCrosschainTokenIds();
+    const filteredTokens = original_result.list.filter(token => tokenIds.indexOf(token.token_id) > -1);
+
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        count: filteredTokens.length,
+        list: filteredTokens,
+      },
+      tokenIds,
+    };
   }
 
   async renewMyWithdrawPermit() {

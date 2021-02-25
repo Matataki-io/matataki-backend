@@ -137,6 +137,8 @@ module.exports = app => {
   router.get('/tags/latest', passport.verify, controller.tag.getLatestTags);
   // 获取一个文章的所有标签
   router.get('/tags/get_by_post', passport.verify, controller.tag.getTagsById);
+  // 热门标签 筛选对象为最近14天内应用次数最多的标签
+  router.get('/tags/hotestTags', passport.verify, controller.tag.hotestTags);
 
   // -------------------------------- 草稿系统 --------------------------------
   // 获取我的草稿箱列表 (need access token)
@@ -310,7 +312,7 @@ module.exports = app => {
   router.get('/token/myAddress', passport.authorize, controller.user.getHostingAccountPublicKey);
   router.post('/minetoken/:id/withdraw', passport.authorize, controller.mineToken.withdraw);
   // 出入站 跨链版
-  router.get('/minetoken/crosschain/', passport.verify, controller.crossChain.getCrosschainTokenList);
+  router.get('/minetoken/crosschain/', passport.authorize, controller.crossChain.getCrosschainTokenList);
   router.get('/minetoken/crosschain/myDeposits', passport.authorize, controller.crossChain.listMyDepositRequest);
   router.get('/minetoken/crosschain/isToken/:tokenAddress', passport.verify, controller.crossChain.isCrosschainToken);
 
