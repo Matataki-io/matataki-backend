@@ -6,6 +6,9 @@ class Bootstrapper {
 
   async didReady() {
     await this.loadCache();
+
+    const ctx = await this.app.createAnonymousContext();
+    await ctx.service.wechatApi.weChatTnwxInit();
   }
 
   async loadCache() {
@@ -27,12 +30,12 @@ class Bootstrapper {
 
     const pipeline = redis.multi();
 
-    let keys = await redis.keys('post:*');
+    const keys = await redis.keys('post:*');
     if (keys.length > 0) pipeline.del(keys);
 
     pipeline.del('post');
 
-    const posts = await mysql.query('SELECT id, status, channel_id, is_recommend, hot_score, time_down, require_holdtokens, require_buy FROM posts;')
+    const posts = await mysql.query('SELECT id, status, channel_id, is_recommend, hot_score, time_down, require_holdtokens, require_buy FROM posts;');
     for (const { id, status, channel_id, is_recommend, require_holdtokens, time_down, hot_score, require_buy } of posts) {
       pipeline.sadd('post', id);
 
