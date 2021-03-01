@@ -24,9 +24,6 @@ class WechatController extends Controller {
     ctx.logger.info('controller wechat auth: ', ctx.query);
     const { signature, timestamp, nonce, echostr } = ctx.query;
 
-    // init
-    this.service.wechatApi.weChatTnwxInit();
-
     ctx.body = WeChat.checkSignature(signature, timestamp, nonce, echostr);
   }
 
@@ -90,9 +87,6 @@ class WechatController extends Controller {
   }
   async token() {
     const { ctx } = this;
-    // init
-    this.service.wechatApi.weChatTnwxInit();
-    // get accesstoken
     const assessToken = await this.service.wechatApi.getAccessToken();
     this.logger.info('assessToken', assessToken);
     ctx.body = ctx.msg.success;

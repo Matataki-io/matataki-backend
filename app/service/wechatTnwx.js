@@ -50,9 +50,6 @@ class WechatService extends Service {
     const { msgSignature, timestamp, nonce } = ctx.query;
     const msgXml = this.ctx.request.rawBody;
 
-    // init
-    this.service.wechatApi.weChatTnwxInit();
-
     const msgAdapter = new MsgController();
     // this.logger.info('msgAdapter', msgAdapter);
 
@@ -166,13 +163,6 @@ class WechatService extends Service {
     // 生成随机数
     let randomNumber = ctx.helper.randomRange(100000, 999999);
 
-    // init
-    this.service.wechatApi.weChatTnwxInit();
-
-    // get accesstoken
-    const assessToken = await this.service.wechatApi.getAccessToken();
-    if (!assessToken) return;
-
     // 判断场景值是否存在了
     const checkScene = async id => {
       try {
@@ -187,6 +177,15 @@ class WechatService extends Service {
     };
 
     await checkScene(randomNumber);
+
+    // get accesstoken
+    const assessToken = await this.service.wechatApi.getAccessToken();
+    if (!assessToken) {
+      return {
+        code: -1,
+        message: `assessToken: ${assessToken}`,
+      };
+    }
 
     // 二维码场景值
     const data = {
@@ -209,31 +208,32 @@ class WechatService extends Service {
 
     this.logger.info('ticketResult', ticketResult);
 
-    const [ longUrlError, longUrlResult ] = await this.service.utils.facotryRequst(this.service.wechatApi.longUrlConvertShortUrl, assessToken, this.service.wechatApi.ticketExchangeQRcode(ticketResult.ticket));
-    if (longUrlError) {
-      return {
-        code: -1,
-        message: 'longUrlError error',
-        data: longUrlResult,
-      };
-    }
+    // 取消短链接
+    // const [ longUrlError, longUrlResult ] = await this.service.utils.facotryRequst(this.service.wechatApi.longUrlConvertShortUrl, assessToken, this.service.wechatApi.ticketExchangeQRcode(ticketResult.ticket));
+    // if (longUrlError) {
+    //   return {
+    //     code: -1,
+    //     message: 'longUrlError error',
+    //     data: longUrlResult,
+    //   };
+    // }
 
-    this.logger.info('longUrlResult', longUrlResult);
+    // this.logger.info('longUrlResult', longUrlResult);
 
     // 没有 url
-    if (!longUrlResult.short_url) {
-      return {
-        code: -1,
-        message: 'longUrlResult error',
-        data: longUrlResult,
-      };
-    }
+    // if (!longUrlResult.short_url) {
+    //   return {
+    //     code: -1,
+    //     message: 'longUrlResult error',
+    //     data: longUrlResult,
+    //   };
+    // }
 
     return {
       code: 0,
       message: '成功',
       data: {
-        qrcode: longUrlResult.short_url,
+        qrcode: this.service.wechatApi.ticketExchangeQRcode(ticketResult.ticket),
         scene: randomNumber,
       },
     };
@@ -242,12 +242,14 @@ class WechatService extends Service {
   }
   // 绑定扫码二维码
   async qrcodeBind(uid) {
-    // init
-    this.service.wechatApi.weChatTnwxInit();
-
     // get accesstoken
     const assessToken = await this.service.wechatApi.getAccessToken();
-    if (!assessToken) return;
+    if (!assessToken) {
+      return {
+        code: -1,
+        message: `assessToken: ${assessToken}`,
+      };
+    }
 
 
     // 二维码字符场景值
@@ -274,31 +276,31 @@ class WechatService extends Service {
 
     this.logger.info('qrcodeBind ticketResult', ticketResult);
 
-    const [ longUrlError, longUrlResult ] = await this.service.utils.facotryRequst(this.service.wechatApi.longUrlConvertShortUrl, assessToken, this.service.wechatApi.ticketExchangeQRcode(ticketResult.ticket));
-    if (longUrlError) {
-      return {
-        code: -1,
-        message: 'qrcodeBind longUrlError error',
-        data: longUrlResult,
-      };
-    }
+    // const [ longUrlError, longUrlResult ] = await this.service.utils.facotryRequst(this.service.wechatApi.longUrlConvertShortUrl, assessToken, this.service.wechatApi.ticketExchangeQRcode(ticketResult.ticket));
+    // if (longUrlError) {
+    //   return {
+    //     code: -1,
+    //     message: 'qrcodeBind longUrlError error',
+    //     data: longUrlResult,
+    //   };
+    // }
 
-    this.logger.info('qrcodeBind longUrlResult', longUrlResult);
+    // this.logger.info('qrcodeBind longUrlResult', longUrlResult);
 
-    // 没有 url
-    if (!longUrlResult.short_url) {
-      return {
-        code: -1,
-        message: 'qrcodeBind longUrlResult error',
-        data: longUrlResult,
-      };
-    }
+    // // 没有 url
+    // if (!longUrlResult.short_url) {
+    //   return {
+    //     code: -1,
+    //     message: 'qrcodeBind longUrlResult error',
+    //     data: longUrlResult,
+    //   };
+    // }
 
     return {
       code: 0,
       message: '成功',
       data: {
-        qrcode: longUrlResult.short_url,
+        qrcode: this.service.wechatApi.ticketExchangeQRcode(ticketResult.ticket),
         scene: sceneStr,
       },
     };
@@ -353,9 +355,6 @@ class WechatService extends Service {
       const res = await fs.readFileSync(path.join(__dirname, '../../config/wechat_menu.json'));
 
       const fileData = res.toString();
-
-      // init
-      this.service.wechatApi.weChatTnwxInit();
 
       // get accesstoken
       // const assessToken = await this.service.wechatApi.getAccessToken();
