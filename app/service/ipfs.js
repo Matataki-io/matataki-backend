@@ -38,30 +38,31 @@ class ipfs extends Service {
    * @param {object} file 文件
    */
   async uploadToAws(file) {
-    const { username, password } = this.config.awsIpfs;
-    const fd = new FormData();
-    fd.append('', file);
-    try {
-      const { data } = await axios.post(`${IpfsUrl}/api/v0/add`, fd, {
-        auth: { username, password },
-        headers: fd.getHeaders(),
-        params: { pin: "true" },
-        timeout: 1000 * 10
-      });
-      return data.Hash;
-    } catch (error) {
-      if (error.message.indexOf('timeout') > -1) {
-        this.logger.error('uploadToAws failed', 'server down, retry with public node');
-        await this.service.system.notification.pushTextToDingTalk(
-          "ipfs", 
-          `（👷IPFS系统警告）监测到 ${IpfsUrl} 的上传接口无法访问，请工程师登录 AWS 检查 EC2 东京节点的健康状态，如果无响应请重启机器。 (AWS: https://aws.amazon.com/)`
-        );
-        return this.uploadToPublic(file);
-      } else {
-        this.logger.error('uploadToAws failed', error);
-        throw error
-      }
-    }
+    // const { username, password } = this.config.awsIpfs;
+    // const fd = new FormData();
+    // fd.append('', file);
+    // try {
+    //   const { data } = await axios.post(`${IpfsUrl}/api/v0/add`, fd, {
+    //     auth: { username, password },
+    //     headers: fd.getHeaders(),
+    //     params: { pin: "true" },
+    //     timeout: 1000 * 10
+    //   });
+    //   return data.Hash;
+    // } catch (error) {
+    //   if (error.message.indexOf('timeout') > -1) {
+    //     this.logger.error('uploadToAws failed', 'server down, retry with public node');
+    //     await this.service.system.notification.pushTextToDingTalk(
+    //       "ipfs", 
+    //       `（👷IPFS系统警告）监测到 ${IpfsUrl} 的上传接口无法访问，请工程师登录 AWS 检查 EC2 东京节点的健康状态，如果无响应请重启机器。 (AWS: https://aws.amazon.com/)`
+    //     );
+    //     return this.uploadToPublic(file);
+    //   } else {
+    //     this.logger.error('uploadToAws failed', error);
+    //     throw error
+    //   }
+    // }
+    return this.uploadToPublic(file);
   }
 
   /**
@@ -72,10 +73,10 @@ class ipfs extends Service {
     const fd = new FormData();
     fd.append('file', file);
     const { data } = await axios.post('https://ipfs.infura.io:5001/api/v0/add', fd, {
-        headers: fd.getHeaders(),
-        timeout: 1000 * 15,
-        params: { pin: "true" }
-      });
+      headers: fd.getHeaders(),
+      timeout: 1000 * 15,
+      params: { pin: 'true' },
+    });
     return data.Hash;
   }
 }
