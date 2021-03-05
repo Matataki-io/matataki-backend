@@ -85,19 +85,19 @@ class PostImportService extends Service {
     let imgRawUrl, imgUpUrl, imgFileName;
     const imgElements = mediaContent.find('img').toArray();
     for (const imgElement of imgElements) {
-      imgRawUrl = imgElement.attribs['data-src']
+      imgRawUrl = imgElement.attribs['data-src'];
       imgFileName = './uploads/today_' + Date.now() + '.' + imgElement.attribs['data-type'];
       imgUpUrl = await this.uploadArticleImage(imgRawUrl, imgFileName);
-        // 匹配图片URL， 并进行替换
-        if (imgUpUrl) {
-          imgElement.attribs['data-src'] = imgElement.attribs['data-src'].replace(
-            /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
-          imgElement.attribs.style = 'vertical-align: middle;width: 90%;height: 90%;';
-        } else {
-          this.logger.info('PostImportService:: handleWechat: upload Image failed, ignored');
-          imgElement.attribs['data-src'] = '';
-        }
-        imgElement.attribs.src = imgElement.attribs['data-src'];
+      // 匹配图片URL， 并进行替换
+      if (imgUpUrl) {
+        imgElement.attribs['data-src'] = imgElement.attribs['data-src'].replace(
+          /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
+        imgElement.attribs.style = 'vertical-align: middle;width: 90%;height: 90%;';
+      } else {
+        this.logger.info('PostImportService:: handleWechat: upload Image failed, ignored');
+        imgElement.attribs['data-src'] = '';
+      }
+      imgElement.attribs.src = imgElement.attribs['data-src'];
     }
 
     // 处理视频
@@ -117,7 +117,7 @@ class PostImportService extends Service {
         this.logger.error('PostImportService:: handleWechat: error while processing video:', err);
       }
     }
-    let parsedContent = pretty(mediaContent.html());
+    const parsedContent = pretty(mediaContent.html());
 
     // 处理元数据 —— 标题、封面
     const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
@@ -222,11 +222,20 @@ class PostImportService extends Service {
     const parsedCoverUpload = './uploads/today_chainnews_' + Date.now() + '.jpg';
     const coverLocation = await this.uploadArticleImage(image.substring(0, image.length - 6), parsedCoverUpload);
 
+    let tags = [];
+    try {
+      const parsedTags = parsedPage.querySelectorAll('.post-body div.post-tags a');
+      const parsedTagsList = [ ...parsedTags ].map(i => i.innerText);
+      tags = parsedTagsList.join();
+    } catch (e) {
+      this.logger.error('e', e.toString());
+    }
 
     const articleObj = {
       title,
       cover: coverLocation,
       content: articleContent,
+      tags,
     };
 
     return articleObj;
