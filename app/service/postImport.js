@@ -78,29 +78,28 @@ class PostImportService extends Service {
     // 因为 cheerio decode 导致 某些attar属性里面的字符转换渲染出来的html不对 所以删除有问题的自定义属性
     const source = removeTagAttr(rawPage.data, 'span', 'data-shimo-docs');
     const $ = cheerio.load(source, { decodeEntities: false });
-    const mediaContent = $('#rich_media_content ');
+    const mediaContent = $('div.rich_media_content');
 
     // 把图片上传至本站， 并替换链接
     // TBD: 仍然有出现图片未被替换的问题
     let imgRawUrl, imgUpUrl, imgFileName;
-    // const imgElement = parsedPage.querySelector('div.rich_media_content').querySelectorAll('img');
-    const _imgElement = mediaContent.find('img').toArray();
-
-    for (let index = 0; index < _imgElement.length; index += 1) {
-      imgRawUrl = _imgElement[index].attribs['data-src'];
-      imgFileName = './uploads/today_' + Date.now() + '.' + _imgElement[0].attribs['data-type'];
+    const imgElements = mediaContent.find('img').toArray();
+    for (const imgElement of imgElements) {
+      imgRawUrl = imgElement.attribs['data-src']
+      imgFileName = './uploads/today_' + Date.now() + '.' + imgElement.attribs['data-type'];
       imgUpUrl = await this.uploadArticleImage(imgRawUrl, imgFileName);
-      // 匹配图片URL， 并进行替换
-      if (imgUpUrl) {
-        _imgElement[index].attribs['data-src'] = _imgElement[index].attribs['data-src'].replace(
-          /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
-        _imgElement[index].attribs.style = 'vertical-align: middle;width: 90%;height: 90%;';
-      } else {
-        this.logger.info('PostImportService:: handleWechat: upload Image failed, ignored');
-        _imgElement[index].attribs['data-src'] = '';
-      }
-      _imgElement[index].attribs.src = _imgElement[index].attribs['data-src'];
+        // 匹配图片URL， 并进行替换
+        if (imgUpUrl) {
+          imgElement.attribs['data-src'] = imgElement.attribs['data-src'].replace(
+            /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
+          imgElement.attribs.style = 'vertical-align: middle;width: 90%;height: 90%;';
+        } else {
+          this.logger.info('PostImportService:: handleWechat: upload Image failed, ignored');
+          imgElement.attribs['data-src'] = '';
+        }
+        imgElement.attribs.src = imgElement.attribs['data-src'];
     }
+
     // 处理视频
     const videos = $('iframe', mediaContent);
     for (const video of videos.toArray()) {
@@ -118,8 +117,7 @@ class PostImportService extends Service {
         this.logger.error('PostImportService:: handleWechat: error while processing video:', err);
       }
     }
-    let parsedContent = '';
-    parsedContent = pretty($('div.rich_media_content').html());
+    let parsedContent = pretty(mediaContent.html());
 
     // 处理元数据 —— 标题、封面
     const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
@@ -137,21 +135,15 @@ class PostImportService extends Service {
       parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/);
       if (parsedCoverRaw) parsedCoverRaw = parsedCoverRaw[0];
     }
-    // const parsedCover = parsedCoverRaw.substring(15, parsedCoverRaw.length - 1);
     const parsedCover = parsedCoverRaw;
     const parsedCoverUpload = './uploads/today_wx_' + Date.now() + '.jpg';
     const coverLocation = await this.uploadArticleImage(parsedCover, parsedCoverUpload);
-    // console.log(parsedTitle);
-    // console.log(parsedCover);
-    // console.log(parsedContent);
 
-    const articleObj = {
+    return {
       title,
       cover: coverLocation,
       content: parsedContent,
     };
-
-    return articleObj;
   }
 
   // 处理橙皮书文章
