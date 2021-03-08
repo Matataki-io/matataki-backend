@@ -193,7 +193,7 @@ class PostImportService extends Service {
   }
 
   // 处理链闻文章
-  async handleChainnews(url) {
+  async handleChainnews({ url, type }) {
     // 拉取文章内容
     let rawPage;
     try {
@@ -209,36 +209,84 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: handleChainnews: error:', err);
       return null;
     }
-    // 处理元数据 —— 标题、封面
-    const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
-    const { title, image } = metadata;
-    // Parser 处理， 转化为markdown， 因平台而异
-    const parsedPage = htmlparser.parse(rawPage.data);
-    const parsedContent = parsedPage.querySelector('div.post-content.markdown');
-    // const coverRe = new RegExp(//);
-    const turndownService = new turndown();
-    const articleContent = turndownService.turndown(parsedContent.toString());
 
-    const parsedCoverUpload = './uploads/today_chainnews_' + Date.now() + '.jpg';
-    const coverLocation = await this.uploadArticleImage(image.substring(0, image.length - 6), parsedCoverUpload);
-
-    let tags = [];
-    try {
-      const parsedTags = parsedPage.querySelectorAll('.post-body div.post-tags a');
-      const parsedTagsList = [ ...parsedTags ].map(i => i.innerText);
-      tags = parsedTagsList.join();
-    } catch (e) {
-      this.logger.error('e', e.toString());
-    }
-
-    const articleObj = {
-      title,
-      cover: coverLocation,
-      content: articleContent,
-      tags,
+    // 获取Tags
+    const getTags = dom => {
+      let tags = '';
+      try {
+        const parsedTags = dom.querySelectorAll('.post-body div.post-tags a');
+        const parsedTagsList = [ ...parsedTags ].map(i => i.innerText);
+        tags = parsedTagsList.join();
+      } catch (e) {
+        this.logger.error('e', e.toString());
+      }
+      return tags;
     };
 
-    return articleObj;
+    if (type === 'articles') {
+      // 处理元数据 —— 标题、封面
+      const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
+      const { title, image } = metadata;
+      // Parser 处理， 转化为markdown， 因平台而异
+      const parsedPage = htmlparser.parse(rawPage.data);
+      const parsedContent = parsedPage.querySelector('div.post-content.markdown');
+
+      // 替换img
+      const imgList = parsedContent.querySelectorAll('p img');
+      for (let i = 0; i < imgList.length; i++) {
+        const ele = imgList[i];
+        const src = ele.getAttribute('src');
+
+        // TODO: 后缀可能需要处理
+        const parsedImgName = './uploads/today_chainnews_' + Date.now() + '.jpg';
+        const imgUpUrl = await this.uploadArticleImage(src, parsedImgName);
+
+        if (imgUpUrl) {
+          ele.setAttribute('src', `${this.config.ssimg}${imgUpUrl}`);
+        } else {
+          ele.setAttribute('src', src);
+        }
+      }
+
+      // const coverRe = new RegExp(//);
+      const turndownService = new turndown();
+      const articleContent = turndownService.turndown(parsedContent.toString());
+
+      const parsedCoverUpload = './uploads/today_chainnews_' + Date.now() + '.jpg';
+      const coverLocation = await this.uploadArticleImage(image.substring(0, image.length - 6), parsedCoverUpload);
+
+      const articleObj = {
+        title,
+        cover: coverLocation,
+        content: articleContent,
+        tags: getTags(parsedPage),
+      };
+
+      return articleObj;
+    } else if (type === 'news') {
+      // Parser 处理， 转化为markdown， 因平台而异
+      const parsedPage = htmlparser.parse(rawPage.data);
+
+      // 标题
+      const parsedTitle = parsedPage.querySelector('h1.post-title').innerText || '';
+
+      // 内容
+      const parsedContent = parsedPage.querySelector('h2.post-content.markdown');
+      const turndownService = new turndown();
+      const articleContent = turndownService.turndown(parsedContent.toString());
+
+      // head meta 里面的image是默认链闻的图片 所有没有返回封面 保持空
+
+      return {
+        title: parsedTitle,
+        cover: '',
+        content: articleContent,
+        tags: getTags(parsedPage),
+      };
+    }
+    this.logger.error('PostImportService:: handleChainnews: error: other type url is', url);
+    return null;
+
   }
 
   // 处理简书文章
