@@ -230,13 +230,30 @@ class PostImportService extends Service {
       // Parser 处理， 转化为markdown， 因平台而异
       const parsedPage = htmlparser.parse(rawPage.data);
       const parsedContent = parsedPage.querySelector('div.post-content.markdown');
+
+      // 替换img
+      const imgList = parsedContent.querySelectorAll('p img');
+      for (let i = 0; i < imgList.length; i++) {
+        const ele = imgList[i];
+        const src = ele.getAttribute('src');
+
+        // TODO: 后缀可能需要处理
+        const parsedImgName = './uploads/today_chainnews_' + Date.now() + '.jpg';
+        const imgUpUrl = await this.uploadArticleImage(src, parsedImgName);
+
+        if (imgUpUrl) {
+          ele.setAttribute('src', `${this.config.ssimg}${imgUpUrl}`);
+        } else {
+          ele.setAttribute('src', src);
+        }
+      }
+
       // const coverRe = new RegExp(//);
       const turndownService = new turndown();
       const articleContent = turndownService.turndown(parsedContent.toString());
 
       const parsedCoverUpload = './uploads/today_chainnews_' + Date.now() + '.jpg';
       const coverLocation = await this.uploadArticleImage(image.substring(0, image.length - 6), parsedCoverUpload);
-
 
       const articleObj = {
         title,
