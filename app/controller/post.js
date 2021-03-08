@@ -1002,7 +1002,11 @@ class PostController extends Controller {
     );
     const chainnewsMatch = makeMatch(
       /https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/,
-      x => this.service.postImport.handleChainnews(x)
+      x => this.service.postImport.handleChainnews({ url: x, type: 'articles' })
+    );
+    const chainnewsNewsMatch = makeMatch(
+      /https:\/\/(.*)?chainnews\.com\/news\/.+/,
+      x => this.service.postImport.handleChainnews({ url: x, type: 'news' })
     );
     const orangeMatch = makeMatch(/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/, x =>
       this.service.postImport.handleOrange(x)
@@ -1038,6 +1042,7 @@ class PostController extends Controller {
     const result
       = (await wechatMatch)
       || (await chainnewsMatch)
+      || (await chainnewsNewsMatch)
       || (await orangeMatch)
       || (await jianshuMatch)
       || (await gaojinMatch)
