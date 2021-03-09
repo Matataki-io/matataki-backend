@@ -11,6 +11,10 @@ const pretty = require('pretty');
 const turndown = require('turndown');
 const cheerio = require('cheerio'); // 如果是客户端渲染之类的 可以考虑用 puppeteer
 const steem = require('steem');
+const { v4: uuid, NIL: NIL_UUID } = require('uuid');
+const nodePath = require('path');
+
+const isTest = process.env.NODE_ENV === 'test';
 
 class PostImportService extends Service {
 
@@ -32,6 +36,7 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: uploadArticleImage: Download Image failed..', e);
       return null;
     }
+    console.log(imageFile.filename);
     // 上传的文件的名字
     const filename = '/image/'
       + moment().format('YYYY/MM/DD/')
@@ -791,9 +796,17 @@ class PostImportService extends Service {
         if (content) {
           const title = content.title;
           const metadata = JSON.parse(content.json_metadata);
-          const coverLocation = (metadata.image && metadata.image.length) ? metadata.image[0] : null;
+          const coverUrl = (metadata.image && metadata.image.length) ? metadata.image[0] : null;
           const articleContent = (metadata.format === 'markdown') ? content.body : pretty(content.body);
           const tags = (metadata.tags && metadata.tags.length) ? metadata.tags.join(',') : '';
+
+          // 上传 Cover 到自有 OSS
+          let coverLocation = '';
+          if (coverUrl) {
+            const cachePath = `./uploads/steemit_${isTest ? NIL_UUID : uuid()}${nodePath.extname(coverUrl)}`;
+            const uploadResult = await this.uploadArticleImage(coverUrl, cachePath);
+            if (uploadResult) coverLocation = `https://ssimg.frontenduse.top${uploadResult}`;
+          }
 
           return {
             title,

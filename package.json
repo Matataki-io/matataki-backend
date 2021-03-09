@@ -62,6 +62,7 @@
     "tenpay": "^2.1.18",
     "tnwx": "2.4.0",
     "turndown": "^5.0.3",
+    "uuid": "^8.3.2",
     "vnt": "git+https://github.com/vntchain/vnt.js.git",
     "web3": "^1.2.4",
     "xml2js": "0.4.23"
