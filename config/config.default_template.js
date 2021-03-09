@@ -19,7 +19,7 @@ module.exports = appInfo => {
 
   config.errorHandler = {
     match: '/',
-  },
+  };
 
   config.mysql = {
     // 单数据库信息配置
