@@ -991,6 +991,11 @@ class PostController extends Controller {
       }
       return 1;
     };
+    /**
+     * 匹配 URL 并调用对应 Handler 方法
+     * @param {RegExp} matchRule 匹配规则
+     * @param {Function} handler 被调用的方法
+     */
     const makeMatch = async (matchRule, handler) =>
       (url.match(matchRule) ? makeResponse(await handler(url)) : false);
     // true = succeed
@@ -1038,6 +1043,11 @@ class PostController extends Controller {
     const bihuMatch = makeMatch(/https:\/\/(.*)?bihu\.com\/.+/, x =>
       this.service.postImport.handleBihu(x)
     );
+    // Steemit
+    const steemitMatch = makeMatch(
+      /^https:\/\/steemit\.com\/\S+\/\@\S+\/\S+$/,
+      x => this.service.postImport.handleSteemit(x)
+    );
 
     const result
       = (await wechatMatch)
@@ -1050,7 +1060,8 @@ class PostController extends Controller {
       || (await zhihuMatch)
       // || (await weiboMatch)
       || (await archiveMatch)
-      || (await bihuMatch);
+      || (await bihuMatch)
+      || (await steemitMatch);
 
     if (result === 1) {
       this.logger.info(
