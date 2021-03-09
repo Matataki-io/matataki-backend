@@ -89,6 +89,8 @@ module.exports = {
     issue: 'issue',
     mint: 'mint',
     transfer: 'transfer',
+    batchTransfer: 'batch_transfer',
+    airdrop: 'airdrop',
     crosschainBscTransferOut: 'crosschain_bsc_transfer_out',
     crosschainBscTransferIn: 'crosschain_bsc_deposit',
     exchange_purchase: 'exchange_purchase',
