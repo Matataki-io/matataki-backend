@@ -80,9 +80,9 @@
     "node": ">=8.9.0"
   },
   "scripts": {
-    "start": "egg-scripts start --port=7653 --daemon --title=egg-server-example",
+    "start": "egg-scripts start --port=7001 --daemon",
     "serve": "egg-scripts start ",
-    "stop": "egg-scripts stop --title=egg-server-example",
+    "stop": "egg-scripts stop",
     "dev": "egg-bin dev",
     "debug": "egg-bin debug",
     "test": "npm run lint -- --fix && npm run test-local",
