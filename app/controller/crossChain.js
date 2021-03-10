@@ -7,7 +7,7 @@ class CrossChainController extends Controller {
     // 无任何检测，仅限工程师，请设置好接口的权限！！！
     const { ctx } = this;
     const { id, chain } = ctx.params;
-    if (chain !== 'bsc' || chain !== 'matic') {
+    if (chain !== 'bsc' && chain !== 'matic') {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.message = `Not supported chain '${chain}'`;
@@ -36,7 +36,7 @@ class CrossChainController extends Controller {
     const { ctx } = this;
     const { id: tokenId } = ctx.params;
     const { target, amount, chain = 'bsc' } = ctx.request.body;
-    if (chain !== 'bsc' || chain !== 'matic') {
+    if (chain !== 'bsc' && chain !== 'matic') {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.message = `Not supported chain '${chain}'`;
