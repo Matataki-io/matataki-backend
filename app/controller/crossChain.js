@@ -46,10 +46,16 @@ class CrossChainController extends Controller {
   }
 
 
-  async withdrawToBsc() {
+  async withdrawToOtherChain() {
     const { ctx } = this;
-    const tokenId = ctx.params.id;
-    const { target, amount } = ctx.request.body;
+    const { id: tokenId } = ctx.params;
+    const { target, amount, chain = 'bsc' } = ctx.request.body;
+    if (chain !== 'bsc' || chain !== 'matic') {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.message = `Not supported chain '${chain}'`;
+      return;
+    }
     if (isNaN(amount) || amount <= 0) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
@@ -77,7 +83,7 @@ class CrossChainController extends Controller {
       ctx.body.message = 'Token not exist';
       return;
     }
-    const { data } = await this.service.token.crosschain.getAddressFromNameAndSymbol(token.name, token.symbol);
+    const { data } = await this.service.token.crosschain.getAddressFromNameAndSymbol(token.name, token.symbol, chain);
     if (!data.isTokenDeployed) {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
@@ -85,7 +91,7 @@ class CrossChainController extends Controller {
       return;
     }
     try {
-      const permit = await this.service.token.mineToken.withdrawToBsc(tokenId, ctx.user.id, target, amount, data.addressLookUpBySymbol);
+      const permit = await this.service.token.mineToken.withdrawToOtherChain(tokenId, ctx.user.id, target, amount, data.addressLookUpBySymbol, chain);
       ctx.body = {
         ...ctx.msg.success,
         data: { permit },

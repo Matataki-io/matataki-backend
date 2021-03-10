@@ -1208,19 +1208,20 @@ class MineTokenService extends Service {
   }
 
   /**
-   * withdrawToBsc, 提取饭票到 BSC 的以太坊地址
+   * withdrawToOtherChain, 提取饭票到 BSC 的以太坊地址
    * @param {number} tokenId 饭票的ID
    * @param {number} sender 发送方的UID
    * @param {string} target 目标 BSC 钱包地址
    * @param {number} amount 数额
    * @param {string} tokenAddressOnBsc Pegged 代币在BSC上的地址
+   * @param {string} chain 区块链，默认为 bsc
    */
-  async withdrawToBsc(tokenId, sender, target, amount, tokenAddressOnBsc) {
+  async withdrawToOtherChain(tokenId, sender, target, amount, tokenAddressOnBsc, chain = 'bsc') {
     const uidOfInAndOut = this.config.tokenInAndOut.specialAccount.uid;
     // Update DB
     const dbConnection = await this.app.mysql.beginTransaction();
     // const latestNonce = await this.service.token.crosschain.getNonceOf(tokenAddressOnBsc, target);
-    const latestNonce = await this.service.token.crosschain.getNonceOfFromDB(tokenAddressOnBsc, target);
+    const latestNonce = await this.service.token.crosschain.getNonceOfFromDB(tokenAddressOnBsc, target, chain);
     const permit = await this.service.token.crosschain.issueMintPermit(tokenAddressOnBsc, target, amount, latestNonce);
     await dbConnection.insert('pegged_assets_permit', {
       type: 'mint',
