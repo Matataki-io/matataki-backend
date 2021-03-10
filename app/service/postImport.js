@@ -613,12 +613,11 @@ class PostImportService extends Service {
 
     const BIHUAPI = 'https://be02.bihu.com/bihube-pc/api/content/show/getArticle2';
     const BIHUOSS = 'https://oss-cdn2.bihu-static.com';
-    const SSIMG = 'https://ssimg.frontenduse.top';
     const BIHUSHORTCONTENT = 'https://be02.bihu.com/bihube-pc/bihu/shortContent';
 
     let KEY = '';
     const KEYArticle = '/article/';
-    const KEYShort = '/shortContent/';
+    const KEYShort = '/shortcontent/';
 
     // 处理文章
     const handleArticle = async ID => {
@@ -690,7 +689,9 @@ class PostImportService extends Service {
             cover = imgUpUrl;
           }
           if (imgUpUrl) {
-            _imgElement[i].attribs.src = `${SSIMG}${imgUpUrl}`;
+            _imgElement[i].attribs.src = `${this.config.ssimg}${imgUpUrl}`;
+          } else {
+            _imgElement[i].attribs.src = _src;
           }
         }
         content = $('body').html();
@@ -707,9 +708,13 @@ class PostImportService extends Service {
     const handleShortContent = async ID => {
       // 获取内容
       const result = await axios({
+        headers: {
+          uuid: 0,
+        },
         method: 'GET',
         url: `${BIHUSHORTCONTENT}/${ID}`,
       });
+      this.logger.info('result', result);
 
       let content = '';
       if (result.status === 200 && result.data.data) {
@@ -732,7 +737,9 @@ class PostImportService extends Service {
             const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
             const imgUrl = await this.uploadArticleImage(coverUrl, parsedCoverUpload);
             if (imgUrl) {
-              imgMd += `![imgUrl](${SSIMG}/${imgUrl})`;
+              imgMd += `![imgUrl](${this.config.ssimg}/${imgUrl})`;
+            } else {
+              imgMd += `![imgUrl](${coverUrl})`;
             }
 
             // 第一张当封面
@@ -752,25 +759,29 @@ class PostImportService extends Service {
     };
 
     // 判断是文章还是微文
-    if (url.indexOf(KEYArticle) !== -1) {
-      KEY = KEYArticle;
-    } else if (url.indexOf(KEYShort) !== -1) {
-      KEY = KEYShort;
+    const urlToLower = url.toLocaleLowerCase();
+    const KEYArticleLower = KEYArticle.toLocaleLowerCase();
+    const KEYShortLower = KEYShort.toLocaleLowerCase();
+
+    if (urlToLower.indexOf(KEYArticleLower) !== -1) {
+      KEY = KEYArticleLower;
+    } else if (urlToLower.indexOf(KEYShortLower) !== -1) {
+      KEY = KEYShortLower;
     } else {
       throw new Error('other url', url);
     }
 
     // 获取 ID
-    const IDX = url.indexOf(KEY);
-    const ID = parseInt(url.slice(IDX + KEY.length));
+    const IDX = urlToLower.indexOf(KEY);
+    const ID = parseInt(urlToLower.slice(IDX + KEY.length));
     if (!ID) {
-      throw new Error('not article id error', url);
+      throw new Error('not article id error', urlToLower);
     }
 
     try {
-      if (KEY === KEYArticle) {
+      if (KEY === KEYArticleLower) {
         return await handleArticle(ID);
-      } else if (KEY === KEYShort) {
+      } else if (KEY === KEYShortLower) {
         return await handleShortContent(ID);
       }
       throw new Error('not match key', KEY);
