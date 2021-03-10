@@ -1225,7 +1225,7 @@ class MineTokenService extends Service {
     const dbConnection = await this.app.mysql.beginTransaction();
     // const latestNonce = await this.service.token.crosschain.getNonceOf(tokenAddressOnBsc, target);
     const latestNonce = await this.service.token.crosschain.getNonceOfFromDB(tokenAddressOnBsc, target, chain);
-    const permit = await this.service.token.crosschain.issueMintPermit(tokenAddressOnBsc, target, amount, latestNonce);
+    const permit = await this.service.token.crosschain.issueMintPermit(tokenAddressOnBsc, target, amount, latestNonce, chain);
     await dbConnection.insert('pegged_assets_permit', {
       type: 'mint',
       nonce: latestNonce,
@@ -1237,6 +1237,7 @@ class MineTokenService extends Service {
       r: permit.sig.r,
       s: permit.sig.s,
       forUid: sender,
+      chain,
     });
     let type;
     switch (chain) {
