@@ -317,8 +317,7 @@ module.exports = app => {
   router.get('/minetoken/crosschain/isToken/:tokenAddress', passport.verify, controller.crossChain.isCrosschainToken);
 
   // 仅限工程师使用的 API
-  // router.post('/minetoken/crosschain/_dev/createPeggedTokenOnBSC/', passport.apiAuthorize, controller.crossChain.createPeggedTokenOnBSCForAdmin);
-  router.post('/minetoken/crosschain/:id/_dev/createPeggedToken/:chain/', passport.apiAuthorize, controller.crossChain.createPeggedTokenOnBSCForAdminById);
+  router.post('/minetoken/crosschain/:id/_dev/createPeggedToken/:chain/', passport.apiAuthorize, controller.crossChain.createPeggedTokenForAdminById);
 
   // 不写入数据的，无需权限
   // router.get('/minetoken/crosschain/:tokenOnBsc/:walletOnBsc/', passport.verify, controller.crossChain.getMintPermitNonceOf);

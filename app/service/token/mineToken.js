@@ -119,8 +119,9 @@ class MineTokenService extends Service {
    */
   async get(id) {
     const token = await this.getToken({ id });
-    const bsc_pegged_info = await this.service.token.crosschain.findTokenById(id);
-    token.bsc_contract_address = bsc_pegged_info ? bsc_pegged_info.contractAddress : null;
+    const { tokenOnBsc, tokenOnMatic } = await this.service.token.crosschain.findTokenById(id);
+    token.bsc_contract_address = tokenOnBsc ? tokenOnBsc.contractAddress : null;
+    token.bsc_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
     return token;
   }
 
@@ -128,8 +129,9 @@ class MineTokenService extends Service {
   async getBySymbol(symbol) {
     const token = await this.getToken({ symbol });
     if (token) {
-      const bsc_pegged_info = await this.service.token.crosschain.findTokenById(token.id);
-      token.bsc_contract_address = bsc_pegged_info ? bsc_pegged_info.contractAddress : null;
+      const { tokenOnBsc, tokenOnMatic } = await this.service.token.crosschain.findTokenById(token.id);
+      token.bsc_contract_address = tokenOnBsc ? tokenOnBsc.contractAddress : null;
+      token.bsc_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
     }
     return token;
   }
@@ -138,8 +140,9 @@ class MineTokenService extends Service {
   async getByUserId(uid) {
     const token = await this.getToken({ uid });
     if (token) {
-      const bsc_pegged_info = await this.service.token.crosschain.findTokenById(token.id);
-      token.bsc_contract_address = bsc_pegged_info ? bsc_pegged_info.contractAddress : null;
+      const { tokenOnBsc, tokenOnMatic } = await this.service.token.crosschain.findTokenById(token.id);
+      token.bsc_contract_address = tokenOnBsc ? tokenOnBsc.contractAddress : null;
+      token.bsc_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
     }
     return token;
   }
@@ -1208,7 +1211,7 @@ class MineTokenService extends Service {
   }
 
   /**
-   * withdrawToOtherChain, 提取饭票到 BSC 的以太坊地址
+   * withdrawToOtherChain, 提取饭票到 其他网络 的以太坊地址
    * @param {number} tokenId 饭票的ID
    * @param {number} sender 发送方的UID
    * @param {string} target 目标 BSC 钱包地址
@@ -1235,8 +1238,13 @@ class MineTokenService extends Service {
       s: permit.sig.s,
       forUid: sender,
     });
+    let type;
+    switch (chain) {
+      case 'bsc': type = consts.mineTokenTransferTypes.crosschainBscTransferOut; break;
+      case 'matic': type = consts.mineTokenTransferTypes.crosschainMaticTransferOut; break;
+    }
     await this.transferFrom(tokenId, sender, uidOfInAndOut, amount, this.clientIP,
-      consts.mineTokenTransferTypes.crosschainBscTransferOut, dbConnection, `Withdraw to BSC, address: ${target}`);
+      type, dbConnection, `Withdraw to ${chain}, address: ${target}`);
     await dbConnection.commit();
     return permit;
   }

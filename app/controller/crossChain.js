@@ -3,20 +3,6 @@
 const Controller = require('../core/base_controller');
 
 class CrossChainController extends Controller {
-  async createPeggedTokenOnBSCForAdmin() {
-    // 无任何检测，仅限工程师，请设置好接口的权限！！！
-    const { ctx } = this;
-    const { name, symbol, decimals } = ctx.request.body;
-    const result = await this.service.token.crosschain._createPeggedToken(name, symbol, Number(decimals));
-    if (result.statusCode !== 201) {
-      ctx.body = ctx.msg.failure;
-      ctx.body.data = { error: 'Something bad happened, please contact Matataki Team ASAP.' };
-    }
-
-    ctx.body = ctx.msg.success;
-    ctx.body.data = result.data.hash;
-  }
-
   async createPeggedTokenForAdminById() {
     // 无任何检测，仅限工程师，请设置好接口的权限！！！
     const { ctx } = this;

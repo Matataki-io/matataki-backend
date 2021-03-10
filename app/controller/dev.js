@@ -38,7 +38,7 @@ class OnlyForDevController extends Controller {
     // @XXX: remove before go mainnet
     const { ctx } = this;
     const { name, symbol, decimals } = ctx.request.body;
-    const result = await this.service.token.crosschain._createPeggedTokenOnBsc(name, symbol, Number(decimals));
+    const result = await this.service.token.crosschain._createPeggedToken(name, symbol, Number(decimals));
     if (result.statusCode !== 201) {
       ctx.body = ctx.msg.failure;
       ctx.body.data = { error: 'Something bad happened, please contact Matataki Team ASAP.' };
