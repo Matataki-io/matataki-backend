@@ -41,7 +41,7 @@ class DownloaderService extends Service {
 # 标题： ${item.title}
 - 作者： ${item.author}
 
-          ${data.content}
+${data.content}
 - 原文地址：${website}/${item.id}
 - IPFS： ${item.hash}
 ${refMdStr}`);

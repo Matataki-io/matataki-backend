@@ -10,6 +10,11 @@ const htmlparser = require('node-html-parser');
 const pretty = require('pretty');
 const turndown = require('turndown');
 const cheerio = require('cheerio'); // 如果是客户端渲染之类的 可以考虑用 puppeteer
+const steem = require('steem');
+const { v4: uuid, NIL: NIL_UUID } = require('uuid');
+const nodePath = require('path');
+
+const isTest = process.env.NODE_ENV === 'test';
 
 class PostImportService extends Service {
 
@@ -785,6 +790,49 @@ class PostImportService extends Service {
       return null;
     }
 
+  }
+  /**
+   * 处理 Steemit 文章
+   * @param {string} url Steemit 文章的地址
+   */
+  async handleSteemit(url) {
+    try {
+      const path = url.replace('https://steemit.com', ''); // Like /steemit/@abdelzaher1/2cn4y6-new-memes
+      const authorAndPermlinkMatch = /\@\S+\/\S+$/g;
+      const contentKey = (path.match(authorAndPermlinkMatch).length && path.match(authorAndPermlinkMatch)[0].replace('@', '')) || '';
+      if (contentKey) {
+        const response = await steem.api.getStateAsync(path);
+        const content = response.content[contentKey];
+        if (content) {
+          const title = content.title;
+          const metadata = JSON.parse(content.json_metadata);
+          const coverUrl = (metadata.image && metadata.image.length) ? metadata.image[0] : null;
+          const articleContent = (metadata.format === 'markdown') ? content.body : pretty(content.body);
+          const tags = (metadata.tags && metadata.tags.length) ? metadata.tags.join(',') : '';
+
+          // 上传 Cover 到自有 OSS
+          let coverLocation = '';
+          if (coverUrl) {
+            const cachePath = `./uploads/steemit_${isTest ? NIL_UUID : uuid()}${nodePath.extname(coverUrl)}`;
+            const uploadResult = await this.uploadArticleImage(coverUrl, cachePath);
+            if (uploadResult) coverLocation = uploadResult;
+          }
+
+          return {
+            title,
+            cover: coverLocation,
+            content: articleContent,
+            tags,
+          };
+        }
+        throw new Error('Can not get content from steem api response.');
+      } else {
+        throw new Error(`No "contentKey" matched from path "${path}".`);
+      }
+    } catch (error) {
+      this.logger.error('PostImportService:: handleSteemit: error:', error);
+      return null;
+    }
   }
 }
 
