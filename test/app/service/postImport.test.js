@@ -9,7 +9,7 @@ describe('test/app/service/postImport.test.js', () => {
     const md5String = md5('./uploads/steemit_00000000-0000-0000-0000-000000000000.jpg');
     const expected = {
       title: 'New Memes',
-      cover: `https://ssimg.frontenduse.top/image/${moment().format('YYYY/MM/DD')}/${md5String}.jpg`,
+      cover: `/image/${moment().format('YYYY/MM/DD')}/${md5String}.jpg`,
       content: 'https://i.redd.it/3atk5nw97qi61.jpg',
       tags: 'steemit,funny,fun,memes',
     };
