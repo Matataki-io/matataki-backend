@@ -36,7 +36,6 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: uploadArticleImage: Download Image failed..', e);
       return null;
     }
-    console.log(imageFile.filename);
     // 上传的文件的名字
     const filename = '/image/'
       + moment().format('YYYY/MM/DD/')
@@ -805,7 +804,7 @@ class PostImportService extends Service {
           if (coverUrl) {
             const cachePath = `./uploads/steemit_${isTest ? NIL_UUID : uuid()}${nodePath.extname(coverUrl)}`;
             const uploadResult = await this.uploadArticleImage(coverUrl, cachePath);
-            if (uploadResult) coverLocation = `https://ssimg.frontenduse.top${uploadResult}`;
+            if (uploadResult) coverLocation = uploadResult;
           }
 
           return {
