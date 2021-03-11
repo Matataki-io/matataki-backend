@@ -10,6 +10,7 @@ class CheckNotConfirmBscDeposit extends Subscription {
   }
 
   async subscribe() {
+    if (this.ctx.app.config.isDebug) return;
     await this.service.token.crosschain.checkNotConfirmedDeposit();
   }
 }

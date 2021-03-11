@@ -194,7 +194,7 @@ class CrossChainService extends Service {
 
     this.logger.info('isSameTxHashExist', isSameTxHashExist);
 
-    const data = await this.fetchDepositEventBy(token.contractAddress, uid, txHash);
+    const data = await this.fetchDepositEventBy(token.contractAddress, uid, txHash, fromChain);
     this.logger.info('fetchDepositEventBy', data);
 
     // 防止冒用
