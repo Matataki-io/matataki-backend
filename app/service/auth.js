@@ -274,7 +274,8 @@ class AuthService extends Service {
   // github账号登录，创建或登录用户, 发放jwt token
   // todo：2019-8-27 缺少登录日志
   // wechat、telegram、twitter、google 通用方法
-  async saveUser(username, nickname, avatarUrl, ip = '', referral = 0, platform = 'github') {
+  // 2021-3-11: 为 github 新增 access_token 存储
+  async saveUser(username, nickname, avatarUrl, ip = '', referral = 0, platform = 'github', access_token = '') {
     try {
       let currentUser = await this.service.account.binding.get2({ username, platform });
       // 用户是第一次登录, 先创建
@@ -304,6 +305,24 @@ class AuthService extends Service {
       await this.insertLoginLog(currentUser.id, ip);
       // const expires = moment().add(7, 'days').valueOf();
       this.logger.info('currentUser', currentUser);
+      if (platform === 'github') {
+        const github = await this.app.mysql.get('github', {uid: currentUser.id});
+        if (!github) {
+          // 似乎不需要 create_time？
+          // const now = moment().format('YYYY-MM-DD HH:mm:ss');
+          this.app.mysql.insert('github', {
+            uid: currentUser.id,
+            access_token,
+            // create_time: now,
+          });
+        } else {
+          this.app.mysql.update('github', { access_token }, {
+            where: {
+              uid: currentUser.id,
+            }
+          })
+        }
+      }
       const jwttoken = this.jwtSign(currentUser);
       // jwt.encode({
       //   iss: currentUser.username,
