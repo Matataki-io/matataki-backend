@@ -1,6 +1,7 @@
 'use strict';
 const Controller = require('../core/base_controller');
 const moment = require('moment');
+const { verify } = require('hcaptcha');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
 // const sanitize = require('sanitize-html');
@@ -43,7 +44,18 @@ class PostController extends Controller {
       editRequireToken,
       editRequireBuy,
       ipfs_hide,
+      hCaptchaData,
     } = ctx.request.body;
+
+    // do the checking here
+    try {
+      const verifiedCaptchaData = await verify('0x7625265563A6378Af17bd7219D0647Fb6e665136', hCaptchaData.token);
+      if (!verifiedCaptchaData.success) throw new Error('Bad Captcha');
+    } catch (error) {
+      ctx.body = ctx.msg.failed;
+      ctx.body.message = 'bad captcha';
+      return;
+    }
 
     const result = await ctx.service.post.fullPublish(
       ctx.user,
