@@ -5,6 +5,7 @@ const moment = require('moment');
 const _ = require('lodash');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
+const { verify } = require('hcaptcha');
 const consts = require('../service/consts');
 
 class UserController extends Controller {
@@ -204,7 +205,19 @@ class UserController extends Controller {
   // 将设置用户昵称、个性签名合而为一
   async setProfile() {
     const ctx = this.ctx;
-    const { nickname = null, introduction = null, accept = null } = ctx.request.body;
+    const { nickname = null, introduction = null, accept = null, hCaptchaData = null } = ctx.request.body;
+    const hCaptchaKey = this.app.config.hCaptcha.privateKey;
+
+    try {
+      if (!hCaptchaData.token) throw new Error('Bad Captcha');
+      const verifiedCaptchaData = await verify(hCaptchaKey, hCaptchaData.token);
+      if (!verifiedCaptchaData.success) throw new Error('Bad Captcha');
+    } catch (error) {
+      ctx.status = 400;
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = 'bad captcha';
+      return;
+    }
 
     const setResult = await this.service.user.setProfile(ctx.user.id, nickname, introduction, accept);
     if (setResult === true) {
@@ -546,7 +559,6 @@ class UserController extends Controller {
       const { public_key } = account;
       ctx.body = ctx.msg.success;
       ctx.body.data = public_key;
-      return;
     } else {
       ctx.body = ctx.msg.failure;
       return;

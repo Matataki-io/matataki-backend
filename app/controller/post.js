@@ -47,10 +47,12 @@ class PostController extends Controller {
       hCaptchaData,
     } = ctx.request.body;
 
+    const hCaptchaKey = this.app.config.hCaptcha.privateKey;
+
     // do the checking here
     try {
       if (!hCaptchaData.token) throw new Error('Bad Captcha');
-      const verifiedCaptchaData = await verify('0x7625265563A6378Af17bd7219D0647Fb6e665136', hCaptchaData.token);
+      const verifiedCaptchaData = await verify(hCaptchaKey, hCaptchaData.token);
       if (!verifiedCaptchaData.success) throw new Error('Bad Captcha');
     } catch (error) {
       ctx.status = 400;
