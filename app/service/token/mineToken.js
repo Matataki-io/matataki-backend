@@ -119,8 +119,9 @@ class MineTokenService extends Service {
    */
   async get(id) {
     const token = await this.getToken({ id });
-    const bsc_pegged_info = await this.service.token.crosschain.findTokenById(id);
-    token.bsc_contract_address = bsc_pegged_info ? bsc_pegged_info.contractAddress : null;
+    const { tokenOnBsc, tokenOnMatic } = await this.service.token.crosschain.findTokenById(id);
+    token.bsc_contract_address = tokenOnBsc ? tokenOnBsc.contractAddress : null;
+    token.bsc_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
     return token;
   }
 
@@ -128,8 +129,9 @@ class MineTokenService extends Service {
   async getBySymbol(symbol) {
     const token = await this.getToken({ symbol });
     if (token) {
-      const bsc_pegged_info = await this.service.token.crosschain.findTokenById(token.id);
-      token.bsc_contract_address = bsc_pegged_info ? bsc_pegged_info.contractAddress : null;
+      const { tokenOnBsc, tokenOnMatic } = await this.service.token.crosschain.findTokenById(token.id);
+      token.bsc_contract_address = tokenOnBsc ? tokenOnBsc.contractAddress : null;
+      token.bsc_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
     }
     return token;
   }
@@ -138,8 +140,9 @@ class MineTokenService extends Service {
   async getByUserId(uid) {
     const token = await this.getToken({ uid });
     if (token) {
-      const bsc_pegged_info = await this.service.token.crosschain.findTokenById(token.id);
-      token.bsc_contract_address = bsc_pegged_info ? bsc_pegged_info.contractAddress : null;
+      const { tokenOnBsc, tokenOnMatic } = await this.service.token.crosschain.findTokenById(token.id);
+      token.bsc_contract_address = tokenOnBsc ? tokenOnBsc.contractAddress : null;
+      token.bsc_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
     }
     return token;
   }
@@ -1208,20 +1211,21 @@ class MineTokenService extends Service {
   }
 
   /**
-   * withdrawToBsc, 提取饭票到 BSC 的以太坊地址
+   * withdrawToOtherChain, 提取饭票到 其他网络 的以太坊地址
    * @param {number} tokenId 饭票的ID
    * @param {number} sender 发送方的UID
    * @param {string} target 目标 BSC 钱包地址
    * @param {number} amount 数额
    * @param {string} tokenAddressOnBsc Pegged 代币在BSC上的地址
+   * @param {string} chain 区块链，默认为 bsc
    */
-  async withdrawToBsc(tokenId, sender, target, amount, tokenAddressOnBsc) {
+  async withdrawToOtherChain(tokenId, sender, target, amount, tokenAddressOnBsc, chain = 'bsc') {
     const uidOfInAndOut = this.config.tokenInAndOut.specialAccount.uid;
     // Update DB
     const dbConnection = await this.app.mysql.beginTransaction();
     // const latestNonce = await this.service.token.crosschain.getNonceOf(tokenAddressOnBsc, target);
-    const latestNonce = await this.service.token.crosschain.getNonceOfFromDB(tokenAddressOnBsc, target);
-    const permit = await this.service.token.crosschain.issueMintPermit(tokenAddressOnBsc, target, amount, latestNonce);
+    const latestNonce = await this.service.token.crosschain.getNonceOfFromDB(tokenAddressOnBsc, target, chain);
+    const permit = await this.service.token.crosschain.issueMintPermit(tokenAddressOnBsc, target, amount, latestNonce, chain);
     await dbConnection.insert('pegged_assets_permit', {
       type: 'mint',
       nonce: latestNonce,
@@ -1233,9 +1237,15 @@ class MineTokenService extends Service {
       r: permit.sig.r,
       s: permit.sig.s,
       forUid: sender,
+      chain,
     });
+    let type;
+    switch (chain) {
+      case 'bsc': type = consts.mineTokenTransferTypes.crosschainBscTransferOut; break;
+      case 'matic': type = consts.mineTokenTransferTypes.crosschainMaticTransferOut; break;
+    }
     await this.transferFrom(tokenId, sender, uidOfInAndOut, amount, this.clientIP,
-      consts.mineTokenTransferTypes.crosschainBscTransferOut, dbConnection, `Withdraw to BSC, address: ${target}`);
+      type, dbConnection, `Withdraw to ${chain}, address: ${target}`);
     await dbConnection.commit();
     return permit;
   }

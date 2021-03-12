@@ -27,17 +27,25 @@ class CrossChainService extends Service {
         return txt;
       }.bind(this));
     };
-    const { endpoint, accessToken } = this.config.nextApi;
-    this.api = axios.create({
-      baseURL: endpoint,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    const { nextApi: bscCrosschainApi, maticCrosschainApi } = this.config;
+    this.api = {
+      bsc: axios.create({
+        baseURL: bscCrosschainApi.endpoint,
+        headers: {
+          Authorization: `Bearer ${bscCrosschainApi.accessToken}`,
+        },
+      }),
+      matic: axios.create({
+        baseURL: maticCrosschainApi.endpoint,
+        headers: {
+          Authorization: `Bearer ${maticCrosschainApi.accessToken}`,
+        },
+      }),
+    };
   }
 
-  async _createPeggedTokenOnBsc(tokenName, tokenSymbol, decimals) {
-    const { data } = await this.api.post('/token/', {
+  async _createPeggedToken(tokenName, tokenSymbol, decimals, chain = 'bsc') {
+    const { data } = await this.api[chain].post('/token/', {
       name: tokenName,
       symbol: tokenSymbol,
       decimals: Number(decimals),
@@ -45,8 +53,8 @@ class CrossChainService extends Service {
     return data;
   }
 
-  async getAddressFromNameAndSymbol(name, symbol) {
-    const { data } = await this.api.get('/token/compute/', { data: {
+  async getAddressFromNameAndSymbol(name, symbol, chain = 'bsc') {
+    const { data } = await this.api[chain].get('/token/compute/', { data: {
       name, symbol,
     } });
     return data;
@@ -57,9 +65,10 @@ class CrossChainService extends Service {
    * 只返回合约里最新一个可用的 nonce
    * @param {string} token 其他区块链的代币地址
    * @param {string} to 其他区块链的钱包地址
+   * @param {string} chain 区块链，默认为 bsc
    */
-  async getNonceOf(token, to) {
-    const { data } = await this.api.get(`/token/${token}/noncesOf/${to}`);
+  async getNonceOf(token, to, chain = 'bsc') {
+    const { data } = await this.api[chain].get(`/token/${token}/noncesOf/${to}`);
     return data.data.nonce;
   }
 
@@ -68,9 +77,10 @@ class CrossChainService extends Service {
    * 可以在没上传之前继续发行，但使用时需要先上传 Nonce 低的 Permit
    * @param {string} token 其他区块链的代币地址
    * @param {string} to 其他区块链的钱包地址
+   * @param {string} chain 区块链，默认为 bsc
    */
-  async getNonceOfFromDB(token, to) {
-    const result = await this.app.mysql.select('pegged_assets_permit', { where: { token, to }, orders: [[ 'id', 'desc' ]] });
+  async getNonceOfFromDB(token, to, chain = 'bsc') {
+    const result = await this.app.mysql.select('pegged_assets_permit', { where: { token, to, chain }, orders: [[ 'id', 'desc' ]] });
     if (result.length === 0) return 0;
     return result[0].nonce + 1;
   }
@@ -79,20 +89,20 @@ class CrossChainService extends Service {
    * 获取我发行的 Permit
    * @param {number} uid 用户 UID
    */
-  async getMyIssuedPermits(uid) {
-    const result = await this.app.mysql.select('pegged_assets_permit', { where: { forUid: uid }, orders: [[ 'token', 'asc' ], [ 'to', 'desc' ], [ 'nonce', 'desc' ]] });
+  async getMyIssuedPermits(uid, chain = 'bsc') {
+    const result = await this.app.mysql.select('pegged_assets_permit', { where: { forUid: uid, chain }, orders: [[ 'token', 'asc' ], [ 'to', 'desc' ], [ 'nonce', 'desc' ]] });
     return result.map(({
       id, token, to, value, nonce, deadline, r, s, v,
     }) => ({ id, token, to, value, nonce, deadline: Number(deadline), sig: { r, s, v } }));
   }
 
-  async isPermitUsed(token, to, nonce) {
-    const { data } = await this.api.get(`/token/${token}/isPermitUsed/${to}/${nonce}`);
+  async isPermitUsed(token, to, nonce, chain = 'bsc') {
+    const { data } = await this.api[chain].get(`/token/${token}/isPermitUsed/${to}/${nonce}`);
     return data.data.isPermitUsed;
   }
 
-  async issueMintPermit(token, to, value, nonce) {
-    const { data } = await this.api.post(`/token/${token}/mint`, {
+  async issueMintPermit(token, to, value, nonce, chain = 'bsc') {
+    const { data } = await this.api[chain].post(`/token/${token}/mint`, {
       to,
       value,
       nonce,
@@ -100,26 +110,27 @@ class CrossChainService extends Service {
     return data;
   }
 
-  async updateUnusedMintPermit(token, to, value, nonce) {
+  async updateUnusedMintPermit(token, to, value, nonce, chain = 'bsc') {
     if (isNaN(nonce)) throw new Error('Bad nonce parameter');
     // Check is this Permit was used or not
-    const currentNonce = await this.getNonceOf(token, to);
+    const currentNonce = await this.getNonceOf(token, to, chain);
     if (currentNonce > Number(nonce)) {
       throw new Error('This deposit nonce was used. Please try another one.');
     }
     // Issue new permit
-    return this.issueMintPermit(token, to, value, nonce);
+    return this.issueMintPermit(token, to, value, nonce, chain);
   }
 
-  async renewUnusedMintPermit(permitId, forUid) {
-    const permit = await this.app.mysql.get('pegged_assets_permit', { id: permitId, forUid });
+  async renewUnusedMintPermit(permitId, forUid, chain = 'bsc') {
+    const permit = await this.app.mysql.get('pegged_assets_permit', { id: permitId, forUid, chain });
     if (!permit) throw new Error(`Having problem to update Permit #${permitId}, please contact Matataki Support ASAP.`);
     // Blockchain related Check will be in `updateUnusedMintPermit`
     const newPermit = await this.updateUnusedMintPermit(
       permit.token,
       permit.to,
       permit.value,
-      permit.nonce
+      permit.nonce,
+      chain
     );
     await this.app.mysql.update('pegged_assets_permit', {
       id: permit.id,
@@ -131,22 +142,22 @@ class CrossChainService extends Service {
     return newPermit;
   }
 
-  async burn(tokenAddress, to, amount) {
-    const { data } = await this.api.post(`/token/${tokenAddress}/burn`, {
+  async burn(tokenAddress, to, amount, chain = 'bsc') {
+    const { data } = await this.api[chain].post(`/token/${tokenAddress}/burn`, {
       to,
       value: amount,
     });
     return data;
   }
 
-  async fetchDepositEventBy(contractAddress, uid, txHash) {
-    const { data } = await this.api.get(`/token/${contractAddress}/event/burn/${uid}/${txHash}`);
+  async fetchDepositEventBy(contractAddress, uid, txHash, chain = 'bsc') {
+    const { data } = await this.api[chain].get(`/token/${contractAddress}/event/burn/${uid}/${txHash}`);
     return data.data.event;
   }
 
-  async listCrosschainTokenIds() {
+  async listCrosschainTokenIds(chain = 'bsc') {
     // 暂时只有 BSC
-    const tokens = await this.app.mysql.select('pegged_assets', { where: { chain: 'bsc' }, orders: [[ 'id', 'desc' ]] });
+    const tokens = await this.app.mysql.select('pegged_assets', { where: { chain }, orders: [[ 'id', 'desc' ]] });
     const tokenIds = tokens.map(token => token.tokenId);
     return tokenIds;
   }
@@ -157,8 +168,9 @@ class CrossChainService extends Service {
   }
 
   async findTokenById(tokenId) {
-    const token = await this.app.mysql.get('pegged_assets', { tokenId });
-    return token;
+    const tokenOnBsc = await this.app.mysql.get('pegged_assets', { tokenId, chain: 'bsc' });
+    const tokenOnMatic = await this.app.mysql.get('pegged_assets', { tokenId, chain: 'matic' });
+    return { tokenOnBsc, tokenOnMatic };
   }
 
   async listMyDepositRequest(uid) {
@@ -169,10 +181,10 @@ class CrossChainService extends Service {
     return depositsOf;
   }
 
-  async requestToDeposit(tokenId, uid, txHash) {
+  async requestToDeposit(tokenId, uid, txHash, fromChain = 'bsc') {
     // 寻找跨链Fan票
     this.logger.info('requestToDeposit::tokenId', tokenId);
-    const token = await this.app.mysql.get('pegged_assets', { tokenId });
+    const token = await this.app.mysql.get('pegged_assets', { tokenId, chain: fromChain });
     this.logger.info('requestToDeposit::token', token);
     if (!token) throw new Error('No such crosschain token.');
 
@@ -182,15 +194,15 @@ class CrossChainService extends Service {
 
     this.logger.info('isSameTxHashExist', isSameTxHashExist);
 
-    const data = await this.fetchDepositEventBy(token.contractAddress, uid, txHash);
+    const data = await this.fetchDepositEventBy(token.contractAddress, uid, txHash, fromChain);
     this.logger.info('fetchDepositEventBy', data);
 
     // 防止冒用
-    if (data.uid !== uid) throw new Error("You're the one who spend deposit request");
+    if (data.uid !== uid) throw new Error("You're not the one who to use deposit request");
     const { atBlock, confirmation, amount } = data;
     // 确认区块大于6就认可为正常
     const status = confirmation >= 6 ? EnumForPeggedAssetDeposit.BURN_EVENT_CONFIRMED : EnumForPeggedAssetDeposit.BURN_EVENT_CREATED;
-    const obj = { uid: data.uid, fromChain: 'bsc', burnTx: txHash, value: amount, atBlock, status, tokenId, rinkebyHash: null }
+    const obj = { uid: data.uid, fromChain, burnTx: txHash, value: amount, atBlock, status, tokenId, rinkebyHash: null };
     await this.app.mysql.insert(
       'pegged_assets_deposit',
       // 以防万一
@@ -208,8 +220,7 @@ class CrossChainService extends Service {
     if (!notConfirmedDeposit || notConfirmedDeposit.length === 0) return;
 
     const theirTxHash = notConfirmedDeposit.map(tx => tx.burnTx);
-    const data = await this.getBscTransactionsReceipt(theirTxHash);
-    this.logger.info('getBscTransactionsReceipt', data);
+    const data = await this.getTransactionsReceipt(theirTxHash, notConfirmedDeposit.fromChain);
     const filteredTxs = data.filter(e => e !== null && e.confirmations >= 6);
     this.logger.info('filteredTxs', filteredTxs);
     const goodTxs = filteredTxs.map(e => e.transactionHash);
@@ -234,16 +245,28 @@ class CrossChainService extends Service {
     // Do the transfer logic here
     const uidOfInAndOut = this.config.tokenInAndOut.specialAccount.uid;
     const dbConnection = await this.app.mysql.beginTransaction();
+    const depositFrom = confirmedDeposit.fromChain;
+    let type;
+    switch (depositFrom) {
+      case 'bsc': {
+        type = consts.mineTokenTransferTypes.crosschainBscTransferIn;
+        break;
+      }
+      case 'matic': {
+        type = consts.mineTokenTransferTypes.crosschainMaticTransferIn;
+        break;
+      }
+    }
     const { txHash } = await this.service.token.mineToken.transferFrom(
       confirmedDeposit.tokenId, uidOfInAndOut, confirmedDeposit.uid, confirmedDeposit.value, this.clientIP,
-      consts.mineTokenTransferTypes.crosschainBscTransferIn, dbConnection, `Deposit from BSC, bsc tx hash is ${confirmedDeposit.burnTx}`);
+      type, dbConnection, `Deposit from ${depositFrom}, ${depositFrom} tx hash is ${confirmedDeposit.burnTx}`);
     await dbConnection.commit();
     const transferedDeposit = { ...confirmedDeposit, status: EnumForPeggedAssetDeposit.RINKEBY_DEPOSIT_CREATED, rinkebyHash: txHash };
     await this.app.mysql.update('pegged_assets_deposit', transferedDeposit);
   }
 
-  async getBscTransactionsReceipt(txHashes) {
-    const { data } = await this.api.post('/blockchain/getTransactions', {
+  async getTransactionsReceipt(txHashes, chain = 'bsc') {
+    const { data } = await this.api[chain].post('/blockchain/getTransactions', {
       txHashes,
     });
     return data.data;

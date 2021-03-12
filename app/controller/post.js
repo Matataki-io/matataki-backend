@@ -1,6 +1,7 @@
 'use strict';
 const Controller = require('../core/base_controller');
 const moment = require('moment');
+const { verify } = require('hcaptcha');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
 // const sanitize = require('sanitize-html');
@@ -43,7 +44,22 @@ class PostController extends Controller {
       editRequireToken,
       editRequireBuy,
       ipfs_hide,
+      hCaptchaData,
     } = ctx.request.body;
+
+    const hCaptchaKey = this.app.config.hCaptcha.privateKey;
+
+    // do the checking here
+    try {
+      if (!hCaptchaData.token) throw new Error('Bad Captcha');
+      const verifiedCaptchaData = await verify(hCaptchaKey, hCaptchaData.token);
+      if (!verifiedCaptchaData.success) throw new Error('Bad Captcha');
+    } catch (error) {
+      ctx.status = 400;
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = 'bad captcha';
+      return;
+    }
 
     const result = await ctx.service.post.fullPublish(
       ctx.user,
@@ -991,6 +1007,11 @@ class PostController extends Controller {
       }
       return 1;
     };
+    /**
+     * 匹配 URL 并调用对应 Handler 方法
+     * @param {RegExp} matchRule 匹配规则
+     * @param {Function} handler 被调用的方法
+     */
     const makeMatch = async (matchRule, handler) =>
       (url.match(matchRule) ? makeResponse(await handler(url)) : false);
     // true = succeed
@@ -1002,7 +1023,11 @@ class PostController extends Controller {
     );
     const chainnewsMatch = makeMatch(
       /https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/,
-      x => this.service.postImport.handleChainnews(x)
+      x => this.service.postImport.handleChainnews({ url: x, type: 'articles' })
+    );
+    const chainnewsNewsMatch = makeMatch(
+      /https:\/\/(.*)?chainnews\.com\/news\/.+/,
+      x => this.service.postImport.handleChainnews({ url: x, type: 'news' })
     );
     const orangeMatch = makeMatch(/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/, x =>
       this.service.postImport.handleOrange(x)
@@ -1034,10 +1059,16 @@ class PostController extends Controller {
     const bihuMatch = makeMatch(/https:\/\/(.*)?bihu\.com\/.+/, x =>
       this.service.postImport.handleBihu(x)
     );
+    // Steemit
+    const steemitMatch = makeMatch(
+      /^https:\/\/steemit\.com\/\S+\/\@\S+\/\S+$/,
+      x => this.service.postImport.handleSteemit(x)
+    );
 
     const result
       = (await wechatMatch)
       || (await chainnewsMatch)
+      || (await chainnewsNewsMatch)
       || (await orangeMatch)
       || (await jianshuMatch)
       || (await gaojinMatch)
@@ -1045,7 +1076,8 @@ class PostController extends Controller {
       || (await zhihuMatch)
       // || (await weiboMatch)
       || (await archiveMatch)
-      || (await bihuMatch);
+      || (await bihuMatch)
+      || (await steemitMatch);
 
     if (result === 1) {
       this.logger.info(

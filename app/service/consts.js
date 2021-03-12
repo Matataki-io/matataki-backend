@@ -93,6 +93,8 @@ module.exports = {
     airdrop: 'airdrop',
     crosschainBscTransferOut: 'crosschain_bsc_transfer_out',
     crosschainBscTransferIn: 'crosschain_bsc_deposit',
+    crosschainMaticTransferOut: 'crosschain_matic_transfer_out',
+    crosschainMaticTransferIn: 'crosschain_matic_deposit',
     exchange_purchase: 'exchange_purchase',
     exchange_addliquidity: 'exchange_addliquidity',
     exchange_removeliquidity: 'exchange_removeliquidity',

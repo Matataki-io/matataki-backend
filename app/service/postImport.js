@@ -10,6 +10,11 @@ const htmlparser = require('node-html-parser');
 const pretty = require('pretty');
 const turndown = require('turndown');
 const cheerio = require('cheerio'); // 如果是客户端渲染之类的 可以考虑用 puppeteer
+const steem = require('steem');
+const { v4: uuid, NIL: NIL_UUID } = require('uuid');
+const nodePath = require('path');
+
+const isTest = process.env.NODE_ENV === 'test';
 
 class PostImportService extends Service {
 
@@ -78,29 +83,28 @@ class PostImportService extends Service {
     // 因为 cheerio decode 导致 某些attar属性里面的字符转换渲染出来的html不对 所以删除有问题的自定义属性
     const source = removeTagAttr(rawPage.data, 'span', 'data-shimo-docs');
     const $ = cheerio.load(source, { decodeEntities: false });
-    const mediaContent = $('#rich_media_content ');
+    const mediaContent = $('div.rich_media_content');
 
     // 把图片上传至本站， 并替换链接
     // TBD: 仍然有出现图片未被替换的问题
     let imgRawUrl, imgUpUrl, imgFileName;
-    // const imgElement = parsedPage.querySelector('div.rich_media_content').querySelectorAll('img');
-    const _imgElement = mediaContent.find('img').toArray();
-
-    for (let index = 0; index < _imgElement.length; index += 1) {
-      imgRawUrl = _imgElement[index].attribs['data-src'];
-      imgFileName = './uploads/today_' + Date.now() + '.' + _imgElement[0].attribs['data-type'];
+    const imgElements = mediaContent.find('img').toArray();
+    for (const imgElement of imgElements) {
+      imgRawUrl = imgElement.attribs['data-src'];
+      imgFileName = './uploads/today_' + Date.now() + '.' + imgElement.attribs['data-type'];
       imgUpUrl = await this.uploadArticleImage(imgRawUrl, imgFileName);
       // 匹配图片URL， 并进行替换
       if (imgUpUrl) {
-        _imgElement[index].attribs['data-src'] = _imgElement[index].attribs['data-src'].replace(
+        imgElement.attribs['data-src'] = imgElement.attribs['data-src'].replace(
           /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
-        _imgElement[index].attribs.style = 'vertical-align: middle;width: 90%;height: 90%;';
+        imgElement.attribs.style = 'vertical-align: middle;width: 90%;height: 90%;';
       } else {
         this.logger.info('PostImportService:: handleWechat: upload Image failed, ignored');
-        _imgElement[index].attribs['data-src'] = '';
+        imgElement.attribs['data-src'] = '';
       }
-      _imgElement[index].attribs.src = _imgElement[index].attribs['data-src'];
+      imgElement.attribs.src = imgElement.attribs['data-src'];
     }
+
     // 处理视频
     const videos = $('iframe', mediaContent);
     for (const video of videos.toArray()) {
@@ -118,8 +122,7 @@ class PostImportService extends Service {
         this.logger.error('PostImportService:: handleWechat: error while processing video:', err);
       }
     }
-    let parsedContent = '';
-    parsedContent = pretty($('div.rich_media_content').html());
+    const parsedContent = pretty(mediaContent.html());
 
     // 处理元数据 —— 标题、封面
     const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
@@ -137,21 +140,15 @@ class PostImportService extends Service {
       parsedCoverRaw = rawPage.data.match(/msg_cdn_url = "http:\/\/mmbiz\.qpic\.cn\/mmbiz\/[0-9a-zA-Z]{10,100}\/0\?wx_fmt=jpeg"/);
       if (parsedCoverRaw) parsedCoverRaw = parsedCoverRaw[0];
     }
-    // const parsedCover = parsedCoverRaw.substring(15, parsedCoverRaw.length - 1);
     const parsedCover = parsedCoverRaw;
     const parsedCoverUpload = './uploads/today_wx_' + Date.now() + '.jpg';
     const coverLocation = await this.uploadArticleImage(parsedCover, parsedCoverUpload);
-    // console.log(parsedTitle);
-    // console.log(parsedCover);
-    // console.log(parsedContent);
 
-    const articleObj = {
+    return {
       title,
       cover: coverLocation,
       content: parsedContent,
     };
-
-    return articleObj;
   }
 
   // 处理橙皮书文章
@@ -201,7 +198,7 @@ class PostImportService extends Service {
   }
 
   // 处理链闻文章
-  async handleChainnews(url) {
+  async handleChainnews({ url, type }) {
     // 拉取文章内容
     let rawPage;
     try {
@@ -217,27 +214,84 @@ class PostImportService extends Service {
       this.logger.error('PostImportService:: handleChainnews: error:', err);
       return null;
     }
-    // 处理元数据 —— 标题、封面
-    const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
-    const { title, image } = metadata;
-    // Parser 处理， 转化为markdown， 因平台而异
-    const parsedPage = htmlparser.parse(rawPage.data);
-    const parsedContent = parsedPage.querySelector('div.post-content.markdown');
-    // const coverRe = new RegExp(//);
-    const turndownService = new turndown();
-    const articleContent = turndownService.turndown(parsedContent.toString());
 
-    const parsedCoverUpload = './uploads/today_chainnews_' + Date.now() + '.jpg';
-    const coverLocation = await this.uploadArticleImage(image.substring(0, image.length - 6), parsedCoverUpload);
-
-
-    const articleObj = {
-      title,
-      cover: coverLocation,
-      content: articleContent,
+    // 获取Tags
+    const getTags = dom => {
+      let tags = '';
+      try {
+        const parsedTags = dom.querySelectorAll('.post-body div.post-tags a');
+        const parsedTagsList = [ ...parsedTags ].map(i => i.innerText);
+        tags = parsedTagsList.join();
+      } catch (e) {
+        this.logger.error('e', e.toString());
+      }
+      return tags;
     };
 
-    return articleObj;
+    if (type === 'articles') {
+      // 处理元数据 —— 标题、封面
+      const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
+      const { title, image } = metadata;
+      // Parser 处理， 转化为markdown， 因平台而异
+      const parsedPage = htmlparser.parse(rawPage.data);
+      const parsedContent = parsedPage.querySelector('div.post-content.markdown');
+
+      // 替换img
+      const imgList = parsedContent.querySelectorAll('p img');
+      for (let i = 0; i < imgList.length; i++) {
+        const ele = imgList[i];
+        const src = ele.getAttribute('src');
+
+        // TODO: 后缀可能需要处理
+        const parsedImgName = './uploads/today_chainnews_' + Date.now() + '.jpg';
+        const imgUpUrl = await this.uploadArticleImage(src, parsedImgName);
+
+        if (imgUpUrl) {
+          ele.setAttribute('src', `${this.config.ssimg}${imgUpUrl}`);
+        } else {
+          ele.setAttribute('src', src);
+        }
+      }
+
+      // const coverRe = new RegExp(//);
+      const turndownService = new turndown();
+      const articleContent = turndownService.turndown(parsedContent.toString());
+
+      const parsedCoverUpload = './uploads/today_chainnews_' + Date.now() + '.jpg';
+      const coverLocation = await this.uploadArticleImage(image.substring(0, image.length - 6), parsedCoverUpload);
+
+      const articleObj = {
+        title,
+        cover: coverLocation,
+        content: articleContent,
+        tags: getTags(parsedPage),
+      };
+
+      return articleObj;
+    } else if (type === 'news') {
+      // Parser 处理， 转化为markdown， 因平台而异
+      const parsedPage = htmlparser.parse(rawPage.data);
+
+      // 标题
+      const parsedTitle = parsedPage.querySelector('h1.post-title').innerText || '';
+
+      // 内容
+      const parsedContent = parsedPage.querySelector('h2.post-content.markdown');
+      const turndownService = new turndown();
+      const articleContent = turndownService.turndown(parsedContent.toString());
+
+      // head meta 里面的image是默认链闻的图片 所有没有返回封面 保持空
+
+      return {
+        title: parsedTitle,
+        cover: '',
+        content: articleContent,
+        tags: getTags(parsedPage),
+      };
+    }
+    this.logger.error('PostImportService:: handleChainnews: error: other type url is', url);
+    return null;
+
   }
 
   // 处理简书文章
@@ -559,12 +613,11 @@ class PostImportService extends Service {
 
     const BIHUAPI = 'https://be02.bihu.com/bihube-pc/api/content/show/getArticle2';
     const BIHUOSS = 'https://oss-cdn2.bihu-static.com';
-    const SSIMG = 'https://ssimg.frontenduse.top';
     const BIHUSHORTCONTENT = 'https://be02.bihu.com/bihube-pc/bihu/shortContent';
 
     let KEY = '';
     const KEYArticle = '/article/';
-    const KEYShort = '/shortContent/';
+    const KEYShort = '/shortcontent/';
 
     // 处理文章
     const handleArticle = async ID => {
@@ -636,7 +689,9 @@ class PostImportService extends Service {
             cover = imgUpUrl;
           }
           if (imgUpUrl) {
-            _imgElement[i].attribs.src = `${SSIMG}${imgUpUrl}`;
+            _imgElement[i].attribs.src = `${this.config.ssimg}${imgUpUrl}`;
+          } else {
+            _imgElement[i].attribs.src = _src;
           }
         }
         content = $('body').html();
@@ -653,9 +708,13 @@ class PostImportService extends Service {
     const handleShortContent = async ID => {
       // 获取内容
       const result = await axios({
+        headers: {
+          uuid: 0,
+        },
         method: 'GET',
         url: `${BIHUSHORTCONTENT}/${ID}`,
       });
+      this.logger.info('result', result);
 
       let content = '';
       if (result.status === 200 && result.data.data) {
@@ -678,7 +737,9 @@ class PostImportService extends Service {
             const parsedCoverUpload = './uploads/today_bihu_' + Date.now() + '.png';
             const imgUrl = await this.uploadArticleImage(coverUrl, parsedCoverUpload);
             if (imgUrl) {
-              imgMd += `![imgUrl](${SSIMG}/${imgUrl})`;
+              imgMd += `![imgUrl](${this.config.ssimg}/${imgUrl})`;
+            } else {
+              imgMd += `![imgUrl](${coverUrl})`;
             }
 
             // 第一张当封面
@@ -698,25 +759,29 @@ class PostImportService extends Service {
     };
 
     // 判断是文章还是微文
-    if (url.indexOf(KEYArticle) !== -1) {
-      KEY = KEYArticle;
-    } else if (url.indexOf(KEYShort) !== -1) {
-      KEY = KEYShort;
+    const urlToLower = url.toLocaleLowerCase();
+    const KEYArticleLower = KEYArticle.toLocaleLowerCase();
+    const KEYShortLower = KEYShort.toLocaleLowerCase();
+
+    if (urlToLower.indexOf(KEYArticleLower) !== -1) {
+      KEY = KEYArticleLower;
+    } else if (urlToLower.indexOf(KEYShortLower) !== -1) {
+      KEY = KEYShortLower;
     } else {
       throw new Error('other url', url);
     }
 
     // 获取 ID
-    const IDX = url.indexOf(KEY);
-    const ID = parseInt(url.slice(IDX + KEY.length));
+    const IDX = urlToLower.indexOf(KEY);
+    const ID = parseInt(urlToLower.slice(IDX + KEY.length));
     if (!ID) {
-      throw new Error('not article id error', url);
+      throw new Error('not article id error', urlToLower);
     }
 
     try {
-      if (KEY === KEYArticle) {
+      if (KEY === KEYArticleLower) {
         return await handleArticle(ID);
-      } else if (KEY === KEYShort) {
+      } else if (KEY === KEYShortLower) {
         return await handleShortContent(ID);
       }
       throw new Error('not match key', KEY);
@@ -725,6 +790,49 @@ class PostImportService extends Service {
       return null;
     }
 
+  }
+  /**
+   * 处理 Steemit 文章
+   * @param {string} url Steemit 文章的地址
+   */
+  async handleSteemit(url) {
+    try {
+      const path = url.replace('https://steemit.com', ''); // Like /steemit/@abdelzaher1/2cn4y6-new-memes
+      const authorAndPermlinkMatch = /\@\S+\/\S+$/g;
+      const contentKey = (path.match(authorAndPermlinkMatch).length && path.match(authorAndPermlinkMatch)[0].replace('@', '')) || '';
+      if (contentKey) {
+        const response = await steem.api.getStateAsync(path);
+        const content = response.content[contentKey];
+        if (content) {
+          const title = content.title;
+          const metadata = JSON.parse(content.json_metadata);
+          const coverUrl = (metadata.image && metadata.image.length) ? metadata.image[0] : null;
+          const articleContent = (metadata.format === 'markdown') ? content.body : pretty(content.body);
+          const tags = (metadata.tags && metadata.tags.length) ? metadata.tags.join(',') : '';
+
+          // 上传 Cover 到自有 OSS
+          let coverLocation = '';
+          if (coverUrl) {
+            const cachePath = `./uploads/steemit_${isTest ? NIL_UUID : uuid()}${nodePath.extname(coverUrl)}`;
+            const uploadResult = await this.uploadArticleImage(coverUrl, cachePath);
+            if (uploadResult) coverLocation = uploadResult;
+          }
+
+          return {
+            title,
+            cover: coverLocation,
+            content: articleContent,
+            tags,
+          };
+        }
+        throw new Error('Can not get content from steem api response.');
+      } else {
+        throw new Error(`No "contentKey" matched from path "${path}".`);
+      }
+    } catch (error) {
+      this.logger.error('PostImportService:: handleSteemit: error:', error);
+      return null;
+    }
   }
 }
 

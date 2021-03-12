@@ -38,6 +38,7 @@
     "form-data": "^3.0.0",
     "googleapis": "^52.1.0",
     "gt3-sdk": "^2.0.0",
+    "hcaptcha": "^0.0.2",
     "image-downloader": "^3.4.2",
     "ipfs-http-client-lite": "^0.3.0",
     "ipfs-mini": "^1.1.5",
@@ -57,10 +58,12 @@
     "ramda": "^0.27.0",
     "remove-markdown": "^0.3.0",
     "sanitize-html": "^1.20.1",
+    "steem": "^0.7.11",
     "string-random": "^0.1.3",
     "tenpay": "^2.1.18",
     "tnwx": "2.4.0",
     "turndown": "^5.0.3",
+    "uuid": "^8.3.2",
     "vnt": "git+https://github.com/vntchain/vnt.js.git",
     "web3": "^1.2.4",
     "xml2js": "0.4.23"
@@ -79,9 +82,9 @@
     "node": ">=8.9.0"
   },
   "scripts": {
-    "start": "egg-scripts start --port=7653 --daemon --title=egg-server-example",
+    "start": "egg-scripts start --port=7001 --daemon",
     "serve": "egg-scripts start ",
-    "stop": "egg-scripts stop --title=egg-server-example",
+    "stop": "egg-scripts stop",
     "dev": "egg-bin dev",
     "debug": "egg-bin debug",
     "test": "npm run lint -- --fix && npm run test-local",
