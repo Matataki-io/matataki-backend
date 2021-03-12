@@ -340,6 +340,10 @@ module.exports = appInfo => {
     ipfs: '',
   };
 
+  config.hCaptcha = {
+    privateKey: '',
+  };
+
   return config;
 };
 
