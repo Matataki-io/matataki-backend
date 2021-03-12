@@ -49,10 +49,11 @@ class PostController extends Controller {
 
     // do the checking here
     try {
+      if (!hCaptchaData.token) throw new Error('Bad Captcha');
       const verifiedCaptchaData = await verify('0x7625265563A6378Af17bd7219D0647Fb6e665136', hCaptchaData.token);
       if (!verifiedCaptchaData.success) throw new Error('Bad Captcha');
     } catch (error) {
-      ctx.body = ctx.msg.failed;
+      ctx.body = ctx.msg.failure;
       ctx.body.message = 'bad captcha';
       return;
     }
