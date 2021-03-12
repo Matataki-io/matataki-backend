@@ -1,12 +1,24 @@
 'use strict';
 
 const Controller = require('../core/base_controller');
+const { verify } = require('hcaptcha');
 
 class TimedPostController extends Controller {
   async post() {
     const { ctx } = this;
     const draftId = parseInt(ctx.params.id);
     const postTime = new Date(ctx.request.body.postTime);
+
+    const { hCaptchaData } = ctx.request.body;
+
+    try {
+      const verifiedCaptchaData = await verify('0x7625265563A6378Af17bd7219D0647Fb6e665136', hCaptchaData.token);
+      if (!verifiedCaptchaData.success) throw new Error('Bad Captcha');
+    } catch (error) {
+      ctx.body = ctx.msg.failed;
+      ctx.body.message = 'bad captcha';
+      return;
+    }
 
     const draft = await ctx.service.draft.get(draftId);
     // 草稿不存在

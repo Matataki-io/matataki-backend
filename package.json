@@ -38,6 +38,7 @@
     "form-data": "^3.0.0",
     "googleapis": "^52.1.0",
     "gt3-sdk": "^2.0.0",
+    "hcaptcha": "^0.0.2",
     "image-downloader": "^3.4.2",
     "ipfs-http-client-lite": "^0.3.0",
     "ipfs-mini": "^1.1.5",
