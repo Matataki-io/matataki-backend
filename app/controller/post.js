@@ -5,6 +5,9 @@ const { verify } = require('hcaptcha');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
 // const sanitize = require('sanitize-html');
+const { isEmpty } = require('lodash');
+
+
 class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
@@ -23,6 +26,17 @@ class PostController extends Controller {
     };
   }
 
+  // 过滤空
+  tagsProcess({ tags }) {
+    this.logger.info('tags', tags);
+    try {
+      return tags.filter(i => !(isEmpty(i)));
+    } catch (error) {
+      this.logger.error('error', error);
+      return tags;
+    }
+  }
+
   // 发布文章
   async publish() {
     const ctx = this.ctx;
@@ -34,7 +48,6 @@ class PostController extends Controller {
       cover,
       is_original,
       platform,
-      tags,
       assosiateWith,
       commentPayPoint,
       shortContent,
@@ -46,6 +59,10 @@ class PostController extends Controller {
       ipfs_hide,
       hCaptchaData,
     } = ctx.request.body;
+    let { tags } = ctx.request.body;
+    tags = this.tagsProcess({ tags });
+
+    this.logger.info('post publish tags', tags);
 
     const hCaptchaKey = this.app.config.hCaptcha.privateKey;
 
@@ -97,7 +114,6 @@ class PostController extends Controller {
       fissionFactor = 2000,
       cover,
       is_original = 0,
-      tags = [],
       assosiateWith,
       shortContent = null,
       // 新字段，requireToken 和 requireBuy 对应老接口的 data
@@ -108,6 +124,10 @@ class PostController extends Controller {
       editRequireBuy = null,
       ipfs_hide,
     } = ctx.request.body;
+    let { tags = [] } = ctx.request.body;
+    tags = this.tagsProcess({ tags });
+
+    this.logger.info('post edit tags', tags);
 
     // 编辑的时候，signId需要带上
     if (!signId) {
