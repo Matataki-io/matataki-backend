@@ -13,6 +13,7 @@ const cheerio = require('cheerio'); // 如果是客户端渲染之类的 可以�
 const steem = require('steem');
 const { v4: uuid, NIL: NIL_UUID } = require('uuid');
 const nodePath = require('path');
+const { isEmpty } = require('lodash');
 
 const isTest = process.env.NODE_ENV === 'test';
 
@@ -220,20 +221,24 @@ class PostImportService extends Service {
       let tags = '';
       try {
         const parsedTags = dom.querySelectorAll('.post-body div.post-tags a');
+        this.logger.info('parsedTags', parsedTags);
         const parsedTagsList = [ ...parsedTags ].map(i => i.innerText);
-        tags = parsedTagsList.join();
+        const parsedTagsListFilter = parsedTagsList.filter(i => !isEmpty(i));
+        tags = parsedTagsListFilter.join();
       } catch (e) {
         this.logger.error('e', e.toString());
       }
       return tags;
     };
 
+    // title cover
+    const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
+    const { title, image } = metadata;
+
+    // content
+    const parsedPage = htmlparser.parse(rawPage.data);
+
     if (type === 'articles') {
-      // 处理元数据 —— 标题、封面
-      const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
-      const { title, image } = metadata;
-      // Parser 处理， 转化为markdown， 因平台而异
-      const parsedPage = htmlparser.parse(rawPage.data);
       const parsedContent = parsedPage.querySelector('div.post-content.markdown');
 
       // 替换img
@@ -269,12 +274,6 @@ class PostImportService extends Service {
 
       return articleObj;
     } else if (type === 'news') {
-      // Parser 处理， 转化为markdown， 因平台而异
-      const parsedPage = htmlparser.parse(rawPage.data);
-
-      // 标题
-      const parsedTitle = parsedPage.querySelector('h1.post-title').innerText || '';
-
       // 内容
       const parsedContent = parsedPage.querySelector('h2.post-content.markdown');
       const turndownService = new turndown();
@@ -283,7 +282,7 @@ class PostImportService extends Service {
       // head meta 里面的image是默认链闻的图片 所有没有返回封面 保持空
 
       return {
-        title: parsedTitle,
+        title,
         cover: '',
         content: articleContent,
         tags: getTags(parsedPage),
