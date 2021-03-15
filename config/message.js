@@ -115,6 +115,7 @@ module.exports = {
 
   // geetest
   geetestVerifyFailed: 10700,
+  hCaptchaVerifyFailed: 10701,
 
   tokenAlreadyCreated: 10800,
   tokenSymbolDuplicated: 10801,
@@ -215,6 +216,7 @@ module.exports = {
       pointAlreadyClaimed: { code: this.pointAlreadyClaimed, message: 'You have already claimed.' },
 
       geetestVerifyFailed: { code: this.geetestVerifyFailed, message: 'geetest verify failed.' },
+      hCaptchaVerifyFailed: { code: this.hCaptchaVerifyFailed, message: 'hCaptcha verify failed.' },
       pointReadError: { code: this.pointReadError, message: 'Get reading points error.' },
       pointNotEnough: { code: this.pointNotEnough, message: 'You do not have enough points. ' },
       pointCommentSettingError: { code: this.pointCommentSettingError, message: 'The post settings error.' },
@@ -309,6 +311,7 @@ module.exports = {
       pointAlreadyClaimed: { code: this.pointAlreadyClaimed, message: '已经获取过积分' },
 
       geetestVerifyFailed: { code: this.geetestVerifyFailed, message: 'geetest校验失败' },
+      hCaptchaVerifyFailed: { code: this.hCaptchaVerifyFailed, message: 'hCaptcha 校验失败' },
       pointReadError: { code: this.pointReadError, message: '获取阅读积分错误' },
       pointNotEnough: { code: this.pointNotEnough, message: '你没有足够的积分' },
       pointCommentSettingError: { code: this.pointCommentSettingError, message: '文章设置错误.' },
