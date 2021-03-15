@@ -63,6 +63,7 @@ class PostImportService extends Service {
           Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         },
       });
+      this.logger.info('rawPage', rawPage);
     } catch (err) {
       this.logger.error('PostImportService:: handleWechat: error:', err);
       return null;
@@ -211,13 +212,14 @@ class PostImportService extends Service {
           Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         },
       });
+      this.logger.info('rawPage', rawPage);
     } catch (err) {
       this.logger.error('PostImportService:: handleChainnews: error:', err);
       return null;
     }
 
     // 获取Tags
-    const getTags = dom => {
+    const getTags = ({ dom, keywords }) => {
       let tags = '';
       try {
         const parsedTags = dom.querySelectorAll('.post-body div.post-tags a');
@@ -228,15 +230,32 @@ class PostImportService extends Service {
       } catch (e) {
         this.logger.error('e', e.toString());
       }
+
+      this.logger.info('tags', tags);
+
+      // 说明没有获取到 从meta里面获取
+      if (tags.length <= 0) {
+        this.logger.info('keywords', keywords);
+        // 排除最后一个 最后一个是文章标题
+        const list = keywords.slice(0, keywords.length - 1);
+        const listFilter = list.filter(i => !isEmpty(i));
+        tags = listFilter.join();
+      }
+
       return tags;
     };
 
     // title cover
     const metadata = await this.service.metadata.GetFromRawPage(rawPage, url);
-    const { title, image } = metadata;
+    // <meta content="以太坊,安全,DeFi,PeckShield,DODO,项⽬进展,DODO 联合创始人雷达熊复盘众筹池被攻击事件" name="keywords"</meta>
+    const { title, image, keywords } = metadata;
+    this.logger.info('metadata', title, image);
+
 
     // content
     const parsedPage = htmlparser.parse(rawPage.data);
+
+    this.logger.info('parsedPage', parsedPage);
 
     if (type === 'articles') {
       const parsedContent = parsedPage.querySelector('div.post-content.markdown');
@@ -250,6 +269,7 @@ class PostImportService extends Service {
         // TODO: 后缀可能需要处理
         const parsedImgName = './uploads/today_chainnews_' + Date.now() + '.jpg';
         const imgUpUrl = await this.uploadArticleImage(src, parsedImgName);
+        this.logger.info('imgUpUrl', imgUpUrl);
 
         if (imgUpUrl) {
           ele.setAttribute('src', `${this.config.ssimg}${imgUpUrl}`);
@@ -264,12 +284,13 @@ class PostImportService extends Service {
 
       const parsedCoverUpload = './uploads/today_chainnews_' + Date.now() + '.jpg';
       const coverLocation = await this.uploadArticleImage(image.substring(0, image.length - 6), parsedCoverUpload);
+      this.logger.info('coverLocation', coverLocation);
 
       const articleObj = {
         title,
         cover: coverLocation,
         content: articleContent,
-        tags: getTags(parsedPage),
+        tags: getTags({ dom: parsedPage, keywords }),
       };
 
       return articleObj;
@@ -285,7 +306,7 @@ class PostImportService extends Service {
         title,
         cover: '',
         content: articleContent,
-        tags: getTags(parsedPage),
+        tags: getTags({ dom: parsedPage, keywords }),
       };
     }
     this.logger.error('PostImportService:: handleChainnews: error: other type url is', url);
