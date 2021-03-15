@@ -57,26 +57,12 @@ class PostController extends Controller {
       editRequireToken,
       editRequireBuy,
       ipfs_hide,
-      hCaptchaData,
     } = ctx.request.body;
     let { tags } = ctx.request.body;
     tags = this.tagsProcess({ tags });
 
     this.logger.info('post publish tags', tags);
 
-    const hCaptchaKey = this.app.config.hCaptcha.privateKey;
-
-    // do the checking here
-    try {
-      if (!hCaptchaData.token) throw new Error('Bad Captcha');
-      const verifiedCaptchaData = await verify(hCaptchaKey, hCaptchaData.token);
-      if (!verifiedCaptchaData.success) throw new Error('Bad Captcha');
-    } catch (error) {
-      ctx.status = 400;
-      ctx.body = ctx.msg.failure;
-      ctx.body.message = 'bad captcha';
-      return;
-    }
 
     const result = await ctx.service.post.fullPublish(
       ctx.user,
