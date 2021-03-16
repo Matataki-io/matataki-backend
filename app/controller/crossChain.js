@@ -206,13 +206,37 @@ class CrossChainController extends Controller {
 
   async getCrosschainTokenList() {
     const { ctx } = this;
+    const { chain = 'bsc' } = ctx.query;
+
+    const _crossedTokens = await this.service.token.crosschain.listCrosschainToken(chain);
+    const tokenIds = _crossedTokens.map(token => token.tokenId);
+
+    const tokens = await this.app.mysql.select('minetokens', { where: { id: tokenIds } });
+    const result = tokens.map((tokenInfo, idx) => {
+      const { contractAddress } = _crossedTokens[idx];
+      return { ...tokenInfo, crossTokenAddress: contractAddress };
+    });
+
+    ctx.body = {
+      ...ctx.msg.success,
+      data: {
+        chain,
+        count: result.length,
+        list: result,
+      },
+    };
+  }
+
+  async getMyCrosschainTokenList() {
+    const { ctx } = this;
     const { pagesize = 10, page = 1, order = 0, search = '', chain = 'bsc' } = ctx.query;
     // 用户id
     const user_id = ctx.user.id;
     // token list
     const original_result = await this.service.exchange.getTokenListByUser(user_id, parseInt(page), parseInt(pagesize), parseInt(order), search);
 
-    const tokenIds = await this.service.token.crosschain.listCrosschainTokenIds(chain);
+    const tokens = await this.service.token.crosschain.listCrosschainToken(chain);
+    const tokenIds = tokens.map(token => token.tokenId);
     const filteredTokens = original_result.list.filter(token => tokenIds.indexOf(token.token_id) > -1);
 
     ctx.body = {
