@@ -1,6 +1,7 @@
 'use strict';
 
 const Controller = require('../core/base_controller');
+const { convertArray } = require('../utils/index');
 
 class CrossChainController extends Controller {
   async createPeggedTokenForAdminById() {
@@ -208,23 +209,44 @@ class CrossChainController extends Controller {
     const { ctx } = this;
     const { chain = 'bsc' } = ctx.query;
 
-    const _crossedTokens = await this.service.token.crosschain.listCrosschainToken(chain);
-    const tokenIds = _crossedTokens.map(token => token.tokenId);
+    try {
+      const _crossedTokens = await this.service.token.crosschain.listCrosschainToken(chain);
+      const tokenIds = _crossedTokens.map(token => token.tokenId);
 
-    const tokens = await this.app.mysql.select('minetokens', { where: { id: tokenIds } });
-    const result = tokens.map((tokenInfo, idx) => {
-      const { contractAddress } = _crossedTokens[idx];
-      return { ...tokenInfo, crossTokenAddress: contractAddress };
-    });
+      this.logger.info('tokenIds', tokenIds);
 
-    ctx.body = {
-      ...ctx.msg.success,
-      data: {
-        chain,
-        count: result.length,
-        list: result,
-      },
-    };
+
+      // const tokens = await this.app.mysql.select('minetokens', { where: { id: tokenIds } });
+      let sql = '';
+      tokenIds.forEach(i => {
+        sql += `SELECT m.id, m.uid, m.\`name\`, m.symbol, m.decimals, m.total_supply, m.create_time, m.\`status\`, m.logo, m.brief, m.introduction, m.contract_address,
+                u.username, u.nickname, u.avatar
+                FROM minetokens m LEFT JOIN users u ON m.uid = u.id
+                WHERE m.id = ${i};`;
+      });
+      const tokensResult = await this.app.mysql.query(sql);
+      const tokens = convertArray(tokensResult);
+
+      this.logger.info('tokens', tokens);
+
+      const result = tokens.map((tokenInfo, idx) => {
+        const { contractAddress } = _crossedTokens[idx];
+        return { ...tokenInfo, crossTokenAddress: contractAddress };
+      });
+
+      ctx.body = {
+        ...ctx.msg.success,
+        data: {
+          chain,
+          count: result.length,
+          list: result,
+        },
+      };
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = e.message;
+    }
   }
 
   async getMyCrosschainTokenList() {
