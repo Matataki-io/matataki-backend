@@ -57,6 +57,12 @@ class OnlyForDevController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
   }
+
+  async simpleMsg() {
+    const { ctx } = this;
+    ctx.body = ctx.msg.success;
+    ctx.body.data = { msg: 'hi' };
+  }
 }
 
 module.exports = OnlyForDevController;

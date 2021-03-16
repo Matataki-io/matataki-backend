@@ -323,6 +323,9 @@ module.exports = app => {
   // 仅限工程师使用的 API
   router.post('/minetoken/crosschain/:id/_dev/createPeggedToken/:chain/', passport.apiAuthorize, controller.crossChain.createPeggedTokenForAdminById);
 
+  router.get('/dev/simpleMsg', passport.verify, hCaptchaVerify, controller.dev.simpleMsg);
+  router.get('/captcha/doINeedHCaptcha', passport.authorize, controller.hCaptcha.doINeedCaptcha);
+
   // 不写入数据的，无需权限
   // router.get('/minetoken/crosschain/:tokenOnBsc/:walletOnBsc/', passport.verify, controller.crossChain.getMintPermitNonceOf);
   router.get('/minetoken/crosschain/:id/getBscAddress', passport.verify, controller.crossChain.getBscAddress);
