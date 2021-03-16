@@ -76,6 +76,10 @@ class TokenCircleApiService extends Service {
   setTokenContract(tokenId, contractAddress) {
     return this.client.put(`/token/${tokenId}/contractAddress`, { contractAddress });
   }
+
+  getTelegramUsername(uid) {
+    return this.client.get(`/mapping/userToTelegramUsername/${uid}`);
+  }
 }
 
 module.exports = TokenCircleApiService;
