@@ -121,7 +121,7 @@ class MineTokenService extends Service {
     const token = await this.getToken({ id });
     const { tokenOnBsc, tokenOnMatic } = await this.service.token.crosschain.findTokenById(id);
     token.bsc_contract_address = tokenOnBsc ? tokenOnBsc.contractAddress : null;
-    token.bsc_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
+    token.matic_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
     return token;
   }
 
@@ -131,7 +131,7 @@ class MineTokenService extends Service {
     if (token) {
       const { tokenOnBsc, tokenOnMatic } = await this.service.token.crosschain.findTokenById(token.id);
       token.bsc_contract_address = tokenOnBsc ? tokenOnBsc.contractAddress : null;
-      token.bsc_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
+      token.matic_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
     }
     return token;
   }
@@ -142,7 +142,7 @@ class MineTokenService extends Service {
     if (token) {
       const { tokenOnBsc, tokenOnMatic } = await this.service.token.crosschain.findTokenById(token.id);
       token.bsc_contract_address = tokenOnBsc ? tokenOnBsc.contractAddress : null;
-      token.bsc_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
+      token.matic_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
     }
     return token;
   }
