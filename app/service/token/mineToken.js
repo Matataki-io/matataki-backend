@@ -119,6 +119,7 @@ class MineTokenService extends Service {
    */
   async get(id) {
     const token = await this.getToken({ id });
+    if (!token) return null;
     const { tokenOnBsc, tokenOnMatic } = await this.service.token.crosschain.findTokenById(id);
     token.bsc_contract_address = tokenOnBsc ? tokenOnBsc.contractAddress : null;
     token.matic_contract_address = tokenOnMatic ? tokenOnMatic.contractAddress : null;
