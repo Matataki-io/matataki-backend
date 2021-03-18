@@ -44,11 +44,12 @@ class CrossChainService extends Service {
     };
   }
 
-  async _createPeggedToken(tokenName, tokenSymbol, decimals, chain = 'bsc') {
+  async _createPeggedToken(tokenName, tokenSymbol, decimals, tokenId, chain = 'bsc') {
     const { data } = await this.api[chain].post('/token/', {
       name: tokenName,
       symbol: tokenSymbol,
-      decimals: Number(decimals),
+      decimals: parseInt(decimals),
+      tokenId: parseInt(tokenId),
     });
     return data;
   }

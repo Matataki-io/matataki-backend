@@ -104,6 +104,48 @@ class CrossChainController extends Controller {
     };
   }
 
+  async requestCreationPermit() {
+    const { ctx } = this;
+    const tokenId = parseInt(ctx.params.id);
+    const { chain = 'bsc' } = ctx.query;
+    const token = await this.service.token.mineToken.get(tokenId);
+    if (!token) {
+      ctx.status = 400;
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = 'Token not exist';
+      return;
+    }
+    // emmm, 好像创建跨链Fan票的许可公开给任何人也没问题，反正谁来 deploy 都一样 -- Frank
+    // 如果签名损毁（篡改数据），会影响算出来的公钥，合约已经限制了只允许指定钱包签署的签名
+    // 而一创建，签名就会被公开于区块链中，所以反正都是被公开的，只是时间问题（除非你不创建）
+    // 创建跨链Fan票本身不影响安全性，因为创建者是 Factory 而不是用户（用户只上传了我们的签名）
+
+    // if (token.uid !== ctx.user.id) {
+    //   ctx.body = ctx.msg.failure;
+    //   ctx.body.message = 'You are not the owner';
+    //   return;
+    // }
+
+    try {
+      const permitOfCreation = await this.service.token.crosschain._createPeggedToken(token.name, token.symbol, 4, token.id, chain);
+      ctx.body = {
+        ...ctx.msg.success,
+        data: {
+          ...permitOfCreation,
+        },
+      };
+    } catch (error) {
+      ctx.status = 400;
+      ctx.body = ctx.msg.failure;
+      if (error.response && error.response.data.message) {
+        ctx.body.message = error.response.data.message;
+      } else {
+        ctx.body.message = 'Unknown error';
+      }
+    }
+
+  }
+
   async depositFromOtherChain() {
     const { ctx } = this;
     const tokenId = ctx.params.id;
