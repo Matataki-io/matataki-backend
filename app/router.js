@@ -321,7 +321,7 @@ module.exports = app => {
   router.get('/minetoken/crosschain/isToken/:tokenAddress', passport.verify, controller.crossChain.isCrosschainToken);
 
   // 仅限工程师使用的 API
-  router.post('/minetoken/crosschain/:id/_dev/createPeggedToken/:chain/', passport.apiAuthorize, controller.crossChain.createPeggedTokenForAdminById);
+  // router.post('/minetoken/crosschain/:id/_dev/createPeggedToken/:chain/', passport.apiAuthorize, controller.crossChain.createPeggedTokenForAdminById);
 
   router.get('/dev/simpleMsg', passport.verify, hCaptchaVerify, controller.dev.simpleMsg);
   router.get('/captcha/doINeedHCaptcha', passport.authorize, controller.hCaptcha.doINeedCaptcha);

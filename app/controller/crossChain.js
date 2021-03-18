@@ -4,33 +4,33 @@ const Controller = require('../core/base_controller');
 const { convertArray } = require('../utils/index');
 
 class CrossChainController extends Controller {
-  async createPeggedTokenForAdminById() {
-    // 无任何检测，仅限工程师，请设置好接口的权限！！！
-    const { ctx } = this;
-    const { id, chain } = ctx.params;
-    if (chain !== 'bsc' && chain !== 'matic') {
-      ctx.body = ctx.msg.failure;
-      ctx.status = 400;
-      ctx.body.message = `Not supported chain '${chain}'`;
-      return;
-    }
-    const token = await this.service.token.mineToken.get(id);
-    if (!token) {
-      ctx.body = ctx.msg.failure;
-      ctx.status = 400;
-      ctx.body.message = 'Token not exist';
-      return;
-    }
-    const { name, symbol, decimals } = token;
-    const result = await this.service.token.crosschain._createPeggedToken(name, symbol, Number(decimals), chain);
-    if (result.statusCode !== 201) {
-      ctx.body = ctx.msg.failure;
-      ctx.body.data = { error: 'Something bad happened, please contact Matataki Team ASAP.' };
-    }
-
-    ctx.body = ctx.msg.success;
-    ctx.body.data = result.data.hash;
-  }
+  // async createPeggedTokenForAdminById() {
+  //   // 无任何检测，仅限工程师，请设置好接口的权限！！！
+  //   const { ctx } = this;
+  //   const { id, chain } = ctx.params;
+  //   if (chain !== 'bsc' && chain !== 'matic') {
+  //     ctx.body = ctx.msg.failure;
+  //     ctx.status = 400;
+  //     ctx.body.message = `Not supported chain '${chain}'`;
+  //     return;
+  //   }
+  //   const token = await this.service.token.mineToken.get(id);
+  //   if (!token) {
+  //     ctx.body = ctx.msg.failure;
+  //     ctx.status = 400;
+  //     ctx.body.message = 'Token not exist';
+  //     return;
+  //   }
+  //   const { name, symbol, decimals } = token;
+  //   const result = await this.service.token.crosschain._createPeggedToken(name, symbol, Number(decimals), chain);
+  //   if (result.statusCode !== 201) {
+  //     ctx.body = ctx.msg.failure;
+  //     ctx.body.data = { error: 'Something bad happened, please contact Matataki Team ASAP.' };
+  //   }
+  //
+  //   ctx.body = ctx.msg.success;
+  //   ctx.body.data = result.data.hash;
+  // }
 
 
   async withdrawToOtherChain() {
