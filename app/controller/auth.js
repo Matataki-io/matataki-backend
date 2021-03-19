@@ -138,7 +138,7 @@ class AuthController extends Controller {
     }
 
     // 创建， 设置用户
-    const jwttoken = await this.service.auth.saveUser(userinfo.login, userinfo.name, userinfo.avatar_url, this.clientIP, referral);
+    const jwttoken = await this.service.auth.saveUser(userinfo.login, userinfo.name, userinfo.avatar_url, this.clientIP, referral, 'github', usertoken.access_token);
     if (jwttoken === null) {
       ctx.body = ctx.msg.generateTokenError;
       return;
