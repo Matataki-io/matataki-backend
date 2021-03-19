@@ -104,6 +104,35 @@ class CrossChainController extends Controller {
     };
   }
 
+  async appendCrosschainTokenByTxHash() {
+    const { ctx } = this;
+    const { chain, txHash } = ctx.query;
+    try {
+      const { data } = await this.service.token.crosschain.getNewTokenByTxHash(txHash, chain);
+      const isCrossInDB = await this.app.mysql.get('pegged_assets', { contractAddress: data.token });
+      if (isCrossInDB) {
+        throw new Error('Crosschain Token already in the DB');
+      }
+
+      const token = await this.app.mysql.get('minetokens', { symbol: data.symbol });
+      if (!token) {
+        throw new Error('No such token');
+      }
+      await this.app.mysql.insert('pegged_assets',
+        { chain, tokenId: token.id, contractAddress: data.token }
+      );
+
+      ctx.body = {
+        ...ctx.msg.success,
+        data,
+      };
+    } catch (error) {
+      ctx.status = 400;
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+  }
+
   async requestCreationPermit() {
     const { ctx } = this;
     const tokenId = parseInt(ctx.params.id);
