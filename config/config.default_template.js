@@ -76,6 +76,11 @@ module.exports = appInfo => {
     },
   };
 
+  config.amqp = {
+    url: 'amqp://localhost',
+    githubSyncQueueName: 'github',
+  };
+  
   config.cors = {
     allowMethods: 'GET,HEAD,PUT,POST,DELETE,PATCH,OPTIONS',
     credentials: true,
