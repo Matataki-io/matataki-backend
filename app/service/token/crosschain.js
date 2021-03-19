@@ -61,6 +61,21 @@ class CrossChainService extends Service {
     return data;
   }
 
+  async getNewTokenByTxHash(txHash, chain = 'bsc') {
+    const { data } = await this.api[chain].get('/token/getNewTokenByTxHash', { params: { txHash } });
+    return data;
+  }
+
+  async getNewTokensIn(fromBlock, toBlock, chain = 'bsc') {
+    const { data } = await this.api[chain].get('/token/getNewTokensIn', { params: { fromBlock, toBlock } });
+    return data;
+  }
+
+  async getRecentNewTokens(chain = 'bsc') {
+    const { data } = await this.api[chain].get('/token/getRecentNewTokens');
+    return data;
+  }
+
   /**
    * getNonceOf, 从Mint合约获得 Nonce
    * 只返回合约里最新一个可用的 nonce
