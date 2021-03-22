@@ -44,11 +44,12 @@ class CrossChainService extends Service {
     };
   }
 
-  async _createPeggedToken(tokenName, tokenSymbol, decimals, chain = 'bsc') {
+  async _createPeggedToken(tokenName, tokenSymbol, decimals, tokenId, chain = 'bsc') {
     const { data } = await this.api[chain].post('/token/', {
       name: tokenName,
       symbol: tokenSymbol,
-      decimals: Number(decimals),
+      decimals: parseInt(decimals),
+      tokenId: parseInt(tokenId),
     });
     return data;
   }
@@ -57,6 +58,21 @@ class CrossChainService extends Service {
     const { data } = await this.api[chain].get('/token/compute/', { data: {
       name, symbol,
     } });
+    return data;
+  }
+
+  async getNewTokenByTxHash(txHash, chain = 'bsc') {
+    const { data } = await this.api[chain].get('/token/getNewTokenByTxHash', { params: { txHash } });
+    return data;
+  }
+
+  async getNewTokensIn(fromBlock, toBlock, chain = 'bsc') {
+    const { data } = await this.api[chain].get('/token/getNewTokensIn', { params: { fromBlock, toBlock } });
+    return data;
+  }
+
+  async getRecentNewTokens(chain = 'bsc') {
+    const { data } = await this.api[chain].get('/token/getRecentNewTokens');
     return data;
   }
 
@@ -155,9 +171,13 @@ class CrossChainService extends Service {
     return data.data.event;
   }
 
-  async listCrosschainTokenIds(chain = 'bsc') {
-    // 暂时只有 BSC
+  async listCrosschainToken(chain = 'bsc') {
     const tokens = await this.app.mysql.select('pegged_assets', { where: { chain }, orders: [[ 'id', 'desc' ]] });
+    return tokens;
+  }
+
+  async listCrosschainTokenIds(chain = 'bsc') {
+    const tokens = await this.listCrosschainToken(chain);
     const tokenIds = tokens.map(token => token.tokenId);
     return tokenIds;
   }

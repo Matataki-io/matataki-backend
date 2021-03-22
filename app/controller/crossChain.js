@@ -1,35 +1,36 @@
 'use strict';
 
 const Controller = require('../core/base_controller');
+const { convertArray } = require('../utils/index');
 
 class CrossChainController extends Controller {
-  async createPeggedTokenForAdminById() {
-    // 无任何检测，仅限工程师，请设置好接口的权限！！！
-    const { ctx } = this;
-    const { id, chain } = ctx.params;
-    if (chain !== 'bsc' && chain !== 'matic') {
-      ctx.body = ctx.msg.failure;
-      ctx.status = 400;
-      ctx.body.message = `Not supported chain '${chain}'`;
-      return;
-    }
-    const token = await this.service.token.mineToken.get(id);
-    if (!token) {
-      ctx.body = ctx.msg.failure;
-      ctx.status = 400;
-      ctx.body.message = 'Token not exist';
-      return;
-    }
-    const { name, symbol, decimals } = token;
-    const result = await this.service.token.crosschain._createPeggedToken(name, symbol, Number(decimals), chain);
-    if (result.statusCode !== 201) {
-      ctx.body = ctx.msg.failure;
-      ctx.body.data = { error: 'Something bad happened, please contact Matataki Team ASAP.' };
-    }
-
-    ctx.body = ctx.msg.success;
-    ctx.body.data = result.data.hash;
-  }
+  // async createPeggedTokenForAdminById() {
+  //   // 无任何检测，仅限工程师，请设置好接口的权限！！！
+  //   const { ctx } = this;
+  //   const { id, chain } = ctx.params;
+  //   if (chain !== 'bsc' && chain !== 'matic') {
+  //     ctx.body = ctx.msg.failure;
+  //     ctx.status = 400;
+  //     ctx.body.message = `Not supported chain '${chain}'`;
+  //     return;
+  //   }
+  //   const token = await this.service.token.mineToken.get(id);
+  //   if (!token) {
+  //     ctx.body = ctx.msg.failure;
+  //     ctx.status = 400;
+  //     ctx.body.message = 'Token not exist';
+  //     return;
+  //   }
+  //   const { name, symbol, decimals } = token;
+  //   const result = await this.service.token.crosschain._createPeggedToken(name, symbol, Number(decimals), chain);
+  //   if (result.statusCode !== 201) {
+  //     ctx.body = ctx.msg.failure;
+  //     ctx.body.data = { error: 'Something bad happened, please contact Matataki Team ASAP.' };
+  //   }
+  //
+  //   ctx.body = ctx.msg.success;
+  //   ctx.body.data = result.data.hash;
+  // }
 
 
   async withdrawToOtherChain() {
@@ -101,6 +102,77 @@ class CrossChainController extends Controller {
       ...ctx.msg.success,
       data: { deposits },
     };
+  }
+
+  async appendCrosschainTokenByTxHash() {
+    const { ctx } = this;
+    const { chain, txHash } = ctx.query;
+    try {
+      const { data } = await this.service.token.crosschain.getNewTokenByTxHash(txHash, chain);
+      const isCrossInDB = await this.app.mysql.get('pegged_assets', { contractAddress: data.token });
+      if (isCrossInDB) {
+        throw new Error('Crosschain Token already in the DB');
+      }
+
+      const token = await this.app.mysql.get('minetokens', { symbol: data.symbol });
+      if (!token) {
+        throw new Error('No such token');
+      }
+      await this.app.mysql.insert('pegged_assets',
+        { chain, tokenId: token.id, contractAddress: data.token }
+      );
+
+      ctx.body = {
+        ...ctx.msg.success,
+        data,
+      };
+    } catch (error) {
+      ctx.status = 400;
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+  }
+
+  async requestCreationPermit() {
+    const { ctx } = this;
+    const tokenId = parseInt(ctx.params.id);
+    const { chain = 'bsc' } = ctx.query;
+    const token = await this.service.token.mineToken.get(tokenId);
+    if (!token) {
+      ctx.status = 400;
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = 'Token not exist';
+      return;
+    }
+    // emmm, 好像创建跨链Fan票的许可公开给任何人也没问题，反正谁来 deploy 都一样 -- Frank
+    // 如果签名损毁（篡改数据），会影响算出来的公钥，合约已经限制了只允许指定钱包签署的签名
+    // 而一创建，签名就会被公开于区块链中，所以反正都是被公开的，只是时间问题（除非你不创建）
+    // 创建跨链Fan票本身不影响安全性，因为创建者是 Factory 而不是用户（用户只上传了我们的签名）
+
+    // if (token.uid !== ctx.user.id) {
+    //   ctx.body = ctx.msg.failure;
+    //   ctx.body.message = 'You are not the owner';
+    //   return;
+    // }
+
+    try {
+      const permitOfCreation = await this.service.token.crosschain._createPeggedToken(token.name, token.symbol, 4, token.id, chain);
+      ctx.body = {
+        ...ctx.msg.success,
+        data: {
+          ...permitOfCreation,
+        },
+      };
+    } catch (error) {
+      ctx.status = 400;
+      ctx.body = ctx.msg.failure;
+      if (error.response && error.response.data.message) {
+        ctx.body.message = error.response.data.message;
+      } else {
+        ctx.body.message = 'Unknown error';
+      }
+    }
+
   }
 
   async depositFromOtherChain() {
@@ -206,13 +278,58 @@ class CrossChainController extends Controller {
 
   async getCrosschainTokenList() {
     const { ctx } = this;
+    const { chain = 'bsc' } = ctx.query;
+
+    try {
+      const _crossedTokens = await this.service.token.crosschain.listCrosschainToken(chain);
+      const tokenIds = _crossedTokens.map(token => token.tokenId);
+
+      this.logger.info('tokenIds', tokenIds);
+
+
+      // const tokens = await this.app.mysql.select('minetokens', { where: { id: tokenIds } });
+      let sql = '';
+      tokenIds.forEach(i => {
+        sql += `SELECT m.id, m.uid, m.\`name\`, m.symbol, m.decimals, m.total_supply, m.create_time, m.\`status\`, m.logo, m.brief, m.introduction, m.contract_address,
+                u.username, u.nickname, u.avatar
+                FROM minetokens m LEFT JOIN users u ON m.uid = u.id
+                WHERE m.id = ${i};`;
+      });
+      const tokensResult = await this.app.mysql.query(sql);
+      const tokens = convertArray(tokensResult);
+
+      this.logger.info('tokens', tokens);
+
+      const result = tokens.map((tokenInfo, idx) => {
+        const { contractAddress } = _crossedTokens[idx];
+        return { ...tokenInfo, crossTokenAddress: contractAddress };
+      });
+
+      ctx.body = {
+        ...ctx.msg.success,
+        data: {
+          chain,
+          count: result.length,
+          list: result,
+        },
+      };
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = ctx.msg.failure;
+      ctx.body.message = e.message;
+    }
+  }
+
+  async getMyCrosschainTokenList() {
+    const { ctx } = this;
     const { pagesize = 10, page = 1, order = 0, search = '', chain = 'bsc' } = ctx.query;
     // 用户id
     const user_id = ctx.user.id;
     // token list
     const original_result = await this.service.exchange.getTokenListByUser(user_id, parseInt(page), parseInt(pagesize), parseInt(order), search);
 
-    const tokenIds = await this.service.token.crosschain.listCrosschainTokenIds(chain);
+    const tokens = await this.service.token.crosschain.listCrosschainToken(chain);
+    const tokenIds = tokens.map(token => token.tokenId);
     const filteredTokens = original_result.list.filter(token => tokenIds.indexOf(token.token_id) > -1);
 
     ctx.body = {

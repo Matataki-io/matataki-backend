@@ -28,6 +28,17 @@ class DraftsController extends Controller {
     ctx.body.data = draftList;
   }
 
+  // 过滤空 然后 join
+  tagsProcess({ tags }) {
+    this.logger.info('tags', tags);
+    try {
+      const list = tags.filter(i => !(_.isEmpty(i)));
+      return list.join();
+    } catch (error) {
+      this.logger.error('error', error);
+      return tags.join();
+    }
+  }
 
   // 保存草稿
   async save() {
@@ -147,7 +158,7 @@ class DraftsController extends Controller {
         fission_factor: fissionFactor,
         update_time: now,
         is_original,
-        tags: tags.join(','),
+        tags: this.tagsProcess({ tags }),
         comment_pay_point,
         short_content,
         cc_license,
@@ -173,6 +184,7 @@ class DraftsController extends Controller {
       // 如果有数据则认为持币编辑
       setAttributes(editRequireToken, data, 'editor_require_holdtokens');
 
+      this.logger.info('drafts update data', data);
       const result = await conn.update('drafts', data, { where: { id } });
 
       // 清空数据并插入新数据
@@ -238,6 +250,8 @@ class DraftsController extends Controller {
     try {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
 
+      // 处理tags
+
       const data = {
         uid,
         title,
@@ -247,7 +261,7 @@ class DraftsController extends Controller {
         is_original,
         create_time: now,
         update_time: now,
-        tags: tags.join(','),
+        tags: this.tagsProcess({ tags }),
         comment_pay_point,
         short_content,
         cc_license,
@@ -272,6 +286,8 @@ class DraftsController extends Controller {
 
       // 如果有数据则认为持币编辑
       setAttributes(editRequireToken, data, 'editor_require_holdtokens');
+
+      this.logger.info('data', data);
 
       const result = await conn.insert('drafts', data);
 
@@ -319,21 +335,21 @@ class DraftsController extends Controller {
 
   // 获取一篇草稿
   async draft() {
-      const id = this.ctx.params.id;
-      const draft = await this.service.draft.get(id);
+    const id = this.ctx.params.id;
+    const draft = await this.service.draft.get(id);
 
-      if (!draft) {
-        this.ctx.body = this.ctx.msg.draftNotFound;
-        return;
-      }
-      if (draft.uid !== this.ctx.user.id) {
-        this.ctx.body = this.ctx.msg.notYourDraft;
-        return;
-      }
-      this.ctx.body = {
-        ...this.ctx.msg.success,
-        data: draft,
-      };
+    if (!draft) {
+      this.ctx.body = this.ctx.msg.draftNotFound;
+      return;
+    }
+    if (draft.uid !== this.ctx.user.id) {
+      this.ctx.body = this.ctx.msg.notYourDraft;
+      return;
+    }
+    this.ctx.body = {
+      ...this.ctx.msg.success,
+      data: draft,
+    };
   }
 
   // 删除草稿

@@ -12,6 +12,7 @@ class AccountBindingController extends Controller {
     const { ctx } = this;
     const uid = ctx.user.id;
     let { code, platform, email, captcha = null, password, sign, username, publickey, msgParams, telegramParams, telegramBotName, oauth_token, oauth_verifier, callbackUrl } = ctx.request.body;
+    let access_token = null;
     // username = account;
 
     let flag = false;
@@ -36,7 +37,8 @@ class AccountBindingController extends Controller {
       case 'github': {
         const githubResult = await this.handleGithub(code);
         if (!githubResult) return;
-        username = githubResult;
+        username = githubResult.userinfo.login;
+        access_token = githubResult.usertoken.access_token;
         flag = true;
         break;
       }
@@ -88,6 +90,18 @@ class AccountBindingController extends Controller {
     const result = await ctx.service.account.binding.create({
       uid, account: username, platform,
     });
+    if (platform === 'github') {
+      const github = await this.app.mysql.get('github', { uid });
+      if (!github) {
+        // 似乎不需要 create_time？
+        // const now = moment().format('YYYY-MM-DD HH:mm:ss');
+        this.app.mysql.insert('github', { uid, access_token, /* create_time: now */ });
+      } else {
+        this.app.mysql.update('github', { access_token }, {
+          where: { uid }
+        })
+      }
+    }
     if (result) {
       ctx.body = {
         ...ctx.msg.success,
@@ -102,7 +116,7 @@ class AccountBindingController extends Controller {
   /**
    * 处理github绑定
    * @param {*} code 。。
-   * @return {*} [username][false]
+   * @return {*} [{userinfo, usertoken}][false]
    * @memberof AccountBindingController
    */
   async handleGithub(code) {
@@ -119,7 +133,7 @@ class AccountBindingController extends Controller {
       return false;
     }
     this.logger.info('controller: Account binding:: handleGithub: %j', userinfo);
-    return userinfo.login;
+    return { userinfo, usertoken };
   }
 
   /**
