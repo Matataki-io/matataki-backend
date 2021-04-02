@@ -57,6 +57,7 @@ class PostController extends Controller {
       editRequireToken,
       editRequireBuy,
       ipfs_hide,
+      ipfs_or_github
     } = ctx.request.body;
     let { tags } = ctx.request.body;
     tags = this.tagsProcess({ tags });
@@ -82,7 +83,8 @@ class PostController extends Controller {
       requireBuy,
       editRequireToken,
       editRequireBuy,
-      ipfs_hide
+      ipfs_hide,
+      ipfs_or_github
     );
     ctx.body = result;
   }
@@ -109,6 +111,7 @@ class PostController extends Controller {
       editRequireToken = null,
       editRequireBuy = null,
       ipfs_hide,
+      ipfs_or_github = 'ipfs'
     } = ctx.request.body;
     let { tags = [] } = ctx.request.body;
     tags = this.tagsProcess({ tags });
@@ -210,17 +213,32 @@ class PostController extends Controller {
     const short_content
       = shortContent
       || (await this.service.extmarkdown.shortContent(articleContent));
-    const {
-      metadataHash,
-      htmlHash,
-    } = await this.service.post.uploadArticleToIpfs({
-      isEncrypt,
-      data,
-      title,
-      displayName,
-      description: short_content,
-      uid: post.uid,
-    });
+
+    let hashDict = null;
+
+    if ( ipfs_or_github == 'github') {
+      hashDict = await this.service.post.uploadArticleToIpfs({
+        isEncrypt,
+        data,
+        title,
+        displayName,
+        description: short_content,
+        uid: post.uid,
+      });
+    } else {
+      hashDict = await this.service.post.uploadArticleToIpfs({
+        isEncrypt,
+        data,
+        title,
+        displayName,
+        description: short_content,
+        uid: post.uid,
+      });
+    }
+    
+  const metadataHash = hashDict.metadataHash;
+  const htmlHash = hashDict.htmlHash;
+
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
     ctx.logger.info('debug info', signId, author, title, content, is_original);
@@ -1163,7 +1181,12 @@ class PostController extends Controller {
       if (post.require_holdtokens) this.service.postDashboard.addActionLog(ctx.user.id, post.id, 'unlock', true);
     }
     // 从ipfs获取内容
-    const catchRequest = await this.service.post.ipfsCatch(hash);
+    let catchRequest = null;
+    if (hash.substring(0, 2) === 'Gh') {
+      catchRequest = await this.service.github.readFromGithub(hash, 'json');
+    } else {
+      catchRequest = await this.service.post.ipfsCatch(hash);
+    }
 
     if (catchRequest) {
       let data = JSON.parse(catchRequest.toString());
