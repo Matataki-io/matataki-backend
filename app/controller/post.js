@@ -735,7 +735,15 @@ class PostController extends Controller {
     }
 
     // 从ipfs获取内容
-    const catchRequest = await this.service.post.ipfsCatch(post.hash);
+    // const catchRequest = await this.service.post.ipfsCatch(post.hash);
+
+    let catchRequest = null;
+    if (post.hash.substring(0, 2) === 'Gh') {
+      catchRequest = await this.service.github.readFromGithub(post.hash, 'json');
+    } else {
+      catchRequest = await this.service.post.ipfsCatch(post.hash);
+    }
+
 
     if (catchRequest) {
       let data = JSON.parse(catchRequest.toString());
@@ -1520,6 +1528,7 @@ class PostController extends Controller {
     const { hash } = ctx.params;
 
     // 从ipfs获取内容
+    // ?
     const catchRequest = await this.service.post.ipfsCatch(hash);
 
     if (catchRequest) {
