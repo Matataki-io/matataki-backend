@@ -58,7 +58,7 @@ module.exports = app => {
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
   // router.post('/publish', passport.authorize, controller.post.publish);
-  router.post('/post/publish', passport.authorize, hCaptchaVerify, controller.post.publish);
+  router.post('/post/publish', passport.authorize, controller.post.publish);
 
   // 将草稿定时发送为文章
   router.post('/post/timed/:id', passport.authorize, hCaptchaVerify, controller.timedPost.post);
@@ -71,6 +71,12 @@ module.exports = app => {
 
   // 从IPFS拿取文章内容
   router.get('/post/ipfs/:hash', passport.verify, controller.post.catchPost);
+
+
+  // ?? controller not exist
+  // router.post('/post/github', passport.authorize, controller.github.writeToGithub);
+  // // 
+  router.get('/post/github/:hash', passport.authorize, controller.github.getGithub);
   // 上传图片
   router.post('/post/uploadImage', passport.authorize, controller.post.uploadImage);
   // 文章编辑
