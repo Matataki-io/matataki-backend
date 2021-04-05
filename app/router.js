@@ -76,7 +76,7 @@ module.exports = app => {
   // ?? controller not exist
   // router.post('/post/github', passport.authorize, controller.github.writeToGithub);
   // // 
-  router.get('/post/github/:hash', passport.authorize, controller.github.getGithub);
+  // router.get('/post/github/:hash', passport.authorize, controller.github.getGithub);
   // 上传图片
   router.post('/post/uploadImage', passport.authorize, controller.post.uploadImage);
   // 文章编辑
