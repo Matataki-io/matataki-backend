@@ -57,7 +57,6 @@ class PostController extends Controller {
       editRequireToken,
       editRequireBuy,
       ipfs_hide,
-      ipfs_or_github
     } = ctx.request.body;
     let { tags } = ctx.request.body;
     tags = this.tagsProcess({ tags });
@@ -83,8 +82,7 @@ class PostController extends Controller {
       requireBuy,
       editRequireToken,
       editRequireBuy,
-      ipfs_hide,
-      ipfs_or_github
+      ipfs_hide
     );
     ctx.body = result;
   }
@@ -111,7 +109,6 @@ class PostController extends Controller {
       editRequireToken = null,
       editRequireBuy = null,
       ipfs_hide,
-      ipfs_or_github = 'ipfs'
     } = ctx.request.body;
     let { tags = [] } = ctx.request.body;
     tags = this.tagsProcess({ tags });
@@ -213,32 +210,17 @@ class PostController extends Controller {
     const short_content
       = shortContent
       || (await this.service.extmarkdown.shortContent(articleContent));
-
-    let hashDict = null;
-
-    if ( ipfs_or_github == 'github') {
-      hashDict = await this.service.post.uploadArticleToIpfs({
-        isEncrypt,
-        data,
-        title,
-        displayName,
-        description: short_content,
-        uid: post.uid,
-      });
-    } else {
-      hashDict = await this.service.post.uploadArticleToIpfs({
-        isEncrypt,
-        data,
-        title,
-        displayName,
-        description: short_content,
-        uid: post.uid,
-      });
-    }
-    
-  const metadataHash = hashDict.metadataHash;
-  const htmlHash = hashDict.htmlHash;
-
+    const {
+      metadataHash,
+      htmlHash,
+    } = await this.service.post.uploadArticleToIpfs({
+      isEncrypt,
+      data,
+      title,
+      displayName,
+      description: short_content,
+      uid: post.uid,
+    });
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;
     ctx.logger.info('debug info', signId, author, title, content, is_original);
@@ -735,15 +717,7 @@ class PostController extends Controller {
     }
 
     // 从ipfs获取内容
-    // const catchRequest = await this.service.post.ipfsCatch(post.hash);
-
-    let catchRequest = null;
-    if (post.hash.substring(0, 2) === 'Gh') {
-      catchRequest = await this.service.github.readFromGithub(post.hash, 'json');
-    } else {
-      catchRequest = await this.service.post.ipfsCatch(post.hash);
-    }
-
+    const catchRequest = await this.service.post.ipfsCatch(post.hash);
 
     if (catchRequest) {
       let data = JSON.parse(catchRequest.toString());
@@ -1189,12 +1163,7 @@ class PostController extends Controller {
       if (post.require_holdtokens) this.service.postDashboard.addActionLog(ctx.user.id, post.id, 'unlock', true);
     }
     // 从ipfs获取内容
-    let catchRequest = null;
-    if (hash.substring(0, 2) === 'Gh') {
-      catchRequest = await this.service.github.readFromGithub(hash, 'json');
-    } else {
-      catchRequest = await this.service.post.ipfsCatch(hash);
-    }
+    const catchRequest = await this.service.post.ipfsCatch(hash);
 
     if (catchRequest) {
       let data = JSON.parse(catchRequest.toString());
@@ -1528,7 +1497,6 @@ class PostController extends Controller {
     const { hash } = ctx.params;
 
     // 从ipfs获取内容
-    // ?
     const catchRequest = await this.service.post.ipfsCatch(hash);
 
     if (catchRequest) {
