@@ -57,7 +57,7 @@ class GithubController extends Controller {
   }
 
   // https://docs.github.com/en/rest/reference/repos#get-repository-content
-  async getGithub() {
+  // async getGithub() {
     // const { ctx } = this;
     // // const uid = this.ctx.user.id;
     // // const { uid } = ctx.params;
@@ -71,10 +71,10 @@ class GithubController extends Controller {
     //   return;
     // }
 
-    const ctx = this.ctx;
-    const hash = ctx.params.hash;
+    // const ctx = this.ctx;
+    // const hash = ctx.params.hash;
 
-    const articleInfo = await this.service.github.readFromGithub(hash);
+    // const articleInfo = await this.service.github.readFromGithub(hash);
 
 
 
@@ -97,10 +97,10 @@ class GithubController extends Controller {
     
     // , [ hash ]);
 
-    if (articleInfo === null) {
-      ctx.body = ctx.msg.failure;
-      return;
-    }
+    // if (articleInfo === null) {
+    //   ctx.body = ctx.msg.failure;
+    //   return;
+    // }
 
 
 
@@ -134,11 +134,11 @@ class GithubController extends Controller {
     // const decodedText = buffer.toString();
 
     // ??
-    ctx.body = {
-      ...ctx.msg.success,
-      data: articleInfo
-    }
-  }
+  //   ctx.body = {
+  //     ...ctx.msg.success,
+  //     data: articleInfo
+  //   }
+  // }
 
 }
 
