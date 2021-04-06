@@ -201,6 +201,9 @@ class PostController extends Controller {
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
     const articleContent = await this.service.post.wash(data.content);
+    const short_content
+      = shortContent
+      || (await this.service.extmarkdown.shortContent(articleContent));
 
     // 获取作者的昵称
     let displayName = '';
@@ -217,7 +220,7 @@ class PostController extends Controller {
         data,
         title,
         displayName,
-        description: shortContent,
+        description: short_content,
         uid: post.uid,
       });
     } else {
@@ -226,7 +229,7 @@ class PostController extends Controller {
         data,
         title,
         displayName,
-        description: shortContent,
+        description: short_content,
         uid: post.uid,
       });
     }
