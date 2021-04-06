@@ -822,6 +822,14 @@ class UserService extends Service {
 
     return result;
   }
+
+  async setGithubRepo(uid, repo) {
+    const result = await this.app.mysql.query(
+      'UPDATE github SET article_repo = ? WHERE uid = ?', [repo, uid]
+    );
+    return result.changedRows;
+    // return 1;
+  }
 }
 
 module.exports = UserService;

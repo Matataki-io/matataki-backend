@@ -585,6 +585,21 @@ class UserController extends Controller {
     ctx.body.data = result;
   }
 
+
+  async setGithubRepo()  {
+    const ctx = this.ctx;
+    const { repo } = ctx.request.body;
+
+    const result = await this.service.user.setGithubRepo(ctx.user.id, repo);
+    if (result !== 1 ) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = result;
+  }
+
 }
 
 module.exports = UserController;
