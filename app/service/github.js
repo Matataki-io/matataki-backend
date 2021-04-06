@@ -81,10 +81,22 @@ class github extends Service {
       this.logger.info('invalid user id');
       return null;
     }
-    const github = await this.app.mysql.get('github', { 'uid': uid });
-    const userInfo = await this.app.mysql.query('SELECT username FROM users WHERE id = ?;', [uid]);
-    const accessToken = github.access_token;
-    const articleRepo = github.article_repo;
+    // const github = await this.app.mysql.get('github', { 'uid': uid });
+    // const userInfo = await this.app.mysql.query('SELECT username FROM users WHERE id = ?;', [uid]);
+
+
+    const userInfo = await this.app.mysql.query(
+        `SELECT github.uid, github.access_token, github.article_repo, users.username FROM github
+        LEFT JOIN users ON users.id = github.uid
+        WHERE github.uid = ?;`, [uid]
+    )
+
+    if (userInfo.length === 0) {
+        this.logger.info('maybe not a github user');
+        return null;
+    }
+    const accessToken = userInfo[0].access_token;
+    const articleRepo = userInfo[0].article_repo;
     const userGithubId = userInfo[0].username;
     const hash = await this.generateHash(title, salt);
     let buffer = new Buffer.from(rawFile);
@@ -175,7 +187,7 @@ class github extends Service {
       return null;
     }
     if (article_info[0].hash.substring(0, 2) !== 'Gh') {
-      this.logger.info('invalid hash')
+      this.logger.info('invalid hash');
       return null;
     }
     const folder = article_info[0].hash.substring(2, 6) + '/' + article_info[0].hash.substring(6, 8)

@@ -212,12 +212,12 @@ class PostController extends Controller {
 
     let hashDict = null;
     if ( ipfs_or_github == 'github') {
-      hashDict = await this.service.post.uploadArticleToIpfs({
+      hashDict = await this.service.post.uploadArticleToGithub({
         isEncrypt,
         data,
         title,
         displayName,
-        description: short_content,
+        description: shortContent,
         uid: post.uid,
       });
     } else {
@@ -226,7 +226,7 @@ class PostController extends Controller {
         data,
         title,
         displayName,
-        description: short_content,
+        description: shortContent,
         uid: post.uid,
       });
     }
