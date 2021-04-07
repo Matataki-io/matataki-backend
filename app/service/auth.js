@@ -307,7 +307,7 @@ class AuthService extends Service {
       this.logger.info('currentUser', currentUser);
       if (platform === 'github') {
         const github = await this.app.mysql.get('github', {uid: currentUser.id});
-        const save_repo = 'matataki-save';
+        const article_repo = 'matataki-save';
         if (!github) {
           // 似乎不需要 create_time？
           // const now = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -317,7 +317,7 @@ class AuthService extends Service {
             // create_time: now,
           });
         } else {
-          this.app.mysql.update('github', { access_token, save_repo }, {
+          this.app.mysql.update('github', { access_token, article_repo }, {
             where: {
               uid: currentUser.id,
             }
