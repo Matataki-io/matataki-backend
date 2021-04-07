@@ -1,6 +1,7 @@
 'use strict';
 
 const Controller = require('../core/base_controller');
+const Web3 = require('web3');
 const { convertArray } = require('../utils/index');
 
 class CrossChainController extends Controller {
@@ -360,13 +361,14 @@ class CrossChainController extends Controller {
   async isCrosschainToken() {
     const { ctx } = this;
     const { tokenAddress } = ctx.params;
-    const isCrossChainToken = await this.service.token.crosschain.isCrosschainToken(tokenAddress);
-    if (!isCrossChainToken) {
-      ctx.body = ctx.msg.failure;
-      ctx.status = 404;
-    } else {
+    try {
+      const checksumedAddress = Web3.utils.toChecksumAddress(tokenAddress);
+      const isCrossChainToken = await this.service.token.crosschain.isCrosschainToken(checksumedAddress);
       ctx.body = ctx.msg.success;
       ctx.body.data = { token: isCrossChainToken };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 404;
     }
   }
 }
