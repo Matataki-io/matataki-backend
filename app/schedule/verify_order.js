@@ -41,8 +41,6 @@ class VerifyOrder extends Subscription {
         await this.eos_verify(order);
       } else if (order.platform === 'ont') {
         await this.ont_verify(order);
-      } else if (order.platform === 'vnt') {
-        await this.vnt_verify(order);
       }
     }
   }
@@ -185,14 +183,6 @@ class VerifyOrder extends Subscription {
 
     }
     */
-  }
-
-  async vnt_verify(order) {
-    order.action = consts.payActions.buy;
-    const result = await this.service.vnt.verify(order);
-    if (result) {
-      await this.passVerify(order);
-    }
   }
 
   async passVerify(order) {

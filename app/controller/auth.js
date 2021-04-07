@@ -47,8 +47,6 @@ class AuthController extends Controller {
       flag = await this.service.auth.eos_auth(sign, username, publickey);
     } else if (platform === 'ont') {
       flag = await this.service.auth.ont_auth(sign, username, publickey);
-    } else if (platform === 'vnt') {
-      flag = true;
     } else if (platform === 'eth') {
       // 以太坊没用户名, 使用 msgParams 及其签名来判断是否真实
       flag = this.service.ethereum.signatureService.verifyAuth(sign, msgParams, publickey);

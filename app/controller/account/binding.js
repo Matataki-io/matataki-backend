@@ -25,10 +25,6 @@ class AccountBindingController extends Controller {
         flag = await this.service.auth.ont_auth(sign, username, publickey);
         break;
       }
-      case 'vnt': {
-        flag = true;
-        break;
-      }
       case 'eth': {
         flag = this.service.ethereum.signatureService.verifyAuth(sign, msgParams, publickey);
         username = publickey;
