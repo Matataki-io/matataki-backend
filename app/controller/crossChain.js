@@ -176,6 +176,9 @@ class CrossChainController extends Controller {
 
   }
 
+  /**
+   * @deprecated
+   */
   async depositFromOtherChain() {
     const { ctx } = this;
     const tokenId = ctx.params.id;
@@ -209,6 +212,35 @@ class CrossChainController extends Controller {
         message: `Deposit from ${chain} OK`,
         data: {
           tokenId: token.id,
+          amount: result.value,
+          transactionHash: txHash,
+        },
+      };
+    } catch (error) {
+      ctx.body = ctx.msg.failure;
+      ctx.status = 400;
+      ctx.body.data = error;
+      ctx.body.message = error.message;
+    }
+  }
+
+  async newDepositFromOtherChain() {
+    const { ctx } = this;
+    const { txHash, chain } = ctx.request.body;
+    const isSupportedChain = chain === 'bsc' || chain === 'matic';
+    if (!isSupportedChain) throw new Error('Unsupported Chain. Please contact Matataki Support.');
+    try {
+      // 检查这个交易是不是已经在数据库入账了
+      const isDepositExistInDB = await this.service.token.crosschain.isDepositExistInDB(txHash);
+      if (isDepositExistInDB) {
+        throw new Error('This transaction is already in the database, please check your txHash and try again.');
+      }
+      const result = await this.service.token.crosschain.checkUserSumitDeposit(txHash, chain);
+      ctx.body = {
+        ...ctx.msg.success,
+        message: `Deposit from ${chain} OK`,
+        data: {
+          tokenId: result.tokenId,
           amount: result.value,
           transactionHash: txHash,
         },
