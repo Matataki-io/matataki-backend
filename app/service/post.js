@@ -2064,10 +2064,15 @@ class PostService extends Service {
       markdown,
     });
     // 上传的data是json对象， 需要字符串化
-    const [ metadataHash, htmlHash ] = await Promise.all([
-      this.service.github.writeToGithub(uid, metadata, title, 'json', 'salt1'),
-      this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2'),
-    ]);
+    // const [ metadataHash, htmlHash ] = await Promise.all([
+    //   this.service.github.writeToGithub(uid, metadata, title, 'json', 'salt1'),
+    //   this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2'),
+    // ]);
+    // return { metadataHash, htmlHash };
+
+
+    const metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'json', 'salt1');
+    const htmlHash = await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');
     return { metadataHash, htmlHash };
   }
 

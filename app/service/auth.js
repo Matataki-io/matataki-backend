@@ -314,6 +314,7 @@ class AuthService extends Service {
           this.app.mysql.insert('github', {
             uid: currentUser.id,
             access_token,
+            article_repo,
             // create_time: now,
           });
         } else {
