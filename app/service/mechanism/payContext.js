@@ -120,12 +120,6 @@ class PayContextService extends Service {
           + 'ON DUPLICATE KEY UPDATE support_count = support_count + 1, ont_value_count = ont_value_count + ?;',
           [ payment.signid, supportCount, payment.amount, payment.amount ]
         );
-      } else if (payment.platform === 'vnt') {
-        await conn.query(
-          'INSERT INTO post_read_count(post_id, real_read_count, sale_count, support_count, eos_value_count, vnt_value_count) VALUES (?, 0, 0, ?, 0, ?) '
-          + 'ON DUPLICATE KEY UPDATE support_count = support_count + 1, vnt_value_count = vnt_value_count + ?;',
-          [ payment.signid, supportCount, payment.amount, payment.amount ]
-        );
       }
 
       // 提交事务

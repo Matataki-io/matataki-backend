@@ -30,7 +30,7 @@ class OrderController extends Controller {
     if (!platform) {
       return this.response(403, 'platform required');
     }
-    if (!(platform === 'eos' || platform === 'ont' || platform === 'vnt')) {
+    if (!(platform === 'eos' || platform === 'ont')) {
       return this.response(403, 'platform not support');
     }
 
