@@ -334,7 +334,7 @@ module.exports = app => {
 
   // 有权限要求的API
   router.post('/minetoken/crosschain/:id/withdrawToOtherChain', passport.authorize, controller.crossChain.withdrawToOtherChain);
-  router.post('/minetoken/crosschain/:id/depositFromOtherChain', passport.authorize, controller.crossChain.depositFromOtherChain);
+  router.post('/minetoken/crosschain/:id/depositFromOtherChain', passport.authorize, controller.crossChain.newDepositFromOtherChain);
   router.get('/minetoken/crosschain/permit', passport.authorize, controller.crossChain.getMyIssuedPermit);
   router.get('/minetoken/crosschain-permit/renew/:id/', passport.authorize, controller.crossChain.renewMyWithdrawPermit);
 
