@@ -171,6 +171,11 @@ class CrossChainService extends Service {
     return data.data.event;
   }
 
+  async recoverDeposit(txHash, chain = 'bsc') {
+    const { data } = await this.api[chain].get('/token/checkBurnInTx', { params: { txHash } });
+    return data.data.event;
+  }
+
   async listCrosschainToken(chain = 'bsc') {
     const tokens = await this.app.mysql.select('pegged_assets', { where: { chain }, orders: [[ 'id', 'desc' ]] });
     return tokens;
@@ -201,6 +206,14 @@ class CrossChainService extends Service {
     return depositsOf;
   }
 
+  /**
+   * @deprecated [Buggy, use `recoverDeposit` ]
+   * @param {*} tokenId TokenID
+   * @param {*} uid 用户UID
+   * @param {*} txHash 交易哈希
+   * @param {*} fromChain 区块链
+   * @return token detail
+   */
   async requestToDeposit(tokenId, uid, txHash, fromChain = 'bsc') {
     // 寻找跨链Fan票
     this.logger.info('requestToDeposit::tokenId', tokenId);
@@ -223,6 +236,29 @@ class CrossChainService extends Service {
     // 确认区块大于6就认可为正常
     const status = confirmation >= 6 ? EnumForPeggedAssetDeposit.BURN_EVENT_CONFIRMED : EnumForPeggedAssetDeposit.BURN_EVENT_CREATED;
     const obj = { uid: data.uid, fromChain, burnTx: txHash, value: amount, atBlock, status, tokenId, rinkebyHash: null };
+    await this.app.mysql.insert(
+      'pegged_assets_deposit',
+      // 以防万一
+      obj
+    );
+    return obj;
+  }
+
+  /**
+   * @param {*} txHash 交易哈希
+   * @param {*} fromChain 区块链
+   * @return token detail
+   */
+  async checkUserSumitDeposit(txHash, fromChain = 'bsc') {
+    const data = await this.recoverDeposit(txHash, fromChain);
+    this.logger.info('checkUserSumitDeposit:recoverDeposit', data);
+    const { atBlock, confirmation, amount, token: tokenAddress, uid } = data;
+    const token = await this.app.mysql.get('pegged_assets', { contractAddress: tokenAddress, chain: fromChain });
+    if (!token) throw new Error('No such crosschain token.');
+
+    // 确认区块大于6就认可为正常
+    const status = confirmation >= 6 ? EnumForPeggedAssetDeposit.BURN_EVENT_CONFIRMED : EnumForPeggedAssetDeposit.BURN_EVENT_CREATED;
+    const obj = { uid, fromChain, burnTx: txHash, value: amount, atBlock, status, tokenId: token.tokenId, rinkebyHash: null };
     await this.app.mysql.insert(
       'pegged_assets_deposit',
       // 以防万一
