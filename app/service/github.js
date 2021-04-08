@@ -86,15 +86,21 @@ class github extends Service {
 
 
     const userInfo = await this.app.mysql.query(
-        `SELECT github.uid, github.access_token, github.article_repo, users.username FROM github
+        `SELECT github.uid, github.access_token, github.article_repo, users.username, users.platform FROM github
         LEFT JOIN users ON users.id = github.uid
         WHERE github.uid = ?;`, [uid]
     )
 
     if (userInfo.length === 0) {
+        this.logger.info('user not exist');
+        return null;
+    }
+
+    if (userInfo[0].platform !== 'github') {
         this.logger.info('maybe not a github user');
         return null;
     }
+
     const accessToken = userInfo[0].access_token;
     const articleRepo = userInfo[0].article_repo;
     const userGithubId = userInfo[0].username;
@@ -120,7 +126,8 @@ class github extends Service {
         }
       });
     } catch (err) {
-      this.logger.error(err);
+      this.logger.error('github upload error', err);
+      this.logger.info('github upload error', err);
       return null;
     }
     // console.log(updateGithubRepo);
@@ -204,7 +211,8 @@ class github extends Service {
         },
       });
     } catch (err) {
-      this.logger.error(err);
+      this.logger.error('github upload error', err);
+      this.logger.info('github upload error', err);
       return null;
     }
     if (!(getGithubRepo.status === 200) || !(getGithubRepo.statusText === 'OK')) {
