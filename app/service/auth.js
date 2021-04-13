@@ -307,16 +307,18 @@ class AuthService extends Service {
       this.logger.info('currentUser', currentUser);
       if (platform === 'github') {
         const github = await this.app.mysql.get('github', {uid: currentUser.id});
+        const article_repo = 'matataki-save';
         if (!github) {
           // 似乎不需要 create_time？
           // const now = moment().format('YYYY-MM-DD HH:mm:ss');
           this.app.mysql.insert('github', {
             uid: currentUser.id,
             access_token,
+            article_repo,
             // create_time: now,
           });
         } else {
-          this.app.mysql.update('github', { access_token }, {
+          this.app.mysql.update('github', { access_token, article_repo }, {
             where: {
               uid: currentUser.id,
             }

@@ -73,6 +73,7 @@ class PostService extends Service {
     // 持币编辑相关字段
     editRequireToken = null,
     editRequireBuy = null,
+    ipfs_or_github = 'ipfs',
     ipfs_hide = false
   ) {
     const ctx = this.ctx;
@@ -111,10 +112,11 @@ class PostService extends Service {
       = shortContent
       || (await this.service.extmarkdown.shortContent(articleContent));
 
-    const {
-      metadataHash,
-      htmlHash,
-    } = await this.uploadArticleToIpfs({
+      let hashDict = null;
+    if (ipfs_or_github == 'github') {
+ 
+     hashDict = await this.uploadArticleToGithub({
+
       isEncrypt,
       data,
       title,
@@ -122,6 +124,18 @@ class PostService extends Service {
       description: short_content,
       uid: user.id,
     });
+  } else {
+    hashDict = await this.uploadArticleToIpfs({
+       isEncrypt,
+       data,
+       title,
+       displayName: ctx.helper.emailMask(user.nickname || user.username),
+       description: short_content,
+       uid: user.id,
+     });
+   }
+   const metadataHash = hashDict.metadataHash;
+   const htmlHash = hashDict.htmlHash;
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) return ctx.msg.ipfsUploadFailed;
     ctx.logger.info('debug info', title, isEncrypt);
@@ -2025,6 +2039,43 @@ class PostService extends Service {
     ]);
     return { metadataHash, htmlHash };
   }
+  async uploadArticleToGithub({
+    title, description, displayName, data,  uid }) {
+    let markdown = data.content;
+    let metadata = JSON.stringify(data);
+    // description = await this.wash(description);
+    // 如果需要加密，则替换渲染HTML文章内容
+//     if (isEncrypt) {
+//       markdown = `${description}
+// 很抱歉这是一篇付费/持币阅读文章，内容已被加密。
+// 若需要阅读更多内容，请返回到 Matataki 查看原文`;
+//       metadata = JSON.stringify(this.service.cryptography.encrypt(metadata));
+//     }
+    // 渲染html并上传
+    const renderedHtml = articleToHtml({
+      title,
+      author: {
+        nickname: displayName,
+        uid: uid || this.ctx.user.id,
+        username: displayName,
+      },
+      description,
+      datePublished: new Date(),
+      markdown,
+    });
+    // 上传的data是json对象， 需要字符串化
+    // const [ metadataHash, htmlHash ] = await Promise.all([
+    //   this.service.github.writeToGithub(uid, metadata, title, 'json', 'salt1'),
+    //   this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2'),
+    // ]);
+    // return { metadataHash, htmlHash };
+
+
+    const metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'json', 'salt1');
+    const htmlHash = await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');
+    return { metadataHash, htmlHash };
+  }
+
 
 }
 

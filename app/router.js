@@ -218,6 +218,9 @@ module.exports = app => {
   router.get('/user/:id/bind/:platform', passport.authorize, controller.account.bind.GetMyPlatform);
   // 设置 platform 相关数据（第三方平台的id等，对应 user_third_party 表）
   router.post('/user/:id/bind/:platform', passport.verify, controller.account.bind.setBindData);
+  // 设置用户的GitHub储存目录，GitHub user only
+  router.post('/user/repo', passport.authorize, controller.user.setGithubRepo);
+
 
   // -------------------------------- 粉丝系统 --------------------------------
   // follow 关注和取关动作。关注数和粉丝数在userinfo里
