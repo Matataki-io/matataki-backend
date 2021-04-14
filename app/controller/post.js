@@ -133,6 +133,17 @@ class PostController extends Controller {
       ctx.body = ctx.msg.postNotFound;
       return;
     }
+    if (ipfs_or_github === 'github') {
+      if ((post.hash.substring(0,2) !== 'Gh')) {
+        ctx.body = ctx.msg.paramsError;
+        return;
+      }
+    } else {
+      if (post.hash.substring(0,2) !== 'Qm') {
+        ctx.body = ctx.msg.paramsError;
+        return;
+      }
+    }
 
     let isEncrypt;
     const isAuthor = post.uid === ctx.user.id;
@@ -221,7 +232,9 @@ class PostController extends Controller {
         title,
         displayName,
         description: short_content,
+        postid: signId,
         uid: post.uid,
+        publish_or_edit: 'edit',
       });
     } else {
       hashDict = await this.service.post.uploadArticleToIpfs({
