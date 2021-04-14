@@ -117,7 +117,7 @@ class github extends Service {
         url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/${hash.folder}/${hash.hash}.${filetype}`,
         headers: {
           Authorization: 'token ' + accessToken,
-          'User-Agent': 'test.matataki.io',
+          // 'User-Agent': 'matataki.io',
           accept: 'application/vnd.github.v3+json',
         },
         data: {
@@ -176,15 +176,148 @@ class github extends Service {
   //     data: 'Ghq-march-22-2021.md',
   //   }
   // }
+
+  async updateGithub(postid, uid, rawFile, filetype = 'html') {
+    const article_info = await this.app.mysql.query(`
+    SELECT posts.hash, posts.username AS username_p, posts.id AS pid, posts.uid AS postuid,
+    users.id AS userid, users.username AS username_u, users.platform,
+    github.uid, github.access_token, github.article_repo,
+    post_ipfs.metadataHash, post_ipfs.htmlHash
+    FROM posts
+    LEFT JOIN users ON posts.uid = users.id
+    LEFT JOIN github ON github.uid = users.id
+    LEFT JOIN post_ipfs ON articleId = posts.id
+    WHERE posts.id = ?; 
+    `, [ postid ]);
+    // verify Gh prefix?
+    if (article_info.length === 0) {
+      // ctx.body = ctx.msg.failure;
+      this.logger.info('article not exist');
+      return null;
+    }
+    if (article_info[0].hash.substring(0, 2) !== 'Gh') {
+      this.logger.info('not github hash');
+      return null;
+    }
+    if (article_info[0].uid !== uid) {
+      this.logger.info('invalid user');
+      return null;
+    }
+    if (article_info[0].platform !== 'github') {
+      this.logger.info('not github user');
+      return null;
+    }
+
+    const accessToken = article_info[0].access_token;
+    const articleRepo = article_info[0].article_repo;
+    const userGithubId = article_info[0].username_u;
+
+    const folder = article_info[0].hash.substring(2, 6) + '/' + article_info[0].hash.substring(6, 8)
+    
+    let keepArticleHash;
+    if (filetype === 'html') {
+      keepArticleHash = article_info[0].htmlHash;
+    } else {
+      keepArticleHash = article_info[0].metadataHash;
+    }
+
+    let getGithubRepo = null;
+  
+    try {
+      getGithubRepo = await axios({
+        method: 'GET',
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/${folder}/${keepArticleHash}.${filetype}`,
+        headers: {
+          Authorization: 'token ' + accessToken,
+          // 'User-Agent':'test.matataki.io' ,
+          accept: 'application/vnd.github.v3+json',
+        },
+      });
+    } catch (err) {
+      this.logger.error('github upload error', err);
+      this.logger.info('github upload error', err);
+      return null;
+    }
+    if (!(getGithubRepo.status === 200) || !(getGithubRepo.statusText === 'OK')) {
+      this.logger.info('get origin post incorrect status code, failed');
+      // ctx.body = ctx.msg.failure;
+      return null;
+    }
+
+    const origin_sha = getGithubRepo.data.sha;
+
+    // const userInfo = await this.app.mysql.query(
+    //     `SELECT github.uid, github.access_token, github.article_repo, users.username, users.platform FROM github
+    //     LEFT JOIN users ON users.id = github.uid
+    //     WHERE github.uid = ?;`, [uid]
+    // )
+
+    // if (userInfo.length === 0) {
+    //     this.logger.info('user not exist');
+    //     return null;
+    // }
+
+    // if (userInfo[0].platform !== 'github') {
+    //     this.logger.info('maybe not a github user');
+    //     return null;
+    // }
+
+
+    // const title_hash = await this.generateHash(title, salt);
+    let buffer = new Buffer.from(rawFile);
+    const encodedText = buffer.toString('Base64');
+    // const writePath = moment().format('YYYY-MM-DD HH:mm:ss');
+    // generate hash
+    // try??
+    let updateGithubRepo = null;
+    try {
+        updateGithubRepo = await axios({
+        method: 'PUT',
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/${folder}/${keepArticleHash}.${filetype}`,
+        headers: {
+          Authorization: 'token ' + accessToken,
+          // 'User-Agent': 'test.matataki.io',
+          accept: 'application/vnd.github.v3+json',
+        },
+        data: {
+          message: 'upload rendered',
+          sha: origin_sha,
+          content: encodedText
+        }
+      });
+    } catch (err) {
+      this.logger.error('github upload error', err);
+      this.logger.info('github upload error', err);
+      return null;
+    }
+    // console.log(updateGithubRepo);
+    // return......
+    //     ctx.body = {
+    //   ...ctx.msg.success,
+    //   info: updateGithubRepo.data,
+    //   data: title,
+    // }
+    if (!(updateGithubRepo.status === 200) || !(updateGithubRepo.statusText === 'OK')) {
+      this.logger.info('incorrect status code, failed');
+      // ctx.body = ctx.msg.failure;
+      return null;
+    }
+    return keepArticleHash;
+
+
+
+  }
  // https://docs.github.com/en/rest/reference/repos#get-repository-content
   async readFromGithub(hash, filetype = 'html') {
     const article_info = await this.app.mysql.query(`
     SELECT posts.hash, posts.username AS username_p,
     users.id, users.username AS username_u,
-    github.uid, github.access_token, github.article_repo
+    github.uid, github.access_token, github.article_repo,
+    post_ipfs.metadataHash, post_ipfs.htmlHash
     FROM posts
     LEFT JOIN users ON posts.username = users.username
     LEFT JOIN github ON github.uid = users.id
+    LEFT JOIN post_ipfs ON post_ipfs.metadataHash = post_ipfs.htmlHash
     WHERE posts.hash = ?;
     `, [ hash ]);
     // verify Gh prefix?
