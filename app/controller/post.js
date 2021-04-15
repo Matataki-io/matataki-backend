@@ -247,8 +247,34 @@ class PostController extends Controller {
       });
     }
     
-  const metadataHash = hashDict.metadataHash;
-  const htmlHash = hashDict.htmlHash;
+    const metadataHash = hashDict.metadataHash;
+    const htmlHash = hashDict.htmlHash;
+
+    switch (metadataHash) {
+      case 1:
+      case 2:
+        ctx.body = ctx.msg.githubAccountError;
+        return;
+      case 3:
+      case 4:
+        ctx.body = ctx.msg.paramsError;
+        return;
+      default:
+        ctx.logger.info('postController:: metadataHash: ', metadataHash);
+    }
+
+    switch (htmlHash) {
+      case 1:
+      case 2:
+        ctx.body = ctx.msg.githubAccountError;
+        return;
+      case 3:
+      case 4:
+        ctx.body = ctx.msg.paramsError;
+        return;
+      default:
+        ctx.logger.info('postController:: htmlHash: ', htmlHash);
+    }
 
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;

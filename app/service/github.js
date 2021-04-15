@@ -11,106 +11,53 @@ const crypto = require('crypto');
 class github extends Service {
       constructor(ctx, app) {
     super(ctx, app);
-    // const { host, port, protocol } = this.config.ipfs_service;
-    // this.ipfs = new IPFS({
-    //   host,
-    //   port,
-    //   protocol,
-    // });
+
   }
-  // async writeMetadata(uid, rawFile, title = 'title') {
-  //   if (uid === null) {
-  //     // ctx.body = ctx.msg.failure;
-  //     this.logger.info('invalid user id');
-  //     return null;
-  //   }
-  //   const github = await this.app.mysql.get('github', { 'uid': uid });
-  //   const userInfo = await this.app.mysql.query('SELECT username FROM users WHERE id = ?;', [uid]);
-  //   const accessToken = github.access_token;
-  //   const articleRepo = github.article_repo;
-  //   const userGithubId = userInfo[0].username;
-  //   const hash = await this.generateHash(title);
-  //   let buffer = new Buffer.from(rawFile);
-  //   const encodedText = buffer.toString('Base64');
-  //   let updateGithubRepo = null;
-  //   try {
-  //       updateGithubRepo = await axios({
-  //       method: 'PUT',
-  //       url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/${hash.folder}/${hash.hash}.html`,
-  //       headers: {
-  //         Authorization: 'token ' + accessToken,
-  //         'User-Agent': 'test.matataki.io',
-  //         accept: 'application/vnd.github.v3+json',
-  //       },
-  //       data: {
-  //         message: 'upload rendered',
-  //         content: encodedText
-  //       }
-  //     });
-  //   } catch (err) {
-  //     this.logger.error(err);
-  //     return null;
-  //   }
-  //   // console.log(updateGithubRepo);
-  //   // return......
-  //   //     ctx.body = {
-  //   //   ...ctx.msg.success,
-  //   //   info: updateGithubRepo.data,
-  //   //   data: title,
-  //   // }
-  //   if (!(updateGithubRepo.status === 201) || !(updateGithubRepo.statusText === 'Created')) {
-  //     this.logger.info('incorrect status code, failed');
-  //     // ctx.body = ctx.msg.failure;
-  //     return null;
-  //   }
-  //   return hash.hash;
-  // }
-    
+
   // https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
   async writeToGithub(uid, rawFile, title = 'title', filetype = 'html', salt = 'salt') {
-  // async writeToGithub(articleBody) {
-    // const { ctx } = this;
-    // const uid = this.ctx.user.id;
-    // const { uid } = ctx.params;
-    // const { token } = ctx.query;
-    // const uid = this.decode(token);
-    // const ctx = this.ctx;
-    // const userid = ctx.user.id;
+
     if (uid === null) {
       // ctx.body = ctx.msg.failure;
       this.logger.info('invalid user id');
-      return null;
+      return 3;
     }
-    // const github = await this.app.mysql.get('github', { 'uid': uid });
-    // const userInfo = await this.app.mysql.query('SELECT username FROM users WHERE id = ?;', [uid]);
 
 
     const userInfo = await this.app.mysql.query(
-        `SELECT github.uid, github.access_token, github.article_repo, users.username, users.platform FROM github
+        `SELECT github.uid AS uid_g, github.access_token, github.article_repo,
+        users.username, users.platform AS platform_u,
+        user_accounts.account, user_accounts.uid AS uid_ua, user_accounts.platform AS platform_ua
+        FROM github
         LEFT JOIN users ON users.id = github.uid
+        LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
         WHERE github.uid = ?;`, [uid]
     )
 
+    // 用户没有绑定github账号，下同，请重新使用GitHub进行登录
     if (userInfo.length === 0) {
-        this.logger.info('user not exist');
-        return null;
+      this.logger.info('githubService:: user info not exist');
+      return 1;
     }
 
-    if (userInfo[0].platform !== 'github') {
-        this.logger.info('maybe not a github user');
-        return null;
+    // github部分（且重要的）信息缺失，请重新使用GitHub进行登录
+    if (!(userInfo[0].access_token) || !(userInfo[0].article_repo)) {
+      this.logger.info('githubService:: key missing');
+      return 2;
     }
+
 
     const accessToken = userInfo[0].access_token;
     const articleRepo = userInfo[0].article_repo;
-    const userGithubId = userInfo[0].username;
+    // join了user_accounts表，取其中的account为github id，防止账号切换导致username变更
+    const userGithubId = userInfo[0].account;
     const hash = await this.generateHash(title, salt);
     let buffer = new Buffer.from(rawFile);
     const encodedText = buffer.toString('Base64');
-    // const writePath = moment().format('YYYY-MM-DD HH:mm:ss');
-    // generate hash
-    // try??
+
     let updateGithubRepo = null;
+
+    // 基本请求，user agent没有作用所以注释掉了
     try {
         updateGithubRepo = await axios({
         method: 'PUT',
@@ -121,7 +68,7 @@ class github extends Service {
           accept: 'application/vnd.github.v3+json',
         },
         data: {
-          message: 'upload rendered',
+          message: 'Publish article',
           content: encodedText
         }
       });
@@ -130,13 +77,7 @@ class github extends Service {
       this.logger.info('github upload error', err);
       return null;
     }
-    // console.log(updateGithubRepo);
-    // return......
-    //     ctx.body = {
-    //   ...ctx.msg.success,
-    //   info: updateGithubRepo.data,
-    //   data: title,
-    // }
+
     if (!(updateGithubRepo.status === 201) || !(updateGithubRepo.statusText === 'Created')) {
       this.logger.info('incorrect status code, failed');
       // ctx.body = ctx.msg.failure;
@@ -145,75 +86,47 @@ class github extends Service {
     return hash.hash;
   }
   // https://docs.github.com/en/rest/reference/repos#get-repository-content
-  // async readFromGithub(hash) {
-  //   const { ctx } = this;
-  //   // const uid = this.ctx.user.id;
-  //   // const { uid } = ctx.params;
-  //   const { token, githubRepo } = ctx.query;
-  //   const uid = this.decode(token);
-  //   if (uid === null) {
-  //     ctx.body = ctx.msg.failure;
-  //     return;
-  //   }
-  //   const github = this.app.mysql.get('github', { uid });
-  //   const accessToken = github.access_token;
-  //   const articleRepo = github.article_repo;
-  //   const userGithubId = github.user_id;
-  //   const getGithubRepo = await axios({
-  //     method: 'GET',
-  //     url: `https://api.github.com/repo/${userGithubId}/${articleRepo}/contents/${hash}`,
-  //     headers: {
-  //       Authorization: 'token ' + accessToken,
-  //       'User-Agent': this.ctx.app.config.github.appName,
-  //       accept: 'application/vnd.github.v3+json',
-  //     },
-  //   });
-  //   console.log(updateGithubRepo);
-  //   // return......
-  //   ctx.body = {
-  //     ...ctx.msg.success,
-  //     // content
-  //     data: 'Ghq-march-22-2021.md',
-  //   }
-  // }
 
-  async updateGithub(postid, uid, rawFile, filetype = 'html') {
+
+  async updateGithub(postid, rawFile, filetype = 'html') {
     const article_info = await this.app.mysql.query(`
-    SELECT posts.hash, posts.username AS username_p, posts.id AS pid, posts.uid AS postuid,
-    users.id AS userid, users.username AS username_u, users.platform,
+    SELECT posts.hash, posts.username AS username_p, posts.id AS pid, posts.uid AS uid_p,
+    users.id AS userid, users.username AS username_u, users.platform AS paltform_u,
     github.uid, github.access_token, github.article_repo,
+    user_accounts.uid AS uid_ua, user_accounts.account, user_accounts.platform AS platform_u,
     post_ipfs.metadataHash, post_ipfs.htmlHash
     FROM posts
-    LEFT JOIN users ON posts.uid = users.id
+    LEFT JOIN users ON users.id = posts.uid
     LEFT JOIN github ON github.uid = users.id
+    LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
     LEFT JOIN post_ipfs ON articleId = posts.id
-    WHERE posts.id = ?; 
+    WHERE posts.id = ?
+    LIMIT 1;
     `, [ postid ]);
-    // verify Gh prefix?
+
     if (article_info.length === 0) {
       // ctx.body = ctx.msg.failure;
-      this.logger.info('article not exist');
-      return null;
+      this.logger.info('githubService: user/article not exist');
+      return 1;
     }
+
     if (article_info[0].hash.substring(0, 2) !== 'Gh') {
-      this.logger.info('not github hash');
-      return null;
+      this.logger.info('githubService:: not github hash');
+      return 3;
     }
-    if (article_info[0].uid !== uid) {
-      this.logger.info('invalid user');
-      return null;
-    }
-    if (article_info[0].platform !== 'github') {
-      this.logger.info('not github user');
-      return null;
+
+    if (!(article_info[0].access_token) || !(article_info[0].article_repo)) {
+      this.logger.info('githubService:: key missing');
+      return 2;
     }
 
     const accessToken = article_info[0].access_token;
     const articleRepo = article_info[0].article_repo;
-    const userGithubId = article_info[0].username_u;
+    const userGithubId = article_info[0].account;
 
     const folder = article_info[0].hash.substring(2, 6) + '/' + article_info[0].hash.substring(6, 8)
     
+    // 依据文件类型判断用哪个hash
     let keepArticleHash;
     if (filetype === 'html') {
       keepArticleHash = article_info[0].htmlHash;
@@ -246,29 +159,9 @@ class github extends Service {
 
     const origin_sha = getGithubRepo.data.sha;
 
-    // const userInfo = await this.app.mysql.query(
-    //     `SELECT github.uid, github.access_token, github.article_repo, users.username, users.platform FROM github
-    //     LEFT JOIN users ON users.id = github.uid
-    //     WHERE github.uid = ?;`, [uid]
-    // )
-
-    // if (userInfo.length === 0) {
-    //     this.logger.info('user not exist');
-    //     return null;
-    // }
-
-    // if (userInfo[0].platform !== 'github') {
-    //     this.logger.info('maybe not a github user');
-    //     return null;
-    // }
-
-
-    // const title_hash = await this.generateHash(title, salt);
     let buffer = new Buffer.from(rawFile);
     const encodedText = buffer.toString('Base64');
-    // const writePath = moment().format('YYYY-MM-DD HH:mm:ss');
-    // generate hash
-    // try??
+
     let updateGithubRepo = null;
     try {
         updateGithubRepo = await axios({
@@ -280,7 +173,7 @@ class github extends Service {
           accept: 'application/vnd.github.v3+json',
         },
         data: {
-          message: 'upload rendered',
+          message: 'Update article',
           sha: origin_sha,
           content: encodedText
         }
@@ -290,55 +183,65 @@ class github extends Service {
       this.logger.info('github upload error', err);
       return null;
     }
-    // console.log(updateGithubRepo);
-    // return......
-    //     ctx.body = {
-    //   ...ctx.msg.success,
-    //   info: updateGithubRepo.data,
-    //   data: title,
-    // }
+
     if (!(updateGithubRepo.status === 200) || !(updateGithubRepo.statusText === 'OK')) {
       this.logger.info('incorrect status code, failed');
-      // ctx.body = ctx.msg.failure;
+
       return null;
     }
     return keepArticleHash;
 
-
-
   }
+
  // https://docs.github.com/en/rest/reference/repos#get-repository-content
+ // 参数必须传入json那个hash
   async readFromGithub(hash, filetype = 'html') {
-    const article_info = await this.app.mysql.query(`
-    SELECT posts.hash, posts.username AS username_p,
-    users.id, users.username AS username_u,
-    github.uid, github.access_token, github.article_repo,
-    post_ipfs.metadataHash, post_ipfs.htmlHash
-    FROM posts
-    LEFT JOIN users ON posts.username = users.username
-    LEFT JOIN github ON github.uid = users.id
-    LEFT JOIN post_ipfs ON post_ipfs.metadataHash = post_ipfs.htmlHash
-    WHERE posts.hash = ?;
-    `, [ hash ]);
-    // verify Gh prefix?
-    if (article_info.length === 0) {
-      // ctx.body = ctx.msg.failure;
-      this.logger.info('article not exist');
-      return null;
-    }
-    if (article_info[0].hash.substring(0, 2) !== 'Gh') {
+
+    if (hash.substring(0, 2) !== 'Gh') {
       this.logger.info('invalid hash');
       return null;
     }
-    const folder = article_info[0].hash.substring(2, 6) + '/' + article_info[0].hash.substring(6, 8)
+
+    const article_info = await this.app.mysql.query(`
+    SELECT posts.hash, posts.username AS username_p, posts.uid AS uid_p,
+    users.id, users.username AS username_u,
+    github.uid AS uid_g, github.access_token, github.article_repo,
+    user_accounts.uid AS uid_u, user_accounts.platform, user_accounts.account,
+    post_ipfs.metadataHash, post_ipfs.htmlHash, post_ipfs.articleId
+    FROM posts
+    LEFT JOIN users ON users.id = posts.uid
+    LEFT JOIN github ON github.uid = users.id
+    LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
+    LEFT JOIN post_ipfs ON post_ipfs.articleId = posts.id
+    WHERE posts.hash = ?
+    LIMIT 1;
+    `, [ hash ]);
+
+    // 此处不返回详细信息，直接null
+    if (article_info.length === 0) {
+      // ctx.body = ctx.msg.failure;
+      this.logger.info('githubService:: user/article not exist');
+      return null;
+    }
+
+    if (!(article_info[0].access_token) || !(article_info[0].article_repo)) {
+      this.logger.info('githubService:: key missing');
+      return null;
+    }
+
+    const accessToken = article_info[0].access_token;
+    const articleRepo = article_info[0].article_repo;
+    const userGithubId = article_info[0].account;
+    const keepArticleHash = article_info[0].hash;
+    const folder = keepArticleHash.substring(2, 6) + '/' + keepArticleHash.substring(6, 8)
     let getGithubRepo = null;
   
     try {
       getGithubRepo = await axios({
         method: 'GET',
-        url: `https://api.github.com/repos/${article_info[0].username_u}/${article_info[0].article_repo}/contents/${folder}/${article_info[0].hash}.${filetype}`,
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/${folder}/${keepArticleHash}.${filetype}`,
         headers: {
-          Authorization: 'token ' + article_info[0].access_token,
+          Authorization: 'token ' + accessToken,
           'User-Agent':'test.matataki.io' ,
           accept: 'application/vnd.github.v3+json',
         },
@@ -357,7 +260,8 @@ class github extends Service {
     const decodedText = buffer.toString();
     return decodedText;
   }
-  // hash, for article title only
+
+  // 哈希函数，用于生成GitHub文件名
   async generateHash(title, salt) {
       const prefix = 'Gh';
       const folder = moment().format('YYYY/MM');
