@@ -134,8 +134,32 @@ class PostService extends Service {
        uid: user.id,
      });
    }
-   const metadataHash = hashDict.metadataHash;
-   const htmlHash = hashDict.htmlHash;
+
+    const metadataHash = hashDict.metadataHash;
+    const htmlHash = hashDict.htmlHash;
+
+    switch (metadataHash) {
+      case 1:
+      case 2:
+        return ctx.msg.githubAccountError;
+      case 3:
+      case 4:
+        return ctx.msg.paramsError;
+      default:
+        ctx.logger.info('postController:: metadataHash: ', metadataHash);
+    }
+
+    switch (htmlHash) {
+      case 1:
+      case 2:
+        return ctx.msg.githubAccountError;
+      case 3:
+      case 4:
+        return ctx.msg.paramsError;
+      default:
+        ctx.logger.info('postController:: htmlHash: ', htmlHash);
+    }
+
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) return ctx.msg.ipfsUploadFailed;
     ctx.logger.info('debug info', title, isEncrypt);
@@ -2073,8 +2097,8 @@ class PostService extends Service {
     let htmlHash;
 
     if (publish_or_edit === 'edit') {
-      metadataHash = await this.service.github.updateGithub(postid, uid, metadata, 'json');
-      htmlHash = await this.service.github.updateGithub(postid, uid, renderedHtml, 'html');
+      metadataHash = await this.service.github.updateGithub(postid, metadata, 'json');
+      htmlHash = await this.service.github.updateGithub(postid, renderedHtml, 'html');
     } else {
       metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'json', 'salt1');
       htmlHash = await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');

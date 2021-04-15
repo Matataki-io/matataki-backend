@@ -61,6 +61,8 @@ module.exports = {
   passwordWrong: 10017,
   // 签名过期
   signatureExpired: 10018,
+  // GitHub 账号没有绑定，或者没有生成以及保存token以及repo
+  githubAccountError: 10019,
 
   // post相关
   postNotFound: 10100,
@@ -177,6 +179,7 @@ module.exports = {
       invalidSignature: { code: this.invalidSignature, message: 'Invalid signature' },
       signatureVerifyFailed: { code: this.signatureVerifyFailed, message: 'Signature verify failed' },
       signatureExpired: { code: this.signatureExpired, message: 'Your signature was expired' },
+      githubAccountError: { code: this.githubAccountError, message: 'GitHub account unavailable, please login with GitHub again' },
 
       captchaRatelimit: { code: this.captchaRatelimit, message: 'Captcha rate limit' },
       captchaWrong: { code: this.captchaWrong, message: 'wrong captcha' },
@@ -276,6 +279,7 @@ module.exports = {
       captchaWrong: { code: this.captchaWrong, message: '验证码错误' },
       alreadyRegisted: { code: this.alreadyRegisted, message: '已经注册，请直接登录' },
       passwordWrong: { code: this.passwordWrong, message: '密码错误' },
+      githubAccountError: { code: this.githubAccountError, message: 'GitHub账号信息过期或不存在，请重新用GitHub账号登录' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },

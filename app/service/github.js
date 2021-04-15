@@ -79,31 +79,48 @@ class github extends Service {
     if (uid === null) {
       // ctx.body = ctx.msg.failure;
       this.logger.info('invalid user id');
-      return null;
+      return 3;
     }
     // const github = await this.app.mysql.get('github', { 'uid': uid });
     // const userInfo = await this.app.mysql.query('SELECT username FROM users WHERE id = ?;', [uid]);
 
 
+    // const userInfo = await this.app.mysql.query(
+    //     `SELECT github.uid, github.access_token, github.article_repo, users.username, users.platform FROM github
+    //     LEFT JOIN users ON users.id = github.uid
+    //     WHERE github.uid = ?;`, [uid]
+    // )
+
     const userInfo = await this.app.mysql.query(
-        `SELECT github.uid, github.access_token, github.article_repo, users.username, users.platform FROM github
+        `SELECT github.uid AS uid_g, github.access_token, github.article_repo,
+        users.username, users.platform AS platform_u,
+        user_accounts.account, user_accounts.uid AS uid_ua, user_accounts.platform AS platform_ua
+        FROM github
         LEFT JOIN users ON users.id = github.uid
+        LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
         WHERE github.uid = ?;`, [uid]
     )
 
+    // 用户没有绑定github账号，下同，请重新使用GitHub进行登录
     if (userInfo.length === 0) {
-        this.logger.info('user not exist');
-        return null;
+      this.logger.info('githubService:: user info not exist');
+      return 1;
     }
 
-    if (userInfo[0].platform !== 'github') {
-        this.logger.info('maybe not a github user');
-        return null;
+    // github部分（且重要的）信息缺失，请重新使用GitHub进行登录
+    if (!(userInfo[0].access_token) || !(userInfo[0].article_repo)) {
+      this.logger.info('githubService:: key missing');
+      return 2;
     }
+    // if (userInfo[0].platform !== 'github') {
+    //     this.logger.info('maybe not a github user');
+    //     return null;
+    // }
 
     const accessToken = userInfo[0].access_token;
     const articleRepo = userInfo[0].article_repo;
-    const userGithubId = userInfo[0].username;
+    // join了user_accounts表，取其中的account为github id，防止账号切换导致username变更
+    const userGithubId = userInfo[0].account;
     const hash = await this.generateHash(title, salt);
     let buffer = new Buffer.from(rawFile);
     const encodedText = buffer.toString('Base64');
@@ -121,7 +138,7 @@ class github extends Service {
           accept: 'application/vnd.github.v3+json',
         },
         data: {
-          message: 'upload rendered',
+          message: 'Publish article',
           content: encodedText
         }
       });
@@ -177,40 +194,45 @@ class github extends Service {
   //   }
   // }
 
-  async updateGithub(postid, uid, rawFile, filetype = 'html') {
+  async updateGithub(postid, rawFile, filetype = 'html') {
     const article_info = await this.app.mysql.query(`
-    SELECT posts.hash, posts.username AS username_p, posts.id AS pid, posts.uid AS postuid,
-    users.id AS userid, users.username AS username_u, users.platform,
+    SELECT posts.hash, posts.username AS username_p, posts.id AS pid, posts.uid AS uid_p,
+    users.id AS userid, users.username AS username_u, users.platform AS paltform_u,
     github.uid, github.access_token, github.article_repo,
+    user_accounts.uid AS uid_ua, user_accounts.account, user_accounts.platform AS platform_u,
     post_ipfs.metadataHash, post_ipfs.htmlHash
     FROM posts
-    LEFT JOIN users ON posts.uid = users.id
+    LEFT JOIN users ON users.id = posts.uid
     LEFT JOIN github ON github.uid = users.id
+    LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
     LEFT JOIN post_ipfs ON articleId = posts.id
-    WHERE posts.id = ?; 
+    WHERE posts.id = ?
+    LIMIT 1;
     `, [ postid ]);
     // verify Gh prefix?
     if (article_info.length === 0) {
       // ctx.body = ctx.msg.failure;
-      this.logger.info('article not exist');
-      return null;
+      this.logger.info('githubService: user/article not exist');
+      return 1;
     }
+
     if (article_info[0].hash.substring(0, 2) !== 'Gh') {
-      this.logger.info('not github hash');
-      return null;
+      this.logger.info('githubService:: not github hash');
+      return 3;
     }
-    if (article_info[0].uid !== uid) {
-      this.logger.info('invalid user');
-      return null;
+
+    if (!(article_info[0].access_token) || !(article_info[0].article_repo)) {
+      this.logger.info('githubService:: key missing');
+      return 2;
     }
-    if (article_info[0].platform !== 'github') {
-      this.logger.info('not github user');
-      return null;
-    }
+    // if (article_info[0].platform !== 'github') {
+    //   this.logger.info('not github user');
+    //   return null;
+    // }
 
     const accessToken = article_info[0].access_token;
     const articleRepo = article_info[0].article_repo;
-    const userGithubId = article_info[0].username_u;
+    const userGithubId = article_info[0].account;
 
     const folder = article_info[0].hash.substring(2, 6) + '/' + article_info[0].hash.substring(6, 8)
     
@@ -280,7 +302,7 @@ class github extends Service {
           accept: 'application/vnd.github.v3+json',
         },
         data: {
-          message: 'upload rendered',
+          message: 'Update article',
           sha: origin_sha,
           content: encodedText
         }
@@ -309,36 +331,51 @@ class github extends Service {
   }
  // https://docs.github.com/en/rest/reference/repos#get-repository-content
   async readFromGithub(hash, filetype = 'html') {
-    const article_info = await this.app.mysql.query(`
-    SELECT posts.hash, posts.username AS username_p,
-    users.id, users.username AS username_u,
-    github.uid, github.access_token, github.article_repo,
-    post_ipfs.metadataHash, post_ipfs.htmlHash
-    FROM posts
-    LEFT JOIN users ON posts.username = users.username
-    LEFT JOIN github ON github.uid = users.id
-    LEFT JOIN post_ipfs ON post_ipfs.metadataHash = post_ipfs.htmlHash
-    WHERE posts.hash = ?;
-    `, [ hash ]);
-    // verify Gh prefix?
-    if (article_info.length === 0) {
-      // ctx.body = ctx.msg.failure;
-      this.logger.info('article not exist');
-      return null;
-    }
-    if (article_info[0].hash.substring(0, 2) !== 'Gh') {
+
+    if (hash.substring(0, 2) !== 'Gh') {
       this.logger.info('invalid hash');
       return null;
     }
-    const folder = article_info[0].hash.substring(2, 6) + '/' + article_info[0].hash.substring(6, 8)
+
+    const article_info = await this.app.mysql.query(`
+    SELECT posts.hash, posts.username AS username_p, posts.uid AS uid_p,
+    users.id, users.username AS username_u,
+    github.uid AS uid_g, github.access_token, github.article_repo,
+    user_accounts.uid AS uid_u, user_accounts.platform, user_accounts.account,
+    post_ipfs.metadataHash, post_ipfs.htmlHash, post_ipfs.articleId
+    FROM posts
+    LEFT JOIN users ON users.id = posts.uid
+    LEFT JOIN github ON github.uid = users.id
+    LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
+    LEFT JOIN post_ipfs ON post_ipfs.articleId = posts.id
+    WHERE posts.hash = ?
+    LIMIT 1;
+    `, [ hash ]);
+
+    if (article_info.length === 0) {
+      // ctx.body = ctx.msg.failure;
+      this.logger.info('githubService:: user/article not exist');
+      return null;
+    }
+
+    if (!(article_info[0].access_token) || !(article_info[0].article_repo)) {
+      this.logger.info('githubService:: key missing');
+      return null;
+    }
+
+    const accessToken = article_info[0].access_token;
+    const articleRepo = article_info[0].article_repo;
+    const userGithubId = article_info[0].account;
+    const keepArticleHash = article_info[0].hash;
+    const folder = keepArticleHash.substring(2, 6) + '/' + keepArticleHash.substring(6, 8)
     let getGithubRepo = null;
   
     try {
       getGithubRepo = await axios({
         method: 'GET',
-        url: `https://api.github.com/repos/${article_info[0].username_u}/${article_info[0].article_repo}/contents/${folder}/${article_info[0].hash}.${filetype}`,
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/${folder}/${keepArticleHash}.${filetype}`,
         headers: {
-          Authorization: 'token ' + article_info[0].access_token,
+          Authorization: 'token ' + accessToken,
           'User-Agent':'test.matataki.io' ,
           accept: 'application/vnd.github.v3+json',
         },
