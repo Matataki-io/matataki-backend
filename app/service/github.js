@@ -242,7 +242,7 @@ class github extends Service {
         url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/${folder}/${keepArticleHash}.${filetype}`,
         headers: {
           Authorization: 'token ' + accessToken,
-          'User-Agent':'test.matataki.io' ,
+          // 'User-Agent':'test.matataki.io' ,
           accept: 'application/vnd.github.v3+json',
         },
       });
@@ -258,7 +258,11 @@ class github extends Service {
     }
     let buffer = new Buffer.from(getGithubRepo.data.content, 'base64')
     const decodedText = buffer.toString();
-    return decodedText;
+
+    const decodedContent = JSON.parse(decodedText);
+    decodedContent.github_id = userGithubId;
+
+    return JSON.stringify(decodedContent);
   }
 
   // 哈希函数，用于生成GitHub文件名
