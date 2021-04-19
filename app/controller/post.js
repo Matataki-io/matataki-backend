@@ -133,6 +133,17 @@ class PostController extends Controller {
       ctx.body = ctx.msg.postNotFound;
       return;
     }
+    if (ipfs_or_github === 'github') {
+      if ((post.hash.substring(0,2) !== 'Gh')) {
+        ctx.body = ctx.msg.paramsError;
+        return;
+      }
+    } else {
+      if (post.hash.substring(0,2) !== 'Qm') {
+        ctx.body = ctx.msg.paramsError;
+        return;
+      }
+    }
 
     let isEncrypt;
     const isAuthor = post.uid === ctx.user.id;
@@ -221,7 +232,9 @@ class PostController extends Controller {
         title,
         displayName,
         description: short_content,
+        postid: signId,
         uid: post.uid,
+        publish_or_edit: 'edit',
       });
     } else {
       hashDict = await this.service.post.uploadArticleToIpfs({
@@ -234,8 +247,34 @@ class PostController extends Controller {
       });
     }
     
-  const metadataHash = hashDict.metadataHash;
-  const htmlHash = hashDict.htmlHash;
+    const metadataHash = hashDict.metadataHash;
+    const htmlHash = hashDict.htmlHash;
+
+    switch (metadataHash) {
+      case 1:
+      case 2:
+        ctx.body = ctx.msg.githubAccountError;
+        return;
+      case 3:
+      case 4:
+        ctx.body = ctx.msg.paramsError;
+        return;
+      default:
+        ctx.logger.info('postController:: metadataHash: ', metadataHash);
+    }
+
+    switch (htmlHash) {
+      case 1:
+      case 2:
+        ctx.body = ctx.msg.githubAccountError;
+        return;
+      case 3:
+      case 4:
+        ctx.body = ctx.msg.paramsError;
+        return;
+      default:
+        ctx.logger.info('postController:: htmlHash: ', htmlHash);
+    }
 
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) ctx.body = ctx.msg.ipfsUploadFailed;

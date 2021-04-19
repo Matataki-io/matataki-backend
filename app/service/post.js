@@ -134,8 +134,32 @@ class PostService extends Service {
        uid: user.id,
      });
    }
-   const metadataHash = hashDict.metadataHash;
-   const htmlHash = hashDict.htmlHash;
+
+    const metadataHash = hashDict.metadataHash;
+    const htmlHash = hashDict.htmlHash;
+
+    switch (metadataHash) {
+      case 1:
+      case 2:
+        return ctx.msg.githubAccountError;
+      case 3:
+      case 4:
+        return ctx.msg.paramsError;
+      default:
+        ctx.logger.info('postController:: metadataHash: ', metadataHash);
+    }
+
+    switch (htmlHash) {
+      case 1:
+      case 2:
+        return ctx.msg.githubAccountError;
+      case 3:
+      case 4:
+        return ctx.msg.paramsError;
+      default:
+        ctx.logger.info('postController:: htmlHash: ', htmlHash);
+    }
+
     // 无 hash 则上传失败
     if (!metadataHash || !htmlHash) return ctx.msg.ipfsUploadFailed;
     ctx.logger.info('debug info', title, isEncrypt);
@@ -2040,7 +2064,7 @@ class PostService extends Service {
     return { metadataHash, htmlHash };
   }
   async uploadArticleToGithub({
-    title, description, displayName, data,  uid }) {
+    postid, title, description, displayName, data, uid, publish_or_edit = 'publish' }) {
     let markdown = data.content;
     let metadata = JSON.stringify(data);
     // description = await this.wash(description);
@@ -2069,10 +2093,17 @@ class PostService extends Service {
     //   this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2'),
     // ]);
     // return { metadataHash, htmlHash };
+    let metadataHash;
+    let htmlHash;
 
+    if (publish_or_edit === 'edit') {
+      metadataHash = await this.service.github.updateGithub(postid, metadata, 'json');
+      htmlHash = await this.service.github.updateGithub(postid, renderedHtml, 'html');
+    } else {
+      metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'json', 'salt1');
+      htmlHash = await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');
+    }
 
-    const metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'json', 'salt1');
-    const htmlHash = await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');
     return { metadataHash, htmlHash };
   }
 
