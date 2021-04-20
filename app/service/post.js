@@ -2065,8 +2065,8 @@ class PostService extends Service {
   }
   async uploadArticleToGithub({
     postid, title, description, displayName, data, uid, publish_or_edit = 'publish' }) {
-    let markdown = data.content;
-    let metadata = JSON.stringify(data);
+    // let markdown = data.content;
+    let metadata = data.content;
     // description = await this.wash(description);
     // 如果需要加密，则替换渲染HTML文章内容
 //     if (isEncrypt) {
@@ -2085,7 +2085,7 @@ class PostService extends Service {
       },
       description,
       datePublished: new Date(),
-      markdown,
+      markdown: data.content,
     });
     // 上传的data是json对象， 需要字符串化
     // const [ metadataHash, htmlHash ] = await Promise.all([
@@ -2097,11 +2097,11 @@ class PostService extends Service {
     let htmlHash;
 
     if (publish_or_edit === 'edit') {
-      metadataHash = await this.service.github.updateGithub(postid, metadata, 'json');
-      htmlHash = await this.service.github.updateGithub(postid, renderedHtml, 'html');
+      htmlHash = metadataHash = await this.service.github.updateGithub(postid, metadata, 'md');
+      //  await this.service.github.updateGithub(postid, renderedHtml, 'html');
     } else {
-      metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'json', 'salt1');
-      htmlHash = await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');
+      htmlHash = metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'md', 'salt1');
+      //  await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');
     }
 
     return { metadataHash, htmlHash };

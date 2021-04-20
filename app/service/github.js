@@ -15,7 +15,7 @@ class github extends Service {
   }
 
   // https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
-  async writeToGithub(uid, rawFile, title = 'title', filetype = 'html', salt = 'salt') {
+  async writeToGithub(uid, rawFile, title = 'title', filetype = 'md', salt = 'salt') {
 
     if (uid === null) {
       // ctx.body = ctx.msg.failure;
@@ -88,18 +88,16 @@ class github extends Service {
   // https://docs.github.com/en/rest/reference/repos#get-repository-content
 
 
-  async updateGithub(postid, rawFile, filetype = 'html') {
+  async updateGithub(postid, rawFile, filetype = 'md') {
     const article_info = await this.app.mysql.query(`
     SELECT posts.hash, posts.username AS username_p, posts.id AS pid, posts.uid AS uid_p,
-    users.id AS userid, users.username AS username_u, users.platform AS paltform_u,
+    users.id AS userid, users.username AS username_u, users.platform AS platform_u,
     github.uid, github.access_token, github.article_repo,
-    user_accounts.uid AS uid_ua, user_accounts.account, user_accounts.platform AS platform_u,
-    post_ipfs.metadataHash, post_ipfs.htmlHash
+    user_accounts.uid AS uid_ua, user_accounts.account, user_accounts.platform AS platform_ua
     FROM posts
     LEFT JOIN users ON users.id = posts.uid
     LEFT JOIN github ON github.uid = users.id
     LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
-    LEFT JOIN post_ipfs ON articleId = posts.id
     WHERE posts.id = ?
     LIMIT 1;
     `, [ postid ]);
@@ -126,13 +124,16 @@ class github extends Service {
 
     const folder = article_info[0].hash.substring(2, 6) + '/' + article_info[0].hash.substring(6, 8)
     
-    // 依据文件类型判断用哪个hash
-    let keepArticleHash;
-    if (filetype === 'html') {
-      keepArticleHash = article_info[0].htmlHash;
-    } else {
-      keepArticleHash = article_info[0].metadataHash;
-    }
+    // // 依据文件类型判断用哪个hash
+    // let keepArticleHash;
+    // if (filetype === 'html') {
+    //   keepArticleHash = article_info[0].htmlHash;
+    // } else {
+    //   keepArticleHash = article_info[0].metadataHash;
+    // }
+
+    // 目前只需要取meta hash了，故不再需要选择
+    const keepArticleHash = article_info[0].hash;
 
     let getGithubRepo = null;
   
@@ -195,7 +196,7 @@ class github extends Service {
 
  // https://docs.github.com/en/rest/reference/repos#get-repository-content
  // 参数必须传入json那个hash
-  async readFromGithub(hash, filetype = 'html') {
+  async readFromGithub(hash, filetype = 'md') {
 
     if (hash.substring(0, 2) !== 'Gh') {
       this.logger.info('invalid hash');
@@ -203,16 +204,14 @@ class github extends Service {
     }
 
     const article_info = await this.app.mysql.query(`
-    SELECT posts.hash, posts.username AS username_p, posts.uid AS uid_p,
+    SELECT posts.hash, posts.username AS username_p, posts.uid AS uid_p, posts.title, posts.author,
     users.id, users.username AS username_u,
     github.uid AS uid_g, github.access_token, github.article_repo,
-    user_accounts.uid AS uid_u, user_accounts.platform, user_accounts.account,
-    post_ipfs.metadataHash, post_ipfs.htmlHash, post_ipfs.articleId
+    user_accounts.uid AS uid_u, user_accounts.platform, user_accounts.account
     FROM posts
     LEFT JOIN users ON users.id = posts.uid
     LEFT JOIN github ON github.uid = users.id
     LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
-    LEFT JOIN post_ipfs ON post_ipfs.articleId = posts.id
     WHERE posts.hash = ?
     LIMIT 1;
     `, [ hash ]);
@@ -259,10 +258,16 @@ class github extends Service {
     let buffer = new Buffer.from(getGithubRepo.data.content, 'base64')
     const decodedText = buffer.toString();
 
-    const decodedContent = JSON.parse(decodedText);
-    decodedContent.github_id = userGithubId;
+    // const decodedContent = JSON.parse(decodedText);
 
-    return JSON.stringify(decodedContent);
+    const readResponse = {
+      title: article_info[0].title,
+      author: article_info[0].author,
+      github_id: userGithubId,
+      content: decodedText
+    }
+
+    return JSON.stringify(readResponse);
   }
 
   // 哈希函数，用于生成GitHub文件名
@@ -275,7 +280,8 @@ class github extends Service {
       const now = moment().format('x');
       const shasum = crypto.createHash('sha256');
       shasum.update(title + now + salt);
-      const finalHash = prefix + month + shasum.digest('hex');
+      let finalHash = prefix + month + shasum.digest('hex');
+      finalHash = finalHash.substring(0, 40);
       return { hash:finalHash, folder }
   }
 }
