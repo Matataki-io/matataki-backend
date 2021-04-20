@@ -2,6 +2,7 @@
 
 const Controller = require('../core/base_controller');
 const Web3 = require('web3');
+const { utils } = require('ethers');
 const { convertArray } = require('../utils/index');
 
 class CrossChainController extends Controller {
@@ -37,7 +38,8 @@ class CrossChainController extends Controller {
   async withdrawToOtherChain() {
     const { ctx } = this;
     const { id: tokenId } = ctx.params;
-    const { target, amount, chain = 'bsc' } = ctx.request.body;
+    let { target } = ctx.request.body;
+    const { amount, chain = 'bsc' } = ctx.request.body;
     if (chain !== 'bsc' && chain !== 'matic') {
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
@@ -56,6 +58,8 @@ class CrossChainController extends Controller {
       ctx.body.message = 'Use legit ethereum address';
       return;
     }
+    // @fix: use checksumed address
+    target = utils.getAddress(target);
     const currentBalance = Number(await ctx.service.token.mineToken.balanceOf(ctx.user.id, tokenId));
     if (currentBalance < amount) {
       ctx.body = ctx.msg.failure;

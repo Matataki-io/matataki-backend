@@ -34,6 +34,7 @@
     "eth-sig-util": "^2.5.0",
     "ethereumjs-tx": "^2.1.1",
     "ethereumjs-util": "^6.2.0",
+    "ethers": "^5.1.2",
     "file-type": "^12.0.1",
     "form-data": "^3.0.0",
     "googleapis": "^52.1.0",
