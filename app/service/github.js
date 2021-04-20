@@ -203,7 +203,7 @@ class github extends Service {
     }
 
     const article_info = await this.app.mysql.query(`
-    SELECT posts.hash, posts.username AS username_p, posts.uid AS uid_p,
+    SELECT posts.hash, posts.username AS username_p, posts.uid AS uid_p, posts.title, posts.author,
     users.id, users.username AS username_u,
     github.uid AS uid_g, github.access_token, github.article_repo,
     user_accounts.uid AS uid_u, user_accounts.platform, user_accounts.account,
@@ -259,10 +259,16 @@ class github extends Service {
     let buffer = new Buffer.from(getGithubRepo.data.content, 'base64')
     const decodedText = buffer.toString();
 
-    const decodedContent = JSON.parse(decodedText);
-    decodedContent.github_id = userGithubId;
+    // const decodedContent = JSON.parse(decodedText);
 
-    return JSON.stringify(decodedContent);
+    const readResponse = {
+      title: article_info[0].title,
+      author: article_info[0].author,
+      github_id: userGithubId,
+      content: decodedText
+    }
+
+    return JSON.stringify(readResponse);
   }
 
   // 哈希函数，用于生成GitHub文件名
@@ -275,7 +281,8 @@ class github extends Service {
       const now = moment().format('x');
       const shasum = crypto.createHash('sha256');
       shasum.update(title + now + salt);
-      const finalHash = prefix + month + shasum.digest('hex');
+      let finalHash = prefix + month + shasum.digest('hex');
+      finalHash = finalHash.substring(0, 40);
       return { hash:finalHash, folder }
   }
 }
