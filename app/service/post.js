@@ -2097,11 +2097,11 @@ class PostService extends Service {
     let htmlHash;
 
     if (publish_or_edit === 'edit') {
-      metadataHash = await this.service.github.updateGithub(postid, metadata, 'md');
-      htmlHash = await this.service.github.updateGithub(postid, renderedHtml, 'html');
+      htmlHash = metadataHash = await this.service.github.updateGithub(postid, metadata, 'md');
+      //  await this.service.github.updateGithub(postid, renderedHtml, 'html');
     } else {
-      metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'md', 'salt1');
-      htmlHash = await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');
+      htmlHash = metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'md', 'salt1');
+      //  await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');
     }
 
     return { metadataHash, htmlHash };
