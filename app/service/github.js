@@ -15,7 +15,7 @@ class github extends Service {
   }
 
   // https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
-  async writeToGithub(uid, rawFile, title = 'title', filetype = 'md', salt = 'salt') {
+  async writeToGithub(uid, rawFile, title = 'title', filetype = 'md', salt = 'salt', branch = 'main') {
 
     if (uid === null) {
       // ctx.body = ctx.msg.failure;
@@ -46,13 +46,13 @@ class github extends Service {
       return 2;
     }
 
-
     const accessToken = userInfo[0].access_token;
     const articleRepo = userInfo[0].article_repo;
     // join了user_accounts表，取其中的account为github id，防止账号切换导致username变更
     const userGithubId = userInfo[0].account;
     const hash = await this.generateHash(title, salt);
-    let buffer = new Buffer.from(rawFile);
+    const parsedFile = await this.addPageInfo(rawFile, title);
+    let buffer = new Buffer.from(parsedFile);
     const encodedText = buffer.toString('Base64');
 
     let updateGithubRepo = null;
@@ -61,7 +61,7 @@ class github extends Service {
     try {
         updateGithubRepo = await axios({
         method: 'PUT',
-        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/${hash.folder}/${hash.hash}.${filetype}`,
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/source/_posts/${hash.folder}/${hash.hash}.${filetype}`,
         headers: {
           Authorization: 'token ' + accessToken,
           // 'User-Agent': 'matataki.io',
@@ -69,7 +69,8 @@ class github extends Service {
         },
         data: {
           message: 'Publish article',
-          content: encodedText
+          content: encodedText,
+          branch: branch
         }
       });
     } catch (err) {
@@ -88,7 +89,7 @@ class github extends Service {
   // https://docs.github.com/en/rest/reference/repos#get-repository-content
 
 
-  async updateGithub(postid, rawFile, filetype = 'md') {
+  async updateGithub(postid, rawFile, filetype = 'md', branch = 'main') {
     const article_info = await this.app.mysql.query(`
     SELECT posts.hash, posts.username AS username_p, posts.id AS pid, posts.uid AS uid_p,
     users.id AS userid, users.username AS username_u, users.platform AS platform_u,
@@ -140,7 +141,7 @@ class github extends Service {
     try {
       getGithubRepo = await axios({
         method: 'GET',
-        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/${folder}/${keepArticleHash}.${filetype}`,
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/source/_posts/${folder}/${keepArticleHash}.${filetype}?ref=${branch}`,
         headers: {
           Authorization: 'token ' + accessToken,
           // 'User-Agent':'test.matataki.io' ,
@@ -160,14 +161,15 @@ class github extends Service {
 
     const origin_sha = getGithubRepo.data.sha;
 
-    let buffer = new Buffer.from(rawFile);
+    const parsedFile = await this.addPageInfo(rawFile);
+    let buffer = new Buffer.from(parsedFile);
     const encodedText = buffer.toString('Base64');
 
     let updateGithubRepo = null;
     try {
         updateGithubRepo = await axios({
         method: 'PUT',
-        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/${folder}/${keepArticleHash}.${filetype}`,
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/source/_posts/${folder}/${keepArticleHash}.${filetype}`,
         headers: {
           Authorization: 'token ' + accessToken,
           // 'User-Agent': 'test.matataki.io',
@@ -176,7 +178,8 @@ class github extends Service {
         data: {
           message: 'Update article',
           sha: origin_sha,
-          content: encodedText
+          content: encodedText,
+          branch: branch
         }
       });
     } catch (err) {
@@ -196,7 +199,7 @@ class github extends Service {
 
  // https://docs.github.com/en/rest/reference/repos#get-repository-content
  // 参数必须传入json那个hash
-  async readFromGithub(hash, filetype = 'md') {
+  async readFromGithub(hash, filetype = 'md', branch = 'main') {
 
     if (hash.substring(0, 2) !== 'Gh') {
       this.logger.info('invalid hash');
@@ -238,7 +241,7 @@ class github extends Service {
     try {
       getGithubRepo = await axios({
         method: 'GET',
-        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/${folder}/${keepArticleHash}.${filetype}`,
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/source/_posts/${folder}/${keepArticleHash}.${filetype}?ref=${branch}`,
         headers: {
           Authorization: 'token ' + accessToken,
           // 'User-Agent':'test.matataki.io' ,
@@ -256,7 +259,7 @@ class github extends Service {
       return null;
     }
     let buffer = new Buffer.from(getGithubRepo.data.content, 'base64')
-    const decodedText = buffer.toString();
+    const decodedText = await this.deletePageInfo(buffer.toString());
 
     // const decodedContent = JSON.parse(decodedText);
 
@@ -269,6 +272,11 @@ class github extends Service {
 
     return JSON.stringify(readResponse);
   }
+
+  // 在空的repo中，初始化各个文件
+  // async prepareSite() {
+
+  // }
 
   // 哈希函数，用于生成GitHub文件名
   async generateHash(title, salt) {
@@ -283,6 +291,32 @@ class github extends Service {
       let finalHash = prefix + month + shasum.digest('hex');
       finalHash = finalHash.substring(0, 40);
       return { hash:finalHash, folder }
+  }
+
+  // 需要生成pages，储存的不是纯md原文，需要加上一些信息。
+  // 指定格式。需提示用户：错误地修改格式可能会导致无法在matataki、子站上显示等错误
+  // https://hexo.io/docs/front-matter.html
+  async addPageInfo(rawPost, title) {
+    const timeTag = moment().format('YYYY-MM-DD HH:mm:ss');
+    const parsedPost = 
+`---
+title: ${title}
+date: ${timeTag}
+---
+${rawPost}`;
+
+    return parsedPost;
+  }
+
+  async deletePageInfo(rawPost) {
+    const splitPost = rawPost.split('---', 3);
+
+    // 没有分成3段，表示原格式错误，返回空串。否则取值会出错。
+    if (splitPost.length < 3) {
+      return ''
+    }
+    return splitPost[2];
+
   }
 }
 module.exports = github;

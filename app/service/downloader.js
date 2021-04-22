@@ -13,7 +13,7 @@ class DownloaderService extends Service {
     // const catchRequest = await this.service.post.ipfsCatch(hash);
     let catchRequest = null;
     if (hash.substring(0, 2) === 'Gh') {
-      catchRequest = await this.service.github.readFromGithub(hash, 'md');
+      catchRequest = await this.service.github.readFromGithub(hash, 'md', 'source');
     } else {
       catchRequest = await this.service.post.ipfsCatch(hash);
     }

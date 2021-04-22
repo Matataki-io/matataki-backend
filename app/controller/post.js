@@ -775,7 +775,7 @@ class PostController extends Controller {
     // const catchRequest = await this.service.post.ipfsCatch(post.hash);
     let catchRequest = null;
     if (post.hash.substring(0, 2) === 'Gh') {
-      catchRequest = await this.service.github.readFromGithub(post.hash, 'md');
+      catchRequest = await this.service.github.readFromGithub(post.hash, 'md', 'source');
     } else {
       catchRequest = await this.service.post.ipfsCatch(post.hash);
     }
@@ -1228,7 +1228,7 @@ class PostController extends Controller {
     // const catchRequest = await this.service.post.ipfsCatch(hash);
     let catchRequest = null;
     if (hash.substring(0, 2) === 'Gh') {
-      catchRequest = await this.service.github.readFromGithub(hash, 'md');
+      catchRequest = await this.service.github.readFromGithub(hash, 'md', 'source');
     } else {
       catchRequest = await this.service.post.ipfsCatch(hash);
     }
