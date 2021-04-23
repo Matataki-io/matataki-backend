@@ -1561,11 +1561,11 @@ class PostService extends Service {
       // todo，待验证，修改不改变内容，影响行数应该为0
       const result = await this.app.mysql.update('posts', row, options);
 
-      try {
-        await axios.post(this.config.cacheAPI.uri + '/sync/post/delete', { id }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
-      } catch (e) {
-        await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
-      }
+      // try {
+      //   await axios.post(this.config.cacheAPI.uri + '/sync/post/delete', { id }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
+      // } catch (e) {
+      //   await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
+      // }
 
       return result.affectedRows === 1;
     } catch (err) {
