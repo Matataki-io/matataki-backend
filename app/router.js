@@ -220,6 +220,8 @@ module.exports = app => {
   router.post('/user/:id/bind/:platform', passport.verify, controller.account.bind.setBindData);
   // 设置用户的GitHub储存目录，GitHub user only
   router.post('/user/repo', passport.authorize, controller.user.setGithubRepo);
+  // 创建子站
+  router.post('/user/prepareRepo', passport.authorize, controller.user.createSite);
 
 
   // -------------------------------- 粉丝系统 --------------------------------

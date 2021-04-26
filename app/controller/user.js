@@ -600,6 +600,25 @@ class UserController extends Controller {
     ctx.body.data = result;
   }
 
+  async createSite() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const createSiteResult = await this.service.github.prepareRepo(userid);
+
+    // switch to return..
+    if (createSiteResult === null) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = ctx.msg.success;
+  }
+
+  // async editSiteConfig() {
+  //   return;
+  // }
+
+
 }
 
 module.exports = UserController;
