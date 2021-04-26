@@ -8,6 +8,7 @@ const axios = require('axios').default
 const Service = require('egg').Service;
 const moment = require('moment');
 const crypto = require('crypto');
+const YAML = require('yaml');
 class github extends Service {
       constructor(ctx, app) {
     super(ctx, app);
@@ -273,10 +274,131 @@ class github extends Service {
     return JSON.stringify(readResponse);
   }
 
-  // 在空的repo中，初始化各个文件
-  // async prepareSite() {
+  // 运用模板创建，再添加workflow文件触发page渲染
+  // 测试网模板，主网模板。模板地址应写为参数
+  // https://docs.github.com/en/rest/reference/repos#create-a-repository-using-a-template
+  async prepareRepo(uid) {
 
-  // }
+    if (uid === null) {
+      // ctx.body = ctx.msg.failure;
+      this.logger.info('invalid user id');
+      return null;
+    }
+
+    const userInfo = await this.app.mysql.query(
+      `SELECT github.uid AS uid_g, github.access_token, github.article_repo,
+      users.username, users.platform AS platform_u,
+      user_accounts.account, user_accounts.uid AS uid_ua, user_accounts.platform AS platform_ua
+      FROM github
+      LEFT JOIN users ON users.id = github.uid
+      LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
+      WHERE github.uid = ?;`, [uid]
+    )
+
+    if (userInfo.length === 0) {
+      this.logger.info('githubService:: user info not exist');
+      return null;
+    }
+
+    const templateRepoInfo = {
+      username: 'kumoram',
+      repo: 'matataki-save-template'
+    }
+    const accessToken = userInfo[0].access_token;
+    const articleRepo = userInfo[0].article_repo;
+    const userGithubId = userInfo[0].account;
+
+    let setSiteRepo = null;
+
+    try {
+      setSiteRepo = await axios({
+        method: 'POST',
+        url: `https://api.github.com/repos/${templateRepoInfo.username}/${templateRepoInfo.repo}/generate`,
+        headers: {
+          Authorization: 'token ' + accessToken,
+          // 'User-Agent':'test.matataki.io' ,
+          accept: 'application/vnd.github.baptiste-preview+json',
+        },
+        data: {
+          name: articleRepo,
+          description: 'generate my matataki site',
+          include_all_branches: true
+        }
+      })
+    } catch (err) {
+      this.logger.error('githubService:: set site repo github upload error', err);
+      return null;
+    }
+
+    if (!(setSiteRepo.status === 201) || !(setSiteRepo.statusText === 'Created')) {
+      this.logger.info('githubService:: set site repo incorrect status code, failed');
+      // ctx.body = ctx.msg.failure;
+      return null;
+    }
+// // judge http status code!
+    let editConfig = null;
+    try {
+      editConfig = await axios({
+        method: 'GET',
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml?ref=source`,
+        headers: {
+          Authorization: 'token ' + accessToken,
+          // 'User-Agent':'test.matataki.io' ,
+          accept: 'application/vnd.github.v3+json',
+        },
+      })
+    } catch (err) {
+      this.logger.error('githubService:: edit config github upload error', err);
+      return null;
+    }
+  
+    if (!(editConfig.status === 200) || !(editConfig.statusText === 'OK')) {
+      this.logger.info('githubService:: edit config incorrect status code, failed');
+      // ctx.body = ctx.msg.failure;
+      return null;
+    }
+
+    let buffer = new Buffer.from(editConfig.data.content, 'base64')
+    let configYml = buffer.toString();
+    const origin_sha = editConfig.data.sha;
+
+    configYml = configYml.replace(/site_name_to_be_replaced/g, articleRepo);
+    configYml = configYml.replace(/username_to_be_replaced/g, userGithubId);
+
+    let buffer2 = new Buffer.from(configYml);
+    const encodedConfig = buffer2.toString('Base64');
+
+    let updateConfig = null;
+    try {
+        updateConfig = await axios({
+        method: 'PUT',
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml`,
+        headers: {
+          Authorization: 'token ' + accessToken,
+          // 'User-Agent': 'test.matataki.io',
+          accept: 'application/vnd.github.v3+json',
+        },
+        data: {
+          message: 'set config',
+          sha: origin_sha,
+          content: encodedConfig,
+          branch: 'source'
+        }
+      });
+    } catch (err) {
+      this.logger.error('githubService:: update config github upload error', err);
+      return null;
+    }
+
+        if (!(updateConfig.status === 200) || !(updateConfig.statusText === 'OK')) {
+      this.logger.info('githubService:: update config incorrect status code, failed');
+      // ctx.body = ctx.msg.failure;
+      return null;
+    }
+
+    return 0;
+  }
+
 
   // 哈希函数，用于生成GitHub文件名
   async generateHash(title, salt) {
