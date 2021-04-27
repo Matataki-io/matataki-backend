@@ -588,9 +588,10 @@ class UserController extends Controller {
 
   async setGithubRepo()  {
     const ctx = this.ctx;
+    const userid = ctx.user.id;
     const { repo } = ctx.request.body;
 
-    const result = await this.service.user.setGithubRepo(ctx.user.id, repo);
+    const result = await this.service.user.setGithubRepo(userid, repo);
     if (result !== 1 ) {
       ctx.body = ctx.msg.failure;
       return;
@@ -598,6 +599,50 @@ class UserController extends Controller {
 
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
+  }
+
+  async checkSiteStatus() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const result = await this.service.github.checkSite(userid);
+
+    switch(result) {
+      case 0:
+        ctx.body = ctx.msg.indieSiteNotReady;
+        return;
+      case 1:
+        ctx.body = ctx.msg.success;
+        return;
+      case 2:
+      case 3:
+        ctx.body = ctx.msg.githubAccountError;
+        return;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
+  }
+
+  async checkRepoStatus() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const result = await this.service.github.checkRepo(userid);
+
+    switch (result) {
+      case 0:
+        ctx.body = ctx.msg.githubRepoAlreadyTaken;
+        return;
+      case 1:
+        ctx.body = ctx.msg.success;
+        return;
+      case 2:
+      case 3:
+        ctx.body = ctx.msg.githubAccountError;
+        return;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
   }
 
   async createSite() {
