@@ -172,6 +172,12 @@ class NotifyService extends Service {
       startId ? ' AND t2.id <= :startId' : '',
       startId ? ' AND c2.id <= :startId' : '',
     ];
+    const read =
+    [
+      filterUnread ? ' AND t1.state =  0' : '',
+      filterUnread ? ' AND c1.state = 0' : '',
+    ];
+
     let sqlList = `
       SELECT
         t2.id,
@@ -190,7 +196,10 @@ class NotifyService extends Service {
         MAX(t2.user_id) as max_user_id
       FROM ${EVENT_RECIPIENT_DESC_TABLE} t1
       JOIN ${EVENT_TABLE} t2 ON t1.event_id = t2.id
-      WHERE t1.user_id = :uid AND t2.action IN(:actions)${whereStart[0]}
+      WHERE t1.user_id = :uid
+        ${read[0]}
+        AND t2.action IN(:actions)
+        ${whereStart[0]}
       GROUP BY t2.action, t2.object_id, object_type, DATE(create_time)
       ORDER BY id DESC
       LIMIT :offset, :limit
@@ -201,16 +210,13 @@ class NotifyService extends Service {
         SELECT count(1), c1.state
         FROM ${EVENT_RECIPIENT_DESC_TABLE} c1
         JOIN ${EVENT_TABLE} c2 ON c1.event_id = c2.id
-        WHERE c1.user_id = :uid AND c2.action IN(:actions)${whereStart[1]}
+        WHERE c1.user_id = :uid
+          ${read[1]}
+          AND c2.action IN(:actions)
+          ${whereStart[1]}
         GROUP BY c2.action, c2.object_id, object_type, DATE(create_time)
       ) a
     `;
-
-    // 只看未读
-    if (filterUnread) {
-      sqlList = `SELECT * FROM (${sqlList}) a WHERE a.state = 0`;
-      sqlCount += ' WHERE a.state = 0';
-    }
 
     const sql = `${sqlList}; ${sqlCount};`;
 
