@@ -4024,3 +4024,32 @@ url: /search/token
   ]
 }
 ```
+
+### 获取用户的子站创建状态
+
+- GET /user/repoStatus
+- x-access-token：需要
+- 参数：无
+
+- 正常状态码：200，表示用户是正常的子站用户
+- 独立子站未创建，无法进入设置页面，需要走创建步骤： 10021
+- 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
+
+### 获取用户的子站repo状态
+
+- GET /user/repoStatus
+- x-access-token：需要
+- 参数：无
+
+- 正常状态码：200，表示用户的GitHub repo名称已经留空
+- 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
+- repo没有留空：10020
+
+### 修改用户子站目标repo
+
+- POST /user/repo
+- x-access-token：需要
+- 参数：repo：修改成的repo名称
+
+- 正常状态码：200，表示修改成功
+- 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定

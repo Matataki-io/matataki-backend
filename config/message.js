@@ -63,6 +63,11 @@ module.exports = {
   signatureExpired: 10018,
   // GitHub 账号没有绑定，或者没有生成以及保存token以及repo
   githubAccountError: 10019,
+  // 用户GitHub repo未留空
+  githubRepoAlreadyTaken: 10020,
+
+  // 独立子站未创建，无法进入设置页面，需要走创建步骤
+  indieSiteNotReady: 10021,
 
   // post相关
   postNotFound: 10100,
@@ -180,6 +185,8 @@ module.exports = {
       signatureVerifyFailed: { code: this.signatureVerifyFailed, message: 'Signature verify failed' },
       signatureExpired: { code: this.signatureExpired, message: 'Your signature was expired' },
       githubAccountError: { code: this.githubAccountError, message: 'GitHub account unavailable, please login with GitHub again' },
+      githubRepoAlreadyTaken: { code: this.githubRepoAlreadyTaken, message: 'GitHub repo name has been occupied, please change repo name.' },
+      indieSiteNotReady: { code: this.indieSiteNotReady, message: 'Indie site haven\'t been created' },
 
       captchaRatelimit: { code: this.captchaRatelimit, message: 'Captcha rate limit' },
       captchaWrong: { code: this.captchaWrong, message: 'wrong captcha' },
@@ -280,6 +287,8 @@ module.exports = {
       alreadyRegisted: { code: this.alreadyRegisted, message: '已经注册，请直接登录' },
       passwordWrong: { code: this.passwordWrong, message: '密码错误' },
       githubAccountError: { code: this.githubAccountError, message: 'GitHub账号信息过期或不存在，请重新用GitHub账号登录' },
+      githubRepoAlreadyTaken: { code: this.githubRepoAlreadyTaken, message: 'GitHub repo已经被占用，请在下方修改目标repo名称' },
+      indieSiteNotReady: { code: this.indieSiteNotReady, message: '独立子站还未创建' },
 
       postNotFound: { code: this.postNotFound, message: '帖子不存在' },
       postDeleteError: { code: this.postDeleteError, message: '该文章不存在，或者你无权限删除' },

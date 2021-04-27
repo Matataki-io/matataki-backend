@@ -286,7 +286,7 @@ class github extends Service {
     }
 
     const userInfo = await this.app.mysql.query(
-      `SELECT github.uid AS uid_g, github.access_token, github.article_repo,
+      `SELECT github.uid AS uid_g, github.access_token, github.article_repo, github.site_status,
       users.username, users.platform AS platform_u,
       user_accounts.account, user_accounts.uid AS uid_ua, user_accounts.platform AS platform_ua
       FROM github
@@ -299,6 +299,11 @@ class github extends Service {
       this.logger.info('githubService:: user info not exist');
       return null;
     }
+
+    if (userInfo[0].site_status !== 0) {
+      this.logger.info('githubService:: user info site already created');
+      return null;
+    } 
 
     const templateRepoInfo = {
       username: 'kumoram',
@@ -390,13 +395,95 @@ class github extends Service {
       return null;
     }
 
-        if (!(updateConfig.status === 200) || !(updateConfig.statusText === 'OK')) {
+    if (!(updateConfig.status === 200) || !(updateConfig.statusText === 'OK')) {
       this.logger.info('githubService:: update config incorrect status code, failed');
       // ctx.body = ctx.msg.failure;
       return null;
     }
 
+    await this.app.mysql.query(
+      `UPDATE github SET site_status = 1 WHERE uid = ?;`, [uid]
+    )
+
     return 0;
+  }
+
+  // 检查repo名称是否已经存在
+  async checkRepo(uid) {
+    if (uid === null) {
+      // ctx.body = ctx.msg.failure;
+      this.logger.info('invalid user id');
+      return null;
+    }
+
+    const userInfo = await this.app.mysql.query(
+      `SELECT github.access_token, github.article_repo,
+      user_accounts.account
+      FROM github
+      LEFT JOIN users ON users.id = github.uid
+      LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
+      WHERE github.uid = ?;`, [uid]
+    )
+
+    if (userInfo.length === 0) {
+      this.logger.info('githubService:: user info not exist');
+      return 3;
+    }
+
+    const accessToken = userInfo[0].access_token;
+    const articleRepo = userInfo[0].article_repo;
+    const userGithubId = userInfo[0].account;
+
+    let checkRepoExistence = null;
+    try {
+      checkRepoExistence = await axios({
+        method: 'GET',
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}`,
+        headers: {
+          Authorization: 'token ' + accessToken,
+          // 'User-Agent': 'test.matataki.io',
+          accept: 'application/vnd.github.v3+json',
+        }
+      });
+
+    } catch (err) {
+      // not error!
+      // 结果得到404，才是留空的，才是可用的
+      if ((err.response.status === 404) && (err.response.statusText === 'Not Found')) {
+        return 1;
+      } else {
+        this.logger.err('githubService:: update config github not 200 or 404', err);
+        return null;
+      }
+    }
+
+    // 200的时候会return 0
+    return 0;
+  }
+
+  // 检查子站创建状态。如果未创建，是不能进行其他操作的
+  async checkSite(uid) {
+    if (uid === null) {
+      // ctx.body = ctx.msg.failure;
+      this.logger.info('invalid user id');
+      return null;
+    }
+
+    const userInfo = await this.app.mysql.query(
+      `SELECT github.site_status,
+      user_accounts.account
+      FROM github
+      LEFT JOIN users ON users.id = github.uid
+      LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
+      WHERE github.uid = ?;`, [uid]
+    )
+
+    if (userInfo.length === 0) {
+      this.logger.info('githubService:: user info not exist');
+      return 3;
+    }
+
+    return userInfo[0].site_status;
   }
 
 
