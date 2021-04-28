@@ -99,9 +99,9 @@ class github extends Service {
     }
     return hash.hash;
   }
+
+
   // https://docs.github.com/en/rest/reference/repos#get-repository-content
-
-
   async updateGithub(postid, rawFile, filetype = 'md', branch = 'main') {
     const article_info = await this.app.mysql.query(`
     SELECT posts.hash, posts.username AS username_p, posts.id AS pid, posts.uid AS uid_p,
@@ -318,8 +318,8 @@ class github extends Service {
     } 
 
     const templateRepoInfo = {
-      username: 'kumoram',
-      repo: 'matataki-save-template'
+      username: this.ctx.app.config.github.templateRepoOwner,
+      repo: this.ctx.app.config.github.templateRepoName
     }
     const accessToken = userInfo[0].access_token;
     const articleRepo = userInfo[0].article_repo;
