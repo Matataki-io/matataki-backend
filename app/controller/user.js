@@ -674,21 +674,6 @@ class UserController extends Controller {
     ctx.body.data = readConfigResult;
   }
 
-    async readSiteConfig() {
-    const ctx = this.ctx;
-    const userid = ctx.user.id;
-
-    const readConfigResult = await this.service.github.readSiteSetting(userid);
-
-    // switch to return..
-    if (readConfigResult === null) {
-      ctx.body = ctx.msg.failure;
-      return;
-    }
-    ctx.body = ctx.msg.success;
-    ctx.body.data = readConfigResult;
-  }
-
   async editSiteConfig() {
     const ctx = this.ctx;
     const userid = ctx.user.id;
