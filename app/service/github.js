@@ -9,6 +9,18 @@ const Service = require('egg').Service;
 const moment = require('moment');
 const crypto = require('crypto');
 const YAML = require('yaml');
+
+const requiredSiteConfigList = {
+  'title': '',
+  'subtitle': '',
+  'description': '',
+  'keywords': '',
+  'author': '',
+  'language': '',
+  'timezone': '',
+  'theme': ''
+}
+
 class github extends Service {
       constructor(ctx, app) {
     super(ctx, app);
@@ -484,6 +496,158 @@ class github extends Service {
     }
 
     return userInfo[0].site_status;
+  }
+
+  async readSiteSetting(uid) {
+    if (uid === null) {
+      // ctx.body = ctx.msg.failure;
+      this.logger.info('invalid user id');
+      return null;
+    }
+
+    const userInfo = await this.app.mysql.query(
+      `SELECT github.uid AS uid_g, github.access_token, github.article_repo,
+      users.username, users.platform AS platform_u,
+      user_accounts.account, user_accounts.uid AS uid_ua, user_accounts.platform AS platform_ua
+      FROM github
+      LEFT JOIN users ON users.id = github.uid
+      LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
+      WHERE github.uid = ?;`, [uid]
+    )
+
+    if (userInfo.length === 0) {
+      this.logger.info('githubService:: user info not exist');
+      return null;
+    }
+
+    const accessToken = userInfo[0].access_token;
+    const articleRepo = userInfo[0].article_repo;
+    const userGithubId = userInfo[0].account;
+
+   // judge http status code!
+   let readConfig = null;
+   try {
+     readConfig = await axios({
+       method: 'GET',
+       url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml?ref=source`,
+       headers: {
+         Authorization: 'token ' + accessToken,
+         // 'User-Agent':'test.matataki.io' ,
+         accept: 'application/vnd.github.v3+json',
+       },
+     })
+   } catch (err) {
+     this.logger.error('githubService:: edit config github upload error', err);
+     return null;
+   }
+
+    const buffer = new Buffer.from(readConfig.data.content, 'base64');
+    const configYml = buffer.toString();
+    const configObject = YAML.parse(configYml);
+    let usefulConfig = {};
+
+    for (let everyConfig in requiredSiteConfigList) {
+      usefulConfig[everyConfig] = configObject[everyConfig]
+    }
+
+    return usefulConfig;
+  }
+
+  async editSiteConfig(uid, requestObj) {
+    if (uid === null) {
+      // ctx.body = ctx.msg.failure;
+      this.logger.info('invalid user id');
+      return null;
+    }
+
+    const userInfo = await this.app.mysql.query(
+      `SELECT github.uid AS uid_g, github.access_token, github.article_repo,
+      users.username, users.platform AS platform_u,
+      user_accounts.account, user_accounts.uid AS uid_ua, user_accounts.platform AS platform_ua
+      FROM github
+      LEFT JOIN users ON users.id = github.uid
+      LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
+      WHERE github.uid = ?;`, [uid]
+    )
+
+    if (userInfo.length === 0) {
+      this.logger.info('githubService:: user info not exist');
+      return null;
+    }
+
+    const accessToken = userInfo[0].access_token;
+    const articleRepo = userInfo[0].article_repo;
+    const userGithubId = userInfo[0].account;
+
+   // judge http status code!
+   let editConfig = null;
+   try {
+     editConfig = await axios({
+       method: 'GET',
+       url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml?ref=source`,
+       headers: {
+         Authorization: 'token ' + accessToken,
+         // 'User-Agent':'test.matataki.io' ,
+         accept: 'application/vnd.github.v3+json',
+       },
+     })
+   } catch (err) {
+     this.logger.error('githubService:: edit config github upload error', err);
+     return null;
+   }
+ 
+   if (!(editConfig.status === 200) || !(editConfig.statusText === 'OK')) {
+     this.logger.info('githubService:: edit config incorrect status code, failed');
+     // ctx.body = ctx.msg.failure;
+     return null;
+   }
+
+   let buffer = new Buffer.from(editConfig.data.content, 'base64')
+   let configYml = buffer.toString();
+   const origin_sha = editConfig.data.sha;
+
+   let configObject = YAML.parse(configYml);
+
+  for (let everyConfig in requiredSiteConfigList) {
+    if (requestObj[everyConfig]) {
+      configObject[everyConfig] = requestObj[everyConfig];
+    }
+  }
+
+   configYml = YAML.stringify(configObject);
+
+   let buffer2 = new Buffer.from(configYml);
+   const encodedConfig = buffer2.toString('Base64');
+
+   let updateConfig = null;
+   try {
+       updateConfig = await axios({
+       method: 'PUT',
+       url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml`,
+       headers: {
+         Authorization: 'token ' + accessToken,
+         // 'User-Agent': 'test.matataki.io',
+         accept: 'application/vnd.github.v3+json',
+       },
+       data: {
+         message: 'set config',
+         sha: origin_sha,
+         content: encodedConfig,
+         branch: 'source'
+       }
+     });
+   } catch (err) {
+     this.logger.error('githubService:: update config github upload error', err);
+     return null;
+   }
+
+       if (!(updateConfig.status === 200) || !(updateConfig.statusText === 'OK')) {
+     this.logger.info('githubService:: update config incorrect status code, failed');
+     // ctx.body = ctx.msg.failure;
+     return null;
+   }
+
+    return 0;
   }
 
 
