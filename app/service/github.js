@@ -54,7 +54,7 @@ class github extends Service {
     }
 
     // github部分（且重要的）信息缺失，请重新使用GitHub进行登录
-    if (!(userInfo[0].access_token) || !(userInfo[0].article_repo)) {
+    if (!(userInfo[0].access_token) || !(userInfo[0].article_repo) || !(userInfo[0].account)) {
       this.logger.info('githubService:: key missing');
       return 2;
     }
@@ -127,7 +127,7 @@ class github extends Service {
       return 3;
     }
 
-    if (!(article_info[0].access_token) || !(article_info[0].article_repo)) {
+    if (!(article_info[0].access_token) || !(article_info[0].article_repo) || !(article_info[0].account)) {
       this.logger.info('githubService:: key missing');
       return 2;
     }
@@ -239,7 +239,7 @@ class github extends Service {
       return null;
     }
 
-    if (!(article_info[0].access_token) || !(article_info[0].article_repo)) {
+    if (!(article_info[0].access_token) || !(article_info[0].article_repo) || !(article_info[0].account)) {
       this.logger.info('githubService:: key missing');
       return null;
     }
@@ -446,6 +446,11 @@ class github extends Service {
     const articleRepo = userInfo[0].article_repo;
     const userGithubId = userInfo[0].account;
 
+    if (!userGithubId || !articleRepo || !accessToken) {
+      this.logger.info('githubService:: user info(some keys) not exist');
+      return 3;
+    }
+
     let checkRepoExistence = null;
     try {
       checkRepoExistence = await axios({
@@ -495,6 +500,11 @@ class github extends Service {
       return 3;
     }
 
+    if (!userInfo[0].account) {
+      this.logger.info('githubService:: user info(some keys) not exist');
+      return 3;
+    }
+
     return userInfo[0].site_status;
   }
 
@@ -523,6 +533,11 @@ class github extends Service {
     const accessToken = userInfo[0].access_token;
     const articleRepo = userInfo[0].article_repo;
     const userGithubId = userInfo[0].account;
+
+    if (!userGithubId || !articleRepo || !accessToken) {
+      this.logger.info('githubService:: user info(some keys) not exist');
+      return null;
+    }
 
    // judge http status code!
    let readConfig = null;
@@ -578,6 +593,11 @@ class github extends Service {
     const accessToken = userInfo[0].access_token;
     const articleRepo = userInfo[0].article_repo;
     const userGithubId = userInfo[0].account;
+
+    if (!userGithubId || !articleRepo || !accessToken) {
+      this.logger.info('githubService:: user info(some keys) not exist');
+      return null;
+    }
 
    // judge http status code!
    let editConfig = null;
