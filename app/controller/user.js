@@ -607,7 +607,7 @@ class UserController extends Controller {
 
     const result = await this.service.github.checkSite(userid);
 
-    switch(result) {
+    switch(result.code) {
       case 0:
         ctx.body = ctx.msg.indieSiteNotReady;
         return;
