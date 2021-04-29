@@ -27,6 +27,7 @@ class github extends Service {
 
   }
 
+  //发布文章到GitHub
   // https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
   async writeToGithub(uid, rawFile, title = 'title', filetype = 'md', salt = 'salt', branch = 'main') {
 
@@ -100,7 +101,7 @@ class github extends Service {
     return hash.hash;
   }
 
-
+  // 编辑文章
   // https://docs.github.com/en/rest/reference/repos#get-repository-content
   async updateGithub(postid, rawFile, filetype = 'md', branch = 'main') {
     const article_info = await this.app.mysql.query(`
@@ -210,8 +211,9 @@ class github extends Service {
 
   }
 
- // https://docs.github.com/en/rest/reference/repos#get-repository-content
- // 参数必须传入json那个hash
+  // 读取文章
+  // 参数必须传入json那个hash
+  // https://docs.github.com/en/rest/reference/repos#get-repository-content
   async readFromGithub(hash, filetype = 'md', branch = 'main') {
 
     if (hash.substring(0, 2) !== 'Gh') {
@@ -497,15 +499,18 @@ class github extends Service {
   }
 
   // 检查子站创建状态。如果未创建，是不能进行其他操作的
-  async checkSite(uid) {
+  async checkSite(uid, requireLink = false) {
     if (uid === null) {
       // ctx.body = ctx.msg.failure;
       this.logger.info('invalid user id');
-      return null;
+      return {
+        code: null,
+        data: null
+      };
     }
 
     const userInfo = await this.app.mysql.query(
-      `SELECT github.site_status,
+      `SELECT github.site_status, github.article_repo,
       user_accounts.account
       FROM github
       LEFT JOIN users ON users.id = github.uid
@@ -515,17 +520,34 @@ class github extends Service {
 
     if (userInfo.length === 0) {
       this.logger.info('githubService:: user info not exist');
-      return 3;
+      return {
+        code: 3,
+        data: null
+      };
     }
 
-    if (!userInfo[0].account) {
+    if (!(userInfo[0].account) || !(userInfo[0].article_repo)) {
       this.logger.info('githubService:: user info(some keys) not exist');
-      return 3;
+      return {
+        code: 3,
+        data: null
+      };
     }
 
-    return userInfo[0].site_status;
+    let siteObject = { 
+      code: userInfo[0].site_status, 
+      data: null
+    };
+
+    if (requireLink) {
+      const siteLink = await this.judgeSiteLink(userInfo[0].account, userInfo[0].article_repo);
+      siteObject.data = { siteLink };
+    }
+
+    return siteObject;
   }
 
+  // 读取hexo子站设置
   async readSiteSetting(uid) {
     if (uid === null) {
       // ctx.body = ctx.msg.failure;
@@ -589,6 +611,7 @@ class github extends Service {
     return usefulConfig;
   }
 
+  // 设置hexo子站设置
   async editSiteConfig(uid, requestObj) {
     if (uid === null) {
       // ctx.body = ctx.msg.failure;
@@ -691,7 +714,6 @@ class github extends Service {
     return 0;
   }
 
-
   // 哈希函数，用于生成GitHub文件名
   async generateHash(title, salt) {
       const prefix = 'Gh';
@@ -733,6 +755,7 @@ ${rawPost}`;
     }
   }
 
+  // 消除md文件中的hexo头部信息
   async deletePageInfo(rawPost) {
     const splitPost = rawPost.split('---', 3);
 
