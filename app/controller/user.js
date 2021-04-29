@@ -629,12 +629,14 @@ class UserController extends Controller {
 
     const result = await this.service.github.checkRepo(userid);
 
-    switch (result) {
+    switch (result.code) {
       case 0:
         ctx.body = ctx.msg.githubRepoAlreadyTaken;
+        ctx.body.data = result.data;
         return;
       case 1:
         ctx.body = ctx.msg.success;
+        ctx.body.data = result.data;
         return;
       case 2:
       case 3:
