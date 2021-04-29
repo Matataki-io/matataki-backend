@@ -4041,9 +4041,9 @@ url: /search/token
 - x-access-token：需要
 - 参数：无
 
-- 正常状态码：200，表示用户的GitHub repo名称已经留空
+- 正常状态码：200，表示用户的GitHub repo名称已经留空。会返回用户repo名称
 - 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
-- repo没有留空：10020
+- repo没有留空：10020。会返回用户repo名称
 
 ### 修改用户子站目标repo
 
@@ -4055,7 +4055,7 @@ url: /search/token
 - 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
 
 ### 获取用户site 设置
-实际上是读取用户_config.yml文件的部分内容
+实际上是读取用户_config.yml文件的部分内容，外加子站url
 - GET /user/siteConfig
 - x-access-token：需要
 - 参数：无
@@ -4073,7 +4073,8 @@ url: /search/token
         "author": "John Doe",
         "language": "zh-cn",
         "timezone": "",
-        "theme": "landscape"
+        "theme": "landscape",
+        "siteLink": "username.github.io/repo_name/"
     }
 }
 ```

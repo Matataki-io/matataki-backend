@@ -425,7 +425,10 @@ class github extends Service {
     if (uid === null) {
       // ctx.body = ctx.msg.failure;
       this.logger.info('invalid user id');
-      return null;
+      return {
+        code: null,
+        data: null
+      };
     }
 
     const userInfo = await this.app.mysql.query(
@@ -439,7 +442,10 @@ class github extends Service {
 
     if (userInfo.length === 0) {
       this.logger.info('githubService:: user info not exist');
-      return 3;
+      return {
+        code: 3,
+        data: null
+      };
     }
 
     const accessToken = userInfo[0].access_token;
@@ -448,7 +454,10 @@ class github extends Service {
 
     if (!userGithubId || !articleRepo || !accessToken) {
       this.logger.info('githubService:: user info(some keys) not exist');
-      return 3;
+      return {
+        code: 3,
+        data: null
+      };
     }
 
     let checkRepoExistence = null;
@@ -467,15 +476,24 @@ class github extends Service {
       // not error!
       // 结果得到404，才是留空的，才是可用的
       if ((err.response.status === 404) && (err.response.statusText === 'Not Found')) {
-        return 1;
+        return {
+          code: 1,
+          data: { articleRepo }
+        };
       } else {
         this.logger.err('githubService:: update config github not 200 or 404', err);
-        return null;
+        return {
+          code: null,
+          data: null
+        };
       }
     }
 
     // 200的时候会return 0
-    return 0;
+    return {
+      code: 0,
+      data: { articleRepo }
+    };
   }
 
   // 检查子站创建状态。如果未创建，是不能进行其他操作的
@@ -564,6 +582,9 @@ class github extends Service {
     for (let everyConfig in requiredSiteConfigList) {
       usefulConfig[everyConfig] = configObject[everyConfig]
     }
+
+    const siteLink = await this.judgeSiteLink(userGithubId, articleRepo);
+    usefulConfig['siteLink'] = siteLink;
 
     return usefulConfig;
   }
@@ -699,6 +720,17 @@ date: ${timeTag}
 ${rawPost}`;
 
     return parsedPost;
+  }
+
+  // 用于判断用户是username.github.io 还是username.github.io/repo_name 形式
+  // 同时返回正确的子站link
+  // 自定义域名暂不考虑
+  async judgeSiteLink(username, repo_name) {
+    if (repo_name === `${username}.github.io`) {
+      return repo_name;
+    } else {
+      return `${username}.github.io/${repo_name}/`;
+    }
   }
 
   async deletePageInfo(rawPost) {
