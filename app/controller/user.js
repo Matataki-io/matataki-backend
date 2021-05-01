@@ -588,9 +588,10 @@ class UserController extends Controller {
 
   async setGithubRepo()  {
     const ctx = this.ctx;
+    const userid = ctx.user.id;
     const { repo } = ctx.request.body;
 
-    const result = await this.service.user.setGithubRepo(ctx.user.id, repo);
+    const result = await this.service.user.setGithubRepo(userid, repo);
     if (result !== 1 ) {
       ctx.body = ctx.msg.failure;
       return;
@@ -599,6 +600,102 @@ class UserController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
   }
+
+  async checkSiteStatus() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const result = await this.service.github.checkSite(userid);
+
+    switch(result.code) {
+      case 0:
+        ctx.body = ctx.msg.indieSiteNotReady;
+        return;
+      case 1:
+        ctx.body = ctx.msg.success;
+        return;
+      case 2:
+      case 3:
+        ctx.body = ctx.msg.githubAccountError;
+        return;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
+  }
+
+  async checkRepoStatus() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const result = await this.service.github.checkRepo(userid);
+
+    switch (result.code) {
+      case 0:
+        ctx.body = ctx.msg.githubRepoAlreadyTaken;
+        ctx.body.data = result.data;
+        return;
+      case 1:
+        ctx.body = ctx.msg.success;
+        ctx.body.data = result.data;
+        return;
+      case 2:
+      case 3:
+        ctx.body = ctx.msg.githubAccountError;
+        return;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
+  }
+
+  async createSite() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const createSiteResult = await this.service.github.prepareRepo(userid);
+
+    // switch to return..
+    if (createSiteResult === null) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = ctx.msg.success;
+  }
+
+  async readSiteConfig() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const readConfigResult = await this.service.github.readSiteSetting(userid);
+
+    // switch to return..
+    if (readConfigResult === null) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = ctx.msg.success;
+    ctx.body.data = readConfigResult;
+  }
+
+  async editSiteConfig() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+    const configDict = ctx.request.body;
+
+    const setSiteConfigResult = await this.service.github.editSiteConfig(userid, configDict);
+
+        // switch to return..
+    if (setSiteConfigResult === null) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = ctx.msg.success;
+  }
+
+
+  // async editSiteConfig() {
+  //   return;
+  // }
+
 
 }
 

@@ -207,6 +207,19 @@ module.exports = app => {
   // 获取收藏文章状态
   router.get('/user/bookmark/stats', passport.authorize, controller.user.getBookmarkStats);
 
+  // 设置用户的GitHub储存目录，GitHub user only
+  router.post('/user/repo', passport.authorize, controller.user.setGithubRepo);
+  // 创建子站
+  router.post('/user/prepareRepo', passport.authorize, controller.user.createSite);
+  // 获取子站状态
+  router.get('/user/siteStatus', passport.authorize, controller.user.checkSiteStatus);
+  // 获取repo状态
+  router.get('/user/repoStatus', passport.authorize, controller.user.checkRepoStatus);
+  // 获取独立子站的设置
+  router.get('/user/siteConfig', passport.authorize, controller.user.readSiteConfig);
+  // 设置独立子站的设置
+  router.post('/user/siteConfig', passport.authorize, controller.user.editSiteConfig);
+
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
   // 获取用户的网站和社交帐号信息
@@ -218,8 +231,6 @@ module.exports = app => {
   router.get('/user/:id/bind/:platform', passport.authorize, controller.account.bind.GetMyPlatform);
   // 设置 platform 相关数据（第三方平台的id等，对应 user_third_party 表）
   router.post('/user/:id/bind/:platform', passport.verify, controller.account.bind.setBindData);
-  // 设置用户的GitHub储存目录，GitHub user only
-  router.post('/user/repo', passport.authorize, controller.user.setGithubRepo);
 
 
   // -------------------------------- 粉丝系统 --------------------------------

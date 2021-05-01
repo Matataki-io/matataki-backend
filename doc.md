@@ -4024,3 +4024,68 @@ url: /search/token
   ]
 }
 ```
+
+### 获取用户的子站创建状态
+
+- GET /user/siteStatus
+- x-access-token：需要
+- 参数：无
+
+- 正常状态码：200，表示用户是正常的子站用户
+- 独立子站未创建，无法进入设置页面，需要走创建步骤： 10021
+- 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
+
+### 获取用户的repo状态
+
+- GET /user/repoStatus
+- x-access-token：需要
+- 参数：无
+
+- 正常状态码：200，表示用户的GitHub repo名称已经留空。会返回用户repo名称
+- 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
+- repo没有留空：10020。会返回用户repo名称
+
+### 修改用户子站目标repo
+
+- POST /user/repo
+- x-access-token：需要
+- body参数：repo：修改成的repo名称
+
+- 正常状态码：200，表示修改成功
+- 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
+
+### 获取用户site 设置
+实际上是读取用户_config.yml文件的部分内容，外加子站url
+- GET /user/siteConfig
+- x-access-token：需要
+- 参数：无
+
+- 正常状态码：200，加返回内容。内容样本如下
+```json
+{
+    "code": 0,
+    "message": "成功",
+    "data": {
+        "title": "matataki-site3",
+        "subtitle": "subtitles",
+        "description": "",
+        "keywords": null,
+        "author": "John Doe",
+        "language": "zh-cn",
+        "timezone": "",
+        "theme": "landscape",
+        "siteLink": "username.github.io/repo_name/"
+    }
+}
+```
+
+### 修改用户site设置
+实际上是修改用户_config.yml文件的部分内容
+- POST /user/siteConfig
+- x-access-token：需要
+- body参数：需要修改的项目以及内容。可以只是部分项目。如：
+```json
+{"subtitle": "sub", "language": "zh-cn"}
+```
+
+- 正常状态码：200，表示修改成功

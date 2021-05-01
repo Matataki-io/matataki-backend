@@ -112,28 +112,28 @@ class PostService extends Service {
       = shortContent
       || (await this.service.extmarkdown.shortContent(articleContent));
 
-      let hashDict = null;
+    let hashDict = null;
     if (ipfs_or_github == 'github') {
- 
-     hashDict = await this.uploadArticleToGithub({
 
-      isEncrypt,
-      data,
-      title,
-      displayName: ctx.helper.emailMask(user.nickname || user.username),
-      description: short_content,
-      uid: user.id,
-    });
-  } else {
-    hashDict = await this.uploadArticleToIpfs({
-       isEncrypt,
-       data,
-       title,
-       displayName: ctx.helper.emailMask(user.nickname || user.username),
-       description: short_content,
-       uid: user.id,
-     });
-   }
+      hashDict = await this.uploadArticleToGithub({
+
+        isEncrypt,
+        data,
+        title,
+        displayName: ctx.helper.emailMask(user.nickname || user.username),
+        description: short_content,
+        uid: user.id,
+      });
+    } else {
+      hashDict = await this.uploadArticleToIpfs({
+        isEncrypt,
+        data,
+        title,
+        displayName: ctx.helper.emailMask(user.nickname || user.username),
+        description: short_content,
+        uid: user.id,
+      });
+    }
 
     const metadataHash = hashDict.metadataHash;
     const htmlHash = hashDict.htmlHash;
@@ -243,11 +243,11 @@ class PostService extends Service {
 
     if (id > 0) {
       // 发送同步需要的数据到缓存服务器
-      try {
-        await axios.post(this.config.cacheAPI.uri + '/sync/post/add', { id, uid: user.id, timestamp: create_time }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
-      } catch (e) {
-        await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
-      }
+      // try {
+      //   await axios.post(this.config.cacheAPI.uri + '/sync/post/add', { id, uid: user.id, timestamp: create_time }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
+      // } catch (e) {
+      //   await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
+      // }
 
       return {
         ...ctx.msg.success,
@@ -477,7 +477,7 @@ class PostService extends Service {
     post.editTokens = await this.getEditMineTokens(id);
     post.username = this.service.user.maskEmailAddress(post.username);
     // 媒体
-    if (post.channel_id === 3) post.media = await this.service.share.getMedia([id]) || []
+    if (post.channel_id === 3) post.media = await this.service.share.getMedia([ id ]) || [];
 
     return post;
   }
@@ -1561,11 +1561,11 @@ class PostService extends Service {
       // todo，待验证，修改不改变内容，影响行数应该为0
       const result = await this.app.mysql.update('posts', row, options);
 
-      try {
-        await axios.post(this.config.cacheAPI.uri + '/sync/post/delete', { id }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
-      } catch (e) {
-        await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
-      }
+      // try {
+      //   await axios.post(this.config.cacheAPI.uri + '/sync/post/delete', { id }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
+      // } catch (e) {
+      //   await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
+      // }
 
       return result.affectedRows === 1;
     } catch (err) {
@@ -2066,27 +2066,27 @@ class PostService extends Service {
   async uploadArticleToGithub({
     postid, title, description, displayName, data, uid, publish_or_edit = 'publish' }) {
     // let markdown = data.content;
-    let metadata = data.content;
+    const metadata = data.content;
     // description = await this.wash(description);
     // 如果需要加密，则替换渲染HTML文章内容
-//     if (isEncrypt) {
-//       markdown = `${description}
-// 很抱歉这是一篇付费/持币阅读文章，内容已被加密。
-// 若需要阅读更多内容，请返回到 Matataki 查看原文`;
-//       metadata = JSON.stringify(this.service.cryptography.encrypt(metadata));
-//     }
+    //     if (isEncrypt) {
+    //       markdown = `${description}
+    // 很抱歉这是一篇付费/持币阅读文章，内容已被加密。
+    // 若需要阅读更多内容，请返回到 Matataki 查看原文`;
+    //       metadata = JSON.stringify(this.service.cryptography.encrypt(metadata));
+    //     }
     // 渲染html并上传
-    const renderedHtml = articleToHtml({
-      title,
-      author: {
-        nickname: displayName,
-        uid: uid || this.ctx.user.id,
-        username: displayName,
-      },
-      description,
-      datePublished: new Date(),
-      markdown: data.content,
-    });
+    // const renderedHtml = articleToHtml({
+    //   title,
+    //   author: {
+    //     nickname: displayName,
+    //     uid: uid || this.ctx.user.id,
+    //     username: displayName,
+    //   },
+    //   description,
+    //   datePublished: new Date(),
+    //   markdown: data.content,
+    // });
     // 上传的data是json对象， 需要字符串化
     // const [ metadataHash, htmlHash ] = await Promise.all([
     //   this.service.github.writeToGithub(uid, metadata, title, 'json', 'salt1'),
@@ -2097,10 +2097,10 @@ class PostService extends Service {
     let htmlHash;
 
     if (publish_or_edit === 'edit') {
-      htmlHash = metadataHash = await this.service.github.updateGithub(postid, metadata, 'md');
+      htmlHash = metadataHash = await this.service.github.updateGithub(postid, metadata, 'md', "source");
       //  await this.service.github.updateGithub(postid, renderedHtml, 'html');
     } else {
-      htmlHash = metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'md', 'salt1');
+      htmlHash = metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'md', 'salt1', 'source');
       //  await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');
     }
 

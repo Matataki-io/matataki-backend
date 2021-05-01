@@ -85,6 +85,7 @@ class UserService extends Service {
     let banner = '';
     let create_time;
     let is_recommend = 0;
+    let siteLink = '';
 
     const user = await this.service.account.binding.get2({ id });
     // const user = await this.app.mysql.get('users', { id });
@@ -101,6 +102,11 @@ class UserService extends Service {
       return null;
     }
 
+    const userIndieSite = await this.service.github.checkSite(id, true);
+    if (userIndieSite.code === 1) {
+      siteLink = userIndieSite.data.siteLink;
+    }
+
     const result = {
       username: this.maskEmailAddress(user.username),
       nickname,
@@ -113,6 +119,7 @@ class UserService extends Service {
       create_time,
       is_recommend,
       status: user.status,
+      siteLink,
     };
 
     ctx.logger.info('debug info', result);

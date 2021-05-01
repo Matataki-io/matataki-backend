@@ -318,7 +318,7 @@ class AuthService extends Service {
             // create_time: now,
           });
         } else {
-          this.app.mysql.update('github', { access_token, article_repo }, {
+          this.app.mysql.update('github', { access_token }, {
             where: {
               uid: currentUser.id,
             }
