@@ -103,7 +103,7 @@ class github extends Service {
 
   // 编辑文章
   // https://docs.github.com/en/rest/reference/repos#get-repository-content
-  async updateGithub(postid, rawFile, filetype = 'md', branch = 'main') {
+  async updateGithub(postid, rawFile, title = 'title', filetype = 'md', branch = 'main') {
     const article_info = await this.app.mysql.query(`
     SELECT posts.hash, posts.username AS username_p, posts.id AS pid, posts.uid AS uid_p,
     users.id AS userid, users.username AS username_u, users.platform AS platform_u,
@@ -175,7 +175,7 @@ class github extends Service {
 
     const origin_sha = getGithubRepo.data.sha;
 
-    const parsedFile = await this.addPageInfo(rawFile);
+    const parsedFile = await this.addPageInfo(rawFile, title);
     let buffer = new Buffer.from(parsedFile);
     const encodedText = buffer.toString('Base64');
 
