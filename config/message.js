@@ -90,6 +90,9 @@ module.exports = {
   postNotBookmarked: 10117,
   postBookmarked: 10118,
 
+  // GitHub文章只能转移给GitHub用户
+  githubPostTransferLimit: 10119,
+
   // draft 草稿箱相关
   // 找不到草稿
   draftNotFound: 10201,
@@ -212,6 +215,7 @@ module.exports = {
       postNoPermission: { code: this.postNoPermission, message: 'You do not have permission to access.' },
       postNotBookmarked: { code: this.postNotBookmarked, message: 'You have not bookmarked this post.' },
       postBookmarked: { code: this.postBookmarked, message: 'You have bookmarked this post.' },
+      githubPostTransferLimit: { code: this.githubPostTransferLimit, message: 'Cannot transfer github articles to an none-indie blog user.' },
 
       draftNotFound: { code: this.draftNotFound, message: 'Cannot find the draft' },
       notYourDraft: { code: this.notYourDraft, message: 'It is not your draft' },
@@ -309,6 +313,7 @@ module.exports = {
       postNoPermission: { code: this.postNoPermission, message: '你没有权限' },
       postNotBookmarked: { code: this.postNotBookmarked, message: '你没有收藏这篇文章' },
       postBookmarked: { code: this.postBookmarked, message: '你已经收藏了这篇文章' },
+      githubPostTransferLimit: { code: this.githubPostTransferLimit, message: '不能转移GitHub文章给没有子站的用户' },
 
       draftNotFound: { code: this.draftNotFound, message: '找不到这篇草稿' },
       notYourDraft: { code: this.notYourDraft, message: '无权操作别人的草稿' },

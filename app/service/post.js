@@ -1596,6 +1596,14 @@ class PostService extends Service {
     // 记录转让文章常用候选列表
     await this.service.history.put('post', uid);
 
+    // github文章需要单独处理
+    if (post.hash.substring(0,2) === 'Gh') {
+      const githubTransfer =  await this.service.github.transferGithub(signid, uid, 'md', 'source');
+      if (githubTransfer !== 0) {
+        return githubTransfer;
+      }
+    }
+
     const conn = await this.app.mysql.beginTransaction();
     try {
       await conn.update('posts', {
