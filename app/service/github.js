@@ -288,6 +288,123 @@ class github extends Service {
     return JSON.stringify(readResponse);
   }
 
+  // 转移GitHub文章，会复制一篇文章到接收方的repo下
+  async transferGithub(postid, toUser, filetype = 'md', branch = 'main') {
+
+    const userInfo = await this.app.mysql.query(
+      `SELECT posts.hash, posts.uid AS uid_p,
+      users.id,
+      github.uid AS uid_g, github.access_token, github.article_repo,
+      user_accounts.uid AS uid_u, user_accounts.account
+      FROM posts
+      LEFT JOIN users ON users.id = posts.uid
+      LEFT JOIN github ON github.uid = users.id
+      LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
+      WHERE posts.id = ?
+      LIMIT 1;
+
+      SELECT github.access_token, github.article_repo, github.site_status,
+      users.id,
+      user_accounts.account
+      FROM github
+      LEFT JOIN users ON users.id = github.uid
+      LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
+      WHERE github.uid = ?;`, [postid, toUser]
+    );
+
+    // if (userInfo[0][0].id !== fromUser) {
+    //   return null;
+    // }
+
+    // 检查对方的信息，确认是GitHub用户且有子站
+    if ((userInfo[0].length === 0) || (userInfo[1].length) === 0) {
+      return 7;
+    }
+
+    if (!userInfo[1][0].access_token || !userInfo[1][0].article_repo || !userInfo[1][0].account) {
+      return 7;
+    }
+
+    if (userInfo[1][0].site_status !== 1) {
+      return 7;
+    }
+
+    // 检查己方的信息
+    if (!userInfo[0][0].access_token || !userInfo[0][0].article_repo || !userInfo[0][0].account) {
+      return 8;
+    }
+
+    const fromUserInfo = {
+      accessToken: userInfo[0][0].access_token,
+      articleRepo: userInfo[0][0].article_repo,
+      userGithubId: userInfo[0][0].account,
+      keepArticleHash: userInfo[0][0].hash,
+    }
+
+    const toUserInfo = {
+      accessToken: userInfo[1][0].access_token,
+      articleRepo: userInfo[1][0].article_repo,
+      userGithubId: userInfo[1][0].account,
+    }
+
+    const folder = fromUserInfo.keepArticleHash.substring(2, 6) + '/' + fromUserInfo.keepArticleHash.substring(6, 8);
+    let fromGithubRepo = null;
+  
+    // 获取文章
+    try {
+      fromGithubRepo = await axios({
+        method: 'GET',
+        url: `https://api.github.com/repos/${fromUserInfo.userGithubId}/${fromUserInfo.articleRepo}/contents/source/_posts/${folder}/${fromUserInfo.keepArticleHash}.${filetype}?ref=${branch}`,
+        headers: {
+          Authorization: 'token ' + fromUserInfo.accessToken,
+          // 'User-Agent':'test.matataki.io' ,
+          accept: 'application/vnd.github.v3+json',
+        },
+      });
+    } catch (err) {
+      this.logger.error('github upload error', err);
+      return 9;
+    }
+    if (!(fromGithubRepo.status === 200) || !(fromGithubRepo.statusText === 'OK')) {
+      this.logger.info('incorrect status code, failed');
+      // ctx.body = ctx.msg.failure;
+      return 9;
+    }
+
+    const encodedText = fromGithubRepo.data.content;
+    let toGithubRepo = null;
+
+    // 上传文章
+    // 基本请求，user agent没有作用所以注释掉了
+    try {
+        toGithubRepo = await axios({
+        method: 'PUT',
+        url: `https://api.github.com/repos/${toUserInfo.userGithubId}/${toUserInfo.articleRepo}/contents/source/_posts/${folder}/${fromUserInfo.keepArticleHash}.${filetype}`,
+        headers: {
+          Authorization: 'token ' + toUserInfo.accessToken,
+          // 'User-Agent': 'matataki.io',
+          accept: 'application/vnd.github.v3+json',
+        },
+        data: {
+          message: 'Transfer article',
+          content: encodedText,
+          branch: branch
+        }
+      });
+    } catch (err) {
+      this.logger.error('github upload error', err);
+      return 9;
+    }
+
+    if (!(toGithubRepo.status === 201) || !(toGithubRepo.statusText === 'Created')) {
+      this.logger.info('incorrect status code, failed');
+      // ctx.body = ctx.msg.failure;
+      return 9;
+    }
+    return 0;
+
+  }
+
   // 运用模板创建，再添加workflow文件触发page渲染
   // 测试网模板，主网模板。模板地址应写为参数
   // https://docs.github.com/en/rest/reference/repos#create-a-repository-using-a-template
