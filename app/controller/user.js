@@ -647,6 +647,30 @@ class UserController extends Controller {
     }
   }
 
+  async checkPagesStatus() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const result = await this.service.github.checkPages(userid);
+
+    switch (result.code) {
+      case 0:
+        ctx.body = ctx.msg.success;
+        ctx.body.data = result.data;
+        return;
+      case 1:
+      case 2:
+      case 3:
+        ctx.body = ctx.msg.githubAccountError;
+        return;
+      case 4:
+        ctx.body = ctx.msg.failure;
+        return;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
+  }
+
   async createSite() {
     const ctx = this.ctx;
     const userid = ctx.user.id;

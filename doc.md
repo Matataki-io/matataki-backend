@@ -4045,6 +4045,16 @@ url: /search/token
 - 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
 - repo没有留空：10020。会返回用户repo名称
 
+### 查看GitHub pages的渲染状态
+- GET /user/repoStatus
+- x-access-token：需要
+- 参数：无
+
+- 正常状态码：200，附带用户pages状态：
+- data.status:
+  built:已经渲染完成 building:正在渲染中 Not Found:没有打开pages，或是设置有问题（此状态不在下面官方文档中）
+  详见https://docs.github.com/en/rest/reference/repos#get-a-github-pages-site 中的状态解释
+
 ### 修改用户子站目标repo
 
 - POST /user/repo

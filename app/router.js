@@ -213,6 +213,8 @@ module.exports = app => {
   router.post('/user/prepareRepo', passport.authorize, controller.user.createSite);
   // 获取子站状态
   router.get('/user/siteStatus', passport.authorize, controller.user.checkSiteStatus);
+  // 子站GitHub pages的渲染状态
+  router.get('/user/pagesStatus', passport.authorize, controller.user.checkPagesStatus);
   // 获取repo状态
   router.get('/user/repoStatus', passport.authorize, controller.user.checkRepoStatus);
   // 获取独立子站的设置
