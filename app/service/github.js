@@ -600,7 +600,7 @@ class github extends Service {
           data: { articleRepo }
         };
       } else {
-        this.logger.err('githubService:: update config github not 200 or 404', err);
+        this.logger.error('githubService:: update config github not 200 or 404', err);
         return {
           code: null,
           data: null
@@ -662,6 +662,86 @@ class github extends Service {
     }
 
     return siteObject;
+  }
+
+  // 查看GitHub pages的渲染状态
+  async checkPages(uid) {
+    if (uid === null) {
+      // ctx.body = ctx.msg.failure;
+      this.logger.info('invalid user id');
+      return {
+        code: null,
+        data: null
+      };
+    }
+
+    const userInfo = await this.app.mysql.query(
+      `SELECT github.site_status, github.article_repo, github.access_token,
+      user_accounts.account
+      FROM github
+      LEFT JOIN users ON users.id = github.uid
+      LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
+      WHERE github.uid = ?;`, [uid]
+    )
+
+    if (userInfo.length === 0) {
+      this.logger.info('githubService:: user info not exist');
+      return {
+        code: 3,
+        data: null
+      };
+    }
+
+    const accessToken = userInfo[0].access_token;
+    const articleRepo = userInfo[0].article_repo;
+    const userGithubId = userInfo[0].account;
+
+    if (!userGithubId || !articleRepo || !accessToken) {
+      this.logger.info('githubService:: user info(some keys) not exist');
+      return {
+        code: 3,
+        data: null
+      };
+    }
+
+    let getPageStatus = null;
+
+    try {
+      getPageStatus = await axios({
+        method: 'GET',
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/pages`,
+        headers: {
+          Authorization: 'token ' + accessToken,
+          // 'User-Agent': 'test.matataki.io',
+          accept: 'application/vnd.github.v3+json',
+        }
+      });
+
+    } catch (err) {
+      if ((err.response.status === 404) && (err.response.statusText === 'Not Found')) {
+        return {
+          code: 0,
+          data: { 
+            status: err.response.data.status || 'Not Found',
+            url: err.response.data.html_url || '',
+          }
+        };
+      } else {
+        this.logger.error('githubService:: pages status not 200 or 404', err);
+        return {
+          code: 4,
+          data: null
+        };
+      }
+    }
+
+    return {
+      code: 0,
+      data: { 
+        status: getPageStatus.data.status,
+        url: getPageStatus.data.html_url,
+      }
+    }
   }
 
   // 读取hexo子站设置

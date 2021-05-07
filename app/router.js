@@ -188,7 +188,7 @@ module.exports = app => {
   // 上传 banner 图像, 并自动设置
   router.post('/user/uploadBanner', passport.authorize, controller.user.uploadBanner);
   // 设置用户的个人资料，昵称和自我介绍，不包括email。
-  router.post('/user/setProfile', passport.authorize, controller.user.setProfile);
+  router.post('/user/setProfile', passport.authorize, hCaptchaVerify, controller.user.setProfile);
   // 设置用户的网站和社交帐号信息
   router.put('/user/links', passport.authorize, controller.user.setLinks);
   // 发起提现
@@ -213,6 +213,8 @@ module.exports = app => {
   router.post('/user/prepareRepo', passport.authorize, controller.user.createSite);
   // 获取子站状态
   router.get('/user/siteStatus', passport.authorize, controller.user.checkSiteStatus);
+  // 子站GitHub pages的渲染状态
+  router.get('/user/pagesStatus', passport.authorize, controller.user.checkPagesStatus);
   // 获取repo状态
   router.get('/user/repoStatus', passport.authorize, controller.user.checkRepoStatus);
   // 获取独立子站的设置
