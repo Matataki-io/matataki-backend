@@ -243,11 +243,7 @@ class PostService extends Service {
 
     if (id > 0) {
       // 发送同步需要的数据到缓存服务器
-      // try {
-      //   await axios.post(this.config.cacheAPI.uri + '/sync/post/add', { id, uid: user.id, timestamp: create_time }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
-      // } catch (e) {
-      //   await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
-      // }
+      this.service.cacheAsync.post(id, user.id, create_time)
 
       return {
         ...ctx.msg.success,
@@ -1561,11 +1557,7 @@ class PostService extends Service {
       // todo，待验证，修改不改变内容，影响行数应该为0
       const result = await this.app.mysql.update('posts', row, options);
 
-      // try {
-      //   await axios.post(this.config.cacheAPI.uri + '/sync/post/delete', { id }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
-      // } catch (e) {
-      //   await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
-      // }
+      this.service.cacheAsync.delete(id)
 
       return result.affectedRows === 1;
     } catch (err) {
