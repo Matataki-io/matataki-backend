@@ -830,11 +830,20 @@ class UserService extends Service {
     return result;
   }
 
+  // 需要事先确认用户是否存在。
+  // 若是采用changesRows来查询，会因为修改成的名称和原名称相同，从而返回0的情况
+  // 和用户不存在返回同样结果。需注意。
   async setGithubRepo(uid, repo) {
-    const result = await this.app.mysql.query(
+    const userExistence = await this.app.mysql.query(
+      'SELECT count(1) AS count FROM github WHERE uid = ?;', [uid]
+    );
+    if (userExistence[0].count !== 1) {
+      return 1;
+    } 
+    await this.app.mysql.query(
       'UPDATE github SET article_repo = ? WHERE uid = ?', [repo, uid]
     );
-    return result.changedRows;
+    return 0;
     // return 1;
   }
 }

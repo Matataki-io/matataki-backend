@@ -592,7 +592,7 @@ class UserController extends Controller {
     const { repo } = ctx.request.body;
 
     const result = await this.service.user.setGithubRepo(userid, repo);
-    if (result !== 1 ) {
+    if (result !== 0) {
       ctx.body = ctx.msg.failure;
       return;
     }
