@@ -4046,7 +4046,7 @@ url: /search/token
 - repo没有留空：10020。会返回用户repo名称
 
 ### 查看GitHub pages的渲染状态
-- GET /user/repoStatus
+- GET /user/pagesStatus
 - x-access-token：需要
 - 参数：无
 

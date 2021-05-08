@@ -444,6 +444,8 @@ class github extends Service {
     const articleRepo = userInfo[0].article_repo;
     const userGithubId = userInfo[0].account;
 
+    this.logger.info('githubService:: start to create site for ', uid, userGithubId, articleRepo);
+
     let setSiteRepo = null;
 
     try {
