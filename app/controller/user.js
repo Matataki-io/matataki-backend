@@ -671,7 +671,7 @@ class UserController extends Controller {
     }
   }
 
-  async createSite() {
+  async createRepo() {
     const ctx = this.ctx;
     const userid = ctx.user.id;
 
@@ -679,6 +679,20 @@ class UserController extends Controller {
 
     // switch to return..
     if (createSiteResult === null) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = ctx.msg.success;
+  }
+
+  async createConfig() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const createConfigResult = await this.service.github.prepareConfig(userid);
+
+    // switch to return..
+    if (createConfigResult === null) {
       ctx.body = ctx.msg.failure;
       return;
     }

@@ -4099,3 +4099,14 @@ url: /search/token
 ```
 
 - 正常状态码：200，表示修改成功
+
+### 创建子站repo
+初始化子站第一步
+- POST /user/prepareRepo
+- x-access-token：需要
+- 正常状态码：200，表示创建成功
+### 设置子站repo的config
+初始化子站第二步（为防止请求过快，未创建repo完成就进行编辑而导致失败，故拆分）
+- POST /user/prepareConfig
+- x-access-token：需要
+- 正常状态码：200，表示修改成功

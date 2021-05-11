@@ -210,7 +210,9 @@ module.exports = app => {
   // 设置用户的GitHub储存目录，GitHub user only
   router.post('/user/repo', passport.authorize, controller.user.setGithubRepo);
   // 创建子站
-  router.post('/user/prepareRepo', passport.authorize, controller.user.createSite);
+  router.post('/user/prepareRepo', passport.authorize, controller.user.createRepo);
+  // 设置默认config
+  router.post('/user/prepareConfig', passport.authorize, controller.user.createConfig);
   // 获取子站状态
   router.get('/user/siteStatus', passport.authorize, controller.user.checkSiteStatus);
   // 子站GitHub pages的渲染状态

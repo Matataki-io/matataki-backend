@@ -38,12 +38,12 @@ class github extends Service {
   // https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
   async writeToGithub(uid, rawFile, title = 'title', filetype = 'md', salt = 'salt', branch = 'main') {
 
+    this.logger.info('githubService:: writeToGithub loaded', uid);
     if (uid === null) {
       // ctx.body = ctx.msg.failure;
       this.logger.info('invalid user id');
       return 3;
     }
-
 
     const userInfo = await this.app.mysql.query(
         `SELECT github.uid AS uid_g, github.access_token, github.article_repo,
@@ -76,6 +76,8 @@ class github extends Service {
     let buffer = new Buffer.from(parsedFile);
     const encodedText = buffer.toString('Base64');
 
+    this.logger.info('githubService:: writeToGithub request ', uid, userGithubId, articleRepo);
+
     let updateGithubRepo = null;
 
     // 基本请求，user agent没有作用所以注释掉了
@@ -105,12 +107,15 @@ class github extends Service {
       // ctx.body = ctx.msg.failure;
       return null;
     }
+    this.logger.info('githubService:: writeToGithub end', uid);
     return hash.hash;
   }
 
   // 编辑文章
   // https://docs.github.com/en/rest/reference/repos#get-repository-content
   async updateGithub(postid, rawFile, title = 'title', filetype = 'md', branch = 'main') {
+
+    this.logger.info('githubService:: updateGithub loaded', postid);
     const article_info = await this.app.mysql.query(`
     SELECT posts.hash, posts.username AS username_p, posts.id AS pid, posts.uid AS uid_p,
     users.id AS userid, users.username AS username_u, users.platform AS platform_u,
@@ -145,7 +150,7 @@ class github extends Service {
     const userGithubId = article_info[0].account;
 
     const folder = article_info[0].hash.substring(2, 6) + '/' + article_info[0].hash.substring(6, 8)
-    
+    this.logger.info('githubService:: updateGithub request ', postid, userGithubId, articleRepo);
     // // 依据文件类型判断用哪个hash
     // let keepArticleHash;
     // if (filetype === 'html') {
@@ -157,6 +162,7 @@ class github extends Service {
     // 目前只需要取meta hash了，故不再需要选择
     const keepArticleHash = article_info[0].hash;
 
+    this.logger.info('githubService:: updateGithub ready for request1', postid);
     let getGithubRepo = null;
   
     try {
@@ -186,6 +192,7 @@ class github extends Service {
     let buffer = new Buffer.from(parsedFile);
     const encodedText = buffer.toString('Base64');
 
+    this.logger.info('githubService:: updateGithub ready for request2', postid);
     let updateGithubRepo = null;
     try {
         updateGithubRepo = await axios({
@@ -214,6 +221,7 @@ class github extends Service {
 
       return null;
     }
+    this.logger.info('githubService:: updateGithub loaded', postid);
     return keepArticleHash;
 
   }
@@ -299,6 +307,7 @@ class github extends Service {
   // 转移GitHub文章，会复制一篇文章到接收方的repo下
   async transferGithub(postid, toUser, filetype = 'md', branch = 'main') {
 
+    this.logger.info('githubService:: transferGithub loaded', postid, toUser);
     const userInfo = await this.app.mysql.query(
       `SELECT posts.hash, posts.uid AS uid_p,
       users.id,
@@ -355,6 +364,9 @@ class github extends Service {
       userGithubId: userInfo[1][0].account,
     }
 
+    this.logger.info('githubService:: transferGithub from ', fromUserInfo.userGithubId, fromUserInfo.articleRepo);
+    this.logger.info('githubService:: transferGithub to ', toUserInfo.userGithubId, toUserInfo.articleRepo);
+
     const folder = fromUserInfo.keepArticleHash.substring(2, 6) + '/' + fromUserInfo.keepArticleHash.substring(6, 8);
     let fromGithubRepo = null;
   
@@ -409,15 +421,15 @@ class github extends Service {
       // ctx.body = ctx.msg.failure;
       return 9;
     }
+    this.logger.info('githubService:: transferGithub end', postid, toUser);
     return 0;
-
   }
 
   // 运用模板创建，再添加workflow文件触发page渲染
   // 测试网模板，主网模板。模板地址应写为参数
   // https://docs.github.com/en/rest/reference/repos#create-a-repository-using-a-template
   async prepareRepo(uid) {
-
+    this.logger.info('githubService:: prepareRepo loaded', uid);
     if (uid === null) {
       // ctx.body = ctx.msg.failure;
       this.logger.info('invalid user id');
@@ -481,7 +493,50 @@ class github extends Service {
       // ctx.body = ctx.msg.failure;
       return null;
     }
-// // judge http status code!
+
+    await this.app.mysql.query(
+      `UPDATE github SET site_status = 1 WHERE uid = ?;`, [uid]
+    )
+    this.logger.info('githubService:: prepareRepo completed', uid);
+    return 0;
+  }
+
+  // 创建repo步骤2：设置默认config
+  async prepareConfig(uid) {
+    this.logger.info('githubService:: prepareConfig loaded', uid);
+    if (uid === null) {
+      // ctx.body = ctx.msg.failure;
+      this.logger.info('invalid user id');
+      return null;
+    }
+
+    const userInfo = await this.app.mysql.query(
+      `SELECT github.uid AS uid_g, github.access_token, github.article_repo, github.site_status,
+      users.username, users.platform AS platform_u,
+      user_accounts.account, user_accounts.uid AS uid_ua, user_accounts.platform AS platform_ua
+      FROM github
+      LEFT JOIN users ON users.id = github.uid
+      LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
+      WHERE github.uid = ?;`, [uid]
+    )
+
+    if (userInfo.length === 0) {
+      this.logger.info('githubService:: user info not exist');
+      return null;
+    }
+
+    // if (userInfo[0].site_status !== 0) {
+    //   this.logger.info('githubService:: user info site already created');
+    //   return null;
+    // } 
+
+    const accessToken = userInfo[0].access_token;
+    const articleRepo = userInfo[0].article_repo;
+    const userGithubId = userInfo[0].account;
+
+    this.logger.info('githubService:: start to set default config for ', uid, userGithubId, articleRepo);
+
+    // // judge http status code!
     let editConfig = null;
     try {
       editConfig = await axios({
@@ -497,7 +552,7 @@ class github extends Service {
       this.logger.error('githubService:: edit config github upload error', err);
       return null;
     }
-  
+
     if (!(editConfig.status === 200) || !(editConfig.statusText === 'OK')) {
       this.logger.info('githubService:: edit config incorrect status code, failed');
       // ctx.body = ctx.msg.failure;
@@ -511,6 +566,7 @@ class github extends Service {
     configYml = configYml.replace(/site_name_to_be_replaced/g, articleRepo);
     configYml = configYml.replace(/username_to_be_replaced/g, userGithubId);
 
+    this.logger.info('githubService:: prepareConfig current', configYml);
     let buffer2 = new Buffer.from(configYml);
     const encodedConfig = buffer2.toString('Base64');
 
@@ -542,10 +598,7 @@ class github extends Service {
       return null;
     }
 
-    await this.app.mysql.query(
-      `UPDATE github SET site_status = 1 WHERE uid = ?;`, [uid]
-    )
-
+    this.logger.info('githubService:: prepareConfig end', uid);
     return 0;
   }
 
@@ -820,6 +873,8 @@ class github extends Service {
 
   // 设置hexo子站设置
   async editSiteConfig(uid, requestObj) {
+
+    this.logger.info('githubService:: editSiteConfig loaded', uid);
     if (uid === null) {
       // ctx.body = ctx.msg.failure;
       this.logger.info('invalid user id');
@@ -902,6 +957,7 @@ class github extends Service {
     if (formerTheme !== targetTheme) {
       // 目标主题受支持，才进行请求，更改package json 内容。否则只更新 config yml
       if (supportedThemeInfo[targetTheme]) {
+        this.logger.info('githubService:: editSiteConfig need to edit theme', uid);
         let editDependence = null;
         try {
           editDependence = await axios({
@@ -946,6 +1002,7 @@ class github extends Service {
         let buffer4 = new Buffer.from(packageJson);
         const encodedDependence = buffer4.toString('Base64');
 
+        this.logger.info('githubService:: editSiteConfig request package json', uid);
         let updateDependence = null;
         try {
             updateDependence = await axios({
@@ -981,6 +1038,7 @@ class github extends Service {
     }
   }
 
+  this.logger.info('githubService:: editSiteConfig request config yml', uid);
    let updateConfig = null;
    try {
        updateConfig = await axios({
@@ -1009,6 +1067,7 @@ class github extends Service {
      return null;
    }
 
+    this.logger.info('githubService:: editSiteConfig end', uid);
     return 0;
   }
 
