@@ -21,6 +21,13 @@ const requiredSiteConfigList = {
   'theme': ''
 }
 
+const supportedThemeInfo = {
+  'landscape': {'hexo-theme-landscape': '^0.0.3'},
+  'cake': {'hexo-theme-cake': '^3.4.1'},
+  'stellar': {'hexo-theme-stellar': '^1.1.0'},
+  'next': {'hexo-theme-next': '^8.4.0'}
+}
+
 class github extends Service {
       constructor(ctx, app) {
     super(ctx, app);
@@ -282,6 +289,7 @@ class github extends Service {
       title: article_info[0].title,
       author: article_info[0].author,
       github_id: userGithubId,
+      github_repo: articleRepo,
       content: decodedText
     }
 
@@ -870,17 +878,108 @@ class github extends Service {
    const origin_sha = editConfig.data.sha;
 
    let configObject = YAML.parse(configYml);
+   const formerTheme = configObject.theme;
 
+   // 修改 config yml
   for (let everyConfig in requiredSiteConfigList) {
-    if (requestObj[everyConfig]) {
+    // 注意是undefined。符合需求的设置，即使是空字符串也要。（需要再三确认）
+    if (requestObj[everyConfig] !== undefined) {
       configObject[everyConfig] = requestObj[everyConfig];
     }
   }
 
-   configYml = YAML.stringify(configObject);
+  configYml = YAML.stringify(configObject);
+  this.logger.info('githubService:: edit config:', configYml);
 
    let buffer2 = new Buffer.from(configYml);
    const encodedConfig = buffer2.toString('Base64');
+
+  // 主题需要单独处理
+  const targetTheme = requestObj['theme'];
+  // 有主题这项
+  if (targetTheme !== undefined) {
+    // 目标主题与以前不同，才需更改。
+    if (formerTheme !== targetTheme) {
+      // 目标主题受支持，才进行请求，更改package json 内容。否则只更新 config yml
+      if (supportedThemeInfo[targetTheme]) {
+        let editDependence = null;
+        try {
+          editDependence = await axios({
+            method: 'GET',
+            url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/package.json?ref=source`,
+            headers: {
+              Authorization: 'token ' + accessToken,
+              // 'User-Agent':'test.matataki.io' ,
+              accept: 'application/vnd.github.v3+json',
+            },
+          })
+        } catch (err) {
+          this.logger.error('githubService:: edit dependence github upload error', err);
+          return null;
+        }
+      
+        if (!(editDependence.status === 200) || !(editDependence.statusText === 'OK')) {
+          this.logger.info('githubService:: edit dependence incorrect status code, failed');
+          // ctx.body = ctx.msg.failure;
+          return null;
+        }
+    
+        let buffer3 = new Buffer.from(editDependence.data.content, 'base64')
+        let packageJson = buffer3.toString();
+        let packageObj = JSON.parse(packageJson);
+        const packageSha = editDependence.data.sha;
+        // let dependenceObj = packageObj.dependence;
+    
+        for (let everyDep in packageObj['dependencies']) {
+          if (/hexo-theme-[a-zA-Z\-]{1,20}/.test(everyDep)) {
+            delete packageObj['dependencies'][everyDep];
+          }
+        }
+    
+        for (let everyPkg in supportedThemeInfo[targetTheme]) {
+          packageObj['dependencies'][everyPkg] = supportedThemeInfo[targetTheme][everyPkg];
+        }
+
+        packageJson = JSON.stringify(packageObj, null, '\t');
+        this.logger.info('githubService:: edit package:', packageJson);
+
+        let buffer4 = new Buffer.from(packageJson);
+        const encodedDependence = buffer4.toString('Base64');
+
+        let updateDependence = null;
+        try {
+            updateDependence = await axios({
+            method: 'PUT',
+            url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/package.json`,
+            headers: {
+              Authorization: 'token ' + accessToken,
+              // 'User-Agent': 'test.matataki.io',
+              accept: 'application/vnd.github.v3+json',
+            },
+            data: {
+              message: 'set package',
+              sha: packageSha,
+              content: encodedDependence,
+              branch: 'source'
+            }
+          });
+        } catch (err) {
+          this.logger.error('githubService:: update config github upload error', err);
+          return null;
+        }
+    
+            if (!(updateDependence.status === 200) || !(updateDependence.statusText === 'OK')) {
+          this.logger.info('githubService:: update config incorrect status code, failed');
+          // ctx.body = ctx.msg.failure;
+          return null;
+        }
+        
+      } else {
+        // 即使目标主题不在支持列表，仍然
+        this.logger.info('githubService:: target theme not exist, set as their mind');
+      }
+    }
+  }
 
    let updateConfig = null;
    try {
