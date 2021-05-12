@@ -223,6 +223,8 @@ module.exports = app => {
   router.get('/user/siteConfig', passport.authorize, controller.user.readSiteConfig);
   // 设置独立子站的设置
   router.post('/user/siteConfig', passport.authorize, controller.user.editSiteConfig);
+  // 可用主题列表
+  router.get('/user/themeList', passport.verify, controller.user.readThemeList);
 
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);

@@ -729,6 +729,16 @@ class UserController extends Controller {
     ctx.body = ctx.msg.success;
   }
 
+  // 返回主题列表
+  async readThemeList() {
+    const ctx = this.ctx;
+    const uid = ctx.user.id;
+
+    const themeList = await this.service.github.useableConfigList(uid);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = themeList;
+    return;
+  }
 
   // async editSiteConfig() {
   //   return;

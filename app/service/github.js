@@ -22,10 +22,12 @@ const requiredSiteConfigList = {
 }
 
 const supportedThemeInfo = {
+  // 'Nexmoe': {'hexo-theme-nexmoe': '^2.8.0', 'hexo-wordcount': '^6.0.1'},
   'landscape': {'hexo-theme-landscape': '^0.0.3'},
   'cake': {'hexo-theme-cake': '^3.4.1'},
   'stellar': {'hexo-theme-stellar': '^1.1.0'},
-  'next': {'hexo-theme-next': '^8.4.0'}
+  'next': {'hexo-theme-next': '^8.4.0'},
+  'kaze': {'hexo-theme-kaze': '^1.0.5'}
 }
 
 class github extends Service {
@@ -1069,6 +1071,16 @@ class github extends Service {
 
     this.logger.info('githubService:: editSiteConfig end', uid);
     return 0;
+  }
+
+  // 返回主题列表，若有。
+  async useableConfigList(uid) {
+    this.logger.info('githubService: useConfigList', uid);
+    let useThemeList = [];
+    for (let everyTheme in supportedThemeInfo) {
+      useThemeList.push(everyTheme);
+     }
+    return useThemeList;
   }
 
   // 哈希函数，用于生成GitHub文件名

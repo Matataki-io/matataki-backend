@@ -4100,6 +4100,26 @@ url: /search/token
 
 - 正常状态码：200，表示修改成功
 
+### 获取可用theme的列表
+
+- GET /user/themeList
+- x-access-token：非必须
+
+- 正常状态码：200，附带list：
+```json
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        "landscape",
+        "cake",
+        "stellar",
+        "next",
+        "kaze"
+    ]
+}
+```
+
 ### 创建子站repo
 初始化子站第一步
 - POST /user/prepareRepo
