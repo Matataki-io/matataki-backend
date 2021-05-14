@@ -592,7 +592,7 @@ class UserController extends Controller {
     const { repo } = ctx.request.body;
 
     const result = await this.service.user.setGithubRepo(userid, repo);
-    if (result !== 1 ) {
+    if (result !== 0) {
       ctx.body = ctx.msg.failure;
       return;
     }
@@ -647,7 +647,31 @@ class UserController extends Controller {
     }
   }
 
-  async createSite() {
+  async checkPagesStatus() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const result = await this.service.github.checkPages(userid);
+
+    switch (result.code) {
+      case 0:
+        ctx.body = ctx.msg.success;
+        ctx.body.data = result.data;
+        return;
+      case 1:
+      case 2:
+      case 3:
+        ctx.body = ctx.msg.githubAccountError;
+        return;
+      case 4:
+        ctx.body = ctx.msg.failure;
+        return;
+      default:
+        ctx.body = ctx.msg.failure;
+    }
+  }
+
+  async createRepo() {
     const ctx = this.ctx;
     const userid = ctx.user.id;
 
@@ -655,6 +679,20 @@ class UserController extends Controller {
 
     // switch to return..
     if (createSiteResult === null) {
+      ctx.body = ctx.msg.failure;
+      return;
+    }
+    ctx.body = ctx.msg.success;
+  }
+
+  async createConfig() {
+    const ctx = this.ctx;
+    const userid = ctx.user.id;
+
+    const createConfigResult = await this.service.github.prepareConfig(userid);
+
+    // switch to return..
+    if (createConfigResult === null) {
       ctx.body = ctx.msg.failure;
       return;
     }
@@ -691,6 +729,16 @@ class UserController extends Controller {
     ctx.body = ctx.msg.success;
   }
 
+  // 返回主题列表
+  async readThemeList() {
+    const ctx = this.ctx;
+    const uid = ctx.user.id;
+
+    const themeList = await this.service.github.useableConfigList(uid);
+    ctx.body = ctx.msg.success;
+    ctx.body.data = themeList;
+    return;
+  }
 
   // async editSiteConfig() {
   //   return;

@@ -243,11 +243,7 @@ class PostService extends Service {
 
     if (id > 0) {
       // 发送同步需要的数据到缓存服务器
-      // try {
-      //   await axios.post(this.config.cacheAPI.uri + '/sync/post/add', { id, uid: user.id, timestamp: create_time }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
-      // } catch (e) {
-      //   await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
-      // }
+      this.service.cacheAsync.post(id, user.id, create_time)
 
       return {
         ...ctx.msg.success,
@@ -1561,11 +1557,7 @@ class PostService extends Service {
       // todo，待验证，修改不改变内容，影响行数应该为0
       const result = await this.app.mysql.update('posts', row, options);
 
-      // try {
-      //   await axios.post(this.config.cacheAPI.uri + '/sync/post/delete', { id }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } });
-      // } catch (e) {
-      //   await axios.post(this.config.cacheAPI.uri + '/report/error', { code: 1105, message: e }, { headers: { Authorization: `Bearer ${this.config.cacheAPI.apiToken}` } }).catch(err => { return; });
-      // }
+      this.service.cacheAsync.delete(id)
 
       return result.affectedRows === 1;
     } catch (err) {
@@ -1595,6 +1587,14 @@ class PostService extends Service {
     }
     // 记录转让文章常用候选列表
     await this.service.history.put('post', uid);
+
+    // github文章需要单独处理
+    if (post.hash.substring(0,2) === 'Gh') {
+      const githubTransfer =  await this.service.github.transferGithub(signid, uid, 'md', 'source');
+      if (githubTransfer !== 0) {
+        return githubTransfer;
+      }
+    }
 
     const conn = await this.app.mysql.beginTransaction();
     try {
@@ -2097,7 +2097,7 @@ class PostService extends Service {
     let htmlHash;
 
     if (publish_or_edit === 'edit') {
-      htmlHash = metadataHash = await this.service.github.updateGithub(postid, metadata, 'md', "source");
+      htmlHash = metadataHash = await this.service.github.updateGithub(postid, metadata, title, 'md', "source");
       //  await this.service.github.updateGithub(postid, renderedHtml, 'html');
     } else {
       htmlHash = metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'md', 'salt1', 'source');

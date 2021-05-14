@@ -1033,27 +1033,32 @@ class PostController extends Controller {
       ctx.user.id
     );
 
-    if (success === 2) {
-      ctx.body = ctx.msg.postNotFound;
-      return;
+    switch (success) {
+      case 2:
+        ctx.body = ctx.msg.postNotFound;
+        return;
+      case 3:
+        ctx.body = ctx.msg.notYourPost;
+        return;
+      case 4:
+        ctx.body = ctx.msg.userNotExist;
+        return;
+      case 5:
+        ctx.body = ctx.msg.receiverNotAccept;
+        return;
+      case 6:
+        ctx.body = ctx.msg.failure;
+        return;
+      case 7:
+        ctx.body = ctx.msg.githubPostTransferLimit;
+        return;
+      case 8:
+      case 9:
+        ctx.body = ctx.msg.githubAccountError;
+        return;
+      default:
+        ctx.body = ctx.msg.success;
     }
-    if (success === 3) {
-      ctx.body = ctx.msg.notYourPost;
-      return;
-    }
-    if (success === 4) {
-      ctx.body = ctx.msg.userNotExist;
-      return;
-    }
-    if (success === 5) {
-      ctx.body = ctx.msg.receiverNotAccept;
-      return;
-    }
-    if (success === 6) {
-      ctx.body = ctx.msg.failure;
-      return;
-    }
-    ctx.body = ctx.msg.success;
   }
 
   async importer() {

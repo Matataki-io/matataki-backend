@@ -4045,6 +4045,16 @@ url: /search/token
 - 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
 - repo没有留空：10020。会返回用户repo名称
 
+### 查看GitHub pages的渲染状态
+- GET /user/pagesStatus
+- x-access-token：需要
+- 参数：无
+
+- 正常状态码：200，附带用户pages状态：
+- data.status:
+  built:已经渲染完成 building:正在渲染中 Not Found:没有打开pages，或是设置有问题（此状态不在下面官方文档中）
+  详见https://docs.github.com/en/rest/reference/repos#get-a-github-pages-site 中的状态解释
+
 ### 修改用户子站目标repo
 
 - POST /user/repo
@@ -4088,4 +4098,35 @@ url: /search/token
 {"subtitle": "sub", "language": "zh-cn"}
 ```
 
+- 正常状态码：200，表示修改成功
+
+### 获取可用theme的列表
+
+- GET /user/themeList
+- x-access-token：非必须
+
+- 正常状态码：200，附带list：
+```json
+{
+    "code": 0,
+    "message": "成功",
+    "data": [
+        "landscape",
+        "cake",
+        "stellar",
+        "next",
+        "kaze"
+    ]
+}
+```
+
+### 创建子站repo
+初始化子站第一步
+- POST /user/prepareRepo
+- x-access-token：需要
+- 正常状态码：200，表示创建成功
+### 设置子站repo的config
+初始化子站第二步（为防止请求过快，未创建repo完成就进行编辑而导致失败，故拆分）
+- POST /user/prepareConfig
+- x-access-token：需要
 - 正常状态码：200，表示修改成功
