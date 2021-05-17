@@ -1120,7 +1120,7 @@ ${rawPost}`;
     if (repo_name === `${username}.github.io`) {
       return repo_name;
     } else {
-      return `${username}.github.io/${repo_name}/`;
+      return `https://${username}.github.io/${repo_name}/`;
     }
   }
 

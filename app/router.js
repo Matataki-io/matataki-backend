@@ -208,23 +208,23 @@ module.exports = app => {
   router.get('/user/bookmark/stats', passport.authorize, controller.user.getBookmarkStats);
 
   // 设置用户的GitHub储存目录，GitHub user only
-  router.post('/user/repo', passport.authorize, controller.user.setGithubRepo);
+  router.post('/indie/repo', passport.authorize, controller.user.setGithubRepo);
   // 创建子站
-  router.post('/user/prepareRepo', passport.authorize, controller.user.createRepo);
+  router.post('/indie/prepareRepo', passport.authorize, controller.user.createRepo);
   // 设置默认config
-  router.post('/user/prepareConfig', passport.authorize, controller.user.createConfig);
+  router.post('/indie/prepareConfig', passport.authorize, controller.user.createConfig);
   // 获取子站状态
-  router.get('/user/siteStatus', passport.authorize, controller.user.checkSiteStatus);
+  router.get('/indie/siteStatus', passport.authorize, controller.user.checkSiteStatus);
   // 子站GitHub pages的渲染状态
-  router.get('/user/pagesStatus', passport.authorize, controller.user.checkPagesStatus);
+  router.get('/indie/pagesStatus', passport.authorize, controller.user.checkPagesStatus);
   // 获取repo状态
-  router.get('/user/repoStatus', passport.authorize, controller.user.checkRepoStatus);
+  router.get('/indie/repoStatus', passport.authorize, controller.user.checkRepoStatus);
   // 获取独立子站的设置
-  router.get('/user/siteConfig', passport.authorize, controller.user.readSiteConfig);
+  router.get('/indie/siteConfig', passport.authorize, controller.user.readSiteConfig);
   // 设置独立子站的设置
-  router.post('/user/siteConfig', passport.authorize, controller.user.editSiteConfig);
+  router.post('/indie/siteConfig', passport.authorize, controller.user.editSiteConfig);
   // 可用主题列表
-  router.get('/user/themeList', passport.verify, controller.user.readThemeList);
+  router.get('/indie/themeList', passport.authorize, controller.user.readThemeList);
 
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
