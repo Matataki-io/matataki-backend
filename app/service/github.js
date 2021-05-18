@@ -1118,7 +1118,7 @@ ${rawPost}`;
   // 自定义域名暂不考虑
   async judgeSiteLink(username, repo_name) {
     if (repo_name === `${username}.github.io`) {
-      return repo_name;
+      return `https://${repo_name}/`;
     } else {
       return `https://${username}.github.io/${repo_name}/`;
     }
