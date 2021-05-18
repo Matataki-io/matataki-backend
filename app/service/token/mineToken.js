@@ -364,6 +364,9 @@ class MineTokenService extends Service {
       this.logger.error('mineToken.transferFrom failed: from === to', { from, to });
       return false;
     }
+    if (value <= 0) {
+      return false;
+    }
 
     // 有可能在其他事务中调用该方法，如果conn是传进来的，不要在此commit和rollback
     let isOutConn = false;

@@ -175,6 +175,10 @@ class MineTokenController extends Controller {
     const { tokenId, to, amount, memo = null } = this.ctx.request.body;
     // 记录转赠fan票常用候选列表
     await this.ctx.service.history.put('token', to);
+    if (amount <= 0) {
+      ctx.body = { ...ctx.msg.failure };
+      return;
+    }
     // amount 客户端*精度，10^decimals
     const result = await ctx.service.token.mineToken.transferFrom(tokenId, ctx.user.id, to, amount, this.clientIP, consts.mineTokenTransferTypes.transfer, null, memo);
     if (result) {
@@ -188,6 +192,10 @@ class MineTokenController extends Controller {
     const ctx = this.ctx;
     const { tokenId, to, amount, memo = null } = ctx.request.body;
     const pid = ctx.params.id;
+    if (amount <= 0) {
+      ctx.body = { ...ctx.msg.failure };
+      return;
+    }
     // 记录转赠fan票常用候选列表
     await this.ctx.service.history.put('token', to);
     // amount 客户端*精度，10^decimals
