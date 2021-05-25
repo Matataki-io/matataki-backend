@@ -1643,6 +1643,11 @@ class PostService extends Service {
     return 0;
   }
 
+  /**
+   * @deprecated
+   * @param {object} data the data to be uploaded to IPFS
+   * @return {string} the IPFS hash
+   */
   async ipfsUpload(data) {
     let add = null;
     try {

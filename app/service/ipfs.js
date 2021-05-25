@@ -34,6 +34,7 @@ class ipfs extends Service {
     });
   }
   /**
+   * @deprecated
    * 上传的 AWS 的 IPFS 节点
    * @param {object} file 文件
    */
