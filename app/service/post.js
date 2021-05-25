@@ -2063,8 +2063,8 @@ class PostService extends Service {
     });
     // 上传的data是json对象， 需要字符串化
     const [ metadataHash, htmlHash ] = await Promise.all([
-      this.ipfsUpload(metadata),
-      this.service.ipfs.uploadToAws(renderedHtml),
+      this.service.ipfs.uploadToFleek(metadata),
+      this.service.ipfs.uploadToFleek(renderedHtml),
     ]);
     return { metadataHash, htmlHash };
   }
