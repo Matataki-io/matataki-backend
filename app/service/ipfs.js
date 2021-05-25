@@ -3,6 +3,8 @@ const IPFS = require('ipfs-mini');
 const axios = require('axios').default;
 const FormData = require('form-data');
 const Service = require('egg').Service;
+const { v4 } = require('uuid');
+const fleekStorage = require('@fleekhq/fleek-storage-js');
 
 const IpfsUrl = 'https://ipfs-direct.mttk.net';
 
@@ -16,11 +18,31 @@ class ipfs extends Service {
       protocol,
     });
   }
+
   async cat(hash) {
-    const { site } = this.config.ipfs_service;
-    const { data } = await axios.post(`${site}/api/v0/cat/${hash}`);
+    const data = await Promise.race([
+      this.catWithFleek(hash),
+      this.catWithOld(hash),
+    ]);
     return JSON.stringify(data);
   }
+
+  async catWithOld(hash) {
+    const { site } = this.config.ipfs_service;
+    const { data } = await axios.post(`${site}/api/v0/cat/${hash}`);
+    return data;
+  }
+
+  async catWithFleek(hash) {
+    const { data } = axios.get('https://ipfs.fleek.co/ipfs/' + hash);
+    return data;
+  }
+
+  async catWithInfura(hash) {
+    const { data } = axios.get('https://ipfs.infura.io/ipfs/' + hash);
+    return data;
+  }
+
   add(data) {
     return new Promise((resolve, reject) => {
       this.ipfs.add(data, (err, result) => {
@@ -33,6 +55,24 @@ class ipfs extends Service {
       });
     });
   }
+
+  /**
+   * 上传到 Fleek 的 IPFS 节点
+   * @param {object} file 文件
+   * @param {string} key 文件名，可选，为空时用 uuid 作为标识符
+   */
+  async uploadToFleek(file, key = v4()) {
+    const fleekConfig = this.config.fleekIPFS;
+    const uploadedFile = await fleekStorage.upload({
+      apiKey: fleekConfig.apiKey,
+      apiSecret: fleekConfig.apiSecret,
+      key: 'mttk_post_' + key,
+      data: file,
+    });
+
+    return uploadedFile.hashV0;
+  }
+
   /**
    * @deprecated
    * 上传的 AWS 的 IPFS 节点
