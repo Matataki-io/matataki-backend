@@ -34,12 +34,12 @@ class ipfs extends Service {
   }
 
   async catWithFleek(hash) {
-    const { data } = axios.get('https://ipfs.fleek.co/ipfs/' + hash);
+    const { data } = await axios.get('https://ipfs.fleek.co/ipfs/' + hash);
     return data;
   }
 
   async catWithInfura(hash) {
-    const { data } = axios.get('https://ipfs.infura.io/ipfs/' + hash);
+    const { data } = await axios.get('https://ipfs.infura.io/ipfs/' + hash);
     return data;
   }
 
