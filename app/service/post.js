@@ -1643,6 +1643,11 @@ class PostService extends Service {
     return 0;
   }
 
+  /**
+   * @deprecated
+   * @param {object} data the data to be uploaded to IPFS
+   * @return {string} the IPFS hash
+   */
   async ipfsUpload(data) {
     let add = null;
     try {
@@ -1663,7 +1668,7 @@ class PostService extends Service {
       // const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
       data = await this.service.ipfs.cat(hash);
     } catch (err) {
-      this.logger.error('PostService:: ipfsUpload Error', err);
+      this.logger.error('PostService:: ipfsCatch Error', err);
       return null;
     }
     return data;
@@ -2058,8 +2063,8 @@ class PostService extends Service {
     });
     // 上传的data是json对象， 需要字符串化
     const [ metadataHash, htmlHash ] = await Promise.all([
-      this.ipfsUpload(metadata),
-      this.service.ipfs.uploadToAws(renderedHtml),
+      this.service.ipfs.uploadToFleek(metadata),
+      this.service.ipfs.uploadToFleek(renderedHtml),
     ]);
     return { metadataHash, htmlHash };
   }
