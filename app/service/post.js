@@ -1668,7 +1668,7 @@ class PostService extends Service {
       // const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
       data = await this.service.ipfs.cat(hash);
     } catch (err) {
-      this.logger.error('PostService:: ipfsUpload Error', err);
+      this.logger.error('PostService:: ipfsCatch Error', err);
       return null;
     }
     return data;
