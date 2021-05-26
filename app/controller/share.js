@@ -24,7 +24,7 @@ class ShareController extends Controller {
     const timestamp = moment(now).valueOf() / 1000;
 
     // 上传ipfs
-    const hash = await this.service.post.ipfsUpload(JSON.stringify({
+    const hash = await this.service.ipfs.uploadToFleek(JSON.stringify({
       timestamp,
       author,
       content,

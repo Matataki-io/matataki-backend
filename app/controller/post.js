@@ -1202,7 +1202,7 @@ class PostController extends Controller {
 
     this.logger.info('upload ipfs data', data);
     // 上传的data是json对象， 需要字符串化
-    const uploadRequest = await this.service.post.ipfsUpload(
+    const uploadRequest = await this.service.ipfs.uploadToFleek(
       JSON.stringify(data)
     );
 
