@@ -20,10 +20,11 @@ class ipfs extends Service {
   }
 
   async cat(hash) {
-    const data = await Promise.race([
-      this.catWithFleek(hash),
-      this.catWithOld(hash),
-    ]);
+    // const data = await Promise.race([
+    //   this.catWithFleek(hash),
+    //   this.catWithOld(hash),
+    // ]);
+    const data = await this.catWithFleek(hash);
     return JSON.stringify(data);
   }
 
