@@ -49,12 +49,12 @@ class AccountHostingService extends Service {
     }
   }
 
-  async addNonce(uid, blockchain = 'ETH') {
+  async getAndAddNonce(uid, blockchain = 'ETH') {
     const wallet = await this.app.mysql.get('account_hosting', { uid, blockchain });
     if (!wallet) throw new Error(`No wallet found for ${uid} on chain ${blockchain}`);
     const nextNonce = wallet.nonce + 1;
     await this.app.mysql.update('account_hosting', { nonce: nextNonce }, { id: wallet.id });
-    return true;
+    return wallet.nonce;
   }
 
   searchByPublicKey(publicKey, blockchain = 'ETH') {
