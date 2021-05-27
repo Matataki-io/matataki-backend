@@ -18,6 +18,7 @@ class AssetController extends Controller {
     const { symbol = 'cny', to, amount } = this.ctx.request.body;
     if (amount <= 0) {
       ctx.body = { ...ctx.msg.failure };
+      ctx.status = 400;
       return;
     }
     // amount 客户端*精度，10^decimals

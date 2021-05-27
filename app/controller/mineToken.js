@@ -177,6 +177,7 @@ class MineTokenController extends Controller {
     await this.ctx.service.history.put('token', to);
     if (amount <= 0) {
       ctx.body = { ...ctx.msg.failure };
+      ctx.status = 400;
       return;
     }
     // amount 客户端*精度，10^decimals
@@ -194,6 +195,7 @@ class MineTokenController extends Controller {
     const pid = ctx.params.id;
     if (amount <= 0) {
       ctx.body = { ...ctx.msg.failure };
+      ctx.status = 400;
       return;
     }
     // 记录转赠fan票常用候选列表
