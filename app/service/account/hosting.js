@@ -49,6 +49,14 @@ class AccountHostingService extends Service {
     }
   }
 
+  async addNonce(uid, blockchain = 'ETH') {
+    const wallet = await this.app.mysql.get('account_hosting', { uid, blockchain });
+    if (!wallet) throw new Error(`No wallet found for ${uid} on chain ${blockchain}`);
+    const nextNonce = wallet.nonce + 1;
+    await this.app.mysql.update('account_hosting', { nonce: nextNonce }, { id: wallet.id });
+    return true;
+  }
+
   searchByPublicKey(publicKey, blockchain = 'ETH') {
       const public_key = this.service.ethereum.web3.toChecksumAddress(publicKey);
       return this.app.mysql.get('account_hosting', { public_key, blockchain });
