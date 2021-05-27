@@ -3,7 +3,6 @@
 const Web3 = require('web3');
 const { Transaction } = require('ethereumjs-tx');
 const contract20_data = require('./CommonFanPiao.json');
-const contract777_data = require('./FanPiao777v2.json');
 const configFile = require('../../../config/config.default');
 
 const config = configFile({ name: 'Fake EggAppInfo just for config ' });
@@ -14,7 +13,7 @@ class Token {
     const { infura, runningNetwork } = config.ethereum;
     const provider = new Web3.providers.HttpProvider(`https://${runningNetwork}.infura.io/v3/${infura.id}`);
     this.web3 = new Web3(provider);
-    const ABI = type === 777 ? contract777_data.abi : contract20_data.abi;
+    const ABI = contract20_data.abi;
     this.contractAddress = address;
     this.contract = new this.web3.eth.Contract(ABI, address);
   }
@@ -70,24 +69,6 @@ class Token {
     const tx = new Transaction(txObject, { chain: runningNetwork });
     tx.sign(privateKey);
     return web3.eth.sendSignedTransaction(`0x${tx.serialize().toString('hex')}`);
-  }
-
-  /**
-    * ⚠️ 这个 _operatorSend 函数没有设置权限控制，请在 controller 调用时小心设置好权限控制
-    * _operatorSend, 代替 sender 发送 token 给 recipient 的函数，需要我们是777合约的默认operator才能执行
-    * @param {string} sender token 发送者，发送的token余额从 sender 扣除
-    * @param {string} recipient 收token的地址，如果是一个合约地址，则必须实现 IERC777Recipient 接口
-    * @param {string} amount 发送的 token 数量，单位是wei（最小单位）
-    * @param {string} data bytes extra information provided by the token holder (if any)
-    * @param {string} operatorData bytes extra information provided by the operator (if any)
-    */
-  _operatorSend(sender, recipient, amount, data = '', operatorData = '') {
-    // 开发ing，先硬编码
-    const toBytes32 = string => this.web3.utils.stringToHex(string);
-    const encodedAbi = this.contract.methods.operatorSend(
-      sender, recipient, amount, toBytes32(data), toBytes32(operatorData)
-    ).encodeABI();
-    return this.sendTransactionWithOurKey(encodedAbi);
   }
 
   /**
