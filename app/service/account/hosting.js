@@ -49,6 +49,16 @@ class AccountHostingService extends Service {
     }
   }
 
+  setNonce(dbConn, wallet) {
+    const nextNonce = wallet.nonce + 1;
+    return dbConn.update('account_hosting', { nonce: nextNonce }, { id: wallet.id });
+  }
+
+  setNonceWithoutConn(wallet) {
+    const nextNonce = wallet.nonce + 1;
+    return this.app.mysql.update('account_hosting', { nonce: nextNonce }, { id: wallet.id });
+  }
+
   searchByPublicKey(publicKey, blockchain = 'ETH') {
       const public_key = this.service.ethereum.web3.toChecksumAddress(publicKey);
       return this.app.mysql.get('account_hosting', { public_key, blockchain });

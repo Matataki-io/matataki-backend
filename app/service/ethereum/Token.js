@@ -3,7 +3,6 @@
 const Web3 = require('web3');
 const { Transaction } = require('ethereumjs-tx');
 const contract20_data = require('./CommonFanPiao.json');
-const contract777_data = require('./FanPiao777v2.json');
 const configFile = require('../../../config/config.default');
 
 const config = configFile({ name: 'Fake EggAppInfo just for config ' });
@@ -14,25 +13,9 @@ class Token {
     const { infura, runningNetwork } = config.ethereum;
     const provider = new Web3.providers.HttpProvider(`https://${runningNetwork}.infura.io/v3/${infura.id}`);
     this.web3 = new Web3(provider);
-    const ABI = type === 777 ? contract777_data.abi : contract20_data.abi;
+    const ABI = contract20_data.abi;
     this.contractAddress = address;
     this.contract = new this.web3.eth.Contract(ABI, address);
-  }
-
-  /**
-    * sendTransactionWithOurKey 使用我们的 Key 发送交易
-    * ⚠️ 请谨慎使用
-    * 用于部署合约、代操作等需要我们帐户发送交易的场合
-    * 实际调用下方的 sendTransactionWithKey
-    * @param {object} encodeABI Web3 交易可以输出 encodeABI 用于交易
-    * @param {object} txParams 交易的参数
-    */
-  async sendTransactionWithOurKey(encodeABI, {
-    value = 0,
-    gasLimit = 5000000,
-  }) {
-    const { privateKey } = config.ethereum;
-    return this.sendTransaction(privateKey, encodeABI, { value, gasLimit });
   }
 
   /**
@@ -45,6 +28,7 @@ class Token {
     */
   async sendTransaction(_privateKey, encodeABI, {
     value = 0,
+    nonce,
     gasLimit = 500000,
   }) {
     // 处理0x开头的私钥
@@ -54,15 +38,12 @@ class Token {
     const { runningNetwork } = config.ethereum;
     const { web3 } = this;
     // 发送交易的钱包公钥
-    const { address } = web3.eth.accounts.privateKeyToAccount(_privateKey);
     // txCount 决定了交易顺序
-    const [ gasPrice, txCount ] = await Promise.all([
-      web3.eth.getGasPrice(), web3.eth.getTransactionCount(address),
-    ]);
+    const gasPrice = await web3.eth.getGasPrice();
     const txObject = {
       value: web3.utils.toHex(value),
       gasLimit: web3.utils.toHex(gasLimit),
-      nonce: web3.utils.toHex(txCount),
+      nonce,
       gasPrice: web3.utils.toHex(gasPrice),
       to: this.contractAddress,
       data: encodeABI,
@@ -73,45 +54,17 @@ class Token {
   }
 
   /**
-    * ⚠️ 这个 _operatorSend 函数没有设置权限控制，请在 controller 调用时小心设置好权限控制
-    * _operatorSend, 代替 sender 发送 token 给 recipient 的函数，需要我们是777合约的默认operator才能执行
-    * @param {string} sender token 发送者，发送的token余额从 sender 扣除
-    * @param {string} recipient 收token的地址，如果是一个合约地址，则必须实现 IERC777Recipient 接口
-    * @param {string} amount 发送的 token 数量，单位是wei（最小单位）
-    * @param {string} data bytes extra information provided by the token holder (if any)
-    * @param {string} operatorData bytes extra information provided by the operator (if any)
-    */
-  _operatorSend(sender, recipient, amount, data = '', operatorData = '') {
-    // 开发ing，先硬编码
-    const toBytes32 = string => this.web3.utils.stringToHex(string);
-    const encodedAbi = this.contract.methods.operatorSend(
-      sender, recipient, amount, toBytes32(data), toBytes32(operatorData)
-    ).encodeABI();
-    return this.sendTransactionWithOurKey(encodedAbi);
-  }
-
-  /**
     *   ⚠️ 这个 _mint 函数没有设置权限控制，请在 controller 调用时小心设置好权限控制
     *  _mint, 我们作为合约 Minter 给 to 印钱
     *  @param {string} from 发送铸币交易的钱包私钥，需要是MinterRole
     *  @param {string} to 收新铸币的地址
     *  @param {string} amount 铸币数量，单位是wei（最小单位）
+    *  @param {number} nonce 顺序号
     */
-  _mint(from, to, amount) {
+  _mint(from, to, amount, nonce) {
     // 开发ing，先硬编码
     const encodeABI = this.contract.methods.mint(to, amount).encodeABI();
-    return this.sendTransaction(from, encodeABI, { gasLimit: 100000 });
-  }
-
-  /**
-    * ERC20 的 transferFrom，需要 sender 提前在合约 approve 了我们的动用资金的权限
-    * @param {string} sender 发送者的公钥
-    * @param {string} recipient 接收者的公钥
-    * @param {string} amount 数额
-    */
-  _transferFrom(sender, recipient, amount) {
-    const encodeABI = this.contract.methods.transferFrom(sender, recipient, amount).encodeABI();
-    return this.sendTransactionWithOurKey(encodeABI);
+    return this.sendTransaction(from, encodeABI, { gasLimit: 100000, nonce });
   }
 
   /**
@@ -119,11 +72,13 @@ class Token {
     * @param {string} from 发送者的私钥
     * @param {string} recipient 接收者的公钥
     * @param {string} amount 数额
+    * @param {number} nonce 顺序号
     */
-  transfer(from, recipient, amount) {
+  transfer(from, recipient, amount, nonce) {
     const encodeABI = this.contract.methods.transfer(recipient, amount).encodeABI();
     return this.sendTransaction(from, encodeABI, {
       gasLimit: 150000,
+      nonce,
     });
   }
 
@@ -131,18 +86,21 @@ class Token {
     * burn , burner 销毁饭票的入口
     * @param {*} burner 销毁饭票的主人私钥
     * @param {*} amount 销毁的数额
+    * @param {number} nonce 顺序号
     */
-  burn(burner, amount) {
+  burn(burner, amount, nonce) {
     const encodeABI = this.contract.methods.transfer(amount).encodeABI();
     return this.sendTransaction(burner, encodeABI, {
       gasLimit: 150000,
+      nonce,
     });
   }
 
-  _approve(from, spender, value) {
+  _approve(from, spender, value, nonce) {
     const encodeABI = this.contract.methods.approve(spender, value).encodeABI();
     return this.sendTransaction(from, encodeABI, {
       gasLimit: 75000,
+      nonce,
     });
   }
 

@@ -247,8 +247,11 @@ class MineTokenController extends Controller {
       this.service.account.hosting.isHosting(ctx.user.id, 'ETH'),
     ]);
     const result = await this.service.ethereum.multisender.approveTheMax(
-      token.contract_address, fromWallet.private_key
+      token.contract_address, fromWallet.private_key,
+      fromWallet.nonce
     );
+    await this.service.account.hosting.setNonceWithoutConn(fromWallet);
+
     ctx.body = ctx.msg.success;
     ctx.body.data = { result };
   }
