@@ -56,13 +56,21 @@ class PostController extends Controller {
       requireBuy,
       editRequireToken,
       editRequireBuy,
-      ipfs_or_github,
+      // Indie blog
+      indie_post,
+      indie_sync_tags,
       ipfs_hide,
     } = ctx.request.body;
     let { tags } = ctx.request.body;
     tags = this.tagsProcess({ tags });
 
     this.logger.info('post publish tags', tags);
+
+    this.logger.info("---debug only---");
+    this.logger.info("only0", indie_post);
+    this.logger.info("only0", indie_sync_tags);
+    this.logger.info("only0", typeof(indie_post));
+    this.logger.info("only0", typeof(indie_sync_tags));
 
 
     const result = await ctx.service.post.fullPublish(
@@ -83,7 +91,9 @@ class PostController extends Controller {
       requireBuy,
       editRequireToken,
       editRequireBuy,
-      ipfs_or_github,
+      // Indie blog
+      indie_post,
+      indie_sync_tags,
       ipfs_hide
     );
     ctx.body = result;
@@ -110,7 +120,8 @@ class PostController extends Controller {
       // 持币编辑相关字段
       editRequireToken = null,
       editRequireBuy = null,
-      ipfs_or_github = 'ipfs',
+      indie_post = false,
+      indie_sync_tags = false,
       ipfs_hide,
     } = ctx.request.body;
     let { tags = [] } = ctx.request.body;
@@ -133,7 +144,7 @@ class PostController extends Controller {
       ctx.body = ctx.msg.postNotFound;
       return;
     }
-    if (ipfs_or_github === 'github') {
+    if (indie_post === true) {
       if ((post.hash.substring(0,2) !== 'Gh')) {
         ctx.body = ctx.msg.paramsError;
         return;
@@ -225,7 +236,15 @@ class PostController extends Controller {
     }
 
     let hashDict = null;
-    if ( ipfs_or_github == 'github') {
+    if (indie_post === true) {
+
+      let tags_for_indie = [];
+      if (indie_sync_tags === true) {
+        tags_for_indie = tags;
+      } else {
+        tags_for_indie = [];
+      }
+
       hashDict = await this.service.post.uploadArticleToGithub({
         isEncrypt,
         data,
@@ -235,6 +254,7 @@ class PostController extends Controller {
         postid: signId,
         uid: post.uid,
         publish_or_edit: 'edit',
+        tags: tags_for_indie,
       });
     } else {
       hashDict = await this.service.post.uploadArticleToIpfs({
