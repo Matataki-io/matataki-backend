@@ -115,6 +115,11 @@ class PostService extends Service {
       || (await this.service.extmarkdown.shortContent(articleContent));
 
     let hashDict = null;
+    this.logger.info("---debug only---");
+    this.logger.info("only1", indie_post);
+    this.logger.info("only1", indie_sync_tags);
+    this.logger.info("only1", typeof(indie_post));
+    this.logger.info("only1", typeof(indie_sync_tags));
     if (indie_post === true) {
 
       let tags_for_indie = [];

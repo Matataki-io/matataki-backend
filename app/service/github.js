@@ -1104,6 +1104,7 @@ class github extends Service {
   async addPageInfo(rawPost, title, tags = []) {
     const timeTag = moment().format('YYYY-MM-DD HH:mm:ss');
     let pageInfoJson = {};
+    // bug here 
     if (tags === []) {
       pageInfoJson = { title: title, date: timeTag };
     } else {
