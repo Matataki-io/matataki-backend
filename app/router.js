@@ -58,7 +58,7 @@ module.exports = app => {
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
   // router.post('/publish', passport.authorize, controller.post.publish);
-  router.post('/post/publish', passport.authorize, controller.post.publish);
+  router.post('/post/publish', passport.authorize, hCaptchaVerify, controller.post.publish);
 
   // 将草稿定时发送为文章
   router.post('/post/timed/:id', passport.authorize, hCaptchaVerify, controller.timedPost.post);
@@ -75,7 +75,7 @@ module.exports = app => {
   router.post('/post/uploadImage', passport.authorize, controller.post.uploadImage);
   // 文章编辑
   // router.post('/edit', passport.authorize, controller.post.edit);
-  router.post('/post/edit', passport.authorize, controller.post.edit);
+  router.post('/post/edit', passport.authorize, hCaptchaVerify, controller.post.edit);
   // 单篇文章 (by 文章hash)
   router.get('/post/:hash', passport.verify, controller.post.postByHash);
 
