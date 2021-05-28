@@ -51,12 +51,12 @@ class AccountHostingService extends Service {
 
   setNonce(dbConn, wallet) {
     const nextNonce = wallet.nonce + 1;
-    return dbConn.update('account_hosting', { nonce: nextNonce }, { id: wallet.id });
+    return dbConn.update('account_hosting', { nonce: nextNonce }, { where: { id: wallet.id } });
   }
 
   setNonceWithoutConn(wallet) {
     const nextNonce = wallet.nonce + 1;
-    return this.app.mysql.update('account_hosting', { nonce: nextNonce }, { id: wallet.id });
+    return this.app.mysql.update('account_hosting', { nonce: nextNonce }, { where: { id: wallet.id });
   }
 
   searchByPublicKey(publicKey, blockchain = 'ETH') {
