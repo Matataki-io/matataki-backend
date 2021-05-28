@@ -66,13 +66,6 @@ class PostController extends Controller {
 
     this.logger.info('post publish tags', tags);
 
-    this.logger.info("---debug only---");
-    this.logger.info("only0", indie_post);
-    this.logger.info("only0", indie_sync_tags);
-    this.logger.info("only0", typeof(indie_post));
-    this.logger.info("only0", typeof(indie_sync_tags));
-
-
     const result = await ctx.service.post.fullPublish(
       ctx.user,
       author,

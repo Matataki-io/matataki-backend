@@ -1105,18 +1105,13 @@ class github extends Service {
     const timeTag = moment().format('YYYY-MM-DD HH:mm:ss');
     let pageInfoJson = {};
     // bug here 
-    if (tags === []) {
+    if (tags.length === 0) {
       pageInfoJson = { title: title, date: timeTag };
     } else {
       pageInfoJson = { title: title, date: timeTag, tags: tags };
     }
     const pageInfoYml = YAML.stringify(pageInfoJson);
     const parsedPost = `---\n${pageInfoYml}---\n${rawPost}`;
-
-    console.log(timeTag);
-    console.log(pageInfoJson);
-    console.log(pageInfoYml);
-    console.log(parsedPost);
 
     return parsedPost;
   }
