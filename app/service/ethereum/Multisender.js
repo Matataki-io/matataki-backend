@@ -62,9 +62,9 @@ class MultiSendService extends Web3Service {
       });
   }
 
-  async approveTheMax(token, from) {
+  async approveTheMax(token, from, nonce) {
     const tokenContract = new Token(20, token);
-    return tokenContract._approve(from, senderAddress, MAX_OF_UINT256);
+    return tokenContract._approve(from, senderAddress, MAX_OF_UINT256, nonce);
   }
 
   async getAllowance(token, owner, spender = senderAddress) {

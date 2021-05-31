@@ -45,7 +45,8 @@ class TokenApiController extends Controller {
     const { tokenId, fromUid } = ctx.params;
     const { contract_address } = await this.service.token.mineToken.get(tokenId);
     const fromWallet = await this.service.account.hosting.isHosting(fromUid, 'ETH');
-    const result = await this.service.ethereum.multisender.approveTheMax(contract_address, fromWallet.private_key);
+    const result = await this.service.ethereum.multisender.approveTheMax(contract_address, fromWallet.private_key, fromWallet.nonce);
+    await this.service.account.hosting.setNonceWithoutConn(fromWallet);
     ctx.body = ctx.msg.success;
     ctx.body.data = { result };
   }

@@ -260,7 +260,7 @@ class MineTokenService extends Service {
     const { public_key: target } = toWallet;
     let transactionHash;
     try {
-      const blockchainMintAction = await EtherToken._mint(private_key, target, amount);
+      const blockchainMintAction = await EtherToken._mint(private_key, target, amount, fromWallet.nonce);
       this.logger.info('Minting token', token, blockchainMintAction);
       transactionHash = blockchainMintAction.transactionHash;
     } catch (error) {
@@ -283,6 +283,8 @@ class MineTokenService extends Service {
 
       await conn.query('UPDATE minetokens SET total_supply = total_supply + ? WHERE id = ?;',
         [ amount, tokenId ]);
+
+      await this.service.account.hosting.setNonce(conn, fromWallet);
 
       // 现在要写入上链结果的hash
       await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, create_time, ip, type, tx_hash) VALUES(?,?,?,?,?,?,?,?);',
@@ -397,7 +399,9 @@ class MineTokenService extends Service {
       let transactionHash;
       try {
         const transferAction = await EtherToken.transfer(
-          fromWallet.private_key, toWallet.public_key, amount);
+          fromWallet.private_key, toWallet.public_key, amount,
+          fromWallet.nonce
+        );
         transactionHash = transferAction.transactionHash;
       } catch (error) {
         await this.service.system.notification.pushMarkdownToDingtalk(
@@ -416,6 +420,7 @@ class MineTokenService extends Service {
       await conn.query('INSERT INTO assets_minetokens(uid, token_id, amount, memo) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount = amount + ?;',
         [ to, tokenId, amount, memo, amount ]);
 
+      await this.service.account.hosting.setNonce(conn, fromWallet);
       // 记录日志
       const logResult = await conn.query('INSERT INTO assets_minetokens_log(from_uid, to_uid, token_id, amount, memo, create_time, ip, type, tx_hash, post_id) VALUES(?,?,?,?,?,?,?,?,?,?);',
         [ from, to, tokenId, amount, memo, moment().format('YYYY-MM-DD HH:mm:ss'), ip, type, transactionHash, pid ]);
@@ -1200,7 +1205,8 @@ class MineTokenService extends Service {
     let transactionHash;
     try {
       const transferAction = await EtherToken.transfer(
-        fromWallet.private_key, target, amount);
+        fromWallet.private_key, target, amount,
+        fromWallet.nonce);
       transactionHash = transferAction.transactionHash;
     } catch (error) {
       this.logger.error('transferFrom::syncBlockchain', error);
@@ -1210,6 +1216,7 @@ class MineTokenService extends Service {
     await this._syncTransfer(
       tokenId, sender, uidOfInAndOut, amount, this.clientIP,
       consts.mineTokenTransferTypes.transfer, transactionHash, dbConnection, `Withdraw to ${target}`);
+    await this.service.account.hosting.addNonce(dbConnection, fromWallet.uid, fromWallet.blockchain);
     await dbConnection.commit();
     return transactionHash;
   }
