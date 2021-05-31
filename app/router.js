@@ -210,7 +210,7 @@ module.exports = app => {
   // 设置用户的GitHub储存目录，GitHub user only
   router.post('/indie/repo', passport.authorize, controller.user.setGithubRepo);
   // 创建子站
-  router.post('/indie/prepareRepo', passport.authorize, controller.user.createRepo);
+  router.post('/indie/prepareRepo', passport.authorize, hCaptchaVerify, controller.user.createRepo);
   // 设置默认config
   router.post('/indie/prepareConfig', passport.authorize, controller.user.createConfig);
   // 获取子站状态
@@ -222,7 +222,7 @@ module.exports = app => {
   // 获取独立子站的设置
   router.get('/indie/siteConfig', passport.authorize, controller.user.readSiteConfig);
   // 设置独立子站的设置
-  router.post('/indie/siteConfig', passport.authorize, controller.user.editSiteConfig);
+  router.post('/indie/siteConfig', passport.authorize, hCaptchaVerify, controller.user.editSiteConfig);
   // 可用主题列表
   router.get('/indie/themeList', passport.authorize, controller.user.readThemeList);
 
