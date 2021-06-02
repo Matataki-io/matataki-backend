@@ -104,6 +104,13 @@ class AccountBindingService extends Service {
       // 不能注销
       if (error) return error;
       const tran = await this.app.mysql.beginTransaction();
+      if (platform === 'github') {
+        this.logger.info('deleting github settings main account, ', uid);
+        const del0 = await tran.delete('github', {
+          uid
+        });
+        this.logger.info('deleteGithubInfo main account, ', del0);
+      }
       const del1 = await tran.delete('user_accounts', {
         id: userAccount.id,
       });
