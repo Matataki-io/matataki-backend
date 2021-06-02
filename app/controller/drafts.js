@@ -184,7 +184,6 @@ class DraftsController extends Controller {
       // 如果有数据则认为持币编辑
       setAttributes(editRequireToken, data, 'editor_require_holdtokens');
 
-      this.logger.info('drafts update data', data);
       const result = await conn.update('drafts', data, { where: { id } });
 
       // 清空数据并插入新数据
