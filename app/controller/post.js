@@ -36,10 +36,10 @@ class PostController extends Controller {
       return tags;
     }
   }
-
   // 发布文章
   async publish() {
     const ctx = this.ctx;
+    const _startTime = Date.now();
     const {
       author,
       title,
@@ -63,6 +63,7 @@ class PostController extends Controller {
     } = ctx.request.body;
     let { tags } = ctx.request.body;
     tags = this.tagsProcess({ tags });
+    this.service.timelog.log('publish::tagsProcess', _startTime);
 
     this.logger.info('post publish tags', tags);
 
@@ -89,6 +90,8 @@ class PostController extends Controller {
       indie_sync_tags,
       ipfs_hide
     );
+    this.service.timelog.log('publish::fullPublish::executed', _startTime);
+
     ctx.body = result;
   }
 
