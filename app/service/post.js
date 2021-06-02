@@ -79,6 +79,8 @@ class PostService extends Service {
     ipfs_hide = false
   ) {
     const ctx = this.ctx;
+    const _startTime = Date.now();
+
     // 修改requireBuy为数组
     const isEncrypt = Boolean(requireToken && requireToken.length > 0) || Boolean(requireBuy && requireBuy.length > 0);
 
@@ -89,6 +91,7 @@ class PostService extends Service {
           return ctx.msg.notCollaborator;
         }
       }
+      this.service.timelog.log('PostService::requireToken', _startTime);
     }
     if (requireBuy) {
       for (let i = 0; i < requireBuy.length; i++) {
@@ -97,6 +100,7 @@ class PostService extends Service {
           return ctx.msg.notCollaborator;
         }
       }
+      this.service.timelog.log('PostService::requireBuy', _startTime);
     }
     if (editRequireToken) {
       for (let i = 0; i < editRequireToken.length; i++) {
@@ -104,15 +108,20 @@ class PostService extends Service {
           return ctx.msg.notCollaborator;
         }
       }
+      this.service.timelog.log('PostService::editRequireToken', _startTime);
     }
 
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
     const articleContent = await this.wash(data.content);
+    this.service.timelog.log('PostService::washed::articleContent', _startTime);
+
     // 设置短摘要
     const short_content
       = shortContent
       || (await this.service.extmarkdown.shortContent(articleContent));
+
+    this.service.timelog.log('PostService::short_content', _startTime);
 
     let hashDict = null;
     if (indie_post === true) {
@@ -133,6 +142,7 @@ class PostService extends Service {
         uid: user.id,
         tags: tags_for_indie,
       });
+      this.service.timelog.log('PostService::uploadArticleToGithub', _startTime);
     } else {
       hashDict = await this.uploadArticleToIpfs({
         isEncrypt,
@@ -142,6 +152,7 @@ class PostService extends Service {
         description: short_content,
         uid: user.id,
       });
+      this.service.timelog.log('PostService::uploadArticleToIpfs', _startTime);
     }
 
     const metadataHash = hashDict.metadataHash;
@@ -208,10 +219,12 @@ class PostService extends Service {
       },
       { metadataHash, htmlHash }
     );
+    this.service.timelog.log('PostService::publish::writeDB', _startTime);
 
     // 记录付费信息
     if (requireToken) {
       await this.addMineTokens(user.id, id, requireToken);
+      this.service.timelog.log('PostService::addMineTokens', _startTime);
     }
 
     // 超过 0 元才算数，0元则无视
@@ -219,6 +232,7 @@ class PostService extends Service {
       const price = requireBuy[0].amount;
       const tokenId = requireBuy[0].tokenId;
       await this.addArticlePay(user.id, id, price, tokenId);
+      this.service.timelog.log('PostService::addArticlePay', _startTime);
     }
 
     // 记录持币编辑信息
@@ -228,6 +242,7 @@ class PostService extends Service {
         id,
         editRequireToken
       );
+      this.service.timelog.log('PostService::addEditMineTokens', _startTime);
     }
 
     // 记录购买编辑权限信息
@@ -238,6 +253,7 @@ class PostService extends Service {
         editRequireBuy.price,
         1
       );
+      this.service.timelog.log('PostService::addPrices', _startTime);
     }
 
     // 添加文章到elastic search
@@ -247,8 +263,10 @@ class PostService extends Service {
       title,
       articleContent
     );
+    this.service.timelog.log('PostService::addToElasticSearch', _startTime);
 
     await this.create_tags(id, tags);
+    this.service.timelog.log('PostService::create_tags', _startTime);
 
     if (id > 0) {
       // 发送同步需要的数据到缓存服务器
