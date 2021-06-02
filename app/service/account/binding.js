@@ -131,6 +131,13 @@ class AccountBindingService extends Service {
       const res = await this.service.tokenCircle.api.deleteTelegramUid(uid);
       this.logger.info('res', res);
     }
+    if (platform === 'github') {
+      this.logger.info('deleting github settings, ', uid);
+      const deleteGithubInfo = await this.app.mysql.delete('github', {
+        uid
+      });
+      this.logger.info('deleteGithubInfo, ', deleteGithubInfo);
+    }
     this.logger.info('Service: AccountBinding:: del success: %j', result);
     return 0;
   }
