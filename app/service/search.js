@@ -235,7 +235,6 @@ class SearchService extends Service {
 
   // 新建和更新文章， 都可以用这个
   async importPost(postid, userid, title, content) {
-    this.logger.error('SearchService:: importPost: start ', postid, userid, title, content);
     const author = await this.service.user.get(userid);
 
     if (author.length === 0) {
