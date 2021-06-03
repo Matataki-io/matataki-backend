@@ -262,7 +262,11 @@ class PostService extends Service {
         ...ctx.msg.success,
         data: id,
       };
-    } return ctx.msg.postPublishError; // todo 可以再细化失败的原因
+    } else if (id === -1) {
+      return ctx.msg.postDuplicated;
+    }
+
+    return ctx.msg.postPublishError; // todo 可以再细化失败的原因
   }
 
   async publish(data, { metadataHash, htmlHash }) {
@@ -294,9 +298,7 @@ class PostService extends Service {
     } catch (err) {
       if (err && err.code === 'ER_DUP_ENTRY') {
         // 数据库已经有记录了，提醒查重发现
-        this.ctx.status = 400;
-        this.ctx.body = this.ctx.msg.postDuplicated;
-        return;
+        return -1;
       }
 
       this.logger.error('PostService::publish error: %j', err);
