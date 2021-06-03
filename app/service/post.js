@@ -279,6 +279,13 @@ class PostService extends Service {
         return result.insertId;
       }
     } catch (err) {
+      if (err && err.code === 'ER_DUP_ENTRY') {
+        // 数据库已经有记录了，提醒查重发现
+        this.ctx.status = 400;
+        this.ctx.body = this.ctx.msg.postDuplicated;
+        return;
+      }
+
       this.logger.error('PostService::publish error: %j', err);
     }
 
