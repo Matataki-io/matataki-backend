@@ -92,6 +92,9 @@ module.exports = {
 
   // GitHub文章只能转移给GitHub用户
   githubPostTransferLimit: 10119,
+  // 文章重复
+  postDuplicated: 10120,
+
 
   // draft 草稿箱相关
   // 找不到草稿
@@ -168,6 +171,7 @@ module.exports = {
       failure: { code: this.failure, message: 'failure' },
       paramsError: { code: this.paramsError, message: 'parameter error' },
       unauthorized: { code: this.unauthorized, message: 'unauthorized' },
+      postDuplicated: { code: this.postDuplicated, message: 'Post duplicated' },
       serverError: { code: this.serverError, message: 'internal server error' },
 
       userIntroductionInvalid: { code: this.userIntroductionInvalid, message: 'introduction too long' },
@@ -266,6 +270,7 @@ module.exports = {
       failure: { code: this.failure, message: '失败' },
       paramsError: { code: this.paramsError, message: '参数错误' },
       unauthorized: { code: this.unauthorized, message: '未授权' },
+      postDuplicated: { code: this.postDuplicated, message: '文章已重复' },
       serverError: { code: this.serverError, message: 'internal server error' },
 
       userIntroductionInvalid: { code: this.userIntroductionInvalid, message: '个性签名不能超过20个字!' },
