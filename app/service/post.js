@@ -73,10 +73,14 @@ class PostService extends Service {
     // 持币编辑相关字段
     editRequireToken = null,
     editRequireBuy = null,
-    ipfs_or_github = 'ipfs',
+    // Indie blog 
+    indie_post = false,
+    indie_sync_tags = false,
     ipfs_hide = false
   ) {
     const ctx = this.ctx;
+    const _startTime = Date.now();
+
     // 修改requireBuy为数组
     const isEncrypt = Boolean(requireToken && requireToken.length > 0) || Boolean(requireBuy && requireBuy.length > 0);
 
@@ -107,22 +111,31 @@ class PostService extends Service {
     // 只清洗文章文本的标识
     data.content = this.service.extmarkdown.toIpfs(data.content);
     const articleContent = await this.wash(data.content);
+
     // 设置短摘要
     const short_content
       = shortContent
       || (await this.service.extmarkdown.shortContent(articleContent));
 
+
     let hashDict = null;
-    if (ipfs_or_github == 'github') {
+    if (indie_post === true) {
+
+      let tags_for_indie = [];
+      if (indie_sync_tags === true) {
+        tags_for_indie = tags;
+      } else {
+        tags_for_indie = [];
+      }
 
       hashDict = await this.uploadArticleToGithub({
-
         isEncrypt,
         data,
         title,
         displayName: ctx.helper.emailMask(user.nickname || user.username),
         description: short_content,
         uid: user.id,
+        tags: tags_for_indie,
       });
     } else {
       hashDict = await this.uploadArticleToIpfs({
@@ -249,7 +262,11 @@ class PostService extends Service {
         ...ctx.msg.success,
         data: id,
       };
-    } return ctx.msg.postPublishError; // todo 可以再细化失败的原因
+    } else if (id === -1) {
+      return ctx.msg.postDuplicated;
+    }
+
+    return ctx.msg.postPublishError; // todo 可以再细化失败的原因
   }
 
   async publish(data, { metadataHash, htmlHash }) {
@@ -279,6 +296,11 @@ class PostService extends Service {
         return result.insertId;
       }
     } catch (err) {
+      if (err && err.code === 'ER_DUP_ENTRY') {
+        // 数据库已经有记录了，提醒查重发现
+        return -1;
+      }
+
       this.logger.error('PostService::publish error: %j', err);
     }
 
@@ -2069,7 +2091,7 @@ class PostService extends Service {
     return { metadataHash, htmlHash };
   }
   async uploadArticleToGithub({
-    postid, title, description, displayName, data, uid, publish_or_edit = 'publish' }) {
+    postid, title, description, displayName, data, uid, publish_or_edit = 'publish', tags = []}) {
     // let markdown = data.content;
     const metadata = data.content;
     // description = await this.wash(description);
@@ -2102,10 +2124,10 @@ class PostService extends Service {
     let htmlHash;
 
     if (publish_or_edit === 'edit') {
-      htmlHash = metadataHash = await this.service.github.updateGithub(postid, metadata, title, 'md', "source");
+      htmlHash = metadataHash = await this.service.github.updateGithub(postid, metadata, title, 'md', "source", tags);
       //  await this.service.github.updateGithub(postid, renderedHtml, 'html');
     } else {
-      htmlHash = metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'md', 'salt1', 'source');
+      htmlHash = metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'md', 'salt1', 'source', tags);
       //  await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');
     }
 

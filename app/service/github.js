@@ -38,7 +38,7 @@ class github extends Service {
 
   //发布文章到GitHub
   // https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
-  async writeToGithub(uid, rawFile, title = 'title', filetype = 'md', salt = 'salt', branch = 'main') {
+  async writeToGithub(uid, rawFile, title = 'title', filetype = 'md', salt = 'salt', branch = 'main', tags = []) {
 
     this.logger.info('githubService:: writeToGithub loaded', uid);
     if (uid === null) {
@@ -74,7 +74,7 @@ class github extends Service {
     // join了user_accounts表，取其中的account为github id，防止账号切换导致username变更
     const userGithubId = userInfo[0].account;
     const hash = await this.generateHash(title, salt);
-    const parsedFile = await this.addPageInfo(rawFile, title);
+    const parsedFile = await this.addPageInfo(rawFile, title, tags);
     let buffer = new Buffer.from(parsedFile);
     const encodedText = buffer.toString('Base64');
 
@@ -115,7 +115,7 @@ class github extends Service {
 
   // 编辑文章
   // https://docs.github.com/en/rest/reference/repos#get-repository-content
-  async updateGithub(postid, rawFile, title = 'title', filetype = 'md', branch = 'main') {
+  async updateGithub(postid, rawFile, title = 'title', filetype = 'md', branch = 'main', tags = []) {
 
     this.logger.info('githubService:: updateGithub loaded', postid);
     const article_info = await this.app.mysql.query(`
@@ -190,7 +190,7 @@ class github extends Service {
 
     const origin_sha = getGithubRepo.data.sha;
 
-    const parsedFile = await this.addPageInfo(rawFile, title);
+    const parsedFile = await this.addPageInfo(rawFile, title, tags);
     let buffer = new Buffer.from(parsedFile);
     const encodedText = buffer.toString('Base64');
 
@@ -1101,14 +1101,17 @@ class github extends Service {
   // 需要生成pages，储存的不是纯md原文，需要加上一些信息。
   // 指定格式。需提示用户：错误地修改格式可能会导致无法在matataki、子站上显示等错误
   // https://hexo.io/docs/front-matter.html
-  async addPageInfo(rawPost, title) {
+  async addPageInfo(rawPost, title, tags = []) {
     const timeTag = moment().format('YYYY-MM-DD HH:mm:ss');
-    const parsedPost = 
-`---
-title: ${title}
-date: ${timeTag}
----
-${rawPost}`;
+    let pageInfoJson = {};
+    // bug here 
+    if (tags.length === 0) {
+      pageInfoJson = { title: title, date: timeTag };
+    } else {
+      pageInfoJson = { title: title, date: timeTag, tags: tags };
+    }
+    const pageInfoYml = YAML.stringify(pageInfoJson);
+    const parsedPost = `---\n${pageInfoYml}---\n${rawPost}`;
 
     return parsedPost;
   }

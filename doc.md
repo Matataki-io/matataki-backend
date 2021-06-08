@@ -9,6 +9,12 @@
 
 - 增加参数：commentPayPoint 评论需要花的积分
 
+- 修改参数：ipfs_or_github -> indie_post
+- 对应："github" -> true, "ipfs" -> false, 默认：false
+
+- 增加参数：indie_sync_tags
+- 对应：由发文页面中的选框决定，勾选则为true，否则为false
+
 #### 获取文章列表
 
 - GET /posts/timeRanking
