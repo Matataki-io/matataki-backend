@@ -1,6 +1,6 @@
 'use strict';
 // import { axios } from 'axios';
-const axios = require('axios').default
+const axios = require('axios').default;
 // const amqp = require('amqplib');
 // const { Controller } = require('egg');
 // const fs = require('fs');
@@ -11,32 +11,31 @@ const crypto = require('crypto');
 const YAML = require('yaml');
 
 const requiredSiteConfigList = {
-  'title': '',
-  'subtitle': '',
-  'description': '',
-  'keywords': '',
-  'author': '',
-  'language': '',
-  'timezone': '',
-  'theme': ''
-}
+  title: '',
+  subtitle: '',
+  description: '',
+  keywords: '',
+  author: '',
+  language: '',
+  timezone: '',
+  theme: '',
+};
 
 const supportedThemeInfo = {
   // 'Nexmoe': {'hexo-theme-nexmoe': '^2.8.0', 'hexo-wordcount': '^6.0.1'},
-  'landscape': {'hexo-theme-landscape': '^0.0.3'},
-  'cake': {'hexo-theme-cake': '^3.4.1'},
-  'stellar': {'hexo-theme-stellar': '^1.1.0'},
-  'next': {'hexo-theme-next': '^8.4.0'},
-  'kaze': {'hexo-theme-kaze': '^1.0.5'}
-}
+  landscape: { 'hexo-theme-landscape': '^0.0.3' },
+  cake: { 'hexo-theme-cake': '^3.4.1' },
+  stellar: { 'hexo-theme-stellar': '^1.1.0' },
+  next: { 'hexo-theme-next': '^8.4.0' },
+  kaze: { 'hexo-theme-kaze': '^1.0.5' },
+};
 
 class github extends Service {
-      constructor(ctx, app) {
-    super(ctx, app);
+  // constructor(ctx, app) {
+  //   super(ctx, app);
+  // }
 
-  }
-
-  //发布文章到GitHub
+  // 发布文章到GitHub
   // https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
   async writeToGithub(uid, rawFile, title = 'title', filetype = 'md', salt = 'salt', branch = 'main', tags = []) {
 
@@ -48,14 +47,14 @@ class github extends Service {
     }
 
     const userInfo = await this.app.mysql.query(
-        `SELECT github.uid AS uid_g, github.access_token, github.article_repo,
+      `SELECT github.uid AS uid_g, github.access_token, github.article_repo,
         users.username, users.platform AS platform_u,
         user_accounts.account, user_accounts.uid AS uid_ua, user_accounts.platform AS platform_ua
         FROM github
         LEFT JOIN users ON users.id = github.uid
         LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
-        WHERE github.uid = ?;`, [uid]
-    )
+        WHERE github.uid = ?;`, [ uid ]
+    );
 
     // 用户没有绑定github账号，下同，请重新使用GitHub进行登录
     if (userInfo.length === 0) {
@@ -75,7 +74,7 @@ class github extends Service {
     const userGithubId = userInfo[0].account;
     const hash = await this.generateHash(title, salt);
     const parsedFile = await this.addPageInfo(rawFile, title, tags);
-    let buffer = new Buffer.from(parsedFile);
+    const buffer = new Buffer.from(parsedFile);
     const encodedText = buffer.toString('Base64');
 
     this.logger.info('githubService:: writeToGithub request ', uid, userGithubId, articleRepo);
@@ -84,7 +83,7 @@ class github extends Service {
 
     // 基本请求，user agent没有作用所以注释掉了
     try {
-        updateGithubRepo = await axios({
+      updateGithubRepo = await axios({
         method: 'PUT',
         url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/source/_posts/${hash.folder}/${hash.hash}.${filetype}`,
         headers: {
@@ -95,8 +94,8 @@ class github extends Service {
         data: {
           message: 'Publish article',
           content: encodedText,
-          branch: branch
-        }
+          branch,
+        },
       });
     } catch (err) {
       this.logger.error('github upload error', err);
@@ -151,7 +150,7 @@ class github extends Service {
     const articleRepo = article_info[0].article_repo;
     const userGithubId = article_info[0].account;
 
-    const folder = article_info[0].hash.substring(2, 6) + '/' + article_info[0].hash.substring(6, 8)
+    const folder = article_info[0].hash.substring(2, 6) + '/' + article_info[0].hash.substring(6, 8);
     this.logger.info('githubService:: updateGithub request ', postid, userGithubId, articleRepo);
     // // 依据文件类型判断用哪个hash
     // let keepArticleHash;
@@ -166,7 +165,7 @@ class github extends Service {
 
     this.logger.info('githubService:: updateGithub ready for request1', postid);
     let getGithubRepo = null;
-  
+
     try {
       getGithubRepo = await axios({
         method: 'GET',
@@ -191,13 +190,13 @@ class github extends Service {
     const origin_sha = getGithubRepo.data.sha;
 
     const parsedFile = await this.addPageInfo(rawFile, title, tags);
-    let buffer = new Buffer.from(parsedFile);
+    const buffer = new Buffer.from(parsedFile);
     const encodedText = buffer.toString('Base64');
 
     this.logger.info('githubService:: updateGithub ready for request2', postid);
     let updateGithubRepo = null;
     try {
-        updateGithubRepo = await axios({
+      updateGithubRepo = await axios({
         method: 'PUT',
         url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/source/_posts/${folder}/${keepArticleHash}.${filetype}`,
         headers: {
@@ -209,8 +208,8 @@ class github extends Service {
           message: 'Update article',
           sha: origin_sha,
           content: encodedText,
-          branch: branch
-        }
+          branch,
+        },
       });
     } catch (err) {
       this.logger.error('github upload error', err);
@@ -267,9 +266,9 @@ class github extends Service {
     const articleRepo = article_info[0].article_repo;
     const userGithubId = article_info[0].account;
     const keepArticleHash = article_info[0].hash;
-    const folder = keepArticleHash.substring(2, 6) + '/' + keepArticleHash.substring(6, 8)
+    const folder = keepArticleHash.substring(2, 6) + '/' + keepArticleHash.substring(6, 8);
     let getGithubRepo = null;
-  
+
     try {
       getGithubRepo = await axios({
         method: 'GET',
@@ -290,7 +289,7 @@ class github extends Service {
       // ctx.body = ctx.msg.failure;
       return null;
     }
-    let buffer = new Buffer.from(getGithubRepo.data.content, 'base64')
+    const buffer = new Buffer.from(getGithubRepo.data.content, 'base64');
     const decodedText = await this.deletePageInfo(buffer.toString());
 
     // const decodedContent = JSON.parse(decodedText);
@@ -300,8 +299,8 @@ class github extends Service {
       author: article_info[0].author,
       github_id: userGithubId,
       github_repo: articleRepo,
-      content: decodedText
-    }
+      content: decodedText,
+    };
 
     return JSON.stringify(readResponse);
   }
@@ -328,7 +327,7 @@ class github extends Service {
       FROM github
       LEFT JOIN users ON users.id = github.uid
       LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
-      WHERE github.uid = ?;`, [postid, toUser]
+      WHERE github.uid = ?;`, [ postid, toUser ]
     );
 
     // if (userInfo[0][0].id !== fromUser) {
@@ -358,20 +357,20 @@ class github extends Service {
       articleRepo: userInfo[0][0].article_repo,
       userGithubId: userInfo[0][0].account,
       keepArticleHash: userInfo[0][0].hash,
-    }
+    };
 
     const toUserInfo = {
       accessToken: userInfo[1][0].access_token,
       articleRepo: userInfo[1][0].article_repo,
       userGithubId: userInfo[1][0].account,
-    }
+    };
 
     this.logger.info('githubService:: transferGithub from ', fromUserInfo.userGithubId, fromUserInfo.articleRepo);
     this.logger.info('githubService:: transferGithub to ', toUserInfo.userGithubId, toUserInfo.articleRepo);
 
     const folder = fromUserInfo.keepArticleHash.substring(2, 6) + '/' + fromUserInfo.keepArticleHash.substring(6, 8);
     let fromGithubRepo = null;
-  
+
     // 获取文章
     try {
       fromGithubRepo = await axios({
@@ -399,7 +398,7 @@ class github extends Service {
     // 上传文章
     // 基本请求，user agent没有作用所以注释掉了
     try {
-        toGithubRepo = await axios({
+      toGithubRepo = await axios({
         method: 'PUT',
         url: `https://api.github.com/repos/${toUserInfo.userGithubId}/${toUserInfo.articleRepo}/contents/source/_posts/${folder}/${fromUserInfo.keepArticleHash}.${filetype}`,
         headers: {
@@ -410,8 +409,8 @@ class github extends Service {
         data: {
           message: 'Transfer article',
           content: encodedText,
-          branch: branch
-        }
+          branch,
+        },
       });
     } catch (err) {
       this.logger.error('github upload error', err);
@@ -445,8 +444,8 @@ class github extends Service {
       FROM github
       LEFT JOIN users ON users.id = github.uid
       LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
-      WHERE github.uid = ?;`, [uid]
-    )
+      WHERE github.uid = ?;`, [ uid ]
+    );
 
     if (userInfo.length === 0) {
       this.logger.info('githubService:: user info not exist');
@@ -456,12 +455,12 @@ class github extends Service {
     if (userInfo[0].site_status !== 0) {
       this.logger.info('githubService:: user info site already created');
       return null;
-    } 
+    }
 
     const templateRepoInfo = {
       username: this.ctx.app.config.github.templateRepoOwner,
-      repo: this.ctx.app.config.github.templateRepoName
-    }
+      repo: this.ctx.app.config.github.templateRepoName,
+    };
     const accessToken = userInfo[0].access_token;
     const articleRepo = userInfo[0].article_repo;
     const userGithubId = userInfo[0].account;
@@ -482,9 +481,9 @@ class github extends Service {
         data: {
           name: articleRepo,
           description: 'generate my matataki site',
-          include_all_branches: true
-        }
-      })
+          include_all_branches: true,
+        },
+      });
     } catch (err) {
       this.logger.error('githubService:: set site repo github upload error', err);
       return null;
@@ -497,8 +496,8 @@ class github extends Service {
     }
 
     await this.app.mysql.query(
-      `UPDATE github SET site_status = 1 WHERE uid = ?;`, [uid]
-    )
+      'UPDATE github SET site_status = 1 WHERE uid = ?;', [ uid ]
+    );
     this.logger.info('githubService:: prepareRepo completed', uid);
     return 0;
   }
@@ -519,8 +518,8 @@ class github extends Service {
       FROM github
       LEFT JOIN users ON users.id = github.uid
       LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
-      WHERE github.uid = ?;`, [uid]
-    )
+      WHERE github.uid = ?;`, [ uid ]
+    );
 
     if (userInfo.length === 0) {
       this.logger.info('githubService:: user info not exist');
@@ -530,7 +529,7 @@ class github extends Service {
     // if (userInfo[0].site_status !== 0) {
     //   this.logger.info('githubService:: user info site already created');
     //   return null;
-    // } 
+    // }
 
     const accessToken = userInfo[0].access_token;
     const articleRepo = userInfo[0].article_repo;
@@ -549,7 +548,7 @@ class github extends Service {
           // 'User-Agent':'test.matataki.io' ,
           accept: 'application/vnd.github.v3+json',
         },
-      })
+      });
     } catch (err) {
       this.logger.error('githubService:: edit config github upload error', err);
       return null;
@@ -561,7 +560,7 @@ class github extends Service {
       return null;
     }
 
-    let buffer = new Buffer.from(editConfig.data.content, 'base64')
+    const buffer = new Buffer.from(editConfig.data.content, 'base64');
     let configYml = buffer.toString();
     const origin_sha = editConfig.data.sha;
 
@@ -569,12 +568,12 @@ class github extends Service {
     configYml = configYml.replace(/username_to_be_replaced/g, userGithubId);
 
     this.logger.info('githubService:: prepareConfig current', configYml);
-    let buffer2 = new Buffer.from(configYml);
+    const buffer2 = new Buffer.from(configYml);
     const encodedConfig = buffer2.toString('Base64');
 
     let updateConfig = null;
     try {
-        updateConfig = await axios({
+      updateConfig = await axios({
         method: 'PUT',
         url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml`,
         headers: {
@@ -586,8 +585,8 @@ class github extends Service {
           message: 'set config',
           sha: origin_sha,
           content: encodedConfig,
-          branch: 'source'
-        }
+          branch: 'source',
+        },
       });
     } catch (err) {
       this.logger.error('githubService:: update config github upload error', err);
@@ -611,7 +610,7 @@ class github extends Service {
       this.logger.info('invalid user id');
       return {
         code: null,
-        data: null
+        data: null,
       };
     }
 
@@ -621,14 +620,14 @@ class github extends Service {
       FROM github
       LEFT JOIN users ON users.id = github.uid
       LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
-      WHERE github.uid = ?;`, [uid]
-    )
+      WHERE github.uid = ?;`, [ uid ]
+    );
 
     if (userInfo.length === 0) {
       this.logger.info('githubService:: user info not exist');
       return {
         code: 3,
-        data: null
+        data: null,
       };
     }
 
@@ -640,20 +639,20 @@ class github extends Service {
       this.logger.info('githubService:: user info(some keys) not exist');
       return {
         code: 3,
-        data: null
+        data: null,
       };
     }
 
-    let checkRepoExistence = null;
+    // let checkRepoExistence = null;
     try {
-      checkRepoExistence = await axios({
+      await axios({
         method: 'GET',
         url: `https://api.github.com/repos/${userGithubId}/${articleRepo}`,
         headers: {
           Authorization: 'token ' + accessToken,
           // 'User-Agent': 'test.matataki.io',
           accept: 'application/vnd.github.v3+json',
-        }
+        },
       });
 
     } catch (err) {
@@ -662,21 +661,21 @@ class github extends Service {
       if ((err.response.status === 404) && (err.response.statusText === 'Not Found')) {
         return {
           code: 1,
-          data: { articleRepo }
-        };
-      } else {
-        this.logger.error('githubService:: update config github not 200 or 404', err);
-        return {
-          code: null,
-          data: null
+          data: { articleRepo },
         };
       }
+      this.logger.error('githubService:: update config github not 200 or 404', err);
+      return {
+        code: null,
+        data: null,
+      };
+
     }
 
     // 200的时候会return 0
     return {
       code: 0,
-      data: { articleRepo }
+      data: { articleRepo },
     };
   }
 
@@ -687,7 +686,7 @@ class github extends Service {
       this.logger.info('invalid user id');
       return {
         code: null,
-        data: null
+        data: null,
       };
     }
 
@@ -697,14 +696,14 @@ class github extends Service {
       FROM github
       LEFT JOIN users ON users.id = github.uid
       LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
-      WHERE github.uid = ?;`, [uid]
-    )
+      WHERE github.uid = ?;`, [ uid ]
+    );
 
     if (userInfo.length === 0) {
       this.logger.info('githubService:: user info not exist');
       return {
         code: 3,
-        data: null
+        data: null,
       };
     }
 
@@ -712,13 +711,13 @@ class github extends Service {
       this.logger.info('githubService:: user info(some keys) not exist');
       return {
         code: 3,
-        data: null
+        data: null,
       };
     }
 
-    let siteObject = { 
-      code: userInfo[0].site_status, 
-      data: null
+    const siteObject = {
+      code: userInfo[0].site_status,
+      data: null,
     };
 
     if (requireLink) {
@@ -736,7 +735,7 @@ class github extends Service {
       this.logger.info('invalid user id');
       return {
         code: null,
-        data: null
+        data: null,
       };
     }
 
@@ -746,14 +745,14 @@ class github extends Service {
       FROM github
       LEFT JOIN users ON users.id = github.uid
       LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
-      WHERE github.uid = ?;`, [uid]
-    )
+      WHERE github.uid = ?;`, [ uid ]
+    );
 
     if (userInfo.length === 0) {
       this.logger.info('githubService:: user info not exist');
       return {
         code: 3,
-        data: null
+        data: null,
       };
     }
 
@@ -765,7 +764,7 @@ class github extends Service {
       this.logger.info('githubService:: user info(some keys) not exist');
       return {
         code: 3,
-        data: null
+        data: null,
       };
     }
 
@@ -779,34 +778,34 @@ class github extends Service {
           Authorization: 'token ' + accessToken,
           // 'User-Agent': 'test.matataki.io',
           accept: 'application/vnd.github.v3+json',
-        }
+        },
       });
 
     } catch (err) {
       if ((err.response.status === 404) && (err.response.statusText === 'Not Found')) {
         return {
           code: 0,
-          data: { 
+          data: {
             status: err.response.data.status || 'Not Found',
             url: err.response.data.html_url || '',
-          }
-        };
-      } else {
-        this.logger.error('githubService:: pages status not 200 or 404', err);
-        return {
-          code: 4,
-          data: null
+          },
         };
       }
+      this.logger.error('githubService:: pages status not 200 or 404', err);
+      return {
+        code: 4,
+        data: null,
+      };
+
     }
 
     return {
       code: 0,
-      data: { 
+      data: {
         status: getPageStatus.data.status,
         url: getPageStatus.data.html_url,
-      }
-    }
+      },
+    };
   }
 
   // 读取hexo子站设置
@@ -824,8 +823,8 @@ class github extends Service {
       FROM github
       LEFT JOIN users ON users.id = github.uid
       LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
-      WHERE github.uid = ?;`, [uid]
-    )
+      WHERE github.uid = ?;`, [ uid ]
+    );
 
     if (userInfo.length === 0) {
       this.logger.info('githubService:: user info not exist');
@@ -841,34 +840,34 @@ class github extends Service {
       return null;
     }
 
-   // judge http status code!
-   let readConfig = null;
-   try {
-     readConfig = await axios({
-       method: 'GET',
-       url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml?ref=source`,
-       headers: {
-         Authorization: 'token ' + accessToken,
-         // 'User-Agent':'test.matataki.io' ,
-         accept: 'application/vnd.github.v3+json',
-       },
-     })
-   } catch (err) {
-     this.logger.error('githubService:: edit config github upload error', err);
-     return null;
-   }
+    // judge http status code!
+    let readConfig = null;
+    try {
+      readConfig = await axios({
+        method: 'GET',
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml?ref=source`,
+        headers: {
+          Authorization: 'token ' + accessToken,
+          // 'User-Agent':'test.matataki.io' ,
+          accept: 'application/vnd.github.v3+json',
+        },
+      });
+    } catch (err) {
+      this.logger.error('githubService:: edit config github upload error', err);
+      return null;
+    }
 
     const buffer = new Buffer.from(readConfig.data.content, 'base64');
     const configYml = buffer.toString();
     const configObject = YAML.parse(configYml);
-    let usefulConfig = {};
+    const usefulConfig = {};
 
-    for (let everyConfig in requiredSiteConfigList) {
-      usefulConfig[everyConfig] = configObject[everyConfig]
+    for (const everyConfig in requiredSiteConfigList) {
+      usefulConfig[everyConfig] = configObject[everyConfig];
     }
 
     const siteLink = await this.judgeSiteLink(userGithubId, articleRepo);
-    usefulConfig['siteLink'] = siteLink;
+    usefulConfig.siteLink = siteLink;
 
     return usefulConfig;
   }
@@ -890,8 +889,8 @@ class github extends Service {
       FROM github
       LEFT JOIN users ON users.id = github.uid
       LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
-      WHERE github.uid = ?;`, [uid]
-    )
+      WHERE github.uid = ?;`, [ uid ]
+    );
 
     if (userInfo.length === 0) {
       this.logger.info('githubService:: user info not exist');
@@ -907,167 +906,167 @@ class github extends Service {
       return null;
     }
 
-   // judge http status code!
-   let editConfig = null;
-   try {
-     editConfig = await axios({
-       method: 'GET',
-       url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml?ref=source`,
-       headers: {
-         Authorization: 'token ' + accessToken,
-         // 'User-Agent':'test.matataki.io' ,
-         accept: 'application/vnd.github.v3+json',
-       },
-     })
-   } catch (err) {
-     this.logger.error('githubService:: edit config github upload error', err);
-     return null;
-   }
- 
-   if (!(editConfig.status === 200) || !(editConfig.statusText === 'OK')) {
-     this.logger.info('githubService:: edit config incorrect status code, failed');
-     // ctx.body = ctx.msg.failure;
-     return null;
-   }
-
-   let buffer = new Buffer.from(editConfig.data.content, 'base64')
-   let configYml = buffer.toString();
-   const origin_sha = editConfig.data.sha;
-
-   let configObject = YAML.parse(configYml);
-   const formerTheme = configObject.theme;
-
-   // 修改 config yml
-  for (let everyConfig in requiredSiteConfigList) {
-    // 注意是undefined。符合需求的设置，即使是空字符串也要。（需要再三确认）
-    if (requestObj[everyConfig] !== undefined) {
-      configObject[everyConfig] = requestObj[everyConfig];
+    // judge http status code!
+    let editConfig = null;
+    try {
+      editConfig = await axios({
+        method: 'GET',
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml?ref=source`,
+        headers: {
+          Authorization: 'token ' + accessToken,
+          // 'User-Agent':'test.matataki.io' ,
+          accept: 'application/vnd.github.v3+json',
+        },
+      });
+    } catch (err) {
+      this.logger.error('githubService:: edit config github upload error', err);
+      return null;
     }
-  }
 
-  configYml = YAML.stringify(configObject);
-  this.logger.info('githubService:: edit config:', configYml);
+    if (!(editConfig.status === 200) || !(editConfig.statusText === 'OK')) {
+      this.logger.info('githubService:: edit config incorrect status code, failed');
+      // ctx.body = ctx.msg.failure;
+      return null;
+    }
 
-   let buffer2 = new Buffer.from(configYml);
-   const encodedConfig = buffer2.toString('Base64');
+    const buffer = new Buffer.from(editConfig.data.content, 'base64');
+    let configYml = buffer.toString();
+    const origin_sha = editConfig.data.sha;
 
-  // 主题需要单独处理
-  const targetTheme = requestObj['theme'];
-  // 有主题这项
-  if (targetTheme !== undefined) {
-    // 目标主题与以前不同，才需更改。
-    if (formerTheme !== targetTheme) {
-      // 目标主题受支持，才进行请求，更改package json 内容。否则只更新 config yml
-      if (supportedThemeInfo[targetTheme]) {
-        this.logger.info('githubService:: editSiteConfig need to edit theme', uid);
-        let editDependence = null;
-        try {
-          editDependence = await axios({
-            method: 'GET',
-            url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/package.json?ref=source`,
-            headers: {
-              Authorization: 'token ' + accessToken,
-              // 'User-Agent':'test.matataki.io' ,
-              accept: 'application/vnd.github.v3+json',
-            },
-          })
-        } catch (err) {
-          this.logger.error('githubService:: edit dependence github upload error', err);
-          return null;
-        }
-      
-        if (!(editDependence.status === 200) || !(editDependence.statusText === 'OK')) {
-          this.logger.info('githubService:: edit dependence incorrect status code, failed');
-          // ctx.body = ctx.msg.failure;
-          return null;
-        }
-    
-        let buffer3 = new Buffer.from(editDependence.data.content, 'base64')
-        let packageJson = buffer3.toString();
-        let packageObj = JSON.parse(packageJson);
-        const packageSha = editDependence.data.sha;
-        // let dependenceObj = packageObj.dependence;
-    
-        for (let everyDep in packageObj['dependencies']) {
-          if (/hexo-theme-[a-zA-Z\-]{1,20}/.test(everyDep)) {
-            delete packageObj['dependencies'][everyDep];
-          }
-        }
-    
-        for (let everyPkg in supportedThemeInfo[targetTheme]) {
-          packageObj['dependencies'][everyPkg] = supportedThemeInfo[targetTheme][everyPkg];
-        }
+    const configObject = YAML.parse(configYml);
+    const formerTheme = configObject.theme;
 
-        packageJson = JSON.stringify(packageObj, null, '\t');
-        this.logger.info('githubService:: edit package:', packageJson);
-
-        let buffer4 = new Buffer.from(packageJson);
-        const encodedDependence = buffer4.toString('Base64');
-
-        this.logger.info('githubService:: editSiteConfig request package json', uid);
-        let updateDependence = null;
-        try {
-            updateDependence = await axios({
-            method: 'PUT',
-            url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/package.json`,
-            headers: {
-              Authorization: 'token ' + accessToken,
-              // 'User-Agent': 'test.matataki.io',
-              accept: 'application/vnd.github.v3+json',
-            },
-            data: {
-              message: 'set package',
-              sha: packageSha,
-              content: encodedDependence,
-              branch: 'source'
-            }
-          });
-        } catch (err) {
-          this.logger.error('githubService:: update config github upload error', err);
-          return null;
-        }
-    
-            if (!(updateDependence.status === 200) || !(updateDependence.statusText === 'OK')) {
-          this.logger.info('githubService:: update config incorrect status code, failed');
-          // ctx.body = ctx.msg.failure;
-          return null;
-        }
-        
-      } else {
-        // 即使目标主题不在支持列表，仍然
-        this.logger.info('githubService:: target theme not exist, set as their mind');
+    // 修改 config yml
+    for (const everyConfig in requiredSiteConfigList) {
+    // 注意是undefined。符合需求的设置，即使是空字符串也要。（需要再三确认）
+      if (requestObj[everyConfig] !== undefined) {
+        configObject[everyConfig] = requestObj[everyConfig];
       }
     }
-  }
 
-  this.logger.info('githubService:: editSiteConfig request config yml', uid);
-   let updateConfig = null;
-   try {
-       updateConfig = await axios({
-       method: 'PUT',
-       url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml`,
-       headers: {
-         Authorization: 'token ' + accessToken,
-         // 'User-Agent': 'test.matataki.io',
-         accept: 'application/vnd.github.v3+json',
-       },
-       data: {
-         message: 'set config',
-         sha: origin_sha,
-         content: encodedConfig,
-         branch: 'source'
-       }
-     });
-   } catch (err) {
-     this.logger.error('githubService:: update config github upload error', err);
-     return null;
-   }
+    configYml = YAML.stringify(configObject);
+    this.logger.info('githubService:: edit config:', configYml);
 
-       if (!(updateConfig.status === 200) || !(updateConfig.statusText === 'OK')) {
-     this.logger.info('githubService:: update config incorrect status code, failed');
-     // ctx.body = ctx.msg.failure;
-     return null;
-   }
+    const buffer2 = new Buffer.from(configYml);
+    const encodedConfig = buffer2.toString('Base64');
+
+    // 主题需要单独处理
+    const targetTheme = requestObj.theme;
+    // 有主题这项
+    if (targetTheme !== undefined) {
+    // 目标主题与以前不同，才需更改。
+      if (formerTheme !== targetTheme) {
+      // 目标主题受支持，才进行请求，更改package json 内容。否则只更新 config yml
+        if (supportedThemeInfo[targetTheme]) {
+          this.logger.info('githubService:: editSiteConfig need to edit theme', uid);
+          let editDependence = null;
+          try {
+            editDependence = await axios({
+              method: 'GET',
+              url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/package.json?ref=source`,
+              headers: {
+                Authorization: 'token ' + accessToken,
+                // 'User-Agent':'test.matataki.io' ,
+                accept: 'application/vnd.github.v3+json',
+              },
+            });
+          } catch (err) {
+            this.logger.error('githubService:: edit dependence github upload error', err);
+            return null;
+          }
+
+          if (!(editDependence.status === 200) || !(editDependence.statusText === 'OK')) {
+            this.logger.info('githubService:: edit dependence incorrect status code, failed');
+            // ctx.body = ctx.msg.failure;
+            return null;
+          }
+
+          const buffer3 = new Buffer.from(editDependence.data.content, 'base64');
+          let packageJson = buffer3.toString();
+          const packageObj = JSON.parse(packageJson);
+          const packageSha = editDependence.data.sha;
+          // let dependenceObj = packageObj.dependence;
+
+          for (const everyDep in packageObj.dependencies) {
+            if (/hexo-theme-[a-zA-Z\-]{1,20}/.test(everyDep)) {
+              delete packageObj.dependencies[everyDep];
+            }
+          }
+
+          for (const everyPkg in supportedThemeInfo[targetTheme]) {
+            packageObj.dependencies[everyPkg] = supportedThemeInfo[targetTheme][everyPkg];
+          }
+
+          packageJson = JSON.stringify(packageObj, null, '\t');
+          this.logger.info('githubService:: edit package:', packageJson);
+
+          const buffer4 = new Buffer.from(packageJson);
+          const encodedDependence = buffer4.toString('Base64');
+
+          this.logger.info('githubService:: editSiteConfig request package json', uid);
+          let updateDependence = null;
+          try {
+            updateDependence = await axios({
+              method: 'PUT',
+              url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/package.json`,
+              headers: {
+                Authorization: 'token ' + accessToken,
+                // 'User-Agent': 'test.matataki.io',
+                accept: 'application/vnd.github.v3+json',
+              },
+              data: {
+                message: 'set package',
+                sha: packageSha,
+                content: encodedDependence,
+                branch: 'source',
+              },
+            });
+          } catch (err) {
+            this.logger.error('githubService:: update config github upload error', err);
+            return null;
+          }
+
+          if (!(updateDependence.status === 200) || !(updateDependence.statusText === 'OK')) {
+            this.logger.info('githubService:: update config incorrect status code, failed');
+            // ctx.body = ctx.msg.failure;
+            return null;
+          }
+
+        } else {
+        // 即使目标主题不在支持列表，仍然
+          this.logger.info('githubService:: target theme not exist, set as their mind');
+        }
+      }
+    }
+
+    this.logger.info('githubService:: editSiteConfig request config yml', uid);
+    let updateConfig = null;
+    try {
+      updateConfig = await axios({
+        method: 'PUT',
+        url: `https://api.github.com/repos/${userGithubId}/${articleRepo}/contents/_config.yml`,
+        headers: {
+          Authorization: 'token ' + accessToken,
+          // 'User-Agent': 'test.matataki.io',
+          accept: 'application/vnd.github.v3+json',
+        },
+        data: {
+          message: 'set config',
+          sha: origin_sha,
+          content: encodedConfig,
+          branch: 'source',
+        },
+      });
+    } catch (err) {
+      this.logger.error('githubService:: update config github upload error', err);
+      return null;
+    }
+
+    if (!(updateConfig.status === 200) || !(updateConfig.statusText === 'OK')) {
+      this.logger.info('githubService:: update config incorrect status code, failed');
+      // ctx.body = ctx.msg.failure;
+      return null;
+    }
 
     this.logger.info('githubService:: editSiteConfig end', uid);
     return 0;
@@ -1076,26 +1075,26 @@ class github extends Service {
   // 返回主题列表，若有。
   async useableConfigList(uid) {
     this.logger.info('githubService: useConfigList', uid);
-    let useThemeList = [];
-    for (let everyTheme in supportedThemeInfo) {
+    const useThemeList = [];
+    for (const everyTheme in supportedThemeInfo) {
       useThemeList.push(everyTheme);
-     }
+    }
     return useThemeList;
   }
 
   // 哈希函数，用于生成GitHub文件名
   async generateHash(title, salt) {
-      const prefix = 'Gh';
-      const folder = moment().format('YYYY/MM');
-      const month = folder.replace('/', '');
-      // const now = moment().format('YYYY-MM-DD HH:mm:ss');
-      // used for hash
-      const now = moment().format('x');
-      const shasum = crypto.createHash('sha256');
-      shasum.update(title + now + salt);
-      let finalHash = prefix + month + shasum.digest('hex');
-      finalHash = finalHash.substring(0, 40);
-      return { hash:finalHash, folder }
+    const prefix = 'Gh';
+    const folder = moment().format('YYYY/MM');
+    const month = folder.replace('/', '');
+    // const now = moment().format('YYYY-MM-DD HH:mm:ss');
+    // used for hash
+    const now = moment().format('x');
+    const shasum = crypto.createHash('sha256');
+    shasum.update(title + now + salt);
+    let finalHash = prefix + month + shasum.digest('hex');
+    finalHash = finalHash.substring(0, 40);
+    return { hash: finalHash, folder };
   }
 
   // 需要生成pages，储存的不是纯md原文，需要加上一些信息。
@@ -1104,11 +1103,11 @@ class github extends Service {
   async addPageInfo(rawPost, title, tags = []) {
     const timeTag = moment().format('YYYY-MM-DD HH:mm:ss');
     let pageInfoJson = {};
-    // bug here 
+    // bug here
     if (tags.length === 0) {
-      pageInfoJson = { title: title, date: timeTag };
+      pageInfoJson = { title, date: timeTag };
     } else {
-      pageInfoJson = { title: title, date: timeTag, tags: tags };
+      pageInfoJson = { title, date: timeTag, tags };
     }
     const pageInfoYml = YAML.stringify(pageInfoJson);
     const parsedPost = `---\n${pageInfoYml}---\n${rawPost}`;
@@ -1122,9 +1121,9 @@ class github extends Service {
   async judgeSiteLink(username, repo_name) {
     if (repo_name === `${username}.github.io`) {
       return `https://${repo_name}/`;
-    } else {
-      return `https://${username}.github.io/${repo_name}/`;
     }
+    return `https://${username}.github.io/${repo_name}/`;
+
   }
 
   // 消除md文件中的hexo头部信息
@@ -1133,7 +1132,7 @@ class github extends Service {
 
     // 没有分成3段，表示原格式错误，返回空串。否则取值会出错。
     if (splitPost.length < 3) {
-      return ''
+      return '';
     }
     return splitPost[2];
 
