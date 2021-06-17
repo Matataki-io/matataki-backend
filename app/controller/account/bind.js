@@ -62,16 +62,13 @@ class AccountBindController extends Controller {
    */
   async getProfileByEthWallet() {
     const { ctx } = this;
-    this.logger.info('getProfileByEthWallet')
     const { wallet } = ctx.params;
     const userAccount = await this.app.mysql.get('user_accounts', { account: utils.getAddress(wallet), platform: 'eth' });
-    this.logger.info('userAccount', userAccount)
     if (!userAccount) {
       ctx.body = ctx.msg.userNotExist;
       return;
     }
     const details = await this.service.user.getUserById(userAccount.uid);
-    this.logger.info('details', details)
 
     if (details === null) {
       ctx.body = ctx.msg.userNotExist;
