@@ -1,5 +1,6 @@
 'use strict';
 
+const { utils } = require('ethers');
 const Controller = require('../../core/base_controller');
 
 /**
@@ -54,6 +55,31 @@ class AccountBindController extends Controller {
       thirdParty[platform] = { isBind };
     });
     ctx.body.data = thirdParty;
+  }
+
+  /**
+   * getProfileByEthWallet 通过ETH钱包地址获取对应用户
+   */
+  async getProfileByEthWallet() {
+    const { ctx } = this;
+    this.logger.info('getProfileByEthWallet')
+    const { wallet } = ctx.params;
+    const userAccount = await this.app.mysql.get('user_accounts', { account: utils.getAddress(wallet), platform: 'eth' });
+    this.logger.info('userAccount', userAccount)
+    if (!userAccount) {
+      ctx.body = ctx.msg.userNotExist;
+      return;
+    }
+    const details = await this.service.user.getUserById(userAccount.uid);
+    this.logger.info('details', details)
+
+    if (details === null) {
+      ctx.body = ctx.msg.userNotExist;
+      return;
+    }
+
+    ctx.body = ctx.msg.success;
+    ctx.body.data = details;
   }
 
   /**
