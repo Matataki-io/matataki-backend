@@ -98,7 +98,7 @@ class PostImportService extends Service {
       // 匹配图片URL， 并进行替换
       if (imgUpUrl) {
         imgElement.attribs['data-src'] = imgElement.attribs['data-src'].replace(
-          /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
+          /http[s]?:\/\/mmbiz\.q[a-z]{2,4}\.cn\/([a-z]{2,4}[_])?mmbiz_[a-z]{1,4}\/[a-zA-Z0-9]{50,100}\/[0-9]{1,4}\??[a-z0-9_=&]{0,100}/g, 'https://ssimg.frontenduse.top' + imgUpUrl);
         imgElement.attribs.style = 'vertical-align: middle;width: 90%;height: 90%;';
       } else {
         this.logger.info('PostImportService:: handleWechat: upload Image failed, ignored');
