@@ -1216,7 +1216,7 @@ class MineTokenService extends Service {
     await this._syncTransfer(
       tokenId, sender, uidOfInAndOut, amount, this.clientIP,
       consts.mineTokenTransferTypes.transfer, transactionHash, dbConnection, `Withdraw to ${target}`);
-    await this.service.account.hosting.addNonce(dbConnection, fromWallet.uid, fromWallet.blockchain);
+    await this.service.account.hosting.setNonce(dbConnection, fromWallet);
     await dbConnection.commit();
     return transactionHash;
   }
