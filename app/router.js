@@ -226,6 +226,8 @@ module.exports = app => {
   // 可用主题列表
   router.get('/indie/themeList', passport.authorize, controller.user.readThemeList);
 
+  router.get('/api/user/getProfileByWallet/:wallet', passport.verify, controller.account.bind.getProfileByEthWallet);
+
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
   // 获取用户的网站和社交帐号信息
