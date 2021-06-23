@@ -1137,9 +1137,11 @@ class github extends Service {
     // }
 
     let article_content = '';
-    for (const everyPiece of splitPost) {
-      article_content = article_content.concat(everyPiece);
+    for (let piece_number = 0; piece_number < (splitPost.length - 1); piece_number++) {
+      article_content = article_content.concat(splitPost[piece_number]);
+      article_content = article_content.concat('---');
     }
+    article_content = article_content.concat(splitPost[splitPost.length - 1]);
 
     return article_content;
 
