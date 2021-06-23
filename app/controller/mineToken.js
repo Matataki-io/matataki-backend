@@ -542,6 +542,7 @@ class MineTokenController extends Controller {
         data: { txHash },
       };
     } catch (error) {
+      this.logger.error('Error happned: ' + error);
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.data = { error };
