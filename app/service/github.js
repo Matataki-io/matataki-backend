@@ -1128,13 +1128,20 @@ class github extends Service {
 
   // 消除md文件中的hexo头部信息
   async deletePageInfo(rawPost) {
-    const splitPost = rawPost.split('---', 3);
+    let splitPost = rawPost.split('---');
+    splitPost = splitPost.slice(2);
 
-    // 没有分成3段，表示原格式错误，返回空串。否则取值会出错。
-    if (splitPost.length < 3) {
-      return '';
+    // // 没有分成3段，表示原格式错误，返回空串。否则取值会出错。
+    // if (splitPost.length < 3) {
+    //   return '';
+    // }
+
+    let article_content = '';
+    for (const everyPiece of splitPost) {
+      article_content = article_content.concat(everyPiece);
     }
-    return splitPost[2];
+
+    return article_content;
 
   }
 }
