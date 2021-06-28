@@ -88,8 +88,8 @@ class ShareService extends Service {
       }
 
       conn.commit();
-
-      this.service.cacheAsync.post(result.insertId, this.ctx.user.id, timestamp)
+      const timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
+      this.service.cacheAsync.post(result.insertId, this.ctx.user.id, timestamp);
 
       return signId;
     } catch (err) {
