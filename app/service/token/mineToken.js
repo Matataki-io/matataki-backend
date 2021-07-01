@@ -405,14 +405,14 @@ class MineTokenService extends Service {
         transactionHash = transferAction.transactionHash;
       } catch (error) {
         await this.service.system.notification.pushMarkdownToDingtalk(
-          "ipfs", 
-          `监测到失败的转账交易`, 
+          'ipfs',
+          '监测到失败的转账交易',
           `### ⚠️ Matataki 后端系统监测到失败的转账交易⚠️ 
           From: ${from} (${fromWallet.public_key})
 
           To: ${to} (${toWallet.public_key})
 
-          Amount: ${amount}`)
+          Amount: ${amount}`);
         this.logger.error('transferFrom::syncBlockchain', error);
       }
 
@@ -1182,7 +1182,7 @@ class MineTokenService extends Service {
         token_id = :tokenId
       GROUP BY DATE(create_time);
     `;
-    const result = await this.app.mysql.query(sql, {tokenId});
+    const result = await this.app.mysql.query(sql, { tokenId });
 
     return result;
   }
@@ -1373,6 +1373,22 @@ class MineTokenService extends Service {
       this.logger.error(e);
       this.logger.error('formatListReturnTokenInfo error: ', e);
       return list;
+    }
+  }
+
+  /**
+   * 通过 Token 地址获取 token 信息
+   */
+  async getInfoByAddress({ address, chain }) {
+    try {
+      const tokenAddress = address.toLocaleLowerCase();
+      this.logger.info('tokenAddress', tokenAddress);
+      const sql = 'SELECT * FROM pegged_assets WHERE LOWER(contractAddress) = :address AND chain = :chain LIMIT 0, 1;';
+      const result = await this.app.mysql.query(sql, { address: tokenAddress, chain });
+      return result;
+    } catch (e) {
+      this.logger.error(e);
+      return [];
     }
   }
 }
