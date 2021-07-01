@@ -407,6 +407,9 @@ module.exports = app => {
   // 获取自己创建和协作的Fan票列表
   router.get('/token/bindable', passport.authorize, controller.mineToken.getBindableTokenList);
 
+  // 通过 Token 地址获取 token 信息
+  router.get('/api/token/getInfoByAddress/:address', passport.verify, controller.token.getInfoByAddress);
+
   // 查询当前用户的资产余额
   router.get('/asset/balance', passport.verify, controller.asset.getBalance);
   // 资产转移
