@@ -747,4 +747,9 @@ module.exports = app => {
   router.get('/twitter/userinfo', passport.verify, controller.timeline.getTwitterUserInfo);
 
   router.get('/timeline/telegram_channel', passport.verify, controller.timeline.getTelegramChannelTimeline);
+
+  // ----------------------- MTK NFT -------------------------
+  // 通过 token address 获取 nft
+  router.get('/api/nft/search/byAskToken/:tokenAddress', controller.nft.searchByAskToken);
+
 };
