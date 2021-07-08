@@ -108,6 +108,7 @@ class UserService extends Service {
     }
 
     const result = {
+      id,
       username: this.maskEmailAddress(user.username),
       nickname,
       avatar,
