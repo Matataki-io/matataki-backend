@@ -226,6 +226,8 @@ module.exports = app => {
   // 可用主题列表
   router.get('/indie/themeList', passport.authorize, controller.user.readThemeList);
 
+  router.get('/api/user/getProfileByWallet/:wallet', passport.verify, controller.account.bind.getProfileByEthWallet);
+
   // 获取用户信息：用户名、关注数，粉丝数
   router.get('/user/:id', passport.verify, controller.user.user);
   // 获取用户的网站和社交帐号信息
@@ -404,6 +406,9 @@ module.exports = app => {
   router.get('/token/collaborator', passport.authorize, controller.token.getCollaborators);
   // 获取自己创建和协作的Fan票列表
   router.get('/token/bindable', passport.authorize, controller.mineToken.getBindableTokenList);
+
+  // 通过 Token 地址获取 token 信息
+  router.get('/api/token/getInfoByAddress/:address', passport.verify, controller.token.getInfoByAddress);
 
   // 查询当前用户的资产余额
   router.get('/asset/balance', passport.verify, controller.asset.getBalance);
@@ -742,4 +747,9 @@ module.exports = app => {
   router.get('/twitter/userinfo', passport.verify, controller.timeline.getTwitterUserInfo);
 
   router.get('/timeline/telegram_channel', passport.verify, controller.timeline.getTelegramChannelTimeline);
+
+  // ----------------------- MTK NFT -------------------------
+  // 通过 token address 获取 nft
+  router.get('/api/nft/search/byAskToken/:tokenAddress', controller.nft.searchByAskToken);
+
 };

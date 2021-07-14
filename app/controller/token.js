@@ -411,6 +411,20 @@ class TokenController extends Controller {
       data: result,
     };
   }
+
+  /**
+   * 通过 Token 地址获取 token 信息
+   */
+  async getInfoByAddress() {
+    const { ctx } = this;
+    const { address } = ctx.params;
+    const { chain } = ctx.query;
+    const res = await this.service.token.mineToken.getInfoByAddress({ address, chain });
+    ctx.body = {
+      ...ctx.msg.success,
+      data: res,
+    };
+  }
 }
 
 module.exports = TokenController;
