@@ -11,7 +11,7 @@ class MetaSpaceMigrationService extends Service {
   getPostsDataOf(uid) {
     return this.app.mysql.select('posts', {
       where: { uid },
-      columns: [ 'id', 'title', 'uid', 'require_holdtokens', 'require_buy', 'create_time' ],
+      columns: [ 'id', 'title', 'uid', 'cover', 'require_holdtokens', 'require_buy', 'create_time' ],
     });
   }
 
