@@ -4,8 +4,8 @@ const consts = require('./consts');
 class sendCloudService extends Service {
   // 发送验证码服务
   async sendCaptcha(email, captcha, type = consts.mailTemplate.registered) {
-    const API_USER = this.config.sendCloud.API_USER;
-    const API_KEY = this.config.sendCloud.API_KEY;
+    const apiUser = this.config.sendCloud.apiUser;
+    const apiKey = this.config.sendCloud.apiKey;
     const x_smtpapi = {
       to: [ email ],
       sub: {
@@ -19,8 +19,8 @@ class sendCloudService extends Service {
       templateInvokeName = 'matatakiResetPassword';
     }
     const params = {
-      apiUser: API_USER,
-      apiKey: API_KEY,
+      apiUser,
+      apiKey,
       from: 'admin@smartsignature.io',
       to: email,
       templateInvokeName,

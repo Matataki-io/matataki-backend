@@ -8,8 +8,8 @@ class GeetestController extends Controller {
   constructor(ctx) {
     super(ctx);
     this.captcha = new Geetest({
-      geetest_id: this.config.geetest.geetest_id,
-      geetest_key: this.config.geetest.geetest_key,
+      geetest_id: this.config.geetest.geetestId,
+      geetest_key: this.config.geetest.geetestKey,
     });
   }
   // 请求geetest验证，获取验证参数

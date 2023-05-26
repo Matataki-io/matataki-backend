@@ -107,8 +107,8 @@ class AuthService extends Service {
     const oauth = new OAuth.OAuth(
       'https://api.twitter.com/oauth/request_token',
       'https://api.twitter.com/oauth/access_token',
-      this.app.config.twitter.appkey,
-      this.app.config.twitter.appsecret,
+      this.app.config.twitter.appKey,
+      this.app.config.twitter.appSecret,
       '1.0',
       this.app.config.twitter.callbackUrl + '?type=' + type,
       'HMAC-SHA1'
@@ -149,8 +149,8 @@ class AuthService extends Service {
       const oauth = new OAuth.OAuth(
         'https://api.twitter.com/oauth/request_token',
         'https://api.twitter.com/oauth/access_token',
-        this.app.config.twitter.appkey,
-        this.app.config.twitter.appsecret,
+        this.app.config.twitter.appKey,
+        this.app.config.twitter.appSecret,
         '1.0A',
         null,
         'HMAC-SHA1'
@@ -176,8 +176,8 @@ class AuthService extends Service {
 
   googleLoginPrepare(callbackUrl, state) {
     const oauth = new google.auth.OAuth2(
-      this.app.config.google.appkey,
-      this.app.config.google.appsecret, callbackUrl);
+      this.app.config.google.appKey,
+      this.app.config.google.appSecret, callbackUrl);
 
     return oauth.generateAuthUrl({
       redirect_uri: callbackUrl,
@@ -187,8 +187,8 @@ class AuthService extends Service {
   }
   async googleLogin(code, callbackUrl) {
     const oauth = new google.auth.OAuth2(
-      this.app.config.google.appkey,
-      this.app.config.google.appsecret, callbackUrl);
+      this.app.config.google.appKey,
+      this.app.config.google.appSecret, callbackUrl);
     const { tokens } = await oauth.getToken(code);
 
     const { data } = await axios.get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + tokens.access_token);
@@ -197,15 +197,15 @@ class AuthService extends Service {
   }
 
   facebookLoginPrepare(callbackUrl, state) {
-    const appKey = this.app.config.facebook.appkey;
+    const appKey = this.app.config.facebook.appKey;
 
     return `https://www.facebook.com/v7.0/dialog/oauth?client_id=${appKey}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${state}`;
   }
   async facebookLogin(code, callbackUrl) {
     const { data: oauthResponse } = await axios.get('https://graph.facebook.com/v7.0/oauth/access_token', {
       params: {
-        client_id: this.app.config.facebook.appkey,
-        client_secret: this.app.config.facebook.appsecret,
+        client_id: this.app.config.facebook.appKey,
+        client_secret: this.app.config.facebook.appSecret,
         redirect_uri: callbackUrl,
         code,
       },
@@ -306,7 +306,7 @@ class AuthService extends Service {
       // const expires = moment().add(7, 'days').valueOf();
       this.logger.info('currentUser', currentUser);
       if (platform === 'github') {
-        const github = await this.app.mysql.get('github', {uid: currentUser.id});
+        const github = await this.app.mysql.get('github', { uid: currentUser.id });
         const article_repo = 'matataki-save';
         if (!github) {
           // 似乎不需要 create_time？
@@ -321,8 +321,8 @@ class AuthService extends Service {
           this.app.mysql.update('github', { access_token }, {
             where: {
               uid: currentUser.id,
-            }
-          })
+            },
+          });
         }
       }
       const jwttoken = this.jwtSign(currentUser);

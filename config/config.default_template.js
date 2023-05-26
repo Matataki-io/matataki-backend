@@ -11,43 +11,230 @@ module.exports = appInfo => {
 
   const config = {};
 
+  // env mode: local, test, prod
+  config.env = 'test';
+
+  // app debug mode
+  config.isDebug = config.env === 'local';
+
+  // egg.js proxy mode
+  config.proxy = true;
+
   // use for cookie sign key, should change to your own and keep security
   config.keys = appInfo.name + '_1552273931927_1142';
+
+  // jwt token secret for auth
   config.jwtTokenSecret = 'smart signature auth secret';
 
-  config.env = 'test';
+  // ==========================
+  //      Built-in Config
+  // ==========================
+
   // add your middleware config here
   config.middleware = [ 'errorHandler' ];
-
+  // app/middleware/error_handler.js config
   config.errorHandler = {
     match: '/',
   };
 
+  // egg-security(https://github.com/eggjs/egg-security) config
+  config.security = {
+    // attention: you need set your own domain in production
+    domainWhiteList: [ '127.0.0.1:8080', 'localhost:8080', 'sstest.frontenduse.top' ],
+    csrf: {
+      enable: false,
+    },
+  };
+
+  // egg-cors(https://github.com/eggjs/egg-cors/tree/f5030a9042fa277972ce786cdabbbba8c1dddafa) config
+  config.cors = {
+    allowMethods: 'GET,HEAD,PUT,POST,DELETE,PATCH,OPTIONS',
+    credentials: true,
+  };
+
+  // egg-multipart(https://github.com/eggjs/egg-multipart) config
+  config.multipart = {
+    mode: 'file',
+    tmpdir: './uploads',
+  };
+
+  // egg.js body parser limit config
+  config.bodyParser = {
+    jsonLimit: '1mb',
+    formLimit: '1mb',
+  };
+
+  // ==========================
+  //      Database Config
+  // ==========================
+
+  // egg-mysql(https://github.com/eggjs/egg-mysql/tree/d3fa13cff21dcb4cf2d72d52e144fc5d37c26694) config
+  // use mysql 5.7
   config.mysql = {
-    // 单数据库信息配置
     client: {
-      // host
-      host: 'xxxxx',
-      // 端口号
+      host: 'localhost',
       port: '3306',
-      // 用户名
-      user: 'xxx',
-      // 密码
-      password: 'xxxxx',
-      // 数据库名
-      database: 'xxxx',
+      user: 'ssp_test',
+      password: 'p@sSw0Rd',
+      database: 'ssp_test',
       ssl: {
         // ca: fs.readFileSync(__dirname + '/certs/ca.pem'),
         // key: fs.readFileSync(__dirname + '/certs/client-key.pem'),
         // cert: fs.readFileSync(__dirname + '/certs/client-cert.pem')
       },
+      multipleStatements: true,
+      charset: 'utf8mb4',
     },
-    // 是否加载到 app 上，默认开启
-    app: true,
-    // 是否加载到 agent 上，默认关闭
-    agent: false,
   };
 
+  // egg-redis(https://github.com/eggjs/egg-redis) config
+  config.redis = {
+    client: {
+      port: 6379,
+      host: 'redis',
+      password: 'p@sSw0Rd',
+      db: 0,
+    },
+  };
+
+  // egg-oss(https://github.com/eggjs/egg-oss) aliyun oss config
+  config.oss = {
+    client: {
+      accessKeyId: 'your access key',
+      accessKeySecret: 'your access secret',
+      bucket: 'your bucket name',
+      endpoint: '{https or http}://{your endpoint name}.aliyun.com',
+      timeout: '60s',
+    },
+  };
+
+  config.elasticsearch = {
+    host: 'http://localhost:9200',
+    indexPosts: 'test_posts',
+    indexUsers: 'test_users',
+  };
+
+  // ==========================
+  //       Service Config
+  // ==========================
+
+  // mail config for sign-up and order
+  config.mailSetting = true;
+  config.mail = {
+    // smtp service host
+    host: 'smtp.example.com',
+    port: 465,
+    secure: true,
+    auth: {
+      // a email address for sending mail
+      user: 'sender@example.com',
+      // smtp password
+      pass: 'p@sSw0Rd',
+    },
+  };
+
+  // SendCloud mail service config
+  config.sendCloud = {
+    apiUser: '<SendCloud api user>',
+    apiKey: '<SendCloud api key>',
+  };
+
+  // GeeTest CAPTCHA config
+  config.geetest = {
+    geetestId: '<Geetest Id>',
+    geetestKey: '<Geetest Key>',
+  };
+
+  // hCaptcha config
+  config.hCaptcha = {
+    privateKey: '<hCaptcha private key>',
+  };
+
+  // WeChat config
+  config.wx = {
+    appId: '<WeChat app id>',
+    appSecret: '<WeChat app secret>',
+  };
+
+  config.wechat = {
+    appId: '<WeChat app id>',
+    appSecret: '<WeChat app secret>',
+  };
+
+  // WeChat service account config
+  config.wxServiceAccount = {
+    appId: '<WeChat service account app id>',
+    appSecret: '<WeChat service account app secret>',
+  };
+
+  // GitHub App auth config
+  config.github = {
+    appName: '<GitHub app name>',
+    clientId: '<GitHub app client id>',
+    clientSecret: '<GitHub app client secret>',
+  };
+
+  // Twitter auth config
+  config.twitter = {
+    appKey: '<Twitter app key>',
+    appSecret: '<Twitter app secret>',
+    callbackUrl: '<Twitter callback url>',
+  };
+
+  // Twitter auth config (another?)
+  config.passportTwitter = {
+    key: '<Twitter api key>',
+    secret: '<Twitter api secret>',
+  };
+
+  // Telegram auth config
+  config.telegramBot = {
+    '<Telegram bot name>': '<Telegram bot token>',
+  };
+
+  // Google auth config
+  config.google = {
+    appKey: '<Google app key>',
+    appSecret: '<Google app secret>',
+  };
+
+  // Facebook auth config
+  config.facebook = {
+    appKey: '<Facebook app key>',
+    appSecret: '<Facebook app secret>',
+  };
+
+  // egg-alinode(https://github.com/eggjs/egg-alinode)
+  // Add appid and secret from https://node.console.aliyun.com/
+  config.alinode = {
+    appid: '<appid>',
+    secret: '<secret>',
+  };
+
+  // MatatakiPuller(https://github.com/Matataki-io/MatatakiPuller) config
+  config.cacheAPI = {
+    uri: '<MatatakiPuller service api>',
+    apiToken: '<MatatakiPuller service api token>',
+  };
+
+  // Token Circle Backend(https://github.com/Matataki-io/TokenCircle-Bot-Backend)
+  config.tokenCircleBackend = {
+    baseURL: '<Token Circle Backend service api>',
+    bearerToken: '<Token Circle Backend service api token>',
+  };
+
+  // for NotificationService
+  config.dingtalkBots = {
+    // '<Bot name>': '<Bot token>',
+    badTokenMonitor: '',
+    ipfs: '',
+  };
+
+  // ==========================
+  //     Blockchain Config
+  // ==========================
+
+  // EOS chain config
   config.eos = {
     httpEndpoint: 'http://eos.greymass.com',
     chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
@@ -57,123 +244,152 @@ module.exports = appInfo => {
     startAt: 1500,
   };
 
-  config.mailSetting = true;
-  config.mail = {
-    host: 'xxx',
-    port: 465,
-    secure: true,
-    auth: {
-      user: 'xxx',
-      pass: 'xxx',
-    },
-  };
-
-  config.security = {
-    // TODO: reset in production
-    domainWhiteList: [ 'localhost:8080', 'ss-web.starling.team', '.ngrok.io', '192.168.0.102:8080', 'sign-dev.dravatar.xyz', '192.168.31.67:8080' ],
-    csrf: {
-      enable: false,
-    },
-  };
-
-  config.cors = {
-    allowMethods: 'GET,HEAD,PUT,POST,DELETE,PATCH,OPTIONS',
-    credentials: true,
-  };
-
-  config.cacheAPI = {
-    uri: '',
-    apiToken: '',
-  };
-
-  config.oAuth2Server = {
-    debug: config.env === 'local',
-    grants: [ 'password', 'client_credentials' ],
-  };
-
   config.ont = {
-    httpEndpoint: '',
-    scriptHash: '',
-    websocketClient: '',
-    withdraw_account: '',
-    withdraw_pri: '',
+    httpEndpoint: 'http://polaris1.ont.io:20334',
+    scriptHash: 'a75451b23609e04e6606b4a08bc0304bf727ccb5',
+    websocketClient: 'ws://polaris1.ont.io:20335',
+    withdraw_account: 'AYgQhQUmKuypXNb886m75n7KKAmunbDqct',
+    withdraw_pri: 'e21887a5ef830d2aead4e0cdf02f44ff616a30d3e690342327fba5259ffa2361',
   };
 
   config.ipfs_service = {
-    host: 'ipfs.infura.io',
+    site: 'http://ipfs:5001',
+    host: 'ipfs',
     port: 5001,
-    protocol: 'https',
+    protocol: 'http',
   };
 
-  config.isDebug = true;
+  config.token = {
+    maintokens: [ 'BTC', 'ETH', 'XRP', 'BCH', 'USDT', 'LTC', 'EOS', 'BNB', 'BSV', 'TRX', 'XLM', 'ADA', 'XMR', 'BRC', 'DASH', 'ATOM', 'ETC', 'ONT', 'NEO', 'QTUM', 'NAS', 'STEEM' ],
+  };
 
-  config.proxy = true;
+  config.ethereum = {
+    runningNetwork: 'mainnet',
+    infura: {
+      id: '<infura id>',
+      secret: '<infura secret>',
+    },
+    privateKey: '',
+    airdrop: {
+      api: 'https://us-central1-ether-air-dropper.cloudfunctions.net/batch_airdrop',
+      token: '',
+      privateKey: '',
+    },
+  };
 
-  // 限流
+  config.timemachine = {
+    contracts: {
+      prod: '0x0000000000000000000000000000000000000000',
+      test: '0x0000000000000000000000000000000000000000',
+    },
+  };
+
+  config.tokenInAndOut = {
+    // Collect the token for Matataki DB
+    specialAccount: {
+      uid: 1354, // testnet
+      // uid: 2715, // mainnet
+    },
+  };
+
+  // ==========================
+  //       Payment Config
+  // ==========================
+
+  // egg-wxpay(https://github.com/wbget/egg-wxpay) config
+  config.wxpay = {
+    appId: '<appid>',
+    mchId: '<mchid>',
+    partnerKey: '<partnerkey>',
+    notifyUrl: '<backend api>/wx/notify',
+    // ca: '<location-of-your-apiclient-cert.pem>',  // fs.readFileSync(path.join(__dirname, '../config/rootca.pem'))
+    pfx: fs.readFileSync(path.join(__dirname, './apiclient_cert.p12')),
+  };
+
+  // egg-tenpay(https://github.com/wbget/egg-tenpay) config
+  config.tenpay = {
+    client: {
+      appid: '<appid>',
+      mchid: '<mchid>',
+      partnerKey: '<partnerkey>',
+      notify_url: '<backend api>/wx/notify',
+      refund_url: '<backend api>/wx/refundNotify',
+      pfx: fs.readFileSync(path.join(__dirname, './apiclient_cert.p12')),
+    },
+  };
+
+  // alipay config
+  config.alipay = {
+    appId: '<alipay app id>',
+    privateKey: fs.readFileSync(path.join(__dirname, './alipay/APP_PRIVATE_KEY.pem'), 'ascii'),
+    alipayPublicKey: fs.readFileSync(path.join(__dirname, './alipay/APP_PUBLIC_KEY.pem'), 'ascii'),
+    return_url: '<frontend url>',
+    notify_url: '<backend api>/alipay/notify',
+  };
+
+  config.aritclePay = {
+    notify_url: '<backend api>/wx/payarticlenotify',
+  };
+
+  // exchange user config
+  config.user = {
+    virtualUserPrefix: 'exchange_',
+  };
+
+  // ==========================
+  //       Other Config
+  // ==========================
+
+  // egg-ratelimiter(https://github.com/ZQun/egg-ratelimiter) config
   config.ratelimiter = {
-    // db: {}, // 如已配置egg-redis 可删除此配置
     router: [
       {
         path: '/order', // 限制路由路径 此规则不会匹配(index.html?id=1)[http://url/index.html?id=1]
-        max: 300,
+        max: 3,
         time: '10s', // 时间单位 s m h d y ...
         message: 'Custom request overrun error message', // 自定义请求超限错误信息
       },
       {
         path: '/post/publish', // 限制路由路径 此规则不会匹配(index.html?id=1)[http://url/index.html?id=1]
-        max: 30000000,
+        max: 10,
+        time: '1m', // 时间单位 s m h d y ...
+        message: 'Custom request overrun error message', // 自定义请求超限错误信息
+      },
+      {
+        path: '/comment/comment', // 限制路由路径 此规则不会匹配(index.html?id=1)[http://url/index.html?id=1]
+        max: 10,
         time: '1m', // 时间单位 s m h d y ...
         message: 'Custom request overrun error message', // 自定义请求超限错误信息
       },
     ],
   };
 
-  // 限流如果不在db中初始化redis，则需要启用egg-redis
-  config.redis = {
-    client: {
-      port: 6379, // Redis port
-      host: '',
-      password: '',
-      db: 0,
+  // egg-socket.io(https://github.com/eggjs/egg-socket.io) config
+  config.io = {
+    redis: {
+      port: config.redis.client.port,
+      host: config.redis.client.host,
+      auth_pass: config.redis.client.password,
+      db: config.redis.client.db,
+    },
+    init: {}, // passed to engine.io
+    namespace: {
+      '/': {
+        connectionMiddleware: [],
+        packetMiddleware: [],
+      },
+      '/chat': {
+        connectionMiddleware: [ 'auth' ],
+        packetMiddleware: [ 'filter' ],
+      },
     },
   };
 
-  // 设置mulitpart
-  config.multipart = {
-    mode: 'file',
-    tmpdir: './uploads',
-  };
-
-  // 设置oss
-  config.oss = {
-    client: {
-      accessKeyId: '',
-      accessKeySecret: '',
-      bucket: '',
-      endpoint: '',
-      timeout: '60s',
-    },
-  };
-
-  config.wx = {
-    appId: '',
-    appSecret: '',
-  };
-
-  config.wxServiceAccount = {
-    appId: '',
-    appSecret: '',
-  };
-
-  config.bodyParser = {
-    jsonLimit: '1mb',
-    formLimit: '1mb',
-  };
-
-  config.elasticsearch = {
-    host: 'http://localhost:9200',
-    indexPosts: 'test_posts',
-    indexUsers: 'test_users',
+  // 因为只有我们来操作加解密，所以我们只需要**对称性加密**，只需要私钥
+  config.crypto = {
+    // 32bytes -> 256 bit, 我们是 AES-256，没毛病
+    // 都是十六进制，需要 Buffer.from 指定 encoding 为 hex
+    secretKey: '',
   };
 
   config.points = {
@@ -199,151 +415,5 @@ module.exports = appInfo => {
     publishDailyMax: 300, // 每日发文最大积分
   };
 
-  config.geetest = {
-    geetest_id: '',
-    geetest_key: '',
-  };
-
-  config.sendCloud = {
-    API_USER: '',
-    API_KEY: '',
-  };
-
-  config.wechat = {
-    appId: '',
-    appSecret: '',
-  };
-
-  config.wxpay = {
-    partnerKey: '',
-    appId: '',
-    mchId: '',
-    notifyUrl: 'https://apitest.smartsignature.io/wx/notify',
-    pfx: fs.readFileSync(path.join(__dirname, './apiclient_cert.p12')),
-  };
-
-  config.aritclePay = {
-    notifyUrl: 'https://apitest.smartsignature.io/wx/notify',
-  };
-
-  config.tenpay = {
-    client: {
-      appid: '',
-      mchid: '',
-      partnerKey: '',
-      notify_url: 'https://apitest.smartsignature.io/wx/notify',
-      pfx: fs.readFileSync(path.join(__dirname, './apiclient_cert.p12')),
-    },
-  };
-
-  config.user = {
-    virtualUserPrefix: 'exchange_',
-  };
-
-  config.token = {
-    maintokens: [ 'BTC', 'ETH', 'XRP', 'BCH', 'USDT', 'LTC', 'EOS', 'BNB', 'BSV', 'TRX', 'XLM', 'ADA', 'XMR', 'BRC', 'DASH', 'ATOM', 'ETC', 'ONT', 'NEO', 'QTUM', 'NAS', 'STEEM' ],
-  };
-
-  config.ethereum = {
-    runningNetwork: 'rinkeby', // mainnet or rinkeby
-    infura: {
-      id: '',
-      secret: '',
-    },
-    // privateKey 还没决定好，我先用于开发工作 by Frank
-    privateKey: '',
-    airdrop: {
-      api: 'https://us-central1-ether-air-dropper.cloudfunctions.net/batch_airdrop',
-      token: '',
-      privateKey: '',
-    },
-  };
-
-  config.binanceSmartChain = {
-    runningNetwork: 'testnet', // mainnet or testnet
-    chainId: 0x61, // testnet
-    privateKey: '',
-    contractAddress: {
-      minterContract: '0xe8142C86f7c25A8bF1c73Ab2A5Dd7a7A5C429171',
-      peggedTokenFactory: '0x4452c9ec5F0e3840CaBe7f4c194b12298e5A1713',
-    },
-  };
-
-  config.nextApi = {
-    endpoint: 'http://127.0.0.1:3000',
-    accessToken: '',
-  };
-
-  config.google = {
-    appkey: '',
-    appsecret: '',
-  };
-
-  config.facebook = {
-    appKey: '',
-    appSecret: '',
-  };
-
-  config.timemachine = {
-    contracts: {
-      prod: '',
-      test: '',
-    },
-  };
-
-  config.alipay = {
-    gateway: 'https://openapi.alipay.com/gateway.do',
-    APP_ID: '',
-    ALIPAY_PUBLIC_KEY: fs.readFileSync(path.join(__dirname, './alipay/ALIPAY_PUBLIC_KEY.pem'), 'ascii'),
-    APP_PUBLIC_KEY: fs.readFileSync(path.join(__dirname, './alipay/APP_PUBLIC_KEY.pem'), 'ascii'),
-    APP_PRIVATE_KEY: fs.readFileSync(path.join(__dirname, './alipay/APP_PRIVATE_KEY.pem'), 'ascii'),
-  };
-
-  // 因为只有我们来操作加解密，所以我们只需要**对称性加密**，只需要私钥
-  config.crypto = {
-    // 32bytes -> 256 bit, 我们是 AES-256，没毛病
-    // 都是十六进制，需要 Buffer.from 指定 encoding 为 hex
-    secretKey: '',
-  };
-
-  config.awsIpfs = {
-    username: '',
-    password: '',
-  };
-
-  config.tokenCircleBackend = {
-    baseURL: 'https://data-for-bot-testing.mttk.net',
-    bearerToken: '',
-  };
-
-  config.alinode = {
-    appid: '',
-    secret: '',
-  };
-
-  config.passportTwitter = {
-    key: '',
-    secret: '',
-  };
-
-  config.tokenInAndOut = {
-    // Collect the token for Matataki DB
-    specialAccount: {
-      uid: 1354, // testnet
-      // uid: 2715, // mainnet
-    },
-  };
-
-  // 用于 this.service.notification
-  config.dingtalkBots = {
-    badTokenMonitor: '',
-    ipfs: '',
-  };
-
-  config.hCaptcha = {
-    privateKey: '',
-  };
-
   return config;
 };
-

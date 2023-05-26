@@ -9,9 +9,9 @@ class AlipayService extends Service {
   constructor(ctx, app) {
     super(ctx, app);
     ctx.alipaySdk = new AlipaySdk({
-      appId: this.config.alipay.APP_ID,
-      privateKey: this.config.alipay.APP_PRIVATE_KEY,
-      alipayPublicKey: this.config.alipay.ALIPAY_PUBLIC_KEY,
+      appId: this.config.alipay.appId,
+      privateKey: this.config.alipay.privateKey,
+      alipayPublicKey: this.config.alipay.alipayPublicKey,
       signType: 'RSA2',
       keyType: 'PKCS8',
       gateway: this.config.alipay.gateway,
