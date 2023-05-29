@@ -1,61 +1,71 @@
-version: "2"
+version: "3.9"
+
 services:
 
-  prod:
+  db_local:
+    image: mysql:5.7
+    container_name: mysql_local
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=6Oot_p@sSw0Rd
+      - MYSQL_DATABASE=ss
+      - MYSQL_USER=ss_test
+      - MYSQL_PASSWORD=p@sSw0Rd
+    volumes:
+      - .data/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin", "ping", "--user=root", "--password=${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis_local:
+    image: redis:7
+    container_name: redis_local
+    restart: unless-stopped
+    command: >
+      --requirepass p@sSw0Rd
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch_local:
+    image: elasticsearch:7.17.10
+    container_name: elasticsearch_local
+    restart: unless-stopped
+    volumes:
+      - .data/elasticsearch:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ipfs_local:
+    image: ipfs/kubo
+
+  ss_backend:
     restart: always
-    build: .
-    hostname: "{{.Service.Name}}-{{.Task.Slot}}"
+    container_name: ss_backend_local
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     command: yarn serve
     volumes:
-      - /usr/local/smart-signature/ss-backend-config/config.prod.js:/usr/src/app/config/config.default.js
-      - /usr/local/smart-signature/ss-backend-config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
-      - /usr/local/smart-signature/ss-backend-config/wechat_config.js:/usr/src/app/config/wechat_config.js
+      - config/config.default.js:/usr/src/app/config/config.default.js
+      - config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
+      - config/wechat_config.js:/usr/src/app/config/wechat_config.js
     ports:
       - 7653:7001
-    networks:
-      overlay:
-  
-  prod2:
-    restart: always
-    build: .
-    hostname: "{{.Service.Name}}-{{.Task.Slot}}"
-    command: yarn serve
-    volumes:
-      - /usr/local/smart-signature/ss-backend-config/config.prod.js:/usr/src/app/config/config.default.js
-      - /usr/local/smart-signature/ss-backend-config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
-      - /usr/local/smart-signature/ss-backend-config/wechat_config.js:/usr/src/app/config/wechat_config.js
-    ports:
-      - 7654:7001
-    networks:
-      overlay:
-
-  test:
-    restart: always
-    build: .
-    hostname: "{{.Service.Name}}-{{.Task.Slot}}"
-    command: yarn dev
-    volumes:
-      - /usr/local/smart-signature/ss-backend-config/config.local.js:/usr/src/app/config/config.default.js
-      - /usr/local/smart-signature/ss-backend-config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
-      - /usr/local/smart-signature/ss-backend-config/wechat_config.js:/usr/src/app/config/wechat_config.js
-    ports:
-      - 7652:7001
-    networks:
-      overlay:
-
-  local:
-    restart: always
-    build: .
-    hostname: "{{.Service.Name}}-{{.Task.Slot}}"
-    command: yarn dev
-    volumes:
-      - /usr/local/smart-signature/ss-backend-config/config.local.js:/usr/src/app/config/config.default.js
-      - /usr/local/smart-signature/ss-backend-config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
-      - /usr/local/smart-signature/ss-backend-config/wechat_config.js:/usr/src/app/config/wechat_config.js
-    ports:
-      - 7652:7001
-    networks:
-      overlay:
-
-networks:
-  overlay:
+    depends_on:
+      - db_local
+      - redis_local
+      - elasticsearch_local
+      - ipfs_local
+    healthcheck:
+      test: curl --fail http://localhost:7001 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 5

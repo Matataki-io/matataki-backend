@@ -14,7 +14,7 @@
   },
   "scripts": {
     "start": "egg-scripts start --port=7001 --daemon",
-    "serve": "egg-scripts start ",
+    "serve": "egg-scripts start",
     "stop": "egg-scripts stop",
     "dev": "egg-bin dev",
     "debug": "egg-bin debug",

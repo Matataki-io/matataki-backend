@@ -1,0 +1,41 @@
+{
+  "prettier.enable": false,
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "eslint.format.enable": true,
+  "[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "cSpell.words": [
+    "alinode",
+    "alipay",
+    "aliyun",
+    "autod",
+    "commandx",
+    "eosjs",
+    "fleek",
+    "fleekhq",
+    "Geetest",
+    "hcaptcha",
+    "ipfs",
+    "Kubo",
+    "maintokens",
+    "Matataki",
+    "ratelimiter",
+    "steem",
+    "Tencent",
+    "tenpay",
+    "tnwx",
+    "webstorm",
+    "wechat",
+    "wxpay"
+  ],
+}

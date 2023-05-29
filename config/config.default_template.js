@@ -1,64 +1,93 @@
-/* eslint valid-jsdoc: "off" */
+/**
+ * Create a copy of this file named `config.default.js` and populate it with your secrets.
+ * Some default values are set to work with the docker-compose setup.
+ */
 
 'use strict';
+
 const fs = require('fs');
 const path = require('path');
 
 /**
- * @param {Egg.EggAppInfo} appInfo app info
+ * @param {import('egg').EggAppInfo} appInfo app info
  */
 module.exports = appInfo => {
 
   const config = {};
 
-  // env mode: local, test, prod
+  /**
+   * App env, use for error handling and some service
+   * env mode: local, test, prod
+   * attention: should change to 'prod' before deploy to production env
+   */
   config.env = 'test';
 
-  // app debug mode
+  /**
+   * App debug mode, use for bypass some app logic
+   * attention: do not enable it in production env
+   */
   config.isDebug = config.env === 'local';
 
-  // egg.js proxy mode
+  /**
+   * egg.js proxy mode, enable it can collect user's request ip
+   */
   config.proxy = true;
 
-  // use for cookie sign key, should change to your own and keep security
+  /**
+   * Use for cookie sign key
+   * attention: should change to your own and keep security
+   */
   config.keys = appInfo.name + '_1552273931927_1142';
 
-  // jwt token secret for auth
+  /**
+   * JWT token secret for auth
+   * attention: should change to your own and keep security
+   */
   config.jwtTokenSecret = 'smart signature auth secret';
 
   // ==========================
   //      Built-in Config
   // ==========================
 
-  // add your middleware config here
+  /**
+   * Custom middleware config
+   */
   config.middleware = [ 'errorHandler' ];
   // app/middleware/error_handler.js config
   config.errorHandler = {
     match: '/',
   };
 
-  // egg-security(https://github.com/eggjs/egg-security) config
+  /**
+   * egg-security(https://github.com/eggjs/egg-security) config
+   * attention: you need set your own domain in production
+   */
   config.security = {
-    // attention: you need set your own domain in production
     domainWhiteList: [ '127.0.0.1:8080', 'localhost:8080', 'sstest.frontenduse.top' ],
     csrf: {
       enable: false,
     },
   };
 
-  // egg-cors(https://github.com/eggjs/egg-cors/tree/f5030a9042fa277972ce786cdabbbba8c1dddafa) config
+  /**
+   * egg-cors(https://github.com/eggjs/egg-cors/tree/f5030a9042fa277972ce786cdabbbba8c1dddafa) config
+   */
   config.cors = {
     allowMethods: 'GET,HEAD,PUT,POST,DELETE,PATCH,OPTIONS',
     credentials: true,
   };
 
-  // egg-multipart(https://github.com/eggjs/egg-multipart) config
+  /**
+   * egg-multipart(https://github.com/eggjs/egg-multipart) config
+   */
   config.multipart = {
     mode: 'file',
     tmpdir: './uploads',
   };
 
-  // egg.js body parser limit config
+  /**
+   * egg.js body parser limit config
+   */
   config.bodyParser = {
     jsonLimit: '1mb',
     formLimit: '1mb',
@@ -68,15 +97,18 @@ module.exports = appInfo => {
   //      Database Config
   // ==========================
 
-  // egg-mysql(https://github.com/eggjs/egg-mysql/tree/d3fa13cff21dcb4cf2d72d52e144fc5d37c26694) config
-  // use mysql 5.7
+  /**
+   * egg-mysql(https://github.com/eggjs/egg-mysql/tree/d3fa13cff21dcb4cf2d72d52e144fc5d37c26694) config
+   * use mysql 5.7
+   * attention: this config used for docker compose, if you don't use docker compose, you should change it
+   */
   config.mysql = {
     client: {
-      host: 'localhost',
+      host: 'db_local',
       port: '3306',
-      user: 'ssp_test',
+      user: 'ss_test',
       password: 'p@sSw0Rd',
-      database: 'ssp_test',
+      database: 'ss',
       ssl: {
         // ca: fs.readFileSync(__dirname + '/certs/ca.pem'),
         // key: fs.readFileSync(__dirname + '/certs/client-key.pem'),
@@ -87,17 +119,36 @@ module.exports = appInfo => {
     },
   };
 
-  // egg-redis(https://github.com/eggjs/egg-redis) config
+  /**
+   * egg-redis(https://github.com/eggjs/egg-redis) config
+   * use redis 7
+   * attention: this config used for docker compose, if you don't use docker compose, you should change it
+   */
   config.redis = {
     client: {
       port: 6379,
-      host: 'redis',
+      host: 'redis_local',
       password: 'p@sSw0Rd',
       db: 0,
     },
   };
 
-  // egg-oss(https://github.com/eggjs/egg-oss) aliyun oss config
+  /**
+   * Elasticsearch config
+   * use elasticsearch 7
+   * attention: this config used for docker compose, if you don't use docker compose, you should change it
+   */
+  config.elasticsearch = {
+    host: 'http://elasticsearch_local:9200',
+    indexPosts: 'test_posts',
+    indexUsers: 'test_users',
+  };
+
+  /**
+   * egg-oss(https://github.com/eggjs/egg-oss) aliyun oss config
+   * Matataki use Aliyun OSS to store images
+   * attention: you need set your own aliyun oss config
+   */
   config.oss = {
     client: {
       accessKeyId: 'your access key',
@@ -108,17 +159,14 @@ module.exports = appInfo => {
     },
   };
 
-  config.elasticsearch = {
-    host: 'http://localhost:9200',
-    indexPosts: 'test_posts',
-    indexUsers: 'test_users',
-  };
-
   // ==========================
   //       Service Config
   // ==========================
 
-  // mail config for sign-up and order
+  /**
+   * SMTP mail config for sign-up and order
+   * attention: you need set your own mail config
+   */
   config.mailSetting = true;
   config.mail = {
     // smtp service host
@@ -133,97 +181,147 @@ module.exports = appInfo => {
     },
   };
 
-  // SendCloud mail service config
+  /**
+   * SendCloud mail service config
+   * attention: you need set your own SendCloud config
+   */
   config.sendCloud = {
     apiUser: '<SendCloud api user>',
     apiKey: '<SendCloud api key>',
   };
 
-  // GeeTest CAPTCHA config
+  /**
+   * GeeTest CAPTCHA config
+   * attention: you need set your own GeeTest config
+   */
   config.geetest = {
     geetestId: '<Geetest Id>',
     geetestKey: '<Geetest Key>',
   };
 
-  // hCaptcha config
+  /**
+   * hCaptcha config
+   * attention: you need set your own hCaptcha config
+   */
   config.hCaptcha = {
     privateKey: '<hCaptcha private key>',
   };
 
-  // WeChat config
+  /**
+   * WeChat share config
+   * attention: you need set your own WeChat config
+   */
   config.wx = {
     appId: '<WeChat app id>',
     appSecret: '<WeChat app secret>',
   };
 
+  /**
+   * WeChat auth config
+   * attention: you need set your own WeChat config
+   */
   config.wechat = {
     appId: '<WeChat app id>',
     appSecret: '<WeChat app secret>',
   };
 
-  // WeChat service account config
+  /**
+   * WeChat service account config
+   * attention: you need set your own WeChat service account config
+   */
   config.wxServiceAccount = {
     appId: '<WeChat service account app id>',
     appSecret: '<WeChat service account app secret>',
   };
 
-  // GitHub App auth config
+  /**
+   * GitHub App oauth config
+   * attention: you need set your own GitHub App config
+   */
   config.github = {
     appName: '<GitHub app name>',
     clientId: '<GitHub app client id>',
     clientSecret: '<GitHub app client secret>',
   };
 
-  // Twitter auth config
+  /**
+   * Twitter oauth config
+   * attention: you need set your own Twitter config
+   */
   config.twitter = {
     appKey: '<Twitter app key>',
     appSecret: '<Twitter app secret>',
     callbackUrl: '<Twitter callback url>',
   };
 
-  // Twitter auth config (another?)
+  /**
+   * Twitter oauth config (another?)
+   * attention: you need set your own Twitter config
+   */
   config.passportTwitter = {
     key: '<Twitter api key>',
     secret: '<Twitter api secret>',
   };
 
-  // Telegram auth config
+  /**
+   * Telegram bot auth config
+   * attention: you need set your own Telegram config
+   */
   config.telegramBot = {
     '<Telegram bot name>': '<Telegram bot token>',
   };
 
-  // Google auth config
+  /**
+   * Google auth config
+   * attention: you need set your own Google config
+   */
   config.google = {
     appKey: '<Google app key>',
     appSecret: '<Google app secret>',
   };
 
-  // Facebook auth config
+  /**
+   * Facebook auth config
+   * attention: you need set your own Facebook config
+   */
   config.facebook = {
     appKey: '<Facebook app key>',
     appSecret: '<Facebook app secret>',
   };
 
-  // egg-alinode(https://github.com/eggjs/egg-alinode)
-  // Add appid and secret from https://node.console.aliyun.com/
+  /**
+   * egg-alinode(https://github.com/eggjs/egg-alinode)
+   * Add appid and secret from https://node.console.aliyun.com/
+   * attention: you need set your own AliNode config
+   */
   config.alinode = {
     appid: '<appid>',
     secret: '<secret>',
   };
 
-  // MatatakiPuller(https://github.com/Matataki-io/MatatakiPuller) config
+  /**
+   * MatatakiPuller(https://github.com/Matataki-io/MatatakiPuller) config
+   * You can get MatatakiPuller from https://github.com/Matataki-io/MatatakiPuller
+   * attention: you need set your own MatatakiPuller config
+   */
   config.cacheAPI = {
     uri: '<MatatakiPuller service api>',
     apiToken: '<MatatakiPuller service api token>',
   };
 
-  // Token Circle Backend(https://github.com/Matataki-io/TokenCircle-Bot-Backend)
+  /**
+   * Token Circle Backend(https://github.com/Matataki-io/TokenCircle-Bot-Backend)
+   * You can get Token Circle Backend from https://github.com/Matataki-io/TokenCircle-Bot-Backend
+   * attention: you need set your own Token Circle Backend config
+   */
   config.tokenCircleBackend = {
     baseURL: '<Token Circle Backend service api>',
     bearerToken: '<Token Circle Backend service api token>',
   };
 
-  // for NotificationService
+  /**
+   * DingTalk bot for NotificationService, might be optional
+   */
   config.dingtalkBots = {
     // '<Bot name>': '<Bot token>',
     badTokenMonitor: '',
@@ -234,7 +332,9 @@ module.exports = appInfo => {
   //     Blockchain Config
   // ==========================
 
-  // EOS chain config
+  /**
+   * EOS chain config
+   */
   config.eos = {
     httpEndpoint: 'http://eos.greymass.com',
     chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
@@ -244,6 +344,9 @@ module.exports = appInfo => {
     startAt: 1500,
   };
 
+  /**
+   * Ontology chain config
+   */
   config.ont = {
     httpEndpoint: 'http://polaris1.ont.io:20334',
     scriptHash: 'a75451b23609e04e6606b4a08bc0304bf727ccb5',
@@ -252,17 +355,37 @@ module.exports = appInfo => {
     withdraw_pri: 'e21887a5ef830d2aead4e0cdf02f44ff616a30d3e690342327fba5259ffa2361',
   };
 
+  /**
+   * Kubo IPFS config
+   * attention: this config used for docker compose, if you don't use docker compose, you should change it
+   */
   config.ipfs_service = {
-    site: 'http://ipfs:5001',
-    host: 'ipfs',
+    site: 'http://ipfs_local:5001',
+    host: 'ipfs_local',
     port: 5001,
     protocol: 'http',
   };
 
+  /**
+   * Fleek IPFS config
+   * attention: you need set your own Fleek IPFS config
+   */
+  config.fleekIPFS = {
+    apiKey: '<Fleek api key>',
+    apiSecret: '<Fleek api secret>',
+  };
+
+  /**
+   * Mint token whitelist?
+  */
   config.token = {
     maintokens: [ 'BTC', 'ETH', 'XRP', 'BCH', 'USDT', 'LTC', 'EOS', 'BNB', 'BSV', 'TRX', 'XLM', 'ADA', 'XMR', 'BRC', 'DASH', 'ATOM', 'ETC', 'ONT', 'NEO', 'QTUM', 'NAS', 'STEEM' ],
   };
 
+  /**
+   * Ethereum chain config
+   * attention: you need set your own Ethereum config
+   */
   config.ethereum = {
     runningNetwork: 'mainnet',
     infura: {
@@ -277,6 +400,9 @@ module.exports = appInfo => {
     },
   };
 
+  /**
+   * TimeMachine config
+   */
   config.timemachine = {
     contracts: {
       prod: '0x0000000000000000000000000000000000000000',
@@ -284,6 +410,9 @@ module.exports = appInfo => {
     },
   };
 
+  /**
+   * Cross chain token in-out service config
+   */
   config.tokenInAndOut = {
     // Collect the token for Matataki DB
     specialAccount: {
@@ -296,7 +425,10 @@ module.exports = appInfo => {
   //       Payment Config
   // ==========================
 
-  // egg-wxpay(https://github.com/wbget/egg-wxpay) config
+  /**
+   * egg-wxpay(https://github.com/wbget/egg-wxpay) config
+   * attention: you need set your own WeChat pay config
+   */
   config.wxpay = {
     appId: '<appid>',
     mchId: '<mchid>',
@@ -306,7 +438,18 @@ module.exports = appInfo => {
     pfx: fs.readFileSync(path.join(__dirname, './apiclient_cert.p12')),
   };
 
-  // egg-tenpay(https://github.com/wbget/egg-tenpay) config
+  /**
+   * WeChat pay for article config
+   * attention: replace <backend api> to your own api domain
+   */
+  config.aritclePay = {
+    notify_url: '<backend api>/wx/payarticlenotify',
+  };
+
+  /**
+   * egg-tenpay(https://github.com/wbget/egg-tenpay) config
+   * attention: you need set your own Tencent pay config
+   */
   config.tenpay = {
     client: {
       appid: '<appid>',
@@ -318,7 +461,10 @@ module.exports = appInfo => {
     },
   };
 
-  // alipay config
+  /**
+   * AliPay config
+   * attention: you need set your own AliPay config
+   */
   config.alipay = {
     appId: '<alipay app id>',
     privateKey: fs.readFileSync(path.join(__dirname, './alipay/APP_PRIVATE_KEY.pem'), 'ascii'),
@@ -327,11 +473,9 @@ module.exports = appInfo => {
     notify_url: '<backend api>/alipay/notify',
   };
 
-  config.aritclePay = {
-    notify_url: '<backend api>/wx/payarticlenotify',
-  };
-
-  // exchange user config
+  /**
+   * Exchange user config
+   */
   config.user = {
     virtualUserPrefix: 'exchange_',
   };
@@ -340,7 +484,9 @@ module.exports = appInfo => {
   //       Other Config
   // ==========================
 
-  // egg-ratelimiter(https://github.com/ZQun/egg-ratelimiter) config
+  /**
+   * egg-ratelimiter(https://github.com/ZQun/egg-ratelimiter) config
+   */
   config.ratelimiter = {
     router: [
       {
@@ -364,7 +510,9 @@ module.exports = appInfo => {
     ],
   };
 
-  // egg-socket.io(https://github.com/eggjs/egg-socket.io) config
+  /**
+   * egg-socket.io(https://github.com/eggjs/egg-socket.io) config
+   */
   config.io = {
     redis: {
       port: config.redis.client.port,
@@ -385,13 +533,19 @@ module.exports = appInfo => {
     },
   };
 
-  // 因为只有我们来操作加解密，所以我们只需要**对称性加密**，只需要私钥
+  /**
+   * Crypto config
+   * 因为只有我们来操作加解密，所以我们只需要**对称性加密**，只需要私钥
+   */
   config.crypto = {
     // 32bytes -> 256 bit, 我们是 AES-256，没毛病
     // 都是十六进制，需要 Buffer.from 指定 encoding 为 hex
     secretKey: '',
   };
 
+  /**
+   * Rewards points config
+   */
   config.points = {
     regInviter: 66, // 每成功邀请一名好友注册，邀请者可得到xx积分
     regInvitee: 500, // 成功被邀请注册，登录即可领取xx积分

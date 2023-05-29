@@ -32,3 +32,4 @@ uploads/*
 posts-zip/*.zip
 *.p12
 *.pem
+.data/
