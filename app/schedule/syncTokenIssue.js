@@ -12,30 +12,30 @@ class SyncTokenIssue extends Subscription {
 
   async subscribe() {
     // 先暂时关掉
-    return;
-    if (this.ctx.app.config.isDebug) return;
-    const { mysql } = this.app;
-    const failIssueTxs = await mysql.query(`
-    select mt.name, mt.symbol, mt.decimals, mt.total_supply, mt.uid, log.id, ht.public_key
-      from assets_minetokens_log as log 
-        join minetokens as mt ON mt.id = log.token_id
-        join account_hosting as ht ON ht.uid = mt.uid
-          where log.tx_hash is null and log.type = "issue" 
-      and log.on_chain_tx_status = 0 and mt.contract_address is null`);
-    this.logger.info(failIssueTxs);
-    if (failIssueTxs.length === 0) {
-      // 哦，没有失败的发币啊，那没事了
-      this.logger.info('SyncTokenIssue: 哦，没有失败的发币啊，那没事了');
-      return;
-    }
-    const mappingAsRequests = failIssueTxs.map(token =>
-      this.issue(token.name, token.symbol, token.decimals, token.total_supply, token.public_key)
-    );
-    this.logger.info('mappingAsRequests', mappingAsRequests);
-    const txHashes = await this.sendMultiIssues(mappingAsRequests);
-    const mappingResult = failIssueTxs.map((tx, idx) => ({ id: tx.id, type: 'issue', tx_hash: txHashes[idx] }));
-    this.logger.info('sync failed tokens', mappingResult);
-    await Promise.all(mappingResult.map(res => mysql.update('assets_minetokens_log', res)));
+
+    // if (this.ctx.app.config.isDebug) return;
+    // const { mysql } = this.app;
+    // const failIssueTxs = await mysql.query(`
+    // select mt.name, mt.symbol, mt.decimals, mt.total_supply, mt.uid, log.id, ht.public_key
+    //   from assets_minetokens_log as log
+    //     join minetokens as mt ON mt.id = log.token_id
+    //     join account_hosting as ht ON ht.uid = mt.uid
+    //       where log.tx_hash is null and log.type = "issue"
+    //   and log.on_chain_tx_status = 0 and mt.contract_address is null`);
+    // this.logger.info(failIssueTxs);
+    // if (failIssueTxs.length === 0) {
+    //   // 哦，没有失败的发币啊，那没事了
+    //   this.logger.info('SyncTokenIssue: 哦，没有失败的发币啊，那没事了');
+    //   return;
+    // }
+    // const mappingAsRequests = failIssueTxs.map(token =>
+    //   this.issue(token.name, token.symbol, token.decimals, token.total_supply, token.public_key)
+    // );
+    // this.logger.info('mappingAsRequests', mappingAsRequests);
+    // const txHashes = await this.sendMultiIssues(mappingAsRequests);
+    // const mappingResult = failIssueTxs.map((tx, idx) => ({ id: tx.id, type: 'issue', tx_hash: txHashes[idx] }));
+    // this.logger.info('sync failed tokens', mappingResult);
+    // await Promise.all(mappingResult.map(res => mysql.update('assets_minetokens_log', res)));
   }
 
 

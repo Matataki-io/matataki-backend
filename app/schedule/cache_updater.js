@@ -42,7 +42,7 @@ class CacheUpdater extends Subscription {
 
     pipeline.del('tag:post', 'tag:product');
 
-    const tags = await this.app.mysql.query(`SELECT id, name, type FROM tags;`);
+    const tags = await this.app.mysql.query('SELECT id, name, type FROM tags;');
     for (const { id, name, type } of tags) {
       pipeline.sadd(type === 'post' ? 'tag:post' : 'tag:product', id);
       pipeline.hmset(`tag:${id}`, 'name', name, 'type', type);

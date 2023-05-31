@@ -9,9 +9,10 @@ class CheckNotConfirmBscDeposit extends Subscription {
     };
   }
 
+  // Disable CrossChain feature
   async subscribe() {
-    if (this.ctx.app.config.isDebug) return;
-    await this.service.token.crosschain.checkNotConfirmedDeposit();
+    // if (this.ctx.app.config.isDebug) return;
+    // await this.service.token.crosschain.checkNotConfirmedDeposit();
   }
 }
 

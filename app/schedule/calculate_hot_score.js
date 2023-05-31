@@ -39,9 +39,9 @@ class PostScore extends Subscription {
     if (delShareList.length > 0) await this.app.redis.zrem('post:score:filter:3', delShareList);
 
     const posts = await this.app.mysql.query(
-      `SELECT p.id, p.create_time, p.channel_id, c.dislikes, c.likes, c.real_read_count, c.support_count, c.down 
-      FROM posts p 
-      INNER JOIN post_read_count c 
+      `SELECT p.id, p.create_time, p.channel_id, c.dislikes, c.likes, c.real_read_count, c.support_count, c.down
+      FROM posts p
+      INNER JOIN post_read_count c
       ON p.id = c.post_id
       WHERE p.status=0;`
     );

@@ -25,24 +25,25 @@ class VerifyOrder extends Subscription {
     };
   }
 
+  // Disable EOS feature
   async subscribe() {
-    if (this.ctx.app.config.isDebug) return;
+    // if (this.ctx.app.config.isDebug) return;
 
-    const expire = moment().subtract(12, 'hours').format('YYYY-MM-DD HH:mm:ss');
+    // const expire = moment().subtract(12, 'hours').format('YYYY-MM-DD HH:mm:ss');
 
-    const results = await this.app.mysql.query(`select * from orders where status=0 and create_time>'${expire}' and category = 0 limit 10`);
-    // this.logger.info(results);
-    // console.log(results);
-    if (results.length === 0) { return; }
+    // const results = await this.app.mysql.query(`select * from orders where status=0 and create_time>'${expire}' and category = 0 limit 10`);
+    // // this.logger.info(results);
+    // // console.log(results);
+    // if (results.length === 0) { return; }
 
-    for (let i = 0; i < results.length; i++) {
-      const order = results[i];
-      if (order.platform === 'eos') {
-        await this.eos_verify(order);
-      } else if (order.platform === 'ont') {
-        await this.ont_verify(order);
-      }
-    }
+    // for (let i = 0; i < results.length; i++) {
+    //   const order = results[i];
+    //   if (order.platform === 'eos') {
+    //     await this.eos_verify(order);
+    //   } else if (order.platform === 'ont') {
+    //     await this.ont_verify(order);
+    //   }
+    // }
   }
 
   async eos_verify(order) {

@@ -25,25 +25,26 @@ class VerifySupport extends Subscription {
     };
   }
 
+  // Disable EOS feature
   async subscribe() {
-    if (this.ctx.app.config.isDebug) return;
+    // if (this.ctx.app.config.isDebug) return;
 
-    const expire = moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss');
+    // const expire = moment().subtract(1, 'hours').format('YYYY-MM-DD HH:mm:ss');
 
-    const results = await this.app.mysql.query(`select * from supports where status=0 and create_time>'${expire}' limit 10`);
+    // const results = await this.app.mysql.query(`select * from supports where status=0 and create_time>'${expire}' limit 10`);
 
-    if (results.length === 0) {
-      return;
-    }
+    // if (results.length === 0) {
+    //   return;
+    // }
 
-    for (let i = 0; i < results.length; i++) {
-      const support = results[i];
-      if (support.platform === 'eos') {
-        await this.eos_verify(support);
-      } else if (support.platform === 'ont') {
-        await this.ont_verify(support);
-      }
-    }
+    // for (let i = 0; i < results.length; i++) {
+    //   const support = results[i];
+    //   if (support.platform === 'eos') {
+    //     await this.eos_verify(support);
+    //   } else if (support.platform === 'ont') {
+    //     await this.ont_verify(support);
+    //   }
+    // }
   }
 
   async eos_verify(support) {

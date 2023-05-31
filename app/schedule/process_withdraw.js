@@ -24,29 +24,30 @@ class ProcessWithdraw extends Subscription {
     };
   }
 
+  // Disable EOS feature
   async subscribe() {
-    if (this.ctx.app.config.isDebug) return;
+    // if (this.ctx.app.config.isDebug) return;
 
-    const results = await this.app.mysql.query('select * from assets_change_log where type=\'withdraw\' and status=0 limit 10');
+    // const results = await this.app.mysql.query('select * from assets_change_log where type=\'withdraw\' and status=0 limit 10');
 
-    if (results.length === 0) { return; }
+    // if (results.length === 0) { return; }
 
-    for (let i = 0; i < results.length; i++) {
-      const withdraw = results[i];
+    // for (let i = 0; i < results.length; i++) {
+    //   const withdraw = results[i];
 
-      const isLesshan10Min = moment(withdraw.create_time).add(10, 'm').isAfter(moment());
-      if (isLesshan10Min) {
-        this.logger.info(withdraw);
-        // return;
-        if (withdraw.platform === 'eos') {
-          await this.eos_transfer(withdraw);
-        } else if (withdraw.platform === 'ont') {
-          await this.ont_transfer(withdraw);
-        }
-      } else {
-        await this.refund(withdraw);
-      }
-    }
+    //   const isLessThan10Min = moment(withdraw.create_time).add(10, 'm').isAfter(moment());
+    //   if (isLessThan10Min) {
+    //     this.logger.info(withdraw);
+    //     // return;
+    //     if (withdraw.platform === 'eos') {
+    //       await this.eos_transfer(withdraw);
+    //     } else if (withdraw.platform === 'ont') {
+    //       await this.ont_transfer(withdraw);
+    //     }
+    //   } else {
+    //     await this.refund(withdraw);
+    //   }
+    // }
   }
 
   async refund(withdraw) {

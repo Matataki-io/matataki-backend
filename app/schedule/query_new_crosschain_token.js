@@ -9,12 +9,13 @@ class QueryNewCrossChainToken extends Subscription {
     };
   }
 
+  // Disable CrossChain feature
   async subscribe() {
-    if (this.ctx.app.config.isDebug) return;
+    // if (this.ctx.app.config.isDebug) return;
 
-    this.logger.info('Running QueryNewCrossChainToken at: ', new Date().toLocaleString());
-    await this.checkForChain('bsc');
-    await this.checkForChain('matic');
+    // this.logger.info('Running QueryNewCrossChainToken at: ', new Date().toLocaleString());
+    // await this.checkForChain('bsc');
+    // await this.checkForChain('matic');
   }
 
   async checkForChain(chain) {
