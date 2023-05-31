@@ -24,6 +24,7 @@ unittest/
 build/
 cmd.sh
 .vscode/
+!.vscode/settings.json
 .vs/
 scripts/config.local.json
 scripts/article-cart/config.*.json

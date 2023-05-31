@@ -109,11 +109,11 @@ module.exports = appInfo => {
       user: 'ss_test',
       password: 'p@sSw0Rd',
       database: 'ss',
-      ssl: {
-        // ca: fs.readFileSync(__dirname + '/certs/ca.pem'),
-        // key: fs.readFileSync(__dirname + '/certs/client-key.pem'),
-        // cert: fs.readFileSync(__dirname + '/certs/client-cert.pem')
-      },
+      // ssl: {
+      //   ca: fs.readFileSync(__dirname + '/certs/ca.pem'),
+      //   key: fs.readFileSync(__dirname + '/certs/client-key.pem'),
+      //   cert: fs.readFileSync(__dirname + '/certs/client-cert.pem')
+      // },
       multipleStatements: true,
       charset: 'utf8mb4',
     },
@@ -142,6 +142,9 @@ module.exports = appInfo => {
     host: 'http://elasticsearch_local:9200',
     indexPosts: 'test_posts',
     indexUsers: 'test_users',
+    indexShares: 'test_shares',
+    indexTokens: 'test_tokens',
+    indexTags: 'test_tags',
   };
 
   /**
@@ -158,6 +161,11 @@ module.exports = appInfo => {
       timeout: '60s',
     },
   };
+
+  /**
+   * Aliyun OSS bucket public url
+   */
+  config.ssimg = config.oss.client.endpoint;
 
   // ==========================
   //       Service Config
@@ -264,6 +272,15 @@ module.exports = appInfo => {
   };
 
   /**
+   * Twitter oauth config for Matataki Timeline service
+   * attention: you need set your own Twitter config
+   */
+  config.twitterConsumerKey = {
+    key: '<Twitter api key>',
+    secret: '<Twitter api secret>',
+  };
+
+  /**
    * Telegram bot auth config
    * attention: you need set your own Telegram config
    */
@@ -334,6 +351,7 @@ module.exports = appInfo => {
 
   /**
    * EOS chain config
+   * attention: you need set your own
    */
   config.eos = {
     httpEndpoint: 'http://eos.greymass.com',
@@ -342,17 +360,21 @@ module.exports = appInfo => {
     contract: 'signature.bp',
     actor: 'kuriharachie',
     startAt: 1500,
+    withdraw_account: 'kuriharachie',
+    withdraw_pri: 'a private key',
+    orange_contract: 'cryptomeetup',
   };
 
   /**
    * Ontology chain config
+   * attention: you need set your own
    */
   config.ont = {
     httpEndpoint: 'http://polaris1.ont.io:20334',
     scriptHash: 'a75451b23609e04e6606b4a08bc0304bf727ccb5',
     websocketClient: 'ws://polaris1.ont.io:20335',
     withdraw_account: 'AYgQhQUmKuypXNb886m75n7KKAmunbDqct',
-    withdraw_pri: 'e21887a5ef830d2aead4e0cdf02f44ff616a30d3e690342327fba5259ffa2361',
+    withdraw_pri: 'a private key',
   };
 
   /**
@@ -421,6 +443,24 @@ module.exports = appInfo => {
     },
   };
 
+  /**
+   * BSC cross chain api config
+   * attention: you need set your own config
+   */
+  config.bscCrossChainApi = {
+    endpoint: '<api url>',
+    accessToken: 'access token uuid',
+  };
+
+  /**
+   * Matic(Polygon) cross chain api config
+   * attention: you need set your own config
+   */
+  config.maticCrossChainApi = {
+    endpoint: '<api url>',
+    accessToken: 'access token uuid',
+  };
+
   // ==========================
   //       Payment Config
   // ==========================
@@ -478,6 +518,7 @@ module.exports = appInfo => {
    */
   config.user = {
     virtualUserPrefix: 'exchange_',
+    tradeUserPrefix: 'trade_',
   };
 
   // ==========================
@@ -534,7 +575,22 @@ module.exports = appInfo => {
   };
 
   /**
+   * egg-logrotator(https://github.com/eggjs/egg-logrotator) config
+   * if any files need rotate by file size, config here
+   */
+  config.logrotator = {
+    filesRotateByHour: [], // list of files that will be rotated by hour
+    hourDelimiter: '-', // rotate the file by hour use specified delimiter
+    // filesRotateBySize: [master-stdout.log],           // list of files that will be rotated by size
+    maxFileSize: 50 * 1024 * 1024, // Max file size to judge if any file need rotate
+    maxFiles: 10, // pieces rotate by size
+    rotateDuration: 60000, // time interval to judge if any file need rotate
+    maxDays: 7, // keep max days log files, default is `31`. Set `0` to keep all logs
+  };
+
+  /**
    * Crypto config
+   * attention: you need set your own secret key
    * 因为只有我们来操作加解密，所以我们只需要**对称性加密**，只需要私钥
    */
   config.crypto = {

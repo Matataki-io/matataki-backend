@@ -2,10 +2,12 @@ version: "3.9"
 
 services:
 
-  db_local:
+  mysql_local:
     image: mysql:5.7
     container_name: mysql_local
     restart: unless-stopped
+    ports:
+      - 3306:3306
     environment:
       - MYSQL_ROOT_PASSWORD=6Oot_p@sSw0Rd
       - MYSQL_DATABASE=ss
@@ -23,6 +25,8 @@ services:
     image: redis:7
     container_name: redis_local
     restart: unless-stopped
+    ports:
+      - 6379:6379
     command: >
       --requirepass p@sSw0Rd
     healthcheck:

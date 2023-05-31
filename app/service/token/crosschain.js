@@ -27,18 +27,18 @@ class CrossChainService extends Service {
         return txt;
       }.bind(this));
     };
-    const { nextApi: bscCrosschainApi, maticCrosschainApi } = this.config;
+    const { bscCrossChainApi, maticCrossChainApi } = this.config;
     this.api = {
       bsc: axios.create({
-        baseURL: bscCrosschainApi.endpoint,
+        baseURL: bscCrossChainApi.endpoint,
         headers: {
-          Authorization: `Bearer ${bscCrosschainApi.accessToken}`,
+          Authorization: `Bearer ${bscCrossChainApi.accessToken}`,
         },
       }),
       matic: axios.create({
-        baseURL: maticCrosschainApi.endpoint,
+        baseURL: maticCrossChainApi.endpoint,
         headers: {
-          Authorization: `Bearer ${maticCrosschainApi.accessToken}`,
+          Authorization: `Bearer ${maticCrossChainApi.accessToken}`,
         },
       }),
     };
