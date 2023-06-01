@@ -103,6 +103,9 @@ class MineTokenController extends Controller {
     const id = ctx.params.id;
 
     const token = await ctx.service.token.mineToken.get(id);
+    // Maybe should not do that, leave it 500 error.
+    // if (!token || token === null) { return (ctx.body = { ...ctx.msg.tokenNotExist }); }
+
     let exchange = await ctx.service.token.exchange.detail(id);
     const tags = await ctx.service.token.mineToken.getTokenTags(id);
     const user = await ctx.service.user.get(token.uid);
@@ -439,7 +442,7 @@ class MineTokenController extends Controller {
     ctx.body = {
       ...ctx.msg.success,
       data: result,
-    }
+    };
   }
 
   async deposit() {

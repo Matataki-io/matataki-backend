@@ -116,15 +116,15 @@ class ExchangeService extends Service {
     // 搜索筛选
     if (search.trim()) {
       const wd = (search.trim()).toLowerCase();
-      const sql = `SELECT a.token_id, a.amount, b.symbol, b.name, b.decimals, b.logo, b.uid, u.username, u.nickname, u.avatar 
-      FROM assets_minetokens AS a 
-      LEFT JOIN minetokens AS b ON a.token_id = b.id 
-      LEFT JOIN users u ON b.uid = u.id 
+      const sql = `SELECT a.token_id, a.amount, b.symbol, b.name, b.decimals, b.logo, b.uid, u.username, u.nickname, u.avatar
+      FROM assets_minetokens AS a
+      LEFT JOIN minetokens AS b ON a.token_id = b.id
+      LEFT JOIN users u ON b.uid = u.id
       WHERE a.uid = :id AND a.amount > 0 AND (LOWER(b.name) REGEXP :wd OR LOWER(b.symbol) REGEXP :wd) ORDER BY ${orderString} LIMIT :offset, :limit;
       SELECT count(1) as count FROM assets_minetokens AS a LEFT JOIN minetokens AS b ON a.token_id = b.id WHERE a.uid = :id AND a.amount > 0 AND (LOWER(b.name) REGEXP :wd OR LOWER(b.symbol) REGEXP :wd);
-      SELECT MAX(amount) AS amount 
-      FROM assets_minetokens AS a 
-      LEFT JOIN minetokens AS b ON a.token_id = b.id 
+      SELECT MAX(amount) AS amount
+      FROM assets_minetokens AS a
+      LEFT JOIN minetokens AS b ON a.token_id = b.id
       WHERE a.uid = :id AND a.amount > 0 AND (LOWER(b.name) REGEXP :wd OR LOWER(b.symbol) REGEXP :wd);`;
       result = await this.app.mysql.query(sql, {
         id,
@@ -197,7 +197,7 @@ class ExchangeService extends Service {
     }
 
     id = parseInt(id);
-    const sql = `SELECT a.*, b.total_supply, u.username, u.nickname, u.avatar, u.is_recommend AS user_is_recommend 
+    const sql = `SELECT a.*, b.total_supply, u.username, u.nickname, u.avatar, u.is_recommend AS user_is_recommend
     FROM assets_minetokens AS a
     JOIN minetokens b ON b.id = a.token_id
     JOIN users u ON u.id = a.uid
@@ -225,7 +225,7 @@ class ExchangeService extends Service {
   }
   async getTokenBySymbol(symbol) {
     const sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t4.amount
-                FROM mineTokens AS t1
+                FROM minetokens AS t1
                 Left JOIN users AS t2 ON t1.uid = t2.id
                 LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
                 LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id
@@ -298,7 +298,7 @@ class ExchangeService extends Service {
     let sql, parameters;
     if (search === '') {
       sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t2.is_recommend AS user_is_recommend, t4.amount, ifnull(t6.amount, 0) AS liquidity, ifnull(t7.amount, 0) AS exchange_amount
-          FROM mineTokens AS t1
+          FROM minetokens AS t1
           JOIN users AS t2 ON t1.uid = t2.id
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
           LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id
@@ -313,14 +313,14 @@ class ExchangeService extends Service {
           ) t7 ON t7.token_id = t1.id `
         + sqlOrder
         + ' LIMIT :offset, :limit;'
-        + 'SELECT count(1) as count FROM mineTokens;';
+        + 'SELECT count(1) as count FROM minetokens;';
       parameters = {
         offset: (page - 1) * pagesize,
         limit: pagesize,
       };
     } else {
       sql = `SELECT t1.*, t2.username, t2.nickname, t2.avatar, t2.is_recommend AS user_is_recommend, t4.amount, t6.amount AS liquidity, t7.amount AS exchange_amount
-          FROM mineTokens AS t1
+          FROM minetokens AS t1
           JOIN users AS t2 ON t1.uid = t2.id
           LEFT JOIN exchanges as t3 ON t1.id = t3.token_id
           LEFT JOIN assets_minetokens as t4 ON t3.exchange_uid = t4.uid AND t3.token_id = t4.token_id
@@ -336,7 +336,7 @@ class ExchangeService extends Service {
           WHERE Lower(t1.name) LIKE :search OR Lower(t1.symbol) LIKE :search `
         + sqlOrder
         + ' LIMIT :offset, :limit;'
-        + 'SELECT count(1) as count FROM mineTokens WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search;';
+        + 'SELECT count(1) as count FROM minetokens WHERE Lower(name) LIKE :search OR Lower(symbol) LIKE :search;';
       parameters = {
         search: '%' + search.toLowerCase() + '%',
         offset: (page - 1) * pagesize,

@@ -14,7 +14,7 @@ module.exports = app => {
       photo: profile.photos && profile.photos[0] && profile.photos[0].value,
       token,
       tokenSecret,
-      params,
+      // params,
       profile,
     };
     app.passport.doVerify(req, user, cb);

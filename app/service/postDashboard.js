@@ -13,7 +13,7 @@ const TABLE = {
   ASSETS_TOKEN_LOG: 'assets_minetokens_log',
   TOKENS: 'minetokens',
   USERS: 'users',
-}
+};
 
 // 行为的种类
 const ACTION_TYPES = [
@@ -21,8 +21,8 @@ const ACTION_TYPES = [
   'like', // 推荐
   'dislike', // 不推荐
   'share', // 分享
-  'unlock' // 解锁
-]
+  'unlock', // 解锁
+];
 
 class PostDashboardService extends Service {
   /**
@@ -38,10 +38,10 @@ class PostDashboardService extends Service {
       bookmark: `SELECT COUNT(*) AS count FROM ${TABLE.BOOKMARKS} WHERE pid IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)`,
       comment: `SELECT COUNT(*) AS count FROM ${TABLE.COMMENTS} WHERE type = 3 AND sign_id IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)`,
       sale: `SELECT COUNT(*) AS count FROM ${TABLE.ORDERS} WHERE status = 9 AND signid IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)`,
-      reward: `SELECT COUNT(*) AS count FROM ${TABLE.ASSETS_TOKEN_LOG} WHERE type = 'reward_article' AND to_uid = :userId`
-    }
+      reward: `SELECT COUNT(*) AS count FROM ${TABLE.ASSETS_TOKEN_LOG} WHERE type = 'reward_article' AND to_uid = :userId`,
+    };
     // 时间筛选部分
-    const whereDate = days ? ` AND TO_DAYS(NOW()) - TO_DAYS(create_time) < :days` : '';
+    const whereDate = days ? ' AND TO_DAYS(NOW()) - TO_DAYS(create_time) < :days' : '';
     // 拼接
     const sql = select.bookmark + whereDate + '; '
       + select.comment + whereDate + '; '
@@ -55,8 +55,8 @@ class PostDashboardService extends Service {
       bookmarkCount: res[0][0].count,
       commentCount: res[1][0].count,
       saleCount: res[2][0].count,
-      rewardCount: res[3][0].count
-    }
+      rewardCount: res[3][0].count,
+    };
   }
 
   /**
@@ -100,9 +100,9 @@ class PostDashboardService extends Service {
       uid: userId,
       post_id: postId,
       action,
-      create_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
     });
-    return res.affectedRows
+    return res.affectedRows;
   }
 
   /**
@@ -115,12 +115,12 @@ class PostDashboardService extends Service {
     return await this.app.mysql.get(TABLE.POST_ACTION_LOG, {
       uid: userId,
       post_id: postId,
-      action
+      action,
     });
   }
 
 
-  /********************
+  /** ******************
    *  阅览数据历史记录  *
    ********************/
 
@@ -143,8 +143,8 @@ class PostDashboardService extends Service {
         action = :action
         AND post_id IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)
         ${days ? whereDate : ''}
-      GROUP BY
-        DATE(create_time);
+      GROUP
+        BY post_action_log.create_time;
     `;
     const res = await this.app.mysql.query(sql, { userId, action, days });
     return res;
@@ -165,9 +165,9 @@ class PostDashboardService extends Service {
         ${TABLE.BOOKMARKS}
       WHERE
         pid IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)
-        ${ days ? whereDate : ''}
+        ${days ? whereDate : ''}
       GROUP
-        BY DATE(create_time);
+        BY post_bookmarks.create_time;
     `;
     const res = await this.app.mysql.query(sql, { userId, days });
     return res;
@@ -189,9 +189,9 @@ class PostDashboardService extends Service {
       WHERE
         type = 3
         AND sign_id IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)
-        ${ days ? whereDate : ''}
+        ${days ? whereDate : ''}
       GROUP
-        BY DATE(create_time);
+        BY comments.create_time;
     `;
     const res = await this.app.mysql.query(sql, { userId, days });
     return res;
@@ -213,14 +213,14 @@ class PostDashboardService extends Service {
       WHERE
         status = 9
         AND signid IN (SELECT id FROM ${TABLE.POSTS} WHERE uid = :userId)
-        ${ days ? whereDate : ''}
+        ${days ? whereDate : ''}
       GROUP
-        BY DATE(create_time);
+        BY orders.create_time;
     `;
     const res = await this.app.mysql.query(sql, { userId, days });
     return res;
   }
-  
+
   /**
    * 获取赞赏量历史，单位时间：天
    * @param {Number} userId 用户 id
@@ -236,15 +236,15 @@ class PostDashboardService extends Service {
         ${TABLE.ASSETS_TOKEN_LOG}
       WHERE
         type = 'reward_article' AND to_uid = :userId
-        ${ days ? whereDate : ''}
+        ${days ? whereDate : ''}
       GROUP
-        BY DATE(create_time);
+        BY assets_minetokens_log.create_time;
     `;
     const res = await this.app.mysql.query(sql, { userId, days });
     return res;
   }
 
-  /********************
+  /** ******************
    *  阅览数据文章排名  *
    ********************/
 
@@ -271,7 +271,7 @@ class PostDashboardService extends Service {
       WHERE
         a.action = :action
         AND p.uid = :userId
-        ${ days ? whereDate : '' }
+        ${days ? whereDate : ''}
       GROUP BY
         p.id
       ORDER BY
@@ -290,7 +290,7 @@ class PostDashboardService extends Service {
         WHERE
           a.action = :action
           AND p.uid = :userId
-          ${ days ? whereDate : '' }
+          ${days ? whereDate : ''}
         GROUP BY
           p.id
       ) t1;
@@ -304,7 +304,7 @@ class PostDashboardService extends Service {
     });
     return {
       count: res[1][0].count,
-      list: res[0]
+      list: res[0],
     };
   }
 
@@ -329,7 +329,7 @@ class PostDashboardService extends Service {
         ${TABLE.BOOKMARKS} b ON b.pid = p.id
       WHERE
         p.uid = :userId
-        ${ days ? whereDate : '' }
+        ${days ? whereDate : ''}
       GROUP BY
         p.id
       ORDER BY
@@ -347,7 +347,7 @@ class PostDashboardService extends Service {
           ${TABLE.BOOKMARKS} b ON b.pid = p.id
         WHERE
           p.uid = :userId
-          ${ days ? whereDate : '' }
+          ${days ? whereDate : ''}
         GROUP BY
           p.id
       ) t1;
@@ -360,7 +360,7 @@ class PostDashboardService extends Service {
     });
     return {
       count: res[1][0].count,
-      list: res[0]
+      list: res[0],
     };
   }
 
@@ -386,7 +386,7 @@ class PostDashboardService extends Service {
       WHERE
         c.type = 3
         AND p.uid = :userId
-        ${ days ? whereDate : '' }
+        ${days ? whereDate : ''}
       GROUP BY
         p.id
       ORDER BY
@@ -405,7 +405,7 @@ class PostDashboardService extends Service {
         WHERE
           c.type = 3
           AND p.uid = :userId
-          ${ days ? whereDate : '' }
+          ${days ? whereDate : ''}
         GROUP BY
           p.id
       ) t1;
@@ -418,7 +418,7 @@ class PostDashboardService extends Service {
     });
     return {
       count: res[1][0].count,
-      list: res[0]
+      list: res[0],
     };
   }
 
@@ -444,7 +444,7 @@ class PostDashboardService extends Service {
       WHERE
         o.status = 9
         AND p.uid = :userId
-        ${ days ? whereDate : '' }
+        ${days ? whereDate : ''}
       GROUP BY
         p.id
       ORDER BY
@@ -463,7 +463,7 @@ class PostDashboardService extends Service {
         WHERE
           o.status = 9
           AND p.uid = :userId
-          ${ days ? whereDate : '' }
+          ${days ? whereDate : ''}
         GROUP BY
           p.id
       ) t1;
@@ -476,7 +476,7 @@ class PostDashboardService extends Service {
     });
     return {
       count: res[1][0].count,
-      list: res[0]
+      list: res[0],
     };
   }
 
@@ -502,7 +502,7 @@ class PostDashboardService extends Service {
       WHERE
         t.type = 'reward_article'
         AND p.uid = :userId
-        ${ days ? whereDate : '' }
+        ${days ? whereDate : ''}
       GROUP BY
         p.id
       ORDER BY
@@ -521,7 +521,7 @@ class PostDashboardService extends Service {
         WHERE
           t.type = 'reward_article'
           AND p.uid = :userId
-          ${ days ? whereDate : '' }
+          ${days ? whereDate : ''}
         GROUP BY
           p.id
       ) t1;
@@ -534,11 +534,11 @@ class PostDashboardService extends Service {
     });
     return {
       count: res[1][0].count,
-      list: res[0]
+      list: res[0],
     };
   }
 
-  /*************
+  /** ***********
    *  收益数据  *
    *************/
 
@@ -597,7 +597,7 @@ class PostDashboardService extends Service {
         AND p.uid = :userId
     `;
     // 筛选特定的 token 类型
-    const whereToken = tokenId || tokenId === 0 ? `WHERE t1.token_id = :tokenId` : '';
+    const whereToken = tokenId || tokenId === 0 ? 'WHERE t1.token_id = :tokenId' : '';
     // 连接两种 list 数据，并且查询 user 信息
     const listSql = `
       SELECT
@@ -636,8 +636,8 @@ class PostDashboardService extends Service {
     res[0].forEach(value => value.username = this.ctx.helper.emailMask(value.username));
     return {
       count: res[1][0].count,
-      list: res[0]
-    }
+      list: res[0],
+    };
   }
 
   /**
@@ -647,7 +647,7 @@ class PostDashboardService extends Service {
    */
   async getSumIncome(userId, days) {
     // 时间筛选
-    const whereDaye = days ? 'AND TO_DAYS(NOW()) - TO_DAYS(t1.create_time) < :days' : '';
+    const whereDate = days ? 'AND TO_DAYS(NOW()) - TO_DAYS(t1.create_time) < :days' : '';
     // 售出总收益查询
     const saleSql = `
       SELECT
@@ -664,9 +664,9 @@ class PostDashboardService extends Service {
       WHERE
         t1.status = 9
         AND p.uid = :userId
-        ${whereDaye}
+        ${whereDate}
       GROUP BY
-        token_id
+        token_id, t1.decimals, t1.symbol
     `;
     // 打赏总收益查询
     const rewardSql = `
@@ -684,7 +684,7 @@ class PostDashboardService extends Service {
       WHERE
         t1.type = 'reward_article'
         AND p.uid = :userId
-        ${whereDaye}
+        ${whereDate}
       GROUP BY
         token_id
     `;
@@ -701,7 +701,7 @@ class PostDashboardService extends Service {
         ${rewardSql}
       ) t2
       GROUP BY
-        t2.token_id
+        t2.token_id, t2.symbol, t2.decimals
       ORDER BY
         t2.symbol;
     `;
@@ -771,12 +771,12 @@ class PostDashboardService extends Service {
       tokenId,
       days,
       offset: (page - 1) * pagesize,
-      limit: pagesize
+      limit: pagesize,
     });
     return {
       count: res[1][0].count,
-      list: res[0]
-    }
+      list: res[0],
+    };
   }
 
   /**
@@ -839,12 +839,12 @@ class PostDashboardService extends Service {
       tokenId,
       days,
       offset: (page - 1) * pagesize,
-      limit: pagesize
+      limit: pagesize,
     });
     return {
       count: res[1][0].count,
-      list: res[0]
-    }
+      list: res[0],
+    };
   }
 }
 
