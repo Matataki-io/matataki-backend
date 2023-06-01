@@ -148,7 +148,7 @@ class UserService extends Service {
       + 'SELECT COUNT(*) AS fans FROM follows WHERE fuid = :uid AND status = 1;'
       + 'SELECT COUNT(*) AS articles FROM posts WHERE uid = :uid AND status = 0;'
       + 'SELECT COUNT(*) AS drafts FROM drafts WHERE uid = :uid AND status = 0;'
-      + 'SELECT COUNT(*) AS supports, signid FROM supports s INNER JOIN posts p ON s.signid = p.id WHERE s.uid = :uid AND p.status = 0 AND s.status = 1;'
+      + 'SELECT COUNT(*) AS supports FROM supports s INNER JOIN posts p ON s.signid = p.id WHERE s.uid = :uid AND p.status = 0 AND s.status = 1;'
       + 'SELECT amount FROM assets_points WHERE uid = :uid;' // 查询 assets_points 的 amount 积分
       + 'SELECT COUNT(*) AS referral_amount FROM users WHERE referral_uid = :uid;' // 统计 users 的 referral_uid 数量'=
       + 'SELECT count(1) AS count FROM post_bookmarks WHERE uid = :uid;'
@@ -836,13 +836,13 @@ class UserService extends Service {
   // 和用户不存在返回同样结果。需注意。
   async setGithubRepo(uid, repo) {
     const userExistence = await this.app.mysql.query(
-      'SELECT count(1) AS count FROM github WHERE uid = ?;', [uid]
+      'SELECT count(1) AS count FROM github WHERE uid = ?;', [ uid ]
     );
     if (userExistence[0].count !== 1) {
       return 1;
-    } 
+    }
     await this.app.mysql.query(
-      'UPDATE github SET article_repo = ? WHERE uid = ?', [repo, uid]
+      'UPDATE github SET article_repo = ? WHERE uid = ?', [ repo, uid ]
     );
     return 0;
     // return 1;

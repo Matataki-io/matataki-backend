@@ -172,13 +172,13 @@ class NotifyService extends Service {
       startId ? ' AND t2.id <= :startId' : '',
       startId ? ' AND c2.id <= :startId' : '',
     ];
-    const read =
-    [
+    const read
+    = [
       filterUnread ? ' AND t1.state =  0' : '',
       filterUnread ? ' AND c1.state = 0' : '',
     ];
 
-    let sqlList = `
+    const sqlList = `
       SELECT
         t2.id,
         MIN(t2.id) as end_id,
@@ -205,7 +205,7 @@ class NotifyService extends Service {
       LIMIT :offset, :limit
     `;
 
-    let sqlCount = `
+    const sqlCount = `
       SELECT count(1) as count FROM(
         SELECT count(1), c1.state
         FROM ${EVENT_RECIPIENT_DESC_TABLE} c1
@@ -317,7 +317,7 @@ class NotifyService extends Service {
         FROM ${EVENT_RECIPIENT_DESC_TABLE} c1
         JOIN ${EVENT_TABLE} c2 ON c1.event_id = c2.id
         WHERE c1.user_id = :uid
-        GROUP BY c2.action, c2.object_id, object_type, DATE(create_time)
+        GROUP BY c2.action, c2.object_id, c2.object_type, DATE(c2.create_time), c1.state
       ) a WHERE a.state = 0;
     `;
 

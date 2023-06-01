@@ -1207,7 +1207,7 @@ class ExchangeService extends Service {
   async getAllChangeByDay() {
     const beforeTimeSql = `
                 SELECT T.* FROM
-                (SELECT 
+                (SELECT
                 case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
                 case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
                 sold_amount,
@@ -1216,12 +1216,11 @@ class ExchangeService extends Service {
                 FROM exchange_purchase_logs
                 ORDER BY create_time DESC
                 LIMIT 10000000000
-                ) AS T 
-                WHERE T.create_time <= DATE_SUB(NOW(),INTERVAL 1 DAY)
-                GROUP BY T.id;`;
+                ) AS T
+                WHERE T.create_time <= DATE_SUB(NOW(),INTERVAL 1 DAY);`;
     const afterTimeDESCSql = `
                 SELECT T.* FROM
-                (SELECT 
+                (SELECT
                 case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
                 case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
                 sold_amount,
@@ -1230,12 +1229,11 @@ class ExchangeService extends Service {
                 FROM exchange_purchase_logs
                 ORDER BY create_time DESC
                 LIMIT 10000000000
-                ) AS T 
-                WHERE T.create_time > DATE_SUB(NOW(),INTERVAL 1 DAY)
-                GROUP BY T.id;`;
+                ) AS T
+                WHERE T.create_time > DATE_SUB(NOW(),INTERVAL 1 DAY);`;
     const afterTimeASCSql = `
                 SELECT T.* FROM
-                (SELECT 
+                (SELECT
                 case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
                 case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
                 sold_amount,
@@ -1244,9 +1242,8 @@ class ExchangeService extends Service {
                 FROM exchange_purchase_logs
                 ORDER BY create_time ASC
                 LIMIT 10000000000
-                ) AS T 
-                WHERE T.create_time > DATE_SUB(NOW(),INTERVAL 1 DAY)
-                GROUP BY T.id;`;
+                ) AS T
+                WHERE T.create_time > DATE_SUB(NOW(),INTERVAL 1 DAY);`;
     const result = await this.app.mysql.query(beforeTimeSql + afterTimeDESCSql + afterTimeASCSql);
     const beforeTimeObj = {};
     const afterTimeASCObj = {};
@@ -1281,7 +1278,7 @@ class ExchangeService extends Service {
   async getAllPrice() {
     const sql = `SELECT am.amount token_reserve, a.amount cny_reserve, e.token_id FROM exchanges e
     LEFT JOIN assets_minetokens am ON e.exchange_uid = am.uid
-    LEFT JOIN assets a ON e.exchange_uid = a.uid  
+    LEFT JOIN assets a ON e.exchange_uid = a.uid
     WHERE a.symbol = 'CNY' AND e.token_id = am.token_id
     ORDER BY e.token_id;`;
     const result = await this.app.mysql.query(sql);
@@ -1297,7 +1294,7 @@ class ExchangeService extends Service {
     return priceObj;
   }
   async getPriceHistory(tokenId) {
-    const sql = `SELECT 
+    const sql = `SELECT
     case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'id',
     case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
     case when sold_token_id = 0 THEN sold_amount/bought_amount ELSE bought_amount/sold_amount END 'price',
@@ -1390,7 +1387,7 @@ class ExchangeService extends Service {
       )
     UNION ALL
       (
-        SELECT 
+        SELECT
         case when sold_token_id = 0 THEN bought_token_id ELSE sold_token_id END 'token_id',
         case when sold_token_id = 0 THEN 'buy' ELSE 'sell' END 'type',
         create_time,
