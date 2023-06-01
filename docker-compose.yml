@@ -39,6 +39,11 @@ services:
     image: elasticsearch:7.17.10
     container_name: elasticsearch_local
     restart: unless-stopped
+    ports:
+      - 9200:9200
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
       - .data/elasticsearch:/usr/share/elasticsearch/data
     healthcheck:
@@ -64,7 +69,7 @@ services:
     ports:
       - 7653:7001
     depends_on:
-      - db_local
+      - mysql_local
       - redis_local
       - elasticsearch_local
       - ipfs_local

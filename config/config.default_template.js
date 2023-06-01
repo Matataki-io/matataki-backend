@@ -63,7 +63,7 @@ module.exports = appInfo => {
    * attention: you need set your own domain in production
    */
   config.security = {
-    domainWhiteList: [ '127.0.0.1:8080', 'localhost:8080', 'sstest.frontenduse.top' ],
+    domainWhiteList: [ 'http://127.0.0.1:3000', 'http://localhost:3000' ],
     csrf: {
       enable: false,
     },
@@ -165,7 +165,8 @@ module.exports = appInfo => {
   /**
    * Aliyun OSS bucket public url
    */
-  config.ssimg = config.oss.client.endpoint;
+  const ossUrl = new URL(config.oss.client.endpoint);
+  config.ssimg = `${ossUrl.protocol}//${config.oss.client.bucket}.${ossUrl.host}`;
 
   // ==========================
   //       Service Config
