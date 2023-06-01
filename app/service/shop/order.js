@@ -30,7 +30,7 @@ class OrderService extends Service {
   // √ 陈浩 验证ont合约
 
   // 创建订单
-  async create(userId, signId, contract, symbol, amount, platform, num, referreruid, trade_no = '', conn = null) {
+  async create(userId, signId, contract, symbol, amount, platform, num, referrerUId, trade_no = '', conn = null) {
     // 校验商品价格
     const prices = await this.service.post.getPrices(signId);
     const price = prices.find(p => p.platform === platform);
@@ -55,7 +55,7 @@ class OrderService extends Service {
     try {
       const result = await conn.query(
         'INSERT INTO orders (uid, signid, contract, symbol, num, amount, price, decimals, referreruid, platform, status, create_time, trade_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? ,?, ?, ?, ?)',
-        [ userId, signId, contract, symbol, num, amount, price.price, price.decimals, referreruid, platform, 0, now, trade_no ]
+        [ userId, signId, contract, symbol, num, amount, price.price, price.decimals, referrerUId, platform, 0, now, trade_no ]
       );
 
       const updateSuccess = result.affectedRows === 1;
@@ -173,19 +173,19 @@ class OrderService extends Service {
       return null;
     }
 
-    const countsql = 'SELECT COUNT(*) AS count ';
-    const listsql = 'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, o.price, o.amount, r.title, p.category_id, p.cover ';
-    const wheresql = 'FROM orders o '
+    const countSQL = 'SELECT COUNT(*) AS count ';
+    const listSQL = 'SELECT o.signid AS sign_id, o.id AS order_id, o.symbol, o.amount, o.create_time, o.price, o.amount, r.title, p.category_id, p.cover ';
+    const whereSQL = 'FROM orders o '
       + 'INNER JOIN product_prices r ON r.sign_id = o.signid AND r.platform = o.platform AND r.category = 0 '
       + 'INNER JOIN posts p ON p.id = o.signid '
       + 'WHERE o.uid = :userid AND o.status = 1 ';
-    const ordersql = 'ORDER BY o.create_time DESC LIMIT :start, :end ';
+    const orderSQL = 'ORDER BY o.create_time DESC LIMIT :start, :end ';
 
-    const sqlcode = countsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const sqlCode = countSQL + whereSQL + ';' + listSQL + whereSQL + orderSQL + ';';
 
     // 获取用户所有的订单
     const queryResult = await this.app.mysql.query(
-      sqlcode,
+      sqlCode,
       { userid, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
@@ -197,16 +197,16 @@ class OrderService extends Service {
     }
 
     // 取出订单的id列表
-    const orderids = [];
+    const orderIds = [];
     _.each(orders, row => {
       row.digital_copy = [];
-      orderids.push(row.order_id);
+      orderIds.push(row.order_id);
     });
 
     // 取出订单对应的keys
     const keys = await this.app.mysql.query(
-      'SELECT digital_copy, order_id FROM product_stock_keys WHERE order_id IN (:orderids);',
-      { orderids }
+      'SELECT digital_copy, order_id FROM product_stock_keys WHERE order_id IN (:orderIds);',
+      { orderIds }
     );
 
     // 给每个订单塞上key string
@@ -245,7 +245,7 @@ class OrderService extends Service {
     const orderSql = `
       ORDER BY o.create_time DESC LIMIT :offset, :limit; `;
     const sql = selectSql + whereSql + orderSql + countSql + whereSql + ';';
-    this.ctx.logger.info('[service getUserArticle] sql', sql);
+    // this.ctx.logger.info('[service getUserArticle] sql', sql);
     const result = await this.app.mysql.query(sql, {
       offset: (page - 1) * pagesize,
       limit: Number(pagesize),

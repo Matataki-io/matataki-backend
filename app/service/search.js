@@ -100,7 +100,7 @@ class SearchService extends Service {
     try {
       postQuery = await elasticClient.search(searchProject);
     } catch (err) {
-      this.logger.error('SearchService:: SearchPost: error: ', err);
+      this.logger.error('SearchService:: SearchPost: error: ', err.message);
       return null;
     }
     // const postQuery = await elasticClient.search(searchProject);
@@ -181,7 +181,7 @@ class SearchService extends Service {
     try {
       userQuery = await elasticClient.search(searchProject);
     } catch (err) {
-      this.logger.error('SearchService:: SearchUser: error: ', err);
+      this.logger.error('SearchService:: SearchUser: error: ', err.message);
       return null;
     }
     // return userQuery;
@@ -455,7 +455,7 @@ class SearchService extends Service {
     try {
       tokenQuery = await elasticClient.search(searchProject);
     } catch (err) {
-      this.logger.error('SearchService:: SearchUser: error: ', err);
+      this.logger.error('SearchService:: SearchUser: error: ', err.message);
       return null;
     }
 
