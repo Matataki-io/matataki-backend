@@ -9,7 +9,7 @@ class MineTokenService extends Service {
 
   constructor(ctx, app) {
     super(ctx, app);
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFormat = function(query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
@@ -407,7 +407,7 @@ class MineTokenService extends Service {
         await this.service.system.notification.pushMarkdownToDingtalk(
           'ipfs',
           '监测到失败的转账交易',
-          `### ⚠️ Matataki 后端系统监测到失败的转账交易⚠️ 
+          `### ⚠️ Matataki 后端系统监测到失败的转账交易⚠️
           From: ${from} (${fromWallet.public_key})
 
           To: ${to} (${toWallet.public_key})
@@ -822,7 +822,7 @@ class MineTokenService extends Service {
       SELECT t1.uid, t1.token_id, t1.liquidity_balance, t1.create_time,
         t2.total_supply,
         t3.name, t3.symbol, decimals, t3.logo,
-        t4.username, t4.nickname, t4.avatar, t4.is_recommend AS user_is_recommend 
+        t4.username, t4.nickname, t4.avatar, t4.is_recommend AS user_is_recommend
       FROM exchange_balances AS t1
       JOIN exchanges AS t2 USING (token_id)
       JOIN minetokens AS t3 ON t1.token_id = t3.id
@@ -1130,7 +1130,7 @@ class MineTokenService extends Service {
         DATE_FORMAT(acl.create_time, '%Y-%m-%d') AS create_time
       FROM
         exchanges e
-        JOIN assets_change_log acl ON acl.uid = e.exchange_uid 
+        JOIN assets_change_log acl ON acl.uid = e.exchange_uid
       WHERE
         token_id = :tokenId
       GROUP BY DATE(acl.create_time);

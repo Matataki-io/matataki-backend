@@ -21,7 +21,7 @@ class AuthService extends Service {
 
   constructor(ctx, app) {
     super(ctx, app);
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFormat = function(query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {

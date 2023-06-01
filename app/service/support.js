@@ -43,7 +43,7 @@ class SupportService extends Service {
   // 转移到CommentService，待删除
   async commentList(signid, page = 1, pagesize = 20) {
 
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFormat = function(query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {

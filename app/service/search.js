@@ -9,7 +9,7 @@ class SearchService extends Service {
   constructor(ctx, app) {
     super(ctx, app);
     // const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFormat = function(query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
@@ -403,11 +403,11 @@ class SearchService extends Service {
     // 获取详情
     const shareList = await this.app.mysql.query(
       `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content,
-      b.nickname, b.avatar, 
-      c.real_read_count AS \`read\`, c.likes 
+      b.nickname, b.avatar,
+      c.real_read_count AS \`read\`, c.likes
       FROM posts a
-      LEFT JOIN users b ON a.uid = b.id 
-      LEFT JOIN post_read_count c ON a.id = c.post_id 
+      LEFT JOIN users b ON a.uid = b.id
+      LEFT JOIN post_read_count c ON a.id = c.post_id
       WHERE a.id IN (:shareids)
       ORDER BY FIELD(a.id, :shareids);`,
       { shareids }
@@ -474,7 +474,7 @@ class SearchService extends Service {
 
     // 获取详情
     const tokenList = await this.app.mysql.query(
-      `SELECT id, uid, \`name\`, symbol, decimals, total_supply, create_time, logo, brief, introduction, contract_address 
+      `SELECT id, uid, \`name\`, symbol, decimals, total_supply, create_time, logo, brief, introduction, contract_address
       FROM minetokens
       WHERE id IN (:tokenids)
       ORDER BY FIELD(id, :tokenids);`,
@@ -717,4 +717,3 @@ class SearchService extends Service {
 }
 
 module.exports = SearchService;
-

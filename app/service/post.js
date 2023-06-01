@@ -5,9 +5,9 @@ const consts = require('./consts');
 const Service = require('egg').Service;
 const _ = require('lodash');
 const moment = require('moment');
-const axios = require('axios').default;
+// const axios = require('axios').default;
 const fs = require('fs');
-const removemd = require('remove-markdown');
+const removeMD = require('remove-markdown');
 // const IpfsHttpClientLite = require('ipfs-http-client-lite');
 const { articleToHtml } = require('markdown-article-to-html');
 
@@ -16,7 +16,7 @@ class PostService extends Service {
 
   constructor(ctx, app) {
     super(ctx, app);
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFormat = function(query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
@@ -45,7 +45,7 @@ class PostService extends Service {
     // 去除[read]加密语法
     parsedContent = this.service.extmarkdown.removeReadTags(parsedContent);
     // 去除markdown和html
-    parsedContent = removemd(parsedContent);
+    parsedContent = removeMD(parsedContent);
     // 去除空格
     parsedContent = parsedContent.replace(/\s+/g, '');
     // parsedContent = parsedContent.substring(0, 300);
@@ -73,13 +73,13 @@ class PostService extends Service {
     // 持币编辑相关字段
     editRequireToken = null,
     editRequireBuy = null,
-    // Indie blog 
+    // Indie blog
     indie_post = false,
     indie_sync_tags = false,
     ipfs_hide = false
   ) {
     const ctx = this.ctx;
-    const _startTime = Date.now();
+    // const _startTime = Date.now();
 
     // 修改requireBuy为数组
     const isEncrypt = Boolean(requireToken && requireToken.length > 0) || Boolean(requireBuy && requireBuy.length > 0);
@@ -256,7 +256,7 @@ class PostService extends Service {
 
     if (id > 0) {
       // 发送同步需要的数据到缓存服务器
-      this.service.cacheAsync.post(id, user.id, create_time)
+      this.service.cacheAsync.post(id, user.id, create_time);
 
       return {
         ...ctx.msg.success,
@@ -559,7 +559,7 @@ class PostService extends Service {
       post.nickname = user.nickname;
     }
 
-    // update cahce
+    // update cache
     // this.app.read_cache[post.id] = post.read;
     // this.app.value_cache[post.id] = post.value;
     // this.app.ups_cache[post.id] = post.ups;
@@ -640,23 +640,23 @@ class PostService extends Service {
   }
 
   // 获取我关注的作者的文章
-  async followedPosts(page = 1, pagesize = 20, userid = null, channel = null, extra = null, filter = 0) {
+  async followedPosts(page = 1, pagesize = 20, userId = null, channel = null, extra = null, filter = 0) {
 
-    if (userid === null) {
+    if (userId === null) {
       return 2;
     }
 
-    const totalsql = 'SELECT COUNT(*) AS count FROM posts p INNER JOIN follows f ON f.fuid = p.uid AND f.status = 1 ';
-    const listsql = 'SELECT p.id AS signid FROM posts p INNER JOIN follows f ON f.fuid = p.uid AND f.status = 1 ';
-    const ordersql = 'ORDER BY p.id DESC LIMIT :start, :end';
-    let wheresql = 'WHERE f.uid = :uid AND p.status = 0 ';
+    const totalSQL = 'SELECT COUNT(*) AS count FROM posts p INNER JOIN follows f ON f.fuid = p.uid AND f.status = 1 ';
+    const listSQL = 'SELECT p.id AS signid FROM posts p INNER JOIN follows f ON f.fuid = p.uid AND f.status = 1 ';
+    const orderSQL = 'ORDER BY p.id DESC LIMIT :start, :end';
+    let whereSQL = 'WHERE f.uid = :uid AND p.status = 0 ';
 
-    const channelid = parseInt(channel);
+    const channelId = parseInt(channel);
     if (channel) {
-      if (isNaN(channelid)) {
+      if (isNaN(channelId)) {
         return 2;
       }
-      wheresql += 'AND p.channel_id = ' + channelid + ' ';
+      whereSQL += 'AND p.channel_id = ' + channelId + ' ';
     }
 
     if (typeof filter === 'string') filter = parseInt(filter);
@@ -679,21 +679,21 @@ class PostService extends Service {
         conditions.push('require_buy = 1');
       }
 
-      wheresql += 'AND (' + conditions.join(' OR ') + ') ';
+      whereSQL += 'AND (' + conditions.join(' OR ') + ') ';
     }
 
-    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const sqlCode = totalSQL + whereSQL + ';' + listSQL + whereSQL + orderSQL + ';';
     const queryResult = await this.app.mysql.query(
-      sqlcode,
-      { uid: userid, start: (page - 1) * pagesize, end: 1 * pagesize }
+      sqlCode,
+      { uid: userId, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
     const amount = queryResult[0];
     const posts = queryResult[1];
 
-    const postids = [];
+    const postIds = [];
     _.each(posts, row => {
-      postids.push(row.signid);
+      postIds.push(row.signid);
     });
 
     const extraItem = {};
@@ -707,12 +707,12 @@ class PostService extends Service {
     }
 
 
-    if (postids.length === 0) {
+    if (postIds.length === 0) {
       // return [];
       return { count: 0, list: [] };
     }
 
-    const postList = await this.getPostList(postids, extraItem);
+    const postList = await this.getPostList(postIds, extraItem);
 
     return { count: amount[0].count, list: postList };
 
@@ -745,16 +745,16 @@ class PostService extends Service {
     LEFT JOIN minetokens t7
     ON t7.id = t6.token_id
 
-    WHERE a.uid IN (:uids) AND a.\`status\` = 0 AND a.channel_id = :channel
+    WHERE a.uid IN (:uIds) AND a.\`status\` = 0 AND a.channel_id = :channel
     ORDER BY a.create_time DESC
     LIMIT :start, :end;
 
     SELECT COUNT(*) AS count FROM posts a
-    WHERE a.uid IN (:uids) AND a.\`status\` = 0 AND a.channel_id = :channel;
+    WHERE a.uid IN (:uIds) AND a.\`status\` = 0 AND a.channel_id = :channel;
     `;
     const queryResult = await this.app.mysql.query(
       sql,
-      { start: (page - 1) * pagesize, end: 1 * pagesize, uids: followIds, channel }
+      { start: (page - 1) * pagesize, end: 1 * pagesize, uIds: followIds, channel }
     );
 
     const posts = queryResult[0];
@@ -839,18 +839,18 @@ class PostService extends Service {
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
 
-    const totalsql = 'SELECT COUNT(*) AS count FROM posts ';
-    let wheresql = 'WHERE status = 0 ';
+    const totalSQL = 'SELECT COUNT(*) AS count FROM posts ';
+    let whereSQL = 'WHERE status = 0 ';
 
     if (author) {
-      wheresql += 'AND uid = :author ';
+      whereSQL += 'AND uid = :author ';
     }
-    const channelid = parseInt(channel);
+    const channelId = parseInt(channel);
     if (channel !== null) {
-      if (isNaN(channelid)) {
+      if (isNaN(channelId)) {
         return 2;
       }
-      wheresql += 'AND channel_id = ' + channelid + ' ';
+      whereSQL += 'AND channel_id = ' + channelId + ' ';
     }
 
     if (typeof filter === 'string') filter = parseInt(filter);
@@ -873,19 +873,19 @@ class PostService extends Service {
         conditions.push('require_buy = 1');
       }
 
-      wheresql += 'AND (' + conditions.join(' OR ') + ') ';
+      whereSQL += 'AND (' + conditions.join(' OR ') + ') ';
     }
-    const postids = await this.service.hot.list(page, pagesize, 1);
+    const postIds = await this.service.hot.list(page, pagesize, 1);
 
-    const sqlcode = totalsql + wheresql + ';';
+    const sqlCode = totalSQL + whereSQL + ';';
     const queryResult = await this.app.mysql.query(
-      sqlcode,
+      sqlCode,
       { author, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
     const amount = queryResult[0];
 
-    if (postids.length === 0) {
+    if (postIds.length === 0) {
       return { count: 0, list: [] };
     }
 
@@ -899,14 +899,14 @@ class PostService extends Service {
       });
     }
 
-    const postList = await this.getPostList(postids, extraItem);
+    const postList = await this.getPostList(postIds, extraItem);
 
     return { count: amount.count, list: postList };
   }
   // 推荐分数排序(默认方法)(new format)(count-list格式)
   async scoreRankSlow(page = 1, pagesize = 20, channel = 1) {
-    const postids = await this.service.hot.list(page, pagesize, channel);
-    if (postids === null || postids.length <= 0) {
+    const postIds = await this.service.hot.list(page, pagesize, channel);
+    if (postIds === null || postIds.length <= 0) {
       return {
         count: 0,
         list: [],
@@ -930,15 +930,15 @@ class PostService extends Service {
       LEFT JOIN minetokens t7
       ON t7.id = t6.token_id
 
-      WHERE a.id IN (:postids)
-      ORDER BY FIELD(a.id, :postids);
+      WHERE a.id IN (:postIds)
+      ORDER BY FIELD(a.id, :postIds);
 
       SELECT COUNT(*) AS count FROM posts a
       WHERE a.\`status\` = 0 AND a.channel_id = :channel;`;
 
     const queryResult = await this.app.mysql.query(
       sql,
-      { start: (page - 1) * pagesize, end: 1 * pagesize, postids, channel }
+      { start: (page - 1) * pagesize, end: 1 * pagesize, postIds, channel }
     );
 
     const posts = queryResult[0];
@@ -954,13 +954,13 @@ class PostService extends Service {
       const row = posts[i];
       row.tags = [];
       id2posts[row.id] = row;
-      postids.push(row.id);
+      postIds.push(row.id);
     }
     const tagSql = 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);';
 
     const tagResult = await this.app.mysql.query(
       tagSql,
-      { signid: postids }
+      { signid: postIds }
     );
     const tagResultLen = tagResult.length;
     for (let i = 0; i < tagResultLen; i++) {
@@ -1016,9 +1016,9 @@ class PostService extends Service {
 
     // 获取文章列表, 分为商品文章和普通文章
     // 再分为带作者和不带作者的情况.
-    let wheresql = 'WHERE a.channel_id = :channel ';
-    if (!showingDeleted) wheresql += ' AND a.\`status\` = 0 ';
-    if (author) wheresql += ' AND a.uid = :author ';
+    let whereSQL = 'WHERE a.channel_id = :channel ';
+    if (!showingDeleted) whereSQL += ' AND a.\`status\` = 0 ';
+    if (author) whereSQL += ' AND a.uid = :author ';
 
     if (typeof filter === 'string') filter = parseInt(filter);
 
@@ -1036,7 +1036,7 @@ class PostService extends Service {
       if ((filter & 4) > 0) {
         conditions.push('require_buy = 1');
       }
-      wheresql += 'AND (' + conditions.join(' OR ') + ') ';
+      whereSQL += 'AND (' + conditions.join(' OR ') + ') ';
     }
 
     const sql = `SELECT a.id, a.uid, a.author, a.title, a.status, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
@@ -1055,10 +1055,10 @@ class PostService extends Service {
       LEFT JOIN minetokens t7
       ON t7.id = t6.token_id
 
-      ${wheresql}
+      ${whereSQL}
       ORDER BY a.time_down ASC, a.id DESC LIMIT :start, :end;
       SELECT COUNT(*) AS count FROM posts a
-      ${wheresql};`;
+      ${whereSQL};`;
     const queryResult = await this.app.mysql.query(
       sql,
       { author, start: (page - 1) * pagesize, end: 1 * pagesize, channel }
@@ -1070,20 +1070,20 @@ class PostService extends Service {
     if (posts.length === 0) {
       return { count: 0, list: [] };
     }
-    const postids = [];
+    const postIds = [];
     const len = posts.length;
     const id2posts = {};
     for (let i = 0; i < len; i++) {
       const row = posts[i];
       row.tags = [];
       id2posts[row.id] = row;
-      postids.push(row.id);
+      postIds.push(row.id);
     }
     const tagSql = 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);';
 
     const tagResult = await this.app.mysql.query(
       tagSql,
-      { signid: postids }
+      { signid: postIds }
     );
     const tagResultLen = tagResult.length;
     for (let i = 0; i < tagResultLen; i++) {
@@ -1121,8 +1121,8 @@ class PostService extends Service {
     return isFullHistory ? records : records.slice(0, 1);
   }
 
-  async getByPostIds(postids = []) {
-    if (postids === null || postids.length <= 0) {
+  async getByPostIds(postIds = []) {
+    if (postIds === null || postIds.length <= 0) {
       return [];
     }
     const sql = `SELECT a.id, a.uid, a.author, a.title, a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.short_content, a.is_recommend,
@@ -1143,12 +1143,12 @@ class PostService extends Service {
       LEFT JOIN minetokens t7
       ON t7.id = t6.token_id
 
-      WHERE a.id IN (:postids)
-      ORDER BY FIELD(a.id, :postids);`;
+      WHERE a.id IN (:postIds)
+      ORDER BY FIELD(a.id, :postIds);`;
 
     const queryResult = await this.app.mysql.query(
       sql,
-      { postids }
+      { postIds }
     );
 
     const posts = queryResult;
@@ -1163,13 +1163,13 @@ class PostService extends Service {
       const row = posts[i];
       row.tags = [];
       id2posts[row.id] = row;
-      postids.push(row.id);
+      postIds.push(row.id);
     }
     const tagSql = 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);';
 
     const tagResult = await this.app.mysql.query(
       tagSql,
-      { signid: postids }
+      { signid: postIds }
     );
     const tagResultLen = tagResult.length;
     for (let i = 0; i < tagResultLen; i++) {
@@ -1579,7 +1579,7 @@ class PostService extends Service {
       // todo，待验证，修改不改变内容，影响行数应该为0
       const result = await this.app.mysql.update('posts', row, options);
 
-      this.service.cacheAsync.delete(id)
+      this.service.cacheAsync.delete(id);
 
       return result.affectedRows === 1;
     } catch (err) {
@@ -1611,8 +1611,8 @@ class PostService extends Service {
     await this.service.history.put('post', uid);
 
     // github文章需要单独处理
-    if (post.hash.substring(0,2) === 'Gh') {
-      const githubTransfer =  await this.service.github.transferGithub(signid, uid, 'md', 'source');
+    if (post.hash.substring(0, 2) === 'Gh') {
+      const githubTransfer = await this.service.github.transferGithub(signid, uid, 'md', 'source');
       if (githubTransfer !== 0) {
         return githubTransfer;
       }
@@ -2091,7 +2091,7 @@ class PostService extends Service {
     return { metadataHash, htmlHash };
   }
   async uploadArticleToGithub({
-    postid, title, description, displayName, data, uid, publish_or_edit = 'publish', tags = []}) {
+    postid, title, /* description, *//* displayName, */ data, uid, publish_or_edit = 'publish', tags = [] }) {
     // let markdown = data.content;
     const metadata = data.content;
     // description = await this.wash(description);
@@ -2124,7 +2124,7 @@ class PostService extends Service {
     let htmlHash;
 
     if (publish_or_edit === 'edit') {
-      htmlHash = metadataHash = await this.service.github.updateGithub(postid, metadata, title, 'md', "source", tags);
+      htmlHash = metadataHash = await this.service.github.updateGithub(postid, metadata, title, 'md', 'source', tags);
       //  await this.service.github.updateGithub(postid, renderedHtml, 'html');
     } else {
       htmlHash = metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'md', 'salt1', 'source', tags);

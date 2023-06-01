@@ -159,7 +159,7 @@ class OrderService extends Service {
   // 获取用户已经购买的商品
   async getUserProducts(page = 1, pagesize = 20, userid = null) {
 
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFormat = function(query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
@@ -240,7 +240,7 @@ class OrderService extends Service {
     const whereSql = `
       WHERE o.uid = :userid AND o.status = 9 AND o.platform = 'cny' `;
     const countSql = `
-      SELECT COUNT(1) AS count  
+      SELECT COUNT(1) AS count
       FROM orders as o `;
     const orderSql = `
       ORDER BY o.create_time DESC LIMIT :offset, :limit; `;

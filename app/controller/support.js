@@ -6,9 +6,9 @@ const consts = require('../service/consts');
 
 class SupportController extends Controller {
 
-  constructor(ctx) {
-    super(ctx);
-  }
+  // constructor(ctx) {
+  //   super(ctx);
+  // }
 
   async support() {
     const { ctx } = this;
@@ -33,21 +33,21 @@ class SupportController extends Controller {
       return this.response(403, 'platform not support');
     }
 
-    let referreruid = parseInt(referrer);
+    let referrerUId = parseInt(referrer);
 
-    if (isNaN(referreruid)) {
-      referreruid = 0;
+    if (isNaN(referrerUId)) {
+      referrerUId = 0;
     }
 
     if (referrer) {
       // 不能是自己
-      if (referreruid === this.ctx.user.id) {
+      if (referrerUId === this.ctx.user.id) {
         this.ctx.body = ctx.msg.referrerNoYourself;
         return;
       }
 
       // 判断是否可以当推荐人
-      const flag = await this.service.mechanism.payContext.canBeReferrer(referreruid, signId);
+      const flag = await this.service.mechanism.payContext.canBeReferrer(referrerUId, signId);
       if (!flag) {
         this.ctx.body = ctx.msg.referrerNotExist;
         return;
@@ -55,7 +55,7 @@ class SupportController extends Controller {
     }
 
     // 保存赞赏
-    const supportId = await this.service.support.create(this.ctx.user.id, signId, contract, symbol, amount, referreruid, platform);
+    const supportId = await this.service.support.create(this.ctx.user.id, signId, contract, symbol, amount, referrerUId, platform);
 
     // 失败
     if (supportId <= 0) {
@@ -77,7 +77,8 @@ class SupportController extends Controller {
   async saveTxhash() {
     const { ctx } = this;
     const { supportId, txhash } = this.ctx.request.body;
-    const result = await this.service.support.saveTxhash(supportId, ctx.user.id, txhash);
+    // const result = await this.service.support.saveTxhash(supportId, ctx.user.id, txhash);
+    await this.service.support.saveTxhash(supportId, ctx.user.id, txhash);
 
     ctx.body = ctx.msg.success;
   }
@@ -87,15 +88,15 @@ class SupportController extends Controller {
 
     const ctx = this.ctx;
 
-    const { pagesize = 20, page = 1, signid } = this.ctx.query;
+    const { pagesize = 20, page = 1, signid: signId } = this.ctx.query;
 
-    // singid缺少,此种情况用户正常使用时候不会出现
-    if (!signid) {
+    // singId 缺少,此种情况用户正常使用时候不会出现
+    if (!signId) {
       ctx.body = ctx.msg.paramsError;
       return;
     }
 
-    const shares = await this.service.support.commentList(parseInt(signid), parseInt(page), parseInt(pagesize));
+    const shares = await this.service.support.commentList(parseInt(signId), parseInt(page), parseInt(pagesize));
 
     if (shares === null) {
       ctx.body = ctx.msg.paramsError;
@@ -110,11 +111,11 @@ class SupportController extends Controller {
   async myProducts() {
 
     const ctx = this.ctx;
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
 
     const { page = 1, pagesize = 20 } = ctx.query;
 
-    const products = await this.service.support.getUserProducts(page, pagesize, userid);
+    const products = await this.service.support.getUserProducts(page, pagesize, userId);
 
     if (products === null) {
       ctx.body = ctx.msg.failure;

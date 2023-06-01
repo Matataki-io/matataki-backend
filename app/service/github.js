@@ -114,9 +114,9 @@ class github extends Service {
 
   // 编辑文章
   // https://docs.github.com/en/rest/reference/repos#get-repository-content
-  async updateGithub(postid, rawFile, title = 'title', filetype = 'md', branch = 'main', tags = []) {
+  async updateGithub(postId, rawFile, title = 'title', filetype = 'md', branch = 'main', tags = []) {
 
-    this.logger.info('githubService:: updateGithub loaded', postid);
+    this.logger.info('githubService:: updateGithub loaded', postId);
     const article_info = await this.app.mysql.query(`
     SELECT posts.hash, posts.username AS username_p, posts.id AS pid, posts.uid AS uid_p,
     users.id AS userid, users.username AS username_u, users.platform AS platform_u,
@@ -128,7 +128,7 @@ class github extends Service {
     LEFT JOIN user_accounts ON user_accounts.uid = users.id AND user_accounts.platform = 'github'
     WHERE posts.id = ?
     LIMIT 1;
-    `, [ postid ]);
+    `, [ postId ]);
 
     if (article_info.length === 0) {
       // ctx.body = ctx.msg.failure;
@@ -151,7 +151,7 @@ class github extends Service {
     const userGithubId = article_info[0].account;
 
     const folder = article_info[0].hash.substring(2, 6) + '/' + article_info[0].hash.substring(6, 8);
-    this.logger.info('githubService:: updateGithub request ', postid, userGithubId, articleRepo);
+    this.logger.info('githubService:: updateGithub request ', postId, userGithubId, articleRepo);
     // // 依据文件类型判断用哪个hash
     // let keepArticleHash;
     // if (filetype === 'html') {
@@ -163,7 +163,7 @@ class github extends Service {
     // 目前只需要取meta hash了，故不再需要选择
     const keepArticleHash = article_info[0].hash;
 
-    this.logger.info('githubService:: updateGithub ready for request1', postid);
+    this.logger.info('githubService:: updateGithub ready for request1', postId);
     let getGithubRepo = null;
 
     try {
@@ -193,7 +193,7 @@ class github extends Service {
     const buffer = new Buffer.from(parsedFile);
     const encodedText = buffer.toString('Base64');
 
-    this.logger.info('githubService:: updateGithub ready for request2', postid);
+    this.logger.info('githubService:: updateGithub ready for request2', postId);
     let updateGithubRepo = null;
     try {
       updateGithubRepo = await axios({
@@ -222,7 +222,7 @@ class github extends Service {
 
       return null;
     }
-    this.logger.info('githubService:: updateGithub loaded', postid);
+    this.logger.info('githubService:: updateGithub loaded', postId);
     return keepArticleHash;
 
   }

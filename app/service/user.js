@@ -21,7 +21,7 @@ class UserService extends Service {
 
   constructor(ctx, app) {
     super(ctx, app);
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFormat = function(query, values) {
       if (!values) return query;
       return query.replace(/\:(\w+)/g, function(txt, key) {
         if (values.hasOwnProperty(key)) {
@@ -398,13 +398,13 @@ class UserService extends Service {
     return false;
   }
 
-  async uploadAvatarFromUrl(avatarurl) {
+  async uploadAvatarFromUrl(avatarUrl) {
     const ctx = this.ctx;
     // 由URL抓到图片
     let imageFile;
     try {
       imageFile = await downloader.image({
-        url: avatarurl,
+        url: avatarUrl,
         dest: './uploads',
       });
     } catch (err) {
@@ -421,7 +421,7 @@ class UserService extends Service {
       + md5(imageFile.filename + moment().toLocaleString())
       + '.' + fileext;
 
-    this.logger.info('UserService:: uploadAvatarFromUrl info: downloaded: ', avatarurl);
+    this.logger.info('UserService:: uploadAvatarFromUrl info: downloaded: ', avatarUrl);
 
     let result = null;
     try {
@@ -816,12 +816,13 @@ class UserService extends Service {
         username = username[0] + '*' + username[2];
         break;
 
-      default:
+      default: {
         const trunkSize = username.length / 4;
         const firstSize = Math.max(Math.floor(trunkSize), 1);
         const secondSize = Math.ceil(trunkSize * 2);
         username = username.slice(0, firstSize) + '*'.repeat(secondSize) + username.slice(firstSize + secondSize);
         break;
+      }
     }
 
     result = username + rest;

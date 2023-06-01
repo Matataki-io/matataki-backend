@@ -34,20 +34,20 @@ class OrderController extends Controller {
       return this.response(403, 'platform not support');
     }
 
-    let referreruid = parseInt(referrer);
-    if (isNaN(referreruid)) {
-      referreruid = 0;
+    let referrerUId = parseInt(referrer);
+    if (isNaN(referrerUId)) {
+      referrerUId = 0;
     }
     // 判断推荐人
-    if (referreruid > 0) {
+    if (referrerUId > 0) {
       // 不能是自己
-      if (referreruid === this.ctx.user.id) {
+      if (referrerUId === this.ctx.user.id) {
         this.ctx.body = ctx.msg.referrerNoYourself;
         return;
       }
 
       // 判断是否可以当推荐人
-      const flag = await this.service.mechanism.payContext.canBeReferrer(referreruid, signId);
+      const flag = await this.service.mechanism.payContext.canBeReferrer(referrerUId, signId);
       if (!flag) {
         this.ctx.body = ctx.msg.referrerNotExist;
         return;
@@ -55,7 +55,7 @@ class OrderController extends Controller {
     }
 
     // const m = ctx.msg.get(1);
-    const orderId = await this.service.shop.order.create(this.ctx.user.id, signId, contract, symbol, amount, platform, num, referreruid);
+    const orderId = await this.service.shop.order.create(this.ctx.user.id, signId, contract, symbol, amount, platform, num, referrerUId);
 
     // 失败
     if (orderId <= 0) {
@@ -90,7 +90,8 @@ class OrderController extends Controller {
   async saveTxhash() {
     const { ctx } = this;
     const { orderId, txhash } = this.ctx.request.body;
-    const result = await this.service.shop.order.saveTxhash(orderId, ctx.user.id, txhash);
+    // const result = await this.service.shop.order.saveTxhash(orderId, ctx.user.id, txhash);
+    await this.service.shop.order.saveTxhash(orderId, ctx.user.id, txhash);
 
     ctx.body = ctx.msg.success;
   }
@@ -98,7 +99,7 @@ class OrderController extends Controller {
   async myProducts() {
 
     const ctx = this.ctx;
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
 
     const { page = 1, pagesize = 20, platform = '' } = ctx.query;
 
@@ -108,9 +109,9 @@ class OrderController extends Controller {
     }
     let result = {};
     if (platform === 'cny') {
-      result = await this.service.shop.order.getUserArticle(page, pagesize, userid);
+      result = await this.service.shop.order.getUserArticle(page, pagesize, userId);
     } else {
-      result = await this.service.shop.order.getUserProducts(page, pagesize, userid);
+      result = await this.service.shop.order.getUserProducts(page, pagesize, userId);
     }
 
     if (result === null) {

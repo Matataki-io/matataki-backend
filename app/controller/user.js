@@ -2,10 +2,10 @@
 
 const Controller = require('../core/base_controller');
 const moment = require('moment');
-const _ = require('lodash');
+// const _ = require('lodash');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
-const { verify } = require('hcaptcha');
+// const { verify } = require('hcaptcha');
 const consts = require('../service/consts');
 
 class UserController extends Controller {
@@ -46,7 +46,7 @@ class UserController extends Controller {
       SELECT a.uid, a.object_id, a.contract, a.symbol, a.amount, a.type, a.create_time, a.signid, a.trx, a.toaddress, a.memo, a.status, b.title,
       u1.username AS from_username, u1.nickname AS from_nickname, u1.avatar AS from_avatar, u1.platform AS from_platform,
       u2.username AS to_username, u2.nickname AS to_nickname, u2.avatar AS to_avatar, u2.platform AS to_platform
-      FROM assets_change_log a 
+      FROM assets_change_log a
       LEFT JOIN posts b ON a.signid = b.id
       LEFT JOIN users u1 ON a.uid = u1.id
       LEFT JOIN users u2 ON a.object_id = u2.id `;
@@ -129,7 +129,7 @@ class UserController extends Controller {
 
     const { avatar = '' } = ctx.request.body;
 
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
 
     try {
       const now = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -137,7 +137,7 @@ class UserController extends Controller {
       // 如果ID不存在, 会以此ID创建一条新的用户数据, 不过因为jwt secret不会被知道, 所以对外不会发生
       const result = await this.app.mysql.query(
         'INSERT INTO users (id, avatar, create_time) VALUES ( ?, ?, ?) ON DUPLICATE KEY UPDATE avatar = ?',
-        [ userid, avatar, now, avatar ]
+        [ userId, avatar, now, avatar ]
       );
 
       const updateSuccess = result.affectedRows >= 1;
@@ -586,12 +586,12 @@ class UserController extends Controller {
   }
 
 
-  async setGithubRepo()  {
+  async setGithubRepo() {
     const ctx = this.ctx;
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
     const { repo } = ctx.request.body;
 
-    const result = await this.service.user.setGithubRepo(userid, repo);
+    const result = await this.service.user.setGithubRepo(userId, repo);
     if (result !== 0) {
       ctx.body = ctx.msg.failure;
       return;
@@ -603,11 +603,11 @@ class UserController extends Controller {
 
   async checkSiteStatus() {
     const ctx = this.ctx;
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
 
-    const result = await this.service.github.checkSite(userid);
+    const result = await this.service.github.checkSite(userId);
 
-    switch(result.code) {
+    switch (result.code) {
       case 0:
         ctx.body = ctx.msg.indieSiteNotReady;
         return;
@@ -625,9 +625,9 @@ class UserController extends Controller {
 
   async checkRepoStatus() {
     const ctx = this.ctx;
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
 
-    const result = await this.service.github.checkRepo(userid);
+    const result = await this.service.github.checkRepo(userId);
 
     switch (result.code) {
       case 0:
@@ -649,9 +649,9 @@ class UserController extends Controller {
 
   async checkPagesStatus() {
     const ctx = this.ctx;
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
 
-    const result = await this.service.github.checkPages(userid);
+    const result = await this.service.github.checkPages(userId);
 
     switch (result.code) {
       case 0:
@@ -673,9 +673,9 @@ class UserController extends Controller {
 
   async createRepo() {
     const ctx = this.ctx;
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
 
-    const createSiteResult = await this.service.github.prepareRepo(userid);
+    const createSiteResult = await this.service.github.prepareRepo(userId);
 
     // switch to return..
     if (createSiteResult === null) {
@@ -687,9 +687,9 @@ class UserController extends Controller {
 
   async createConfig() {
     const ctx = this.ctx;
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
 
-    const createConfigResult = await this.service.github.prepareConfig(userid);
+    const createConfigResult = await this.service.github.prepareConfig(userId);
 
     // switch to return..
     if (createConfigResult === null) {
@@ -701,9 +701,9 @@ class UserController extends Controller {
 
   async readSiteConfig() {
     const ctx = this.ctx;
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
 
-    const readConfigResult = await this.service.github.readSiteSetting(userid);
+    const readConfigResult = await this.service.github.readSiteSetting(userId);
 
     // switch to return..
     if (readConfigResult === null) {
@@ -716,12 +716,12 @@ class UserController extends Controller {
 
   async editSiteConfig() {
     const ctx = this.ctx;
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
     const configDict = ctx.request.body;
 
-    const setSiteConfigResult = await this.service.github.editSiteConfig(userid, configDict);
+    const setSiteConfigResult = await this.service.github.editSiteConfig(userId, configDict);
 
-        // switch to return..
+    // switch to return..
     if (setSiteConfigResult === null) {
       ctx.body = ctx.msg.failure;
       return;

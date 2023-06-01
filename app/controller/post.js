@@ -1,7 +1,7 @@
 'use strict';
 const Controller = require('../core/base_controller');
 const moment = require('moment');
-const { verify } = require('hcaptcha');
+// const { verify } = require('hcaptcha');
 // const ONT = require('ontology-ts-sdk');
 const md5 = require('crypto-js/md5');
 // const sanitize = require('sanitize-html');
@@ -12,7 +12,7 @@ class PostController extends Controller {
   constructor(ctx) {
     super(ctx);
 
-    this.app.mysql.queryFromat = function(query, values) {
+    this.app.mysql.queryFormat = function(query, values) {
       if (!values) return query;
       return query.replace(
         /\:(\w+)/g,
@@ -39,7 +39,7 @@ class PostController extends Controller {
   // 发布文章
   async publish() {
     const ctx = this.ctx;
-    const _startTime = Date.now();
+    // const _startTime = Date.now();
     const {
       author,
       title,
@@ -139,12 +139,12 @@ class PostController extends Controller {
       return;
     }
     if (indie_post === true) {
-      if ((post.hash.substring(0,2) !== 'Gh')) {
+      if ((post.hash.substring(0, 2) !== 'Gh')) {
         ctx.body = ctx.msg.paramsError;
         return;
       }
     } else {
-      if (post.hash.substring(0,2) !== 'Qm') {
+      if (post.hash.substring(0, 2) !== 'Qm') {
         ctx.body = ctx.msg.paramsError;
         return;
       }
@@ -260,7 +260,7 @@ class PostController extends Controller {
         uid: post.uid,
       });
     }
-    
+
     const metadataHash = hashDict.metadataHash;
     const htmlHash = hashDict.htmlHash;
 
@@ -417,9 +417,9 @@ class PostController extends Controller {
   // 获取关注作者的文章列表
   async getFollowedRanking() {
     const ctx = this.ctx;
-    const userid = ctx.user.id;
+    const userId = ctx.user.id;
 
-    if (!userid) {
+    if (!userId) {
       ctx.body = ctx.msg.success;
       ctx.body.data = { count: 0, list: [] };
       return;
@@ -435,7 +435,7 @@ class PostController extends Controller {
     const postData = await this.service.post.followedPostsFast(
       page,
       pagesize,
-      userid,
+      userId,
       channel
     );
 
@@ -478,8 +478,8 @@ class PostController extends Controller {
       page = 1,
       pagesize = 20,
       channel = 1,
-      author = null,
-      extra = null,
+      // author = null,
+      // extra = null,
       filter = 7,
     } = this.ctx.query;
 
@@ -535,7 +535,7 @@ class PostController extends Controller {
       pagesize = 20,
       channel = 1,
       author = null,
-      extra = null,
+      // extra = null,
       filter = 7,
       showAll = 0, // 0 有效文章 1 隐藏文章
     } = this.ctx.query;
@@ -1102,34 +1102,34 @@ class PostController extends Controller {
     const makeMatch = async (matchRule, handler) =>
       (url.match(matchRule) ? makeResponse(await handler(url)) : false);
     // true = succeed
-    // false = unspported platform
+    // false = unsupported platform
     // 1 = import failed
     const wechatMatch = makeMatch(
       /https:\/\/mp\.weixin\.qq\.com\/s[?\/]{1}[_\-=&#a-zA-Z0-9]{1,200}/,
       x => this.service.postImport.handleWechat(x)
     );
-    const chainnewsMatch = makeMatch(
+    const chainNewsMatch = makeMatch(
       /https:\/\/www\.chainnews\.com\/articles\/[0-9]{8,14}\.htm/,
       x => this.service.postImport.handleChainnews({ url: x, type: 'articles' })
     );
-    const chainnewsNewsMatch = makeMatch(
+    const chainNewsNewsMatch = makeMatch(
       /https:\/\/(.*)?chainnews\.com\/news\/.+/,
       x => this.service.postImport.handleChainnews({ url: x, type: 'news' })
     );
     const orangeMatch = makeMatch(/https:\/\/orange\.xyz\/p\/[0-9]{1,6}/, x =>
       this.service.postImport.handleOrange(x)
     );
-    const jianshuMatch = makeMatch(
+    const jianShuMatch = makeMatch(
       /https:\/\/(www\.)?jianshu\.com\/p\/[\w]{12}/,
       x => this.service.postImport.handleJianShu(x)
     );
-    const gaojinMatch = makeMatch(/https:\/\/(www\.)?igaojin\.me/, x =>
+    const gaoJinMatch = makeMatch(/https:\/\/(www\.)?igaojin\.me/, x =>
       this.service.postImport.handleJianShu(x)
     );
     const mattersMatch = makeMatch(/https:\/\/(www\.)?matters\.news\/.+/, x =>
       this.service.postImport.handleMatters(x)
     );
-    const zhihuMatch = makeMatch(
+    const zhiHuMatch = makeMatch(
       /https:\/\/zhuanlan\.zhihu\.com\/p\/\d+/,
       x => this.service.postImport.handleZhihu(x)
     );
@@ -1143,7 +1143,7 @@ class PostController extends Controller {
       this.service.postImport.handleArchive(x)
     );
     // 币乎
-    const bihuMatch = makeMatch(/https:\/\/(.*)?bihu\.com\/.+/, x =>
+    const biHuMatch = makeMatch(/https:\/\/(.*)?bihu\.com\/.+/, x =>
       this.service.postImport.handleBihu(x)
     );
     // Steemit
@@ -1154,16 +1154,16 @@ class PostController extends Controller {
 
     const result
       = (await wechatMatch)
-      || (await chainnewsMatch)
-      || (await chainnewsNewsMatch)
+      || (await chainNewsMatch)
+      || (await chainNewsNewsMatch)
       || (await orangeMatch)
-      || (await jianshuMatch)
-      || (await gaojinMatch)
+      || (await jianShuMatch)
+      || (await gaoJinMatch)
       || (await mattersMatch)
-      || (await zhihuMatch)
+      || (await zhiHuMatch)
       // || (await weiboMatch)
       || (await archiveMatch)
-      || (await bihuMatch)
+      || (await biHuMatch)
       || (await steemitMatch);
 
     if (result === 1) {
@@ -1444,7 +1444,7 @@ class PostController extends Controller {
 
     const signId = parseInt(ctx.params.id);
 
-    // singid缺少,此种情况用户正常使用时候不会出现
+    // singId 缺少,此种情况用户正常使用时候不会出现
     if (!signId) {
       ctx.body = ctx.msg.paramsError;
       return;
@@ -1471,7 +1471,7 @@ class PostController extends Controller {
 
     const signId = parseInt(ctx.params.id);
 
-    // singid缺少,此种情况用户正常使用时候不会出现
+    // singId 缺少,此种情况用户正常使用时候不会出现
     if (!signId) {
       ctx.body = ctx.msg.paramsError;
       return;
@@ -1498,7 +1498,7 @@ class PostController extends Controller {
 
     const signId = parseInt(ctx.params.id);
 
-    // singid缺少,此种情况用户正常使用时候不会出现
+    // singId 缺少,此种情况用户正常使用时候不会出现
     if (!signId) {
       ctx.body = ctx.msg.paramsError;
       return;
@@ -1613,7 +1613,7 @@ class PostController extends Controller {
     const { ctx } = this;
     const { id } = ctx.params;
     const post = await this.service.post.get(id);
-    if (!post || post.status === 1) return ctx.body = ctx.msg.postNotFound;
+    if (!post || post.status === 1) return (ctx.body = ctx.msg.postNotFound);
     const res = await this.service.postDashboard.addActionLog({ ...ctx.user }.id, id, 'share');
     ctx.body = res ? ctx.msg.success : ctx.msg.failure;
   }
