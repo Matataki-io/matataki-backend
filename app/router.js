@@ -10,10 +10,10 @@ module.exports = app => {
   // app.get('/passport/twitter/callback',app.passport.authenticate('twitter',{}))
 
 
-  // geetest校验中间件
+  // geetest 校验中间件
   const geetestVerify = app.middleware.geetest();
-  // hcaptcha 校验中间件
-  const hCaptchaVerify = app.middleware.hcaptcha();
+  // hCaptcha 校验中间件
+  // const hCaptchaVerify = app.middleware.hcaptcha();
 
 
   router.get('/', controller.home.index);
@@ -57,11 +57,10 @@ module.exports = app => {
 
   // -------------------------------- 发布与获取文章 --------------------------------
   // 发布文章
-  // router.post('/publish', passport.authorize, controller.post.publish);
-  router.post('/post/publish', passport.authorize, hCaptchaVerify, controller.post.publish);
+  router.post('/post/publish', passport.authorize, /* hCaptchaVerify, */ controller.post.publish);
 
   // 将草稿定时发送为文章
-  router.post('/post/timed/:id', passport.authorize, hCaptchaVerify, controller.timedPost.post);
+  router.post('/post/timed/:id', passport.authorize, /* hCaptchaVerify, */ controller.timedPost.post);
   // 取消定时发送
   router.delete('/post/timed/:id', passport.authorize, controller.timedPost.delete);
 
@@ -75,7 +74,7 @@ module.exports = app => {
   router.post('/post/uploadImage', passport.authorize, controller.post.uploadImage);
   // 文章编辑
   // router.post('/edit', passport.authorize, controller.post.edit);
-  router.post('/post/edit', passport.authorize, hCaptchaVerify, controller.post.edit);
+  router.post('/post/edit', passport.authorize, /* hCaptchaVerify, */ controller.post.edit);
   // 单篇文章 (by 文章hash)
   router.get('/post/:hash', passport.verify, controller.post.postByHash);
 
@@ -188,7 +187,7 @@ module.exports = app => {
   // 上传 banner 图像, 并自动设置
   router.post('/user/uploadBanner', passport.authorize, controller.user.uploadBanner);
   // 设置用户的个人资料，昵称和自我介绍，不包括email。
-  router.post('/user/setProfile', passport.authorize, hCaptchaVerify, controller.user.setProfile);
+  router.post('/user/setProfile', passport.authorize, /* hCaptchaVerify, */ controller.user.setProfile);
   // 设置用户的网站和社交帐号信息
   router.put('/user/links', passport.authorize, controller.user.setLinks);
   // 发起提现
@@ -210,7 +209,7 @@ module.exports = app => {
   // 设置用户的GitHub储存目录，GitHub user only
   router.post('/indie/repo', passport.authorize, controller.user.setGithubRepo);
   // 创建子站
-  router.post('/indie/prepareRepo', passport.authorize, hCaptchaVerify, controller.user.createRepo);
+  router.post('/indie/prepareRepo', passport.authorize, /* hCaptchaVerify, */ controller.user.createRepo);
   // 设置默认config
   router.post('/indie/prepareConfig', passport.authorize, controller.user.createConfig);
   // 获取子站状态
@@ -222,7 +221,7 @@ module.exports = app => {
   // 获取独立子站的设置
   router.get('/indie/siteConfig', passport.authorize, controller.user.readSiteConfig);
   // 设置独立子站的设置
-  router.post('/indie/siteConfig', passport.authorize, hCaptchaVerify, controller.user.editSiteConfig);
+  router.post('/indie/siteConfig', passport.authorize, /* hCaptchaVerify, */ controller.user.editSiteConfig);
   // 可用主题列表
   router.get('/indie/themeList', passport.authorize, controller.user.readThemeList);
 
@@ -346,7 +345,7 @@ module.exports = app => {
   // 仅限工程师使用的 API
   // router.post('/minetoken/crosschain/:id/_dev/createPeggedToken/:chain/', passport.apiAuthorize, controller.crossChain.createPeggedTokenForAdminById);
 
-  router.get('/dev/simpleMsg', passport.verify, hCaptchaVerify, controller.dev.simpleMsg);
+  router.get('/dev/simpleMsg', passport.verify, /* hCaptchaVerify, */ controller.dev.simpleMsg);
   router.get('/captcha/doINeedHCaptcha', passport.authorize, controller.hCaptcha.doINeedCaptcha);
 
   // 不写入数据的，无需权限
