@@ -2,11 +2,11 @@
 
 ### 推荐搜索词
 
-- 路径： /search/recommand
+- 路径： /search/recommend
 - 请求方式： GET
 - Header： 默认
 - 参数：
-  
+
 | 参数名 | 类型 | 是否必须 | 说明 | 位置 |
 |---|---|---|---|---|
 | amount | int | False | 返回的词数量， 默认为5 | Query |
@@ -15,7 +15,7 @@
 - 请求示例：
 
 ```
-curl -X GET 'http://localhost:7001/search/recommand?amount=3&area=1' 
+curl -X GET 'http://localhost:7001/search/recommend?amount=3&area=1'
 ```
 
 - 返回示例：

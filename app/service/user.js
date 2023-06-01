@@ -123,7 +123,7 @@ class UserService extends Service {
       siteLink,
     };
 
-    ctx.logger.info('debug info', result);
+    // ctx.logger.info('debug info', result);
 
     return result;
   }

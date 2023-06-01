@@ -106,9 +106,7 @@ class AccountBindingService extends Service {
       const tran = await this.app.mysql.beginTransaction();
       if (platform === 'github') {
         this.logger.info('deleting github settings main account, ', uid);
-        const del0 = await tran.delete('github', {
-          uid
-        });
+        const del0 = await tran.delete('github', { uid });
         this.logger.info('deleteGithubInfo main account, ', del0);
       }
       const del1 = await tran.delete('user_accounts', {
@@ -140,9 +138,7 @@ class AccountBindingService extends Service {
     }
     if (platform === 'github') {
       this.logger.info('deleting github settings, ', uid);
-      const deleteGithubInfo = await this.app.mysql.delete('github', {
-        uid
-      });
+      const deleteGithubInfo = await this.app.mysql.delete('github', { uid });
       this.logger.info('deleteGithubInfo, ', deleteGithubInfo);
     }
     this.logger.info('Service: AccountBinding:: del success: %j', result);
@@ -302,7 +298,7 @@ class AccountBindingService extends Service {
       LEFT JOIN user_accounts as ua
       ON ua.uid = u.id
       WHERE ${whereArr.join(' AND ')};`, searchObj);
-    this.logger.info('service::binding:get2: ', users);
+    this.logger.info('service::binding:get2: ', users[0] ? users[0].username : undefined);
     if (users && users.length > 0) {
       if (platform !== null) users[0].platform = platform;
       return users[0];

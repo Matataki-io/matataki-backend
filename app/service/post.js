@@ -462,7 +462,7 @@ class PostService extends Service {
           LEFT JOIN dynamic_media t4
           ON p.id = t4.post_id
         WHERE p.channel_id = 3 AND p.id IN (:idList)
-        GROUP BY p.id;
+        GROUP BY p.id, p.short_content, t2.username, t2.nickname, t2.platform, t2.avatar, t2.id, t3.real_read_count, t3.likes, t3.dislikes, t4.type, t4.url;
       `,
       { idList }
     );
@@ -1690,7 +1690,7 @@ class PostService extends Service {
       // const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
       data = await this.service.ipfs.cat(hash);
     } catch (err) {
-      this.logger.error('PostService:: ipfsCatch Error', err);
+      this.logger.error('PostService:: ipfsCatch Error', err.message);
       return null;
     }
     return data;

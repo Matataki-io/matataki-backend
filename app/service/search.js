@@ -106,39 +106,39 @@ class SearchService extends Service {
     // const postQuery = await elasticClient.search(searchProject);
 
     // const resultList = [];
-    const postids = [];
+    const postIds = [];
     // let matches = {};
     const count = postQuery.body.hits.total.value;
     // 加了多匹配之后， 没有匹配到的项目在highlight里面没有
-    for (let hindex = 0; hindex < postQuery.body.hits.hits.length; hindex += 1) {
-      postids.push(postQuery.body.hits.hits[hindex]._source.id);
+    for (let hIndex = 0; hIndex < postQuery.body.hits.hits.length; hIndex += 1) {
+      postIds.push(postQuery.body.hits.hits[hIndex]._source.id);
     }
-    this.logger.info('SearchService:: SearchPost ids', postids);
+    this.logger.info('SearchService:: SearchPost ids', postIds);
 
     // 传统的获取文章列表方法
-    let postList = await this.service.post.getPostList(postids, { short_content: true });
+    let postList = await this.service.post.getPostList(postIds, { short_content: true });
 
     this.logger.info('SearchService:: SearchPost postList.length', postList.length);
 
     // 再度排序
     postList = postList.sort((a, b) => {
-      return postids.indexOf(a.id) - postids.indexOf(b.id);
+      return postIds.indexOf(a.id) - postIds.indexOf(b.id);
     });
 
     // 填充高亮匹配信息
-    for (let pindex = 0; pindex < postList.length; pindex += 1) {
-      if (postQuery.body.hits.hits[pindex].highlight.title) {
-        postList[pindex].title = postQuery.body.hits.hits[pindex].highlight.title[0];
+    for (let pIndex = 0; pIndex < postList.length; pIndex += 1) {
+      if (postQuery.body.hits.hits[pIndex].highlight.title) {
+        postList[pIndex].title = postQuery.body.hits.hits[pIndex].highlight.title[0];
       } else {
-        postList[pindex].title = postQuery.body.hits.hits[pindex]._source.title;
+        postList[pIndex].title = postQuery.body.hits.hits[pIndex]._source.title;
       }
 
-      if (postQuery.body.hits.hits[pindex].highlight.content) {
+      if (postQuery.body.hits.hits[pIndex].highlight.content) {
         let new_content = '';
-        for (let cindex = 0; cindex < postQuery.body.hits.hits[pindex].highlight.content.length; cindex += 1) {
-          new_content += (postQuery.body.hits.hits[pindex].highlight.content[cindex] + '...');
+        for (let cIndex = 0; cIndex < postQuery.body.hits.hits[pIndex].highlight.content.length; cIndex += 1) {
+          new_content += (postQuery.body.hits.hits[pIndex].highlight.content[cIndex] + '...');
         }
-        postList[pindex].short_content = new_content;
+        postList[pIndex].short_content = new_content;
       }
     }
 
@@ -186,25 +186,25 @@ class SearchService extends Service {
     }
     // return userQuery;
 
-    const userids = [];
+    const userIds = [];
     const count = userQuery.body.hits.total.value;
     const list = userQuery.body.hits.hits;
 
     // 生成userid列表
     for (let i = 0; i < list.length; i++) {
-      userids.push(list[i]._source.id);
+      userIds.push(list[i]._source.id);
     }
 
-    if (userids.length === 0) {
+    if (userIds.length === 0) {
       return { count: 0, list: [] };
     }
 
     // 获取详情
-    let userList = await this.service.user.getUserList(userids, current_user);
+    let userList = await this.service.user.getUserList(userIds, current_user);
 
     // 重排序
     userList = userList.sort((a, b) => {
-      return userids.indexOf(a.id) - userids.indexOf(b.id);
+      return userIds.indexOf(a.id) - userIds.indexOf(b.id);
     });
 
     // 填充高亮匹配信息
@@ -218,14 +218,14 @@ class SearchService extends Service {
     return { count, list: userList };
   }
 
-  async precisePost(postid) {
+  async precisePost(postId) {
     // const thePost = await this.app.mysql.query(
     //   'SELECT p.id AS postid, p.username, p.create_time, u.nickname, p.title, p.short_content '
     //   + 'FROM posts p LEFT JOIN users u ON p.uid = u.id WHERE p.id = ?;',
-    //   [ postid ]
+    //   [ postId ]
     // );
 
-    const postList = await this.service.post.getPostList([ postid ], { short_content: true });
+    const postList = await this.service.post.getPostList([ postId ], { short_content: true });
 
     if (postList.length === 0) {
       return { count: 0, list: [] };
@@ -234,21 +234,21 @@ class SearchService extends Service {
   }
 
   // 新建和更新文章， 都可以用这个
-  async importPost(postid, userid, title, content) {
+  async importPost(postId, userid, title, content) {
     const author = await this.service.user.get(userid);
 
     if (author.length === 0) {
       return null;
     }
-    // const post = await this.app.mysql.get('posts', { id: postid });
+    // const post = await this.app.mysql.get('posts', { id: postId });
 
     const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
     try {
       await elaClient.index({
-        id: postid,
+        id: postId,
         index: this.config.elasticsearch.indexPosts,
         body: {
-          id: postid,
+          id: postId,
           create_time: moment(),
           title,
           content,
@@ -261,12 +261,12 @@ class SearchService extends Service {
     }
   }
 
-  async deletePost(postid) {
+  async deletePost(postId) {
     const elaClient = new elastic.Client({ node: this.config.elasticsearch.host });
 
     try {
       await elaClient.delete({
-        id: postid,
+        id: postId,
         index: this.config.elasticsearch.indexPosts,
       });
     } catch (err) {
@@ -329,7 +329,7 @@ class SearchService extends Service {
   }
 
   // 返回次数最多的几条搜索
-  async recommandWord(amount = 5, area = 1) {
+  async recommendWord(amount = 5, area = 1) {
     let result = [];
     try {
       result = await this.app.mysql.query(
@@ -337,7 +337,7 @@ class SearchService extends Service {
         { area, amount }
       );
     } catch (err) {
-      this.logger.error('SearchService:: RecommandWord: error ', err);
+      this.logger.error('SearchService:: RecommendWord: error ', err);
       return null;
     }
     return result;
@@ -388,15 +388,15 @@ class SearchService extends Service {
       this.logger.error('SearchService:: SearchShare: error: ', err);
       return null;
     }
-    const shareids = [];
+    const shareIds = [];
     const count = shareQuery.body.hits.total.value;
     const list = shareQuery.body.hits.hits;
 
-    // 生成shareids列表
+    // 生成 shareIds 列表
     for (let i = 0; i < list.length; i++) {
-      shareids.push(list[i]._source.id);
+      shareIds.push(list[i]._source.id);
     }
-    if (shareids.length === 0) {
+    if (shareIds.length === 0) {
       return { count: 0, list: [] };
     }
 
@@ -408,9 +408,9 @@ class SearchService extends Service {
       FROM posts a
       LEFT JOIN users b ON a.uid = b.id
       LEFT JOIN post_read_count c ON a.id = c.post_id
-      WHERE a.id IN (:shareids)
-      ORDER BY FIELD(a.id, :shareids);`,
-      { shareids }
+      WHERE a.id IN (:shareIds)
+      ORDER BY FIELD(a.id, :shareIds);`,
+      { shareIds }
     );
 
     // 填充高亮匹配信息
@@ -459,16 +459,16 @@ class SearchService extends Service {
       return null;
     }
 
-    const tokenids = [];
+    const tokenIds = [];
     const count = tokenQuery.body.hits.total.value;
     const list = tokenQuery.body.hits.hits;
 
-    // 生成tokenids列表
+    // 生成 tokenIds 列表
     for (let i = 0; i < list.length; i++) {
-      tokenids.push(list[i]._source.id);
+      tokenIds.push(list[i]._source.id);
     }
 
-    if (tokenids.length === 0) {
+    if (tokenIds.length === 0) {
       return { count: 0, list: [] };
     }
 
@@ -476,9 +476,9 @@ class SearchService extends Service {
     const tokenList = await this.app.mysql.query(
       `SELECT id, uid, \`name\`, symbol, decimals, total_supply, create_time, logo, brief, introduction, contract_address
       FROM minetokens
-      WHERE id IN (:tokenids)
-      ORDER BY FIELD(id, :tokenids);`,
-      { tokenids }
+      WHERE id IN (:tokenIds)
+      ORDER BY FIELD(id, :tokenIds);`,
+      { tokenIds }
     );
 
     // 填充高亮匹配信息
@@ -496,10 +496,10 @@ class SearchService extends Service {
     const pi = parseInt(page);
     const pz = parseInt(pagesize);
     const wd = keyword.toLowerCase();
-    const wehreSql = 'WHERE LOWER(name) REGEXP :wd OR LOWER(symbol) REGEXP :wd';
+    const whereSql = 'WHERE LOWER(name) REGEXP :wd OR LOWER(symbol) REGEXP :wd';
     const result = await this.app.mysql.query(`
-    SELECT uid, name, symbol, logo FROM minetokens ${wehreSql} LIMIT :start, :end;
-    SELECT count(1) as count FROM minetokens ${wehreSql};
+    SELECT uid, name, symbol, logo FROM minetokens ${whereSql} LIMIT :start, :end;
+    SELECT count(1) as count FROM minetokens ${whereSql};
     `, {
       wd,
       start: (pi - 1) * pz, end: pz,
@@ -517,10 +517,10 @@ class SearchService extends Service {
     const pz = parseInt(pagesize);
     const wd = keyword.toLowerCase();
     const uid = this.ctx.user.id;
-    const wehreSql = 'WHERE (am.uid = :uid AND am.amount > 0) AND (LOWER(m.name) REGEXP :wd OR LOWER(m.symbol) REGEXP :wd)';
+    const whereSql = 'WHERE (am.uid = :uid AND am.amount > 0) AND (LOWER(m.name) REGEXP :wd OR LOWER(m.symbol) REGEXP :wd)';
     const result = await this.app.mysql.query(`
-    SELECT m.id, m.name, m.symbol, m.logo FROM assets_minetokens AS am LEFT JOIN minetokens AS m ON am.token_id = m.id ${wehreSql} LIMIT :start, :end;
-    SELECT COUNT(1) AS count FROM assets_minetokens AS am LEFT JOIN minetokens AS m ON am.token_id = m.id ${wehreSql};
+    SELECT m.id, m.name, m.symbol, m.logo FROM assets_minetokens AS am LEFT JOIN minetokens AS m ON am.token_id = m.id ${whereSql} LIMIT :start, :end;
+    SELECT COUNT(1) AS count FROM assets_minetokens AS am LEFT JOIN minetokens AS m ON am.token_id = m.id ${whereSql};
     `, {
       uid,
       wd,
@@ -538,9 +538,9 @@ class SearchService extends Service {
     const pi = parseInt(page);
     const pz = parseInt(pagesize);
     const wd = keyword.toLowerCase();
-    const wehreSql = 'WHERE LOWER(name) REGEXP :wd';
-    const _sql = `SELECT id, name FROM tags ${wehreSql} LIMIT :start, :end;
-                  SELECT COUNT(1) AS count FROM tags ${wehreSql};`;
+    const whereSql = 'WHERE LOWER(name) REGEXP :wd';
+    const _sql = `SELECT id, name FROM tags ${whereSql} LIMIT :start, :end;
+                  SELECT COUNT(1) AS count FROM tags ${whereSql};`;
     try {
       const result = await this.app.mysql.query(_sql, { wd, start: (pi - 1) * pz, end: pz });
       const list = result[0];
@@ -619,7 +619,7 @@ class SearchService extends Service {
       return null;
     }
   }
-  async serachTag(keyword, page = 1, pagesize = 10) {
+  async searchTag(keyword, page = 1, pagesize = 10) {
     let tagQuery;
     const elasticClient = new elastic.Client({ node: this.config.elasticsearch.host });
     const searchProject = {
@@ -645,7 +645,7 @@ class SearchService extends Service {
     try {
       tagQuery = await elasticClient.search(searchProject);
     } catch (err) {
-      this.logger.error('SearchService:: serachTag: error: ', err);
+      this.logger.error('SearchService:: searchTag: keyword: ', keyword, 'error ', err.message);
       return null;
     }
 
@@ -667,8 +667,8 @@ class SearchService extends Service {
       `SELECT COUNT(DISTINCT sid) AS num, t.id, t.name, t.create_time, t.type FROM post_tag pt
       LEFT JOIN tags t ON pt.tid = t.id
       LEFT JOIN posts p ON p.id = pt.sid
-      WHERE p.\`status\` = 0 AND p.channel_id = 1 AND t.id IN (:tagIds)
-      GROUP BY tid
+      WHERE p.status = 0 AND p.channel_id = 1 AND t.id IN (:tagIds)
+      GROUP BY pt.tid, t.id, t.name, t.create_time, t.type
       ORDER BY FIELD(t.id, :tagIds);`,
       { tagIds }
     );
@@ -683,12 +683,12 @@ class SearchService extends Service {
   async searchUser2DB(keyword, page = 1, pagesize = 10, current_user = null) {
     const pi = parseInt(page);
     const pz = parseInt(pagesize);
-    const wehreSql = `
+    const whereSql = `
     WHERE (username REGEXP :keyword OR nickname REGEXP :keyword) AND platform != 'cny'
     `;
     const result = await this.app.mysql.query(`
-    SELECT id FROM users ${wehreSql} LIMIT :start, :end;
-    SELECT count(*) as count FROM users ${wehreSql};
+    SELECT id FROM users ${whereSql} LIMIT :start, :end;
+    SELECT count(*) as count FROM users ${whereSql};
     `, {
       keyword,
       start: (pi - 1) * pz, end: pz,
@@ -696,18 +696,18 @@ class SearchService extends Service {
     const list = result[0];
     const count = result[1][0].count;
 
-    const userids = [];
+    const userIds = [];
     // 生成userid列表
     for (let i = 0; i < list.length; i++) {
-      userids.push(list[i].id);
+      userIds.push(list[i].id);
     }
 
-    if (userids.length === 0) {
+    if (userIds.length === 0) {
       return { count: 0, list: [] };
     }
 
     // 获取详情
-    const userList = await this.service.user.getUserList(userids, current_user);
+    const userList = await this.service.user.getUserList(userIds, current_user);
 
     return {
       list: userList,

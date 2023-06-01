@@ -25,12 +25,12 @@ class SearchController extends Controller {
     if (type === 'post') {
       // 带了文章id， 视为精确搜索
       if (word[0] === '#') {
-        const postid = parseInt(word.substring(1, word.length));
-        if (isNaN(postid)) {
+        const postId = parseInt(word.substring(1, word.length));
+        if (isNaN(postId)) {
           ctx.body = ctx.msg.paramsError;
           return;
         }
-        const post = await this.service.search.precisePost(postid);
+        const post = await this.service.search.precisePost(postId);
         // 精确搜索， 需要独立把文章摘要提取出来
         result = post;
       } else {
@@ -76,12 +76,12 @@ class SearchController extends Controller {
     let result;
     // 带了文章id， 视为精确搜索
     if (word[0] === '#') {
-      const postid = parseInt(word.substring(1, word.length));
-      if (isNaN(postid)) {
+      const postId = parseInt(word.substring(1, word.length));
+      if (isNaN(postId)) {
         ctx.body = ctx.msg.paramsError;
         return;
       }
-      const post = await this.service.search.precisePost(postid);
+      const post = await this.service.search.precisePost(postId);
       // 精确搜索， 需要独立把文章摘要提取出来
       result = post;
     } else {
@@ -246,7 +246,7 @@ class SearchController extends Controller {
     ctx.body.data = result;
   }
 
-  async recommand() {
+  async recommend() {
     const ctx = this.ctx;
     const { amount = 5, area = 1 } = ctx.query;
 
@@ -257,7 +257,7 @@ class SearchController extends Controller {
       return;
     }
 
-    const result = await this.service.search.recommandWord(amountNum, areaNum);
+    const result = await this.service.search.recommendWord(amountNum, areaNum);
     if (!result) {
       ctx.body = ctx.msg.failure;
       return;
@@ -280,7 +280,7 @@ class SearchController extends Controller {
     }
     // 记录搜索结果，type：6代表tag
     await this.service.search.writeLog(word, 6);
-    const result = await this.service.search.serachTag(word, page, pagesize);
+    const result = await this.service.search.searchTag(word, page, pagesize);
 
     if (!result) {
       ctx.body = ctx.msg.failure;

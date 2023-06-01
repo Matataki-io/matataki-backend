@@ -200,7 +200,7 @@ class NotifyService extends Service {
         ${read[0]}
         AND t2.action IN(:actions)
         ${whereStart[0]}
-      GROUP BY t2.action, t2.object_id, object_type, DATE(create_time)
+      GROUP BY t2.id, t2.user_id, t2.action, t2.object_id, t2.object_type, t2.remark, DATE(t2.create_time), t1.state, t1.notify_time, t1.read_time
       ORDER BY id DESC
       LIMIT :offset, :limit
     `;
@@ -214,7 +214,7 @@ class NotifyService extends Service {
           ${read[1]}
           AND c2.action IN(:actions)
           ${whereStart[1]}
-        GROUP BY c2.action, c2.object_id, object_type, DATE(create_time)
+        GROUP BY c2.action, c2.object_id, c2.object_type, DATE(c2.create_time), c1.state
       ) a
     `;
 

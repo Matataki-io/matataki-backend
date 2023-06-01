@@ -316,7 +316,7 @@ module.exports = app => {
 
   // -------------------------------- 搜索相关 --------------------------------
   // 推荐搜索词语
-  router.get('/search/recommend', passport.verify, controller.search.recommand);
+  router.get('/search/recommend', passport.verify, controller.search.recommend);
   // -------------------------------- geetest --------------------------------
   // 注册geetest
   router.get('/gt/register-slide', controller.geetest.register);
