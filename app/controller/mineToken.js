@@ -464,13 +464,13 @@ class MineTokenController extends Controller {
       // 检查该 to 合约是不是我们DB列入的Fan票
       const token = await this.service.token.externalDeposit.getFanPiaoFromAddress(receipt.to);
       if (!token) {
-        throw new Error('No such Token was found in our database, please check agian is it Matataki FanPiao.');
+        throw new Error('No such Token was found in our database, please check again is it Matataki FanPiao.');
       }
 
       // 检查这个交易是不是非 Transfer
       const event = this.service.token.externalDeposit.getTransferEvent(receipt.logs);
       if (!event) {
-        throw new Error('This transaction seems not a FanPiao transfer, please check agian.');
+        throw new Error('This transaction seems not a FanPiao transfer, please check again.');
       }
 
       const { fromAddr, toAddr, amount } = this.service.token.externalDeposit.getDataFromTransferEvent(event);
@@ -545,7 +545,7 @@ class MineTokenController extends Controller {
         data: { txHash },
       };
     } catch (error) {
-      this.logger.error('Error happned: ' + error);
+      this.logger.error('Error happened: ' + error);
       ctx.body = ctx.msg.failure;
       ctx.status = 400;
       ctx.body.data = { error };

@@ -10,7 +10,6 @@ class DownloaderService extends Service {
     return posts;
   }
   async getIpfsData(uid, hash) {
-    // const catchRequest = await this.service.post.ipfsCatch(hash);
     let catchRequest = null;
     if (hash.substring(0, 2) === 'Gh') {
       catchRequest = await this.service.github.readFromGithub(hash, 'md', 'source');

@@ -785,15 +785,13 @@ class PostController extends Controller {
       }
     }
 
-    // 从ipfs获取内容
-    // const catchRequest = await this.service.post.ipfsCatch(post.hash);
+    // 从 IPFS 或 GitHub 获取内容
     let catchRequest = null;
     if (post.hash.substring(0, 2) === 'Gh') {
       catchRequest = await this.service.github.readFromGithub(post.hash, 'md', 'source');
     } else {
       catchRequest = await this.service.post.ipfsCatch(post.hash);
     }
-
 
     if (catchRequest) {
       let data = JSON.parse(catchRequest.toString());
@@ -1243,8 +1241,7 @@ class PostController extends Controller {
       // 记录文章解锁行为
       if (post.require_holdtokens) this.service.postDashboard.addActionLog(ctx.user.id, post.id, 'unlock', true);
     }
-    // 从ipfs获取内容
-    // const catchRequest = await this.service.post.ipfsCatch(hash);
+    // 从 IPFS 或 GitHub 获取内容
     let catchRequest = null;
     if (hash.substring(0, 2) === 'Gh') {
       catchRequest = await this.service.github.readFromGithub(hash, 'md', 'source');

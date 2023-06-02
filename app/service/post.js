@@ -1673,8 +1673,6 @@ class PostService extends Service {
   async ipfsUpload(data) {
     let add = null;
     try {
-      // 建立连接并上传
-      // const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
       add = await this.service.ipfs.add(data);
     } catch (err) {
       this.logger.error('PostService:: ipfsUpload Error', err);
@@ -1686,8 +1684,6 @@ class PostService extends Service {
   async ipfsCatch(hash) {
     let data = null;
     try {
-      // 建立连接并获取
-      // const ipfs = IpfsHttpClientLite(this.config.ipfs_service.site);
       data = await this.service.ipfs.cat(hash);
     } catch (err) {
       this.logger.error('PostService:: ipfsCatch Error', err.message);
