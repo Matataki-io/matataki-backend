@@ -29,6 +29,14 @@ module.exports = appInfo => {
   config.isDebug = config.env === 'local';
 
   /**
+   * App log level
+   */
+  config.logger = {
+    level: config.isDebug ? 'DEBUG' : 'INFO',
+    consoleLevel: config.isDebug ? 'DEBUG' : 'INFO',
+  };
+
+  /**
    * egg.js proxy mode, enable it can collect user's request ip
    */
   config.proxy = true;
@@ -379,23 +387,26 @@ module.exports = appInfo => {
   };
 
   /**
-   * Kubo IPFS config
-   * attention: this config used for docker compose, if you don't use docker compose, you should change it
+   * IPFS config
+   * attention: you need set your own IPFS config
    */
-  config.ipfs_service = {
-    site: 'http://ipfs_local:5001',
-    host: 'ipfs_local',
-    port: 5001,
-    protocol: 'http',
-  };
-
-  /**
-   * Fleek IPFS config
-   * attention: you need set your own Fleek IPFS config
-   */
-  config.fleekIPFS = {
-    apiKey: '<Fleek api key>',
-    apiSecret: '<Fleek api secret>',
+  config.ipfs = {
+    gatewayUrls: [ 'http://ipfs_local:8080', 'https://ipfs.fleek.co', 'https://<Gateway Name>.infura-ipfs.io', 'https://cloudflare-ipfs.com', 'https://cf-ipfs.com', 'https://ipfs.io' ],
+    /**
+     * Kubo IPFS, used for docker compose
+     */
+    local: {
+      endpointUrl: 'http://ipfs_local:5001',
+    },
+    fleek: {
+      apiKey: '<Fleek api key>',
+      apiSecret: '<Fleek api secret>',
+    },
+    infura: {
+      endpointUrl: 'https://ipfs.infura.io:5001',
+      apiKey: '<Infura api key>',
+      apiSecret: '<Infura api secret>',
+    },
   };
 
   /**
