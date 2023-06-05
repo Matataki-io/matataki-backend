@@ -8,9 +8,8 @@ const moment = require('moment');
 // const axios = require('axios').default;
 const fs = require('fs');
 const removeMD = require('remove-markdown');
-// const IpfsHttpClientLite = require('ipfs-http-client-lite');
 const { articleToHtml } = require('markdown-article-to-html');
-
+const { v4 } = require('uuid');
 
 class PostService extends Service {
 
@@ -610,7 +609,7 @@ class PostService extends Service {
     // 是否点过推荐/不推荐，每个人只能点一次推荐/不推荐
     post.is_liked = await this.service.mining.liked(userId, post.id);
     // 获取用户从单篇文章阅读获取的积分
-    post.points = await this.service.mining.getPointslogBySignId(userId, post.id);
+    post.points = await this.service.mining.getPointsLogBySignId(userId, post.id);
 
     // 判断3天内的文章是否领取过阅读新文章奖励，3天以上的就不查询了
     if ((Date.now() - post.create_time) / (24 * 3600 * 1000) <= 3) {
@@ -956,11 +955,11 @@ class PostService extends Service {
       id2posts[row.id] = row;
       postIds.push(row.id);
     }
-    const tagSql = 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);';
+    const tagSql = 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signId);';
 
     const tagResult = await this.app.mysql.query(
       tagSql,
-      { signid: postIds }
+      { signId: postIds }
     );
     const tagResultLen = tagResult.length;
     for (let i = 0; i < tagResultLen; i++) {
@@ -1079,11 +1078,11 @@ class PostService extends Service {
       id2posts[row.id] = row;
       postIds.push(row.id);
     }
-    const tagSql = 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);';
+    const tagSql = 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signId);';
 
     const tagResult = await this.app.mysql.query(
       tagSql,
-      { signid: postIds }
+      { signId: postIds }
     );
     const tagResultLen = tagResult.length;
     for (let i = 0; i < tagResultLen; i++) {
@@ -1189,29 +1188,29 @@ class PostService extends Service {
   }
 
   // (new format)(count-list格式)
-  async getPostByTag(page = 1, pagesize = 20, extra = null, tagid) {
+  async getPostByTag(page = 1, pagesize = 20, extra = null, tagId) {
 
-    const totalsql = 'SELECT COUNT(*) AS count FROM post_tag a LEFT JOIN posts b ON a.sid = b.id ';
-    const listsql = 'SELECT a.sid, a.tid, b.title FROM post_tag a LEFT JOIN posts b ON a.sid = b.id ';
-    const wheresql = 'WHERE a.tid = :tid AND b.status = 0 ';
-    const ordersql = 'ORDER BY b.id DESC LIMIT :start, :end';
+    const totalSql = 'SELECT COUNT(*) AS count FROM post_tag a LEFT JOIN posts b ON a.sid = b.id ';
+    const listSql = 'SELECT a.sid, a.tid, b.title FROM post_tag a LEFT JOIN posts b ON a.sid = b.id ';
+    const whereSql = 'WHERE a.tid = :tid AND b.status = 0 ';
+    const orderSql = 'ORDER BY b.id DESC LIMIT :start, :end';
 
-    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const sqlCode = totalSql + whereSql + ';' + listSql + whereSql + orderSql + ';';
     const queryResult = await this.app.mysql.query(
-      sqlcode,
-      { tid: tagid, start: (page - 1) * pagesize, end: 1 * pagesize }
+      sqlCode,
+      { tid: tagId, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
     const amount = queryResult[0];
     const posts = queryResult[1];
 
     // 将文章id转为Array
-    const postids = [];
+    const postIds = [];
     _.each(posts, row => {
-      postids.push(row.sid);
+      postIds.push(row.sid);
     });
 
-    if (postids.length === 0) {
+    if (postIds.length === 0) {
       // return [];
       return { count: 0, list: [] };
     }
@@ -1226,7 +1225,7 @@ class PostService extends Service {
       });
     }
 
-    const postList = await this.getPostList(postids, extraItem);
+    const postList = await this.getPostList(postIds, extraItem);
 
     return { count: amount[0].count, list: postList };
   }
@@ -1234,22 +1233,22 @@ class PostService extends Service {
   // 赞赏次数排序(new format)(count-list格式)
   async supportRank(page = 1, pagesize = 20, channel = null, extra = null) {
 
-    const totalsql = 'SELECT COUNT(*) AS count FROM posts p ';
-    const listsql = 'SELECT p.id, c.support_count FROM posts p LEFT JOIN post_read_count c ON c.post_id = p.id ';
-    let wheresql = 'WHERE p.status = 0 ';
-    const ordersql = 'ORDER BY c.support_count DESC, p.id DESC LIMIT :start, :end';
+    const totalSql = 'SELECT COUNT(*) AS count FROM posts p ';
+    const listSql = 'SELECT p.id, c.support_count FROM posts p LEFT JOIN post_read_count c ON c.post_id = p.id ';
+    let whereSql = 'WHERE p.status = 0 ';
+    const orderSql = 'ORDER BY c.support_count DESC, p.id DESC LIMIT :start, :end';
     // 获取文章id列表, 按照统计表的赞赏次数排序
-    const channelid = parseInt(channel);
+    const channelId = parseInt(channel);
     if (channel !== null) {
-      if (isNaN(channelid)) {
+      if (isNaN(channelId)) {
         return 2;
       }
-      wheresql += 'AND p.channel_id = ' + channelid + ' ';
+      whereSql += 'AND p.channel_id = ' + channelId + ' ';
     }
-    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const sqlCode = totalSql + whereSql + ';' + listSql + whereSql + orderSql + ';';
     // 在support表中, 由赞赏次数获得一个文章的排序, 并且已经确保文章是没有被删除的
     const queryResult = await this.app.mysql.query(
-      sqlcode,
+      sqlCode,
       { start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
@@ -1257,12 +1256,12 @@ class PostService extends Service {
     const posts = queryResult[1];
 
     // 将文章id转为Array
-    const postids = [];
+    const postIds = [];
     _.each(posts, row => {
-      postids.push(row.id);
+      postIds.push(row.id);
     });
 
-    if (postids.length === 0) {
+    if (postIds.length === 0) {
       // return [];
       return { count: 0, list: [] };
     }
@@ -1277,7 +1276,7 @@ class PostService extends Service {
       });
     }
 
-    let postList = await this.getPostList(postids, extraItem);
+    let postList = await this.getPostList(postIds, extraItem);
 
     // 由赞赏次数进行排序
     // 还没加上时间降序
@@ -1297,44 +1296,44 @@ class PostService extends Service {
   async amountRank(page = 1, pagesize = 20, symbol = 'EOS', channel = null) {
 
     let posts = null;
-    let sqlcode = '';
+    let sqlCode = '';
 
     // 获取文章id列表, 按照指定的币种赞赏金额排序
     if (symbol.toUpperCase() === 'EOS') {
-      sqlcode = 'SELECT p.id, c.eos_value_count AS count ';
+      sqlCode = 'SELECT p.id, c.eos_value_count AS count ';
     } else {
-      sqlcode = 'SELECT p.id, c.ont_value_count AS count ';
+      sqlCode = 'SELECT p.id, c.ont_value_count AS count ';
     }
-    sqlcode += 'FROM posts p '
+    sqlCode += 'FROM posts p '
       + 'LEFT JOIN post_read_count c ON c.post_id = p.id '
       + 'WHERE p.status = 0 ';
-    const channelid = parseInt(channel);
+    const channelId = parseInt(channel);
     if (channel !== null) {
-      if (isNaN(channelid)) {
+      if (isNaN(channelId)) {
         return 2;
       }
-      sqlcode += 'AND p.channel_id = ' + channelid + ' ';
+      sqlCode += 'AND p.channel_id = ' + channelId + ' ';
     }
-    sqlcode += 'ORDER BY count DESC, p.id DESC LIMIT :start, :end;';
+    sqlCode += 'ORDER BY count DESC, p.id DESC LIMIT :start, :end;';
     posts = await this.app.mysql.query(
-      sqlcode,
+      sqlCode,
       { start: (page - 1) * pagesize, end: 1 * pagesize, symbol: symbol.toUpperCase() }
     );
 
     // 将文章id转为Array
-    const postids = [];
+    const postIds = [];
     _.each(posts, row => {
-      postids.push(row.id);
+      postIds.push(row.id);
     });
 
-    if (postids.length === 0) {
+    if (postIds.length === 0) {
       return [];
       // return { count: 0, list: [] };
     }
 
     // 调用getPostList函数获得文章的具体信息
     // 此时序列已经被打乱了
-    let postList = await this.getPostList(postids);
+    let postList = await this.getPostList(postIds);
 
     // 重新由赞赏金额进行排序
     // 还没加上时间降序
@@ -1369,39 +1368,39 @@ class PostService extends Service {
       return 2;
     }
 
-    const totalsql = 'SELECT COUNT(*) AS count FROM supports s INNER JOIN posts p ON s.signid = p.id ';
-    const listsql = 'SELECT s.create_time, signid FROM supports s INNER JOIN posts p ON s.signid = p.id ';
-    const ordersql = 'ORDER BY s.create_time DESC LIMIT :start, :end';
-    let wheresql = 'WHERE s.status = 1 AND p.status = 0 AND s.uid = :uid ';
+    const totalSql = 'SELECT COUNT(*) AS count FROM supports s INNER JOIN posts p ON s.signid = p.id ';
+    const listSql = 'SELECT s.create_time, signid FROM supports s INNER JOIN posts p ON s.signid = p.id ';
+    const orderSql = 'ORDER BY s.create_time DESC LIMIT :start, :end';
+    let whereSql = 'WHERE s.status = 1 AND p.status = 0 AND s.uid = :uid ';
 
-    const channelid = parseInt(channel);
+    const channelId = parseInt(channel);
     if (channel) {
-      if (isNaN(channelid)) {
+      if (isNaN(channelId)) {
         return 2;
       }
-      wheresql += 'AND p.channel_id = ' + channelid + ' ';
+      whereSql += 'AND p.channel_id = ' + channelId + ' ';
     }
 
-    const sqlcode = totalsql + wheresql + ';' + listsql + wheresql + ordersql + ';';
+    const sqlCode = totalSql + whereSql + ';' + listSql + whereSql + orderSql + ';';
     const queryResult = await this.app.mysql.query(
-      sqlcode,
+      sqlCode,
       { uid: userid, start: (page - 1) * pagesize, end: 1 * pagesize }
     );
 
     const amount = queryResult[0];
     const posts = queryResult[1];
 
-    const postids = [];
+    const postIds = [];
     _.each(posts, row => {
-      postids.push(row.signid);
+      postIds.push(row.signid);
     });
 
-    if (postids.length === 0) {
+    if (postIds.length === 0) {
       // return [];
       return { count: 0, list: [] };
     }
 
-    let postList = await this.getPostList(postids);
+    let postList = await this.getPostList(postIds);
 
     _.each(postList, row2 => {
       _.each(posts, row => {
@@ -1436,63 +1435,63 @@ class PostService extends Service {
   }
   async recommendPostsSlow(channel = null, amount = 5) {
 
-    let sqlcode = '';
-    sqlcode = 'SELECT id FROM posts '
+    let sqlCode = '';
+    sqlCode = 'SELECT id FROM posts '
       + 'WHERE is_recommend = 1 AND status = 0 ';
-    const channelid = parseInt(channel);
+    const channelId = parseInt(channel);
     if (channel !== null) {
-      if (isNaN(channelid)) {
+      if (isNaN(channelId)) {
         return 2;
       }
-      sqlcode += 'AND channel_id = ' + channelid + ' ';
+      sqlCode += 'AND channel_id = ' + channelId + ' ';
     }
-    sqlcode += 'ORDER BY id DESC LIMIT :amountnum;';
-    const amountnum = parseInt(amount);
-    if (isNaN(amountnum)) {
+    sqlCode += 'ORDER BY id DESC LIMIT :amountNum;';
+    const amountNum = parseInt(amount);
+    if (isNaN(amountNum)) {
       return 2;
     }
     const posts = await this.app.mysql.query(
-      sqlcode,
-      { amountnum }
+      sqlCode,
+      { amountNum }
     );
 
-    const postids = [];
+    const postIds = [];
     _.each(posts, row => {
-      postids.push(row.id);
+      postIds.push(row.id);
     });
 
-    if (postids.length === 0) {
+    if (postIds.length === 0) {
       return [];
       // return { count: 0, list: [] };
     }
 
-    const postList = await this.getPostList(postids);
+    const postList = await this.getPostList(postIds);
 
     return postList;
   }
 
   // 获取文章的列表, 用于成片展示文章时, 会被其他函数调用
-  async getPostList(signids, extraItem = null) {
+  async getPostList(signIds, extraItem = null) {
 
     let postList = [];
 
-    if (signids.length === 0) {
+    if (signIds.length === 0) {
       return postList;
     }
     // 查询文章和作者的信息, 结果是按照时间排序
     // 如果上层也需要按照时间排序的, 则无需再排, 需要其他排序方式则需再排
-    let sqlcode = 'SELECT a.id, a.uid, a.author, a.title,';
+    let sqlCode = 'SELECT a.id, a.uid, a.author, a.title,';
     if (extraItem) {
       if (extraItem.short_content) {
-        sqlcode += ' a.short_content,';
+        sqlCode += ' a.short_content,';
       }
     }
 
-    sqlcode += ' a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.is_recommend, b.nickname, b.avatar FROM posts a';
-    sqlcode += ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (:signids) AND a.status = 0 ORDER BY FIELD(a.id, :signids);';
+    sqlCode += ' a.hash, a.create_time, a.cover, a.require_holdtokens, a.require_buy, a.is_recommend, b.nickname, b.avatar FROM posts a';
+    sqlCode += ' LEFT JOIN users b ON a.uid = b.id WHERE a.id IN (:signIds) AND a.status = 0 ORDER BY FIELD(a.id, :signIds);';
     postList = await this.app.mysql.query(
-      sqlcode,
-      { signids }
+      sqlCode,
+      { signIds }
     );
 
     const hashs = [];
@@ -1514,7 +1513,7 @@ class PostService extends Service {
       + ' FROM post_read_count WHERE post_id IN (:signid);'
       + 'SELECT sign_id, symbol, price, decimals FROM product_prices WHERE sign_id IN (:signid) AND category = 0;'
       + 'SELECT p.sid, p.tid, t.name, t.type FROM post_tag p LEFT JOIN tags t ON p.tid = t.id WHERE sid IN (:signid);',
-      { signid: signids }
+      { signid: signIds }
     );
 
     const stats = statsQuery[0];
@@ -1645,13 +1644,13 @@ class PostService extends Service {
     return 0;
   }
 
-  async uploadImage(filename, filelocation) {
+  async uploadImage(filename, fileLocation) {
     const ctx = this.ctx;
 
     let result = null;
     try {
-      result = await ctx.oss.put(filename, filelocation);
-      await fs.unlinkSync(filelocation);
+      result = await ctx.oss.put(filename, fileLocation);
+      await fs.unlinkSync(fileLocation);
     } catch (err) {
       this.app.logger.error('PostService:: uploadImage error: %j', err);
       return 2;
@@ -1855,16 +1854,16 @@ class PostService extends Service {
       }
     }
 
-    const mytokens = [];
+    const myTokens = [];
 
     if (tokens && tokens.length > 0) {
       for (const token of tokens) {
         const amount = await this.service.token.mineToken.balanceOf(userId, token.id);
         token.amount = amount;
-        mytokens.push(token);
+        myTokens.push(token);
       }
     }
-    return mytokens;
+    return myTokens;
   }
 
   // 判断持币阅读
@@ -2080,14 +2079,15 @@ class PostService extends Service {
       markdown,
     });
     // 上传的data是json对象， 需要字符串化
-    const [ metadataHash, htmlHash ] = await Promise.all([
-      this.service.ipfs.uploadToFleek(metadata),
-      this.service.ipfs.uploadToFleek(renderedHtml),
-    ]);
+    const uuid = v4();
+    const metadataKey = `mttk_post_${uuid}`;
+    const htmlKey = `mttk_post_rendered_${uuid}`;
+    const metadataHash = await this.service.ipfs.add(metadata, metadataKey);
+    const htmlHash = await this.service.ipfs.add(renderedHtml, htmlKey);
     return { metadataHash, htmlHash };
   }
   async uploadArticleToGithub({
-    postid, title, /* description, *//* displayName, */ data, uid, publish_or_edit = 'publish', tags = [] }) {
+    postId, title, /* description, *//* displayName, */ data, uid, publish_or_edit = 'publish', tags = [] }) {
     // let markdown = data.content;
     const metadata = data.content;
     // description = await this.wash(description);
@@ -2120,8 +2120,8 @@ class PostService extends Service {
     let htmlHash;
 
     if (publish_or_edit === 'edit') {
-      htmlHash = metadataHash = await this.service.github.updateGithub(postid, metadata, title, 'md', 'source', tags);
-      //  await this.service.github.updateGithub(postid, renderedHtml, 'html');
+      htmlHash = metadataHash = await this.service.github.updateGithub(postId, metadata, title, 'md', 'source', tags);
+      //  await this.service.github.updateGithub(postId, renderedHtml, 'html');
     } else {
       htmlHash = metadataHash = await this.service.github.writeToGithub(uid, metadata, title, 'md', 'salt1', 'source', tags);
       //  await this.service.github.writeToGithub(uid, renderedHtml, title, 'html', 'salt2');

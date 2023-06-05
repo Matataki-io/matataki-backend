@@ -2,12 +2,26 @@
 
 require('core-js/es/aggregate-error');
 require('core-js/proposals/promise-any');
+require('core-js/stable/btoa');
 const axios = require('axios').default;
 const Service = require('egg').Service;
 const { v4 } = require('uuid');
+const { create } = require('ipfs-http-client')
 const fleekStorage = require('@fleekhq/fleek-storage-js');
 
 class ipfs extends Service {
+
+  localClient = create(new URL(this.config.ipfs.local.endpointUrl));
+
+  ipfsUrl = new URL(this.config.ipfs.infura.endpointUrl)
+  infuraClient = create({
+    host: this.ipfsUrl.hostname,
+    port: this.ipfsUrl.port,
+    protocol: this.ipfsUrl.protocol.slice(0, -1),
+    headers: {
+      Authorization: `Basic ${btoa(`${this.config.ipfs.infura.apiKey}:${this.config.ipfs.infura.apiSecret}`)}`
+    }
+  });
 
   /**
    * Cat IPFS content
@@ -37,10 +51,47 @@ class ipfs extends Service {
   /**
    * Add IPFS content
    * @param {any} data IPFS object data
+   * @param {string} key Filename, optional, use uuid as key when empty
    * @return {Promise<string>} IPFS CID hash
    */
-  async add(data) {
-    return await this.uploadToFleek(data);
+  async add(data, key = v4()) {
+    const requests = [
+      this.uploadToLocal(data),
+      this.uploadToInfura(data),
+      this.uploadToFleek(data, key),
+    ]
+    const hash = await Promise.any(requests);
+    return hash;
+  }
+
+  /**
+   * Upload IPFS content to local Kobo instance
+   * @param {any} file IPFS file
+   * @returns IPFS CID hash
+   */
+  async uploadToLocal(file) {
+    try {
+      const { cid } = await this.localClient.add(file, { cidVersion: 1, pin: true });
+      return cid.toString();
+    } catch (error) {
+      this.logger.error('Upload to local has error: ', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Upload IPFS content to Infura IPFS
+   * @param {any} file IPFS file
+   * @returns IPFS CID hash
+   */
+  async uploadToInfura(file) {
+    try {
+      const { cid } = await this.infuraClient.add(file, { cidVersion: 1, pin: true });
+      return cid.toString();
+    } catch (error) {
+      this.logger.error('Upload to infura has error: ', error.message);
+      throw error;
+    }
   }
 
   /**
@@ -55,20 +106,15 @@ class ipfs extends Service {
       const uploadedFile = await fleekStorage.upload({
         apiKey: fleekConfig.apiKey,
         apiSecret: fleekConfig.apiSecret,
-        key: 'mttk_post_' + key,
+        key,
         data: file,
       });
 
       return uploadedFile.hash;
     } catch (error) {
-      this.logger.error('Upload to fleek have error: ', error.message);
-      // await this.service.system.notification.pushTextToDingTalk(
-      //   'ipfs',
-      //   '(👷IPFS系统警告) 监测到 Fleek.Co 的 IPFS 存储上传接口无法访问，请工程师登录 app.fleek.co 检查状态。现在用 Infura 公共节点顶替。'
-      // );
-      // TODO Upload to Infura
-      // const hashWithInfura = await this.uploadToInfura(file);
-      // return hashWithInfura;
+      this.logger.error('Upload to fleek has error: ', error.message);
+      console.log(error)
+      throw error;
     }
   }
 }

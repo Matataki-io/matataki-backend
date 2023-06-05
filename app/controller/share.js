@@ -3,6 +3,7 @@
 const Controller = require('../core/base_controller');
 
 const moment = require('moment');
+const { v4 } = require('uuid');
 
 class ShareController extends Controller {
   // 发布分享
@@ -24,13 +25,15 @@ class ShareController extends Controller {
     const timestamp = moment(now).valueOf() / 1000;
 
     // 上传ipfs
-    const hash = await this.service.ipfs.uploadToFleek(JSON.stringify({
+    const data = JSON.stringify({
       timestamp,
       author,
       content,
       refs,
       media,
-    }));
+    });
+    const key = `mttk_share_${v4()}`;
+    const hash = await this.service.ipfs.add(data, key);
     this.logger.info('controller.share hash', hash);
     if (!hash) {
       ctx.body = ctx.msg.ipfsUploadFailed;

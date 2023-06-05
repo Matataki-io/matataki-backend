@@ -54,6 +54,19 @@ services:
 
   ipfs_local:
     image: ipfs/kubo
+    container_name: ipfs_local
+    restart: unless-stopped
+    ports:
+      - 5001:5001
+      - 8080:8080
+    volumes:
+      - .data/ipfs:/data/ipfs
+    healthcheck:
+      test: ["CMD-SHELL", "ipfs dag stat /ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   ss_backend:
     restart: always

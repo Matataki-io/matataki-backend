@@ -6,7 +6,7 @@ const moment = require('moment');
 const md5 = require('crypto-js/md5');
 // const sanitize = require('sanitize-html');
 const { isEmpty } = require('lodash');
-
+const { v4 } = require('uuid');
 
 class PostController extends Controller {
   constructor(ctx) {
@@ -245,7 +245,7 @@ class PostController extends Controller {
         title,
         displayName,
         description: short_content,
-        postid: signId,
+        postId: signId,
         uid: post.uid,
         publish_or_edit: 'edit',
         tags: tags_for_indie,
@@ -1214,9 +1214,9 @@ class PostController extends Controller {
 
     this.logger.info('upload ipfs data', data);
     // 上传的data是json对象， 需要字符串化
-    const uploadRequest = await this.service.ipfs.uploadToFleek(
-      JSON.stringify(data)
-    );
+    const file = JSON.stringify(data);
+    const key = `mttk_post_${v4()}`;
+    const uploadRequest = await this.service.ipfs.add(file, key);
 
     if (uploadRequest) {
       ctx.body = ctx.msg.success;
