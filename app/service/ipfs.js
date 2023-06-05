@@ -113,7 +113,6 @@ class ipfs extends Service {
       return uploadedFile.hash;
     } catch (error) {
       this.logger.error('Upload to fleek has error: ', error.message);
-      console.log(error)
       throw error;
     }
   }

@@ -40,7 +40,7 @@ module.exports = {
     package: 'egg-tenpay',
   },
   alinode: {
-    enable: true,
+    enable: false,
     package: 'egg-alinode',
   },
 };
