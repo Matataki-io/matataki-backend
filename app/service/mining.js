@@ -355,13 +355,13 @@ class LikeService extends Service {
   }
 
   // 获取用户从单篇文章阅读获取的积分
-  async getPointslogBySignId(userId, signId) {
-    const pointslog = await this.app.mysql.select('assets_points_log', {
+  async getPointsLogBySignId(userId, signId) {
+    const pointsLog = await this.app.mysql.select('assets_points_log', {
       columns: [ 'amount', 'type', 'create_time' ],
       where: { uid: userId, sign_id: signId },
     });
 
-    return pointslog;
+    return pointsLog;
   }
 
   // 发文获取积分

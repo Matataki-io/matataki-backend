@@ -140,7 +140,7 @@ module.exports = app => {
   // 获取一个文章的所有标签
   router.get('/tags/get_by_post', passport.verify, controller.tag.getTagsById);
   // 热门标签 筛选对象为最近14天内应用次数最多的标签
-  router.get('/tags/hotestTags', passport.verify, controller.tag.hotestTags);
+  router.get('/tags/hotestTags', passport.verify, controller.tag.hottestTags);
 
   // -------------------------------- 草稿系统 --------------------------------
   // 获取我的草稿箱列表 (need access token)
@@ -309,7 +309,7 @@ module.exports = app => {
   // 不喜欢
   router.post('/posts/:id/dislike', passport.authorize, controller.mining.dislike);
   // 阅读新内容30秒，增加阅读新内容积分
-  router.post('/posts/:id/readnew', passport.authorize, controller.mining.readnew);
+  router.post('/posts/:id/readnew', passport.authorize, controller.mining.readNew);
   router.post('/posts/:id/reward', passport.authorize, controller.mineToken.rewardArticle);
   router.get('/posts/:id/reward', passport.verify, controller.mineToken.getRewardArticle);
 

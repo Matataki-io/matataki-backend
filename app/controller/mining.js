@@ -22,10 +22,10 @@ class LikeController extends Controller {
 
       // 为喜欢行为创建一个事件通知
       const { uid, channel_id } = await this.service.post.get(ctx.params.id);
-      const objectType = channel_id === 3 ? 'share' : 'article'
-      this.service.notify.event.sendEvent(ctx.user.id, [uid], 'like', ctx.params.id, objectType);
+      const objectType = channel_id === 3 ? 'share' : 'article';
+      this.service.notify.event.sendEvent(ctx.user.id, [ uid ], 'like', ctx.params.id, objectType);
 
-      const points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
+      const points = await this.service.mining.getPointsLogBySignId(ctx.user.id, ctx.params.id);
       ctx.body = ctx.msg.success;
       ctx.body.data = points;
     } else {
@@ -42,7 +42,7 @@ class LikeController extends Controller {
     if (result === 0) {
       await this.service.postDashboard.addActionLog(ctx.user.id, ctx.params.id, 'dislike');
 
-      const points = await this.service.mining.getPointslogBySignId(ctx.user.id, ctx.params.id);
+      const points = await this.service.mining.getPointsLogBySignId(ctx.user.id, ctx.params.id);
       ctx.body = ctx.msg.success;
       ctx.body.data = points;
     } else {
@@ -52,7 +52,7 @@ class LikeController extends Controller {
   }
 
   // 阅读新内容30秒，增加阅读新内容积分
-  async readnew() {
+  async readNew() {
     const ctx = this.ctx;
     const { time } = ctx.request.body;
     const points = await this.service.mining.readNew(ctx.user.id, ctx.params.id, time, ctx.ip);

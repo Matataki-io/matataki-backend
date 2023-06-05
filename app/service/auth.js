@@ -571,7 +571,7 @@ class AuthService extends Service {
   }
 
   // 邮箱账号密码登录
-  async verifyLogin(username, password, ipaddress) {
+  async verifyLogin(username, password, ipAddress) {
     // 提取用户信息
     // let userPw;
     const platform = 'email';
@@ -588,7 +588,7 @@ class AuthService extends Service {
     // if (userPw.length === 0) {
     // const userPw = await this.service.account.binding.getSyncFieldWithUser(username, platform);
     const userPw = await this.service.account.binding.get2({ username, platform, needPasswordHash: true });
-    this.logger.info('AuthService:: verifyLogin: userPw ', userPw);
+    this.logger.info('AuthService:: verifyLogin: userPw ', userPw.id, userPw.username);
 
     if (!userPw) {
       this.logger.info('AuthService:: verifyLogin: User doesn\'t exist ', username);
@@ -602,14 +602,14 @@ class AuthService extends Service {
     }
 
     // 增加登录日志
-    await this.insertLoginLog(userPw.id, ipaddress);
+    await this.insertLoginLog(userPw.id, ipAddress);
     // const now = moment().format('YYYY-MM-DD HH:mm:ss');
     // let addLoginLog;
     // try {
     //   addLoginLog = await this.app.mysql.query(
     //     'INSERT INTO users_login_log (uid, ip, source, login_time) VALUES '
-    //     + '(:uid, :ipaddress, \'ss\', :now);',
-    //     { uid: userPw[0].id, ipaddress, now }
+    //     + '(:uid, :ipAddress, \'ss\', :now);',
+    //     { uid: userPw[0].id, ipAddress, now }
     //   );
     // } catch (err) {
     //   this.logger.error('AuthService:: verifyLogin: Error ', err);

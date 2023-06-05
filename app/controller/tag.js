@@ -78,10 +78,10 @@ class TagController extends Controller {
     ctx.body = ctx.msg.success;
     ctx.body.data = arr;
   }
-  async hotestTags() {
+  async hottestTags() {
     const { ctx } = this;
     const { pagesize = 8, day = 14 } = ctx.query;
-    const result = await this.service.tags.hotestTags({ pagesize, day });
+    const result = await this.service.tags.hottestTags({ pageSize: pagesize, day });
     ctx.body = ctx.msg.success;
     ctx.body.data = result;
   }
