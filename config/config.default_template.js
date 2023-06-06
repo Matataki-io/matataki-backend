@@ -113,6 +113,9 @@ module.exports = appInfo => {
    * @required this config used for docker compose, if you don't use docker compose, you should change it
    */
   config.mysql = {
+    /**
+     * @type {import('mysql').ConnectionConfig}
+     */
     client: {
       host: 'db_local',
       port: '3306',
