@@ -1,6 +1,8 @@
 /**
  * Create a copy of this file named `config.default.js` and populate it with your secrets.
+ * Please fill all the fields marked with @required. And you can change other fields as you need.
  * Some default values are set to work with the docker-compose setup.
+ * Some fields marked with @important means you should not change it in production env.
  */
 
 'use strict';
@@ -18,13 +20,13 @@ module.exports = appInfo => {
   /**
    * App env, use for error handling and some service
    * env mode: local, test, prod
-   * attention: should change to 'prod' before deploy to production env
+   * @required should change to 'prod' before deploy to production env
    */
   config.env = 'test';
 
   /**
    * App debug mode, use for bypass some app logic
-   * attention: do not enable it in production env
+   * @important do not enable it in production env
    */
   config.isDebug = config.env === 'local';
 
@@ -43,13 +45,13 @@ module.exports = appInfo => {
 
   /**
    * Use for cookie sign key
-   * attention: should change to your own and keep security
+   * @required should change to your own and keep security
    */
   config.keys = appInfo.name + '_1552273931927_1142';
 
   /**
    * JWT token secret for auth
-   * attention: should change to your own and keep security
+   * @required should change to your own and keep security
    */
   config.jwtTokenSecret = 'smart signature auth secret';
 
@@ -68,7 +70,7 @@ module.exports = appInfo => {
 
   /**
    * egg-security(https://github.com/eggjs/egg-security) config
-   * attention: you need set your own domain in production
+   * @required you need set your own domain in production
    */
   config.security = {
     domainWhiteList: [ 'http://127.0.0.1:3000', 'http://localhost:3000' ],
@@ -108,7 +110,7 @@ module.exports = appInfo => {
   /**
    * egg-mysql(https://github.com/eggjs/egg-mysql/tree/d3fa13cff21dcb4cf2d72d52e144fc5d37c26694) config
    * use mysql 5.7
-   * attention: this config used for docker compose, if you don't use docker compose, you should change it
+   * @required this config used for docker compose, if you don't use docker compose, you should change it
    */
   config.mysql = {
     client: {
@@ -130,7 +132,7 @@ module.exports = appInfo => {
   /**
    * egg-redis(https://github.com/eggjs/egg-redis) config
    * use redis 7
-   * attention: this config used for docker compose, if you don't use docker compose, you should change it
+   * @required this config used for docker compose, if you don't use docker compose, you should change it
    */
   config.redis = {
     client: {
@@ -144,7 +146,7 @@ module.exports = appInfo => {
   /**
    * Elasticsearch config
    * use elasticsearch 7
-   * attention: this config used for docker compose, if you don't use docker compose, you should change it
+   * @required this config used for docker compose, if you don't use docker compose, you should change it
    */
   config.elasticsearch = {
     host: 'http://elasticsearch_local:9200',
@@ -158,7 +160,7 @@ module.exports = appInfo => {
   /**
    * egg-oss(https://github.com/eggjs/egg-oss) aliyun oss config
    * Matataki use Aliyun OSS to store images
-   * attention: you need set your own aliyun oss config
+   * @required you need set your own aliyun oss config
    */
   config.oss = {
     client: {
@@ -172,6 +174,7 @@ module.exports = appInfo => {
 
   /**
    * Aliyun OSS bucket public url
+   * @important you should change it when you use your own public domain
    */
   const ossUrl = new URL(config.oss.client.endpoint);
   config.ssimg = `${ossUrl.protocol}//${config.oss.client.bucket}.${ossUrl.host}`;
@@ -181,8 +184,8 @@ module.exports = appInfo => {
   // ==========================
 
   /**
-   * SMTP mail config for sign-up and order
-   * attention: you need set your own mail config
+   * SMTP mail config for sign-up and order (legacy)
+   * @important you need set your own mail config
    */
   config.mailSetting = true;
   config.mail = {
@@ -199,8 +202,8 @@ module.exports = appInfo => {
   };
 
   /**
-   * SendCloud mail service config
-   * attention: you need set your own SendCloud config
+   * SendCloud mail service config for auth and password reset
+   * @required you need set your own SendCloud config
    */
   config.sendCloud = {
     apiUser: '<SendCloud api user>',
@@ -208,8 +211,8 @@ module.exports = appInfo => {
   };
 
   /**
-   * GeeTest CAPTCHA config
-   * attention: you need set your own GeeTest config
+   * GeeTest CAPTCHA config for E-mail auth and password reset
+   * @required you need set your own GeeTest config
    */
   config.geetest = {
     geetestId: '<Geetest Id>',
@@ -217,8 +220,9 @@ module.exports = appInfo => {
   };
 
   /**
-   * hCaptcha config
-   * attention: you need set your own hCaptcha config
+   * hCaptcha config for rate limit publish post and change user info
+   * @note currently disabled
+   * @important you need set your own hCaptcha config
    */
   config.hCaptcha = {
     privateKey: '<hCaptcha private key>',
@@ -226,7 +230,7 @@ module.exports = appInfo => {
 
   /**
    * WeChat share config
-   * attention: you need set your own WeChat config
+   * @important you need set your own WeChat config
    */
   config.wx = {
     appId: '<WeChat app id>',
@@ -235,7 +239,7 @@ module.exports = appInfo => {
 
   /**
    * WeChat auth config
-   * attention: you need set your own WeChat config
+   * @important you need set your own WeChat config
    */
   config.wechat = {
     appId: '<WeChat app id>',
@@ -244,7 +248,7 @@ module.exports = appInfo => {
 
   /**
    * WeChat service account config
-   * attention: you need set your own WeChat service account config
+   * @important you need set your own WeChat service account config
    */
   config.wxServiceAccount = {
     appId: '<WeChat service account app id>',
@@ -252,8 +256,8 @@ module.exports = appInfo => {
   };
 
   /**
-   * GitHub App oauth config
-   * attention: you need set your own GitHub App config
+   * GitHub App OAuth config
+   * @important you need set your own GitHub App config
    */
   config.github = {
     appName: '<GitHub app name>',
@@ -262,8 +266,8 @@ module.exports = appInfo => {
   };
 
   /**
-   * Twitter oauth config
-   * attention: you need set your own Twitter config
+   * Twitter OAuth config for bind account
+   * @important you need set your own Twitter config
    */
   config.twitter = {
     appKey: '<Twitter app key>',
@@ -272,8 +276,8 @@ module.exports = appInfo => {
   };
 
   /**
-   * Twitter oauth config (another?)
-   * attention: you need set your own Twitter config
+   * Twitter OAuth config for Matataki sign-up
+   * @important you need set your own Twitter config
    */
   config.passportTwitter = {
     key: '<Twitter api key>',
@@ -281,8 +285,8 @@ module.exports = appInfo => {
   };
 
   /**
-   * Twitter oauth config for Matataki Timeline service
-   * attention: you need set your own Twitter config
+   * Twitter OAuth config for Matataki Timeline service
+   * @important you need set your own Twitter config
    */
   config.twitterConsumerKey = {
     key: '<Twitter api key>',
@@ -291,15 +295,15 @@ module.exports = appInfo => {
 
   /**
    * Telegram bot auth config
-   * attention: you need set your own Telegram config
+   * @important you need set your own Telegram config
    */
   config.telegramBot = {
     '<Telegram bot name>': '<Telegram bot token>',
   };
 
   /**
-   * Google auth config
-   * attention: you need set your own Google config
+   * Google OAuth config
+   * @important you need set your own Google config
    */
   config.google = {
     appKey: '<Google app key>',
@@ -307,8 +311,8 @@ module.exports = appInfo => {
   };
 
   /**
-   * Facebook auth config
-   * attention: you need set your own Facebook config
+   * Facebook OAuth config
+   * @important you need set your own Facebook config
    */
   config.facebook = {
     appKey: '<Facebook app key>',
@@ -318,7 +322,8 @@ module.exports = appInfo => {
   /**
    * egg-alinode(https://github.com/eggjs/egg-alinode)
    * Add appid and secret from https://node.console.aliyun.com/
-   * attention: you need set your own AliNode config
+   * @note currently disabled
+   * @important you need set your own AliNode config
    */
   config.alinode = {
     appid: '<appid>',
@@ -328,7 +333,7 @@ module.exports = appInfo => {
   /**
    * MatatakiPuller(https://github.com/Matataki-io/MatatakiPuller) config
    * You can get MatatakiPuller from https://github.com/Matataki-io/MatatakiPuller
-   * attention: you need set your own MatatakiPuller config
+   * @important you need set your own MatatakiPuller config
    */
   config.cacheAPI = {
     uri: '<MatatakiPuller service api>',
@@ -338,7 +343,7 @@ module.exports = appInfo => {
   /**
    * Token Circle Backend(https://github.com/Matataki-io/TokenCircle-Bot-Backend)
    * You can get Token Circle Backend from https://github.com/Matataki-io/TokenCircle-Bot-Backend
-   * attention: you need set your own Token Circle Backend config
+   * @important you need set your own Token Circle Backend config
    */
   config.tokenCircleBackend = {
     baseURL: '<Token Circle Backend service api>',
@@ -346,7 +351,8 @@ module.exports = appInfo => {
   };
 
   /**
-   * DingTalk bot for NotificationService, might be optional
+   * DingTalk bot for developer monitor
+   * @note currently disabled
    */
   config.dingtalkBots = {
     // '<Bot name>': '<Bot token>',
@@ -360,7 +366,7 @@ module.exports = appInfo => {
 
   /**
    * EOS chain config
-   * attention: you need set your own
+   * @important you need set your own
    */
   config.eos = {
     httpEndpoint: 'http://eos.greymass.com',
@@ -376,7 +382,7 @@ module.exports = appInfo => {
 
   /**
    * Ontology chain config
-   * attention: you need set your own
+   * @important you need set your own
    */
   config.ont = {
     httpEndpoint: 'http://polaris1.ont.io:20334',
@@ -387,10 +393,13 @@ module.exports = appInfo => {
   };
 
   /**
-   * IPFS config
-   * attention: you need set your own IPFS config
+   * IPFS config for publish post
+   * @required you need set your own IPFS config
    */
   config.ipfs = {
+    /**
+     * IPFS gateway urls, highly recommend add public gateway for fallback
+     */
     gatewayUrls: [ 'http://ipfs_local:8080', 'https://ipfs.fleek.co', 'https://<Gateway Name>.infura-ipfs.io', 'https://cloudflare-ipfs.com', 'https://cf-ipfs.com', 'https://ipfs.io' ],
     /**
      * Kubo IPFS, used for docker compose
@@ -410,7 +419,7 @@ module.exports = appInfo => {
   };
 
   /**
-   * Mint token whitelist?
+   * Mint token whitelist
   */
   config.token = {
     maintokens: [ 'BTC', 'ETH', 'XRP', 'BCH', 'USDT', 'LTC', 'EOS', 'BNB', 'BSV', 'TRX', 'XLM', 'ADA', 'XMR', 'BRC', 'DASH', 'ATOM', 'ETC', 'ONT', 'NEO', 'QTUM', 'NAS', 'STEEM' ],
@@ -418,7 +427,7 @@ module.exports = appInfo => {
 
   /**
    * Ethereum chain config
-   * attention: you need set your own Ethereum config
+   * @important you need set your own Ethereum config
    */
   config.ethereum = {
     runningNetwork: 'mainnet',
@@ -436,6 +445,7 @@ module.exports = appInfo => {
 
   /**
    * TimeMachine config
+   * @important you need set your own TimeMachine config
    */
   config.timemachine = {
     contracts: {
@@ -446,6 +456,7 @@ module.exports = appInfo => {
 
   /**
    * Cross chain token in-out service config
+   * @important you need set your own config
    */
   config.tokenInAndOut = {
     // Collect the token for Matataki DB
@@ -457,7 +468,8 @@ module.exports = appInfo => {
 
   /**
    * BSC cross chain api config
-   * attention: you need set your own config
+   * @note currently dsiabled
+   * @important you need set your own config
    */
   config.bscCrossChainApi = {
     endpoint: '<api url>',
@@ -466,7 +478,8 @@ module.exports = appInfo => {
 
   /**
    * Matic(Polygon) cross chain api config
-   * attention: you need set your own config
+   * @note currently dsiabled
+   * @important you need set your own config
    */
   config.maticCrossChainApi = {
     endpoint: '<api url>',
@@ -479,7 +492,7 @@ module.exports = appInfo => {
 
   /**
    * egg-wxpay(https://github.com/wbget/egg-wxpay) config
-   * attention: you need set your own WeChat pay config
+   * @important you need set your own WeChat pay config
    */
   config.wxpay = {
     appId: '<appid>',
@@ -492,7 +505,7 @@ module.exports = appInfo => {
 
   /**
    * WeChat pay for article config
-   * attention: replace <backend api> to your own api domain
+   * @important replace <backend api> to your own api domain
    */
   config.aritclePay = {
     notify_url: '<backend api>/wx/payarticlenotify',
@@ -500,7 +513,7 @@ module.exports = appInfo => {
 
   /**
    * egg-tenpay(https://github.com/wbget/egg-tenpay) config
-   * attention: you need set your own Tencent pay config
+   * @important you need set your own Tencent pay config
    */
   config.tenpay = {
     client: {
@@ -515,7 +528,7 @@ module.exports = appInfo => {
 
   /**
    * AliPay config
-   * attention: you need set your own AliPay config
+   * @important you need set your own AliPay config
    */
   config.alipay = {
     appId: '<alipay app id>',
@@ -601,8 +614,8 @@ module.exports = appInfo => {
   };
 
   /**
-   * Crypto config
-   * attention: you need set your own secret key
+   * Crypto config for post
+   * @required you need set your own secret key
    * 因为只有我们来操作加解密，所以我们只需要**对称性加密**，只需要私钥
    */
   config.crypto = {

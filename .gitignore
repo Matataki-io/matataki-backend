@@ -23,9 +23,15 @@ TTD.md
 unittest/
 build/
 cmd.sh
-.vscode/
+.vscode/*
 !.vscode/settings.json
-.vs/
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+.history/
+*.vsix
+.vs/*
 scripts/config.local.json
 scripts/article-cart/config.*.json
 scripts/oss-copy/config.local.json
