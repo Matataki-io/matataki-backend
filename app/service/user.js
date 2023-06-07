@@ -253,6 +253,11 @@ class UserService extends Service {
 
       ids = await this.app.redis.srandmember('user:recommend', amount);
     }
+
+    if (ids.length <= 0) {
+      return [];
+    }
+
     const users = await this.app.mysql.query('SELECT id, username, email, nickname, avatar, introduction, is_recommend FROM users WHERE id IN (:ids);', {
       ids,
     });
@@ -594,6 +599,7 @@ class UserService extends Service {
   //   return false;
   // }
 
+  // eslint-disable-next-line no-unused-vars
   async isOntAddress(address) {
     /*
     try {
