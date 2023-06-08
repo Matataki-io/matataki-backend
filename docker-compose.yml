@@ -76,9 +76,10 @@ services:
       dockerfile: ./Dockerfile
     command: yarn serve
     volumes:
-      - config/config.default.js:/usr/src/app/config/config.default.js
-      - config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
-      - config/wechat_config.js:/usr/src/app/config/wechat_config.js
+      - ./config/config.local.js:/usr/src/app/config/config.local.js
+      - ./config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
+      - ./config/wechat_config.js:/usr/src/app/config/wechat_config.js
+      - ./posts-zip:/usr/src/app/posts-zip
     ports:
       - 7653:7001
     depends_on:
