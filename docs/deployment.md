@@ -48,7 +48,7 @@ Additionally, some configuration options have default values set according to th
 ## Run with docker-compose
 
 ```bash
-docker-compose up -d --build
+docker compose --profile deploy up -d --build
 ```
 
 ## Initialize the database
