@@ -1,8 +1,7 @@
 /**
- * Create a copy of this file named `config.default.js` and populate it with your secrets.
+ * Create a copy of this file named `config.local.js` and populate it with your secrets.
  * Please fill all the fields marked with @required. And you can change other fields as you need.
  * Some default values are set to work with the docker-compose setup.
- * Some fields marked with @important means you should not change it in production env.
  */
 
 'use strict';
@@ -117,7 +116,7 @@ module.exports = appInfo => {
      * @type {import('mysql').ConnectionConfig}
      */
     client: {
-      host: 'db_local',
+      host: 'mysql_local',
       port: '3306',
       user: 'ss_test',
       password: 'p@sSw0Rd',
@@ -170,7 +169,7 @@ module.exports = appInfo => {
       accessKeyId: 'your access key',
       accessKeySecret: 'your access secret',
       bucket: 'your bucket name',
-      endpoint: '{https or http}://{your endpoint name}.aliyun.com',
+      endpoint: 'https://your-endpoint-name.aliyun.com',
       timeout: '60s',
     },
   };

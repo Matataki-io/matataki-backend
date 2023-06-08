@@ -15,11 +15,11 @@ services:
       - MYSQL_PASSWORD=p@sSw0Rd
     volumes:
       - .data/mysql:/var/lib/mysql
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin", "ping", "--user=root", "--password=${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # healthcheck:
+    #   test: ["CMD-SHELL", "mysqladmin", "ping", "--user=root", "--password=${MYSQL_ROOT_PASSWORD}"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
 
   redis_local:
     image: redis:7
@@ -69,26 +69,27 @@ services:
       start_period: 5s
 
   ss_backend:
-    restart: always
+    restart: unless-stopped
     container_name: ss_backend_local
     build:
       context: .
       dockerfile: ./Dockerfile
     command: yarn serve
     volumes:
-      - ./config/config.local.js:/usr/src/app/config/config.local.js
+      - ./config/config.prod.js:/usr/src/app/config/config.prod.js
       - ./config/apiaccesstoken.js:/usr/src/app/config/apiaccesstoken.js
       - ./config/wechat_config.js:/usr/src/app/config/wechat_config.js
       - ./posts-zip:/usr/src/app/posts-zip
+      - ./logs:/root/logs
     ports:
-      - 7653:7001
+      - 7001:7001
     depends_on:
       - mysql_local
       - redis_local
       - elasticsearch_local
       - ipfs_local
     healthcheck:
-      test: curl --fail http://localhost:7001 || exit 1
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7001 || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
