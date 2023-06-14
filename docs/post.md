@@ -1,6 +1,6 @@
 # Posts API 文档
 
-### 搜索已经关注的用户发的文章
+### ~~搜索已经关注的用户发的文章~~
 
 - 路径： /posts/followedPosts
 - 请求方式： GET
@@ -52,7 +52,7 @@ curl -X GET 'http://apitest.mttk.net/posts/followedPosts?pagesize=2&extra=short_
 }
 ```
 
-### 全文搜索功能
+### ~~全文搜索功能~~
 
 - 路径： /posts/search
 - 请求方式： GET

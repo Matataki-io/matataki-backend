@@ -1,6 +1,6 @@
 # Users API 文档
 
-### 推荐作者（用户）
+### ~~推荐作者（用户）~~
 
 - 路径：/users/recommend
 - 请求方式： GET
@@ -41,7 +41,7 @@ curl -X GET -H 'x-access-token: ey' 'http://localhost:7001/users/recommend?amoun
 }
 ```
 
-### 全文搜索功能
+### ~~全文搜索功能~~
 
 - 路径：/users/search
 - 请求方式： GET

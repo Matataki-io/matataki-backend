@@ -1,6 +1,6 @@
 # Search API 文档
 
-### 推荐搜索词
+### ~~推荐搜索词~~
 
 - 路径： /search/recommend
 - 请求方式： GET
