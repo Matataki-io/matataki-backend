@@ -1,6 +1,6 @@
 ### API docs
 
-#### 发布文章
+#### ~~发布文章~~
 
 - POST /post/publish
 - 响应状态码：200
@@ -15,7 +15,7 @@
 - 增加参数：indie_sync_tags
 - 对应：由发文页面中的选框决定，勾选则为true，否则为false
 
-#### 获取文章列表
+#### ~~获取文章列表~~
 
 - GET /posts/timeRanking
 
@@ -64,7 +64,7 @@
 }
 ```
 
-#### 获取按照赞赏次数排行的文章列表
+#### ~~获取按照赞赏次数排行的文章列表~~
 
 - GET /posts/supportsRanking
 
@@ -103,7 +103,7 @@
 }
 ```
 
-#### 获取推荐文章
+#### ~~获取推荐文章~~
 
 - GET /posts/recommend
 - 不分页, 返回最新的数条
@@ -143,7 +143,7 @@
 }
 ```
 
-#### 获取包含该 tag 的文章列表
+#### ~~获取包含该 tag 的文章列表~~
 
 - GET /posts/getPostByTag
 
@@ -202,7 +202,7 @@
 }
 ```
 
-#### 获取用户信息
+#### ~~获取用户信息~~
 
 返回 email, nickname, avatar, avatar, fans 数和 follow 数 , is_follow 是否关注，
 
@@ -218,7 +218,7 @@
 
 - curl -X GET https://api.mttk.net/user/minakokojima
 
-#### 获取用户个人主页的统计信息 (need access token)
+#### ~~获取用户个人主页的统计信息 (need access token)~~
 
 - GET /user/stats
 - 正常状态码: 200
@@ -246,7 +246,7 @@
 }
 ```
 
-#### 文章分享上报
+#### ~~文章分享上报~~
 
 - POST /share
 - 响应状态码：200
@@ -260,7 +260,7 @@
 
 - curl -d "user=joetothemoon&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy" -X POST https://api.mttk.net/share
 
-#### 文章支持上报
+#### ~~文章支持上报~~
 
 - POST /vote
 - 响应状态码：200
@@ -274,22 +274,22 @@
 
 - curl -d "user=joetothemoon&hash=QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy" -X POST https://api.mttk.net/vote
 
-#### IPFS add
+#### ~~IPFS add~~
 
 - POST /ipfs/add
 - 响应状态码：200
 
-#### IPFS addJSON
+#### ~~IPFS addJSON~~
 
 - POST /ipfs/addJSON
 - 响应状态码：200
 
-#### IPFS cat
+#### ~~IPFS cat~~
 
 - GET /ipfs/cat
 - 响应状态码：200
 
-#### IPFS catJSON
+#### ~~IPFS catJSON~~
 
 - GET /ipfs/catJSON
 - 响应状态码：200
@@ -301,7 +301,7 @@
 - curl -X GET https://api.mttk.net/ipfs/cat/QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy
 - curl -X GET https://api.mttk.net/ipfs/catJSON/QmNzMrW3J7eY6KPqXd3TLwr2Y31iga2QowzrhUPJYk2mcy
 
-#### 上传文章至 IPFS（新） （需要 token）
+#### ~~上传文章至 IPFS（新） （需要 token）~~
 
 POST /post/ipfs
 
@@ -320,7 +320,7 @@ curl -d "data" -H "x-access-token: your_access_token" -X POST https://apitest.mt
 }
 ```
 
-#### 从 IPFS 获取文章
+#### ~~从 IPFS 获取文章~~
 
 GET /post/ipfs/:hash
 
@@ -340,7 +340,7 @@ GET /post/ipfs/:hash
 }
 }
 
-#### 关注
+#### ~~关注~~
 
 - POST /follow/follow
 - 响应状态码：200
@@ -354,7 +354,7 @@ GET /post/ipfs/:hash
 
 - curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.mttk.net/follow/follow
 
-#### 取消关注
+#### ~~取消关注~~
 
 - POST /follow/unfollow
 - 响应状态码：200
@@ -368,7 +368,7 @@ GET /post/ipfs/:hash
 
 - curl -d "username=joetothemoon&followed=minakokojima" -X POST https://api.mttk.net/follow/unfollow
 
-#### Auth (请求获取 access token)
+#### ~~Auth (请求获取 access token)~~
 
 - POST /login/auth
 - 响应状态码：200
@@ -469,7 +469,7 @@ request({
 
 ```
 
-#### 验证用户是否存在
+#### ~~验证用户是否存在~~
 
 - GET /login/verify
 
@@ -488,7 +488,7 @@ request({
 }
 ```
 
-#### 使用邮箱获取验证码
+#### ~~使用邮箱获取验证码~~
 
 - GET /login/captcha
 
@@ -508,7 +508,7 @@ request({
 
 - 错误原因：邮箱格式不对， 邮箱已经注册
 
-#### 使用邮箱注册
+#### ~~使用邮箱注册~~
 
 - POST /login/regist
 
@@ -521,7 +521,7 @@ request({
 
 - 出错原因: 验证码错误， 此邮箱没有获取过验证码
 
-#### 使用账户密码登陆
+#### ~~使用账户密码登陆~~
 
 - POST /login/account
 
@@ -543,7 +543,7 @@ request({
 
 - 出错原因：用户不存在， 密码错误
 
-#### 文章阅读上报
+#### ~~文章阅读上报~~
 
 统计阅读次数
 
