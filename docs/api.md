@@ -562,7 +562,7 @@ curl -X POST http://api.mttk.net/post/show/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vK
 ex：
 http://api.mttk.net/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
-#### 获取打赏列表(打赏队列)
+#### ~~获取打赏列表(打赏队列)~~
 
 - GET /shares
 
@@ -573,7 +573,7 @@ http://api.mttk.net/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
 获取打赏列表，支持使用 user 和 signid 进行筛选。
 
-#### 添加评论 (need access_token)
+#### ~~添加评论 (need access_token)~~
 
 - POST /post/comment
 - 响应状态码：200
@@ -587,7 +587,7 @@ http://api.mttk.net/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 
 - curl -d "comment=this is comment&sign_id=1" -H "x-access-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2V0b3RoZW1vb24iLCJleHAiOjE1NTM3NDQ2MzM0NjF9.hLHem3JxZrJxDDwDiYrs4YLKLT7Y5g0Bz_h7bDTu5zY" -X POST https://api.mttk.net/post/comment
 
-#### 获取评论列表
+#### ~~获取评论列表~~
 
 - GET /comment/comments
 - 响应状态码： 200
@@ -617,7 +617,7 @@ http://api.mttk.net/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 }
 ```
 
-#### 获取支持过的文章列表
+#### ~~获取支持过的文章列表~~
 
 - GET /posts/supported
 
@@ -658,7 +658,7 @@ http://api.mttk.net/post/QmfNHT4eaQ8XGr1kYXZFGEGtkGkr93H8of1vKc5L16ThSK
 }
 ```
 
-#### 获取关注列表
+#### ~~获取关注列表~~
 
 - GET /follow/follows
 
@@ -783,7 +783,7 @@ curl https://api.mttk.net/follow/fans?user=xiaotiandada | jq
 
 ```
 
-#### 获取资产明细
+#### ~~获取资产明细~~
 
 - GET /assets
 
@@ -947,7 +947,7 @@ curl https://api.mttk.net/assets?user=gaojin.game | jq
 
 ```
 
-#### 获取单篇文章的信息
+#### ~~获取单篇文章的信息~~
 
 新增, read: 阅读次数， ups: 被打赏次数, value: 被打赏总金额
 
@@ -1128,7 +1128,7 @@ curl https://api.mttk.net/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiyLF8cW1 | 
 
 ```
 
-#### 修改昵称 (need access_token)
+#### ~~修改昵称 (need access_token)~~
 
 - POST /user/setNickname
 - 响应状态码：201
@@ -1141,7 +1141,7 @@ curl https://api.mttk.net/post/Qmdd61fhUoQQBABde1tfF6qaXVgqL7yv8dQLkkiyLF8cW1 | 
 
 - curl -d "nickname=joenick" -H "x-access-token: access-token" -X POST https://api.mttk.net/user/setNickname
 
-#### 获取单篇文章的信息 （短链接 issues）
+#### ~~获取单篇文章的信息 （短链接 issues）~~
 
 - GET /p/:id
 - 响应状态码：200
@@ -1203,7 +1203,7 @@ curl https://api.mttk.net/p/123 | jq
 }
 ```
 
-#### 上传并设置头像（阿里云 oss 版本）（need access token）
+#### ~~上传并设置头像（阿里云 oss 版本）（need access token）~~
 
 - POST /user/uploadAvatar
 - 响应状态码： 200
@@ -1219,7 +1219,7 @@ curl https://api.mttk.net/p/123 | jq
 }
 ```
 
-#### 上传图片（阿里云 oss 版本）（need access token）
+#### ~~上传图片（阿里云 oss 版本）（need access token）~~
 
 - POST /post/uploadImage
 - 响应状态码： 200
@@ -1238,7 +1238,7 @@ curl https://api.mttk.net/p/123 | jq
 }
 ```
 
-#### 获取图片（阿里云 oss 版本）
+#### ~~获取图片（阿里云 oss 版本）~~
 
 - GET /image/:filename 请注意填写正确的域名
 
@@ -1308,7 +1308,7 @@ https://ssimg.frontenduse.top/image/2019/07/24/2ba618d03e1202fdfe581ff7540e959b.
 
 https://apitest.mttk.net/image/QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT
 
-#### 设置头像 (need access_token)
+#### ~~设置头像 (need access_token)~~
 
 - POST /user/setAvatar
 - 响应状态码：201
@@ -1321,7 +1321,7 @@ https://apitest.mttk.net/image/QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT
 
 - curl -d "avatar=QmPFvWoRsaTqtS5i4YcAqLBca5aVvuxTNe95Ncnd7dssUT" -H "x-access-token: access-token" -X POST https://api.mttk.net/user/setAvatar
 
-#### 设置用户的个性签名（自我介绍）(need access_token)
+#### ~~设置用户的个性签名（自我介绍）(need access_token)~~
 
 - POST /user/setIntroduction
 - 成功响应状态码：200
@@ -1351,7 +1351,7 @@ Body 参数（application/x-www-form-urlencoded）：
 }
 ```
 
-#### 删除文章(隐藏) (need access_token)
+#### ~~删除文章(隐藏) (need access_token)~~
 
 - DELETE /post/:id
 - 响应状态码：200
@@ -1370,7 +1370,7 @@ Body 参数（application/x-www-form-urlencoded）：
 }
 ```
 
-#### 编辑文章 (need access_token)
+#### ~~编辑文章 (need access_token)~~
 
 - POST /post/edit
 - 响应状态码：201
@@ -1393,7 +1393,7 @@ curl -H "x-access-token: access-token" -d "signId=1&author=joetothemoon&title=dd
 
 ```
 
-#### draft list
+#### ~~draft list~~
 
 - GET /draft/drafts
 - 响应状态码：201
@@ -1426,7 +1426,7 @@ curl -H "x-access-token: access-token"  -X GET https://apitest.mttk.net/draft/dr
 
 ```
 
-#### create draft
+#### ~~create draft~~
 
 - POST /draft/save
 - 响应状态码：201
@@ -1445,7 +1445,7 @@ curl -H "x-access-token: access-token" -d "title=112121&content=223312122" -X PO
 
 ```
 
-#### update draft
+#### ~~update draft~~
 
 - POST /draft/save
 - 响应状态码：201
@@ -1455,7 +1455,7 @@ curl -H "x-access-token: access-token" -d "title=112121&content=223312122" -X PO
 - title: 标题
 - content: 内容
 
-#### get draft by id
+#### ~~get draft by id~~
 
 - GET /draft/:id
 - 响应状态码：200
@@ -1482,7 +1482,7 @@ curl -H "x-access-token: access-token"  -X GET https://apitest.mttk.net/draft/1
 
 ```
 
-#### delete draft by id
+#### ~~delete draft by id~~
 
 - DELETE /draft/:id
 - 响应状态码：200
@@ -1494,7 +1494,7 @@ curl -H "x-access-token: access-token"  -X DELETE https://apitest.mttk.net/draft
 
 ```
 
-#### support 跨链打赏
+#### ~~support 跨链打赏~~
 
 - POST /support/support
 - 响应状态码：201
@@ -1514,7 +1514,7 @@ curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referr
 
 ```
 
-#### tokens 个人资产列表 (need access_token)
+#### ~~tokens 个人资产列表 (need access_token)~~
 
 返回 EOS、ONT 的待提现、历史总打赏收入、历史总创作收入、总支出、以及流水数据
 
@@ -1561,7 +1561,7 @@ curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referr
 
 ```
 
-#### 个人资产明细(need access token)
+#### ~~个人资产明细(need access token)~~
 
 - GET /user/balance
 - 响应状态码： 200
@@ -1590,7 +1590,7 @@ curl -d "signId=1&contract=eosio.token&symbol=EOS&amount=111&platform=eos&referr
 }
 ```
 
-#### 资产提现
+#### ~~资产提现~~
 
 - POST /user/withdraw
 - 响应状态码：201
@@ -1632,7 +1632,7 @@ curl -d "sign=01b07c90984e0385b19f62f29f93b037a8a3c3a9d2d434229c5da315e31bdc1f57
 
 ```
 
-#### 获取已经购买的商品列表(need access token)
+#### ~~获取已经购买的商品列表(need access token)~~
 
 - GET /support/products
 - 响应状态码: 200
@@ -1671,7 +1671,7 @@ curl -d "sign=01b07c90984e0385b19f62f29f93b037a8a3c3a9d2d434229c5da315e31bdc1f57
 
 ```
 
-#### get tags 获取可用标签列表
+#### ~~get tags 获取可用标签列表~~
 
 - GET /tag/tags
 - 响应状态码：200
@@ -1713,7 +1713,7 @@ curl http://localhost:7001/tag/tags?type=product
 
 tags=1,2,3,4
 
-#### get post by tag
+#### ~~get post by tag~~
 
 根据 tagid 查找文章
 
@@ -1724,7 +1724,7 @@ tags=1,2,3,4
 
 curl http://localhost:7001/posts/getPostByTag?tagid=1&page=2
 
-#### 转移文章所有权
+#### ~~转移文章所有权~~
 
 - POST /post/transferOwner
 - 响应状态码：201
@@ -1735,7 +1735,7 @@ curl http://localhost:7001/posts/getPostByTag?tagid=1&page=2
 
 curl -d "signid=1&uid=10" -X POST http://127.0.0.1:7001/post/transferOwner
 
-#### 转移草稿所有权
+#### ~~转移草稿所有权~~
 
 - POST /draft/transferOwner
 - 响应状态码：201
