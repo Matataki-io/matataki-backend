@@ -1746,7 +1746,7 @@ curl -d "signid=1&uid=10" -X POST http://127.0.0.1:7001/post/transferOwner
 
 curl -d "draftid=1&uid=10" -X POST http://127.0.0.1:7001/draft/transferOwner
 
-#### 用户搜索
+#### ~~用户搜索~~
 
 - GET /user/search
 - 响应状态码：200
@@ -1756,7 +1756,7 @@ curl -d "draftid=1&uid=10" -X POST http://127.0.0.1:7001/draft/transferOwner
 
 curl -X GET http://127.0.0.1:7001/user/search?q=xiaotiandada
 
-#### 购买商品
+#### ~~购买商品~~
 
 - POST /order/order
 - 响应状态码：201
@@ -1792,7 +1792,7 @@ curl -d "num=10&signId=100418&contract=eosio.token&symbol=EOS&amount=1&platform=
 3. 后端验证了后，处理发货（现在留空了）
 4. 修改 order 状态
 
-#### 橙皮书人次统计
+#### ~~橙皮书人次统计~~
 
 - GET /ads/statistics
 - 响应状态码：200
@@ -1811,7 +1811,7 @@ curl -d "num=10&signId=100418&contract=eosio.token&symbol=EOS&amount=1&platform=
 
 curl -X GET http://localhost:7001/ads/statistics
 
-#### 橙皮书 广告上传（最高出价者才能调用成功）
+#### ~~橙皮书 广告上传（最高出价者才能调用成功）~~
 
 - POST /ads/submit
 - 响应状态码：200
@@ -1833,7 +1833,7 @@ curl -X GET http://localhost:7001/ads/statistics
 
 curl -d "title=牛逼" -H "x-access-token: xxxx" -X POST http://localhost:7001/ads/submit
 
-#### 橙皮书 广告获取
+#### ~~橙皮书 广告获取~~
 
 - GET /ads/ad
 - 响应状态码：200
