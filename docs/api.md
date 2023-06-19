@@ -1857,7 +1857,7 @@ curl -d "title=牛逼" -H "x-access-token: xxxx" -X POST http://localhost:7001/a
 
 curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb703954f7b4612abc5daf48d8d56b277
 
-#### 文章搬运功能（need access token）
+#### ~~文章搬运功能（need access token）~~
 
 - POST /posts/importer
 - 参数： 需要获取的页面 URL， 带协议名称， 如
@@ -1883,7 +1883,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-### 积分系统
+### ~~积分系统~~
 
 积分类型：
 
@@ -1897,7 +1897,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
   }
 ```
 
-#### 客户端打开文章后提交，表示开始阅读
+#### ~~客户端打开文章后提交，表示开始阅读~~
 
 - POST /posts/:id/reading
 - 响应状态码：200
@@ -1911,7 +1911,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 阅读后点击推荐
+#### ~~阅读后点击推荐~~
 
 - POST /posts/:id/like
 - 响应状态码：200
@@ -1932,7 +1932,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 阅读后点击不推荐
+#### ~~阅读后点击不推荐~~
 
 - POST /posts/:id/dislike
 - 响应状态码：200
@@ -1953,7 +1953,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 获取我的积分
+#### ~~获取我的积分~~
 
 - GET /user/points
 - 响应状态码：200
@@ -1990,7 +1990,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 获取任务状态
+#### ~~获取任务状态~~
 
 - GET /user/pointStatus
 - 响应状态码：200
@@ -2018,7 +2018,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 领取任务积分
+#### ~~领取任务积分~~
 
 - POST /user/claimTaskPoint
 - 响应状态码：200
@@ -2040,7 +2040,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 赞赏提交交易 hash
+#### ~~赞赏提交交易 hash~~
 
 - POST /support/saveTxhash
 - 响应状态码：200
@@ -2063,7 +2063,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 订单提交交易 hash
+#### ~~订单提交交易 hash~~
 
 - POST /order/saveTxhash
 - 响应状态码：200
@@ -2086,7 +2086,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 积分评论
+#### ~~积分评论~~
 
 - POST /comment/comment
 - 响应状态码： 200
