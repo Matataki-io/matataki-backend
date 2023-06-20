@@ -2109,7 +2109,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 创建我的 token
+#### ~~创建我的 token~~
 
 - POST /minetoken/create
 - 响应状态码： 200
@@ -2135,7 +2135,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 发行我的 token
+#### ~~发行我的 token~~
 
 - POST /minetoken/mint
 - 响应状态码： 200
@@ -2157,7 +2157,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 转移 token
+#### ~~转移 token~~
 
 - POST /minetoken/transfer
 - 响应状态码： 200
@@ -2181,7 +2181,7 @@ curl -X GET http://localhost:7001/ads/ad?hash=fa3225e28a5f785dcb816f1110fe231cb7
 }
 ```
 
-#### 查询当前用户 token 余额
+#### ~~查询当前用户 token 余额~~
 
 - GET /minetoken/balance
 - 响应状态码： 200
@@ -2202,7 +2202,7 @@ tokenId=5
 }
 ```
 
-#### 创建交易对，前提条件是先查到 tokenId
+#### ~~创建交易对，前提条件是先查到 tokenId~~
 
 - POST /exchange/create
 - 响应状态码： 200
@@ -2224,7 +2224,7 @@ tokenId=5
 }
 ```
 
-#### 获取交易对信息，应该还会有调整
+#### ~~获取交易对信息，应该还会有调整~~
 
 - GET /exchange/create?tokenId=5
 - 响应状态码： 200
@@ -2246,7 +2246,7 @@ tokenId=5
 }
 ```
 
-#### 获取 token 详情
+#### ~~获取 token 详情~~
 
 - GET /token/detail
 - 响应状态码： 200
@@ -2272,7 +2272,7 @@ tokenId=5
 }
 ```
 
-#### 获取 token 的持仓用户列表
+#### ~~获取 token 的持仓用户列表~~
 
 - GET /token/userlist
 - 响应状态码： 200
@@ -2302,7 +2302,7 @@ tokenId=5
 }
 ```
 
-#### 获取用户的持仓 token 列表
+#### ~~获取用户的持仓 token 列表~~
 
 - GET /token/tokenlist
 - 响应状态码： 200
@@ -2337,7 +2337,7 @@ tokenId=5
 }
 ```
 
-#### token 兑换 token
+#### ~~token 兑换 token~~
 
 - POST /exchange/tokenToTokenInput
 - 响应状态码： 200
@@ -2364,7 +2364,7 @@ tokenId=5
 }
 ```
 
-#### token 兑换 cny
+#### ~~token 兑换 cny~~
 
 - POST /exchange/tokenToCnyInput
 - 响应状态码： 200
@@ -2390,7 +2390,7 @@ tokenId=5
 }
 ```
 
-#### 移除流动性
+#### ~~移除流动性~~
 
 - POST /exchange/removeLiquidity
 - 响应状态码： 200
@@ -2416,7 +2416,7 @@ tokenId=5
 }
 ```
 
-#### 增加文章持币阅读
+#### ~~增加文章持币阅读~~
 
 - POST /post/addMineTokens
 - 响应状态码： 200
@@ -2447,7 +2447,7 @@ tokenId=5
 }
 ```
 
-#### 买入粉丝币-流水明细
+#### ~~买入粉丝币-流水明细~~
 
 - GET /token/tokenflow
 - 响应状态码： 200
@@ -2486,7 +2486,7 @@ tokenId=5
 }
 ```
 
-#### 我的粉丝币-流水明细
+#### ~~我的粉丝币-流水明细~~
 
 - GET /token/usertokenflow
 - 响应状态码： 200
@@ -2497,37 +2497,35 @@ tokenId=5
 ```
 {
   "code": 0,
-  "message": "成功"
-    "code": 0,
-    "message": "成功",
-    "data": {
-        "count": 1,
-        "list": [
-          {
-            "id": 79,
-            "uid": 1042,
-            "token_id": 14,
-            "cny_amount": 10000,
-            "token_amount": 758573,
-            "type": "buy_token_input",
-            "trade_no": "i9T5PmF6Xnufe4z1lA3HNEwqrLY8ETq",
-            "openid": "",
-            "status": 9,
-            "create_time": "2019-09-29T07:02:12.000Z",
-            "pay_time": null,
-            "ip": "112.118.225.21",
-            "deadline": 1569740832,
-            "min_liquidity": 0,
-            "max_tokens": 0,
-            "min_tokens": 750987,
-            "recipient": 1042
-          }
-        ]
-    }
+  "message": "成功",
+  "data": {
+      "count": 1,
+      "list": [
+        {
+          "id": 79,
+          "uid": 1042,
+          "token_id": 14,
+          "cny_amount": 10000,
+          "token_amount": 758573,
+          "type": "buy_token_input",
+          "trade_no": "i9T5PmF6Xnufe4z1lA3HNEwqrLY8ETq",
+          "openid": "",
+          "status": 9,
+          "create_time": "2019-09-29T07:02:12.000Z",
+          "pay_time": null,
+          "ip": "112.118.225.21",
+          "deadline": 1569740832,
+          "min_liquidity": 0,
+          "max_tokens": 0,
+          "min_tokens": 750987,
+          "recipient": 1042
+        }
+      ]
+  }
 }
 ```
 
-#### 当前用户视角查看文章属性
+#### ~~当前用户视角查看文章属性~~
 
 - POST /post/currentProfile
 - 响应状态码： 200
@@ -2588,7 +2586,7 @@ tokenId=5
 }
 ```
 
-#### 查看用户的 token 日志
+#### ~~查看用户的 token 日志~~
 
 - GET /token/userlogs
 - 响应状态码： 200
@@ -2643,7 +2641,7 @@ tokenId=5
 }
 ```
 
-#### 查看 token 日志，以发币人视角
+#### ~~查看 token 日志，以发币人视角~~
 
 - GET /token/tokenlogs
 - 响应状态码： 200
@@ -2696,7 +2694,7 @@ tokenId=5
 }
 ```
 
-#### 查询当前用户 CNY 资产余额
+#### ~~查询当前用户 CNY 资产余额~~
 
 - GET /asset/balance
 - 响应状态码： 200
@@ -2717,7 +2715,7 @@ symbol=CNY
 }
 ```
 
-#### 粉丝币详情
+#### ~~粉丝币详情~~
 
 - GET /minetoken/:id
 - 响应状态码： 200
@@ -2773,7 +2771,7 @@ symbol=CNY
 }
 ```
 
-#### 修改 token 详情
+#### ~~修改 token 详情~~
 
 - PUT /minetoken/:tokenId
 - 响应状态码： 200
@@ -2798,7 +2796,7 @@ symbol=CNY
 }
 ```
 
-#### 修改 token 资源
+#### ~~修改 token 资源~~
 
 - PUT /minetoken/:tokenId/resources
 - 响应状态码： 200
@@ -2849,7 +2847,7 @@ symbol=CNY
 }
 ```
 
-#### 查看 token 资源
+#### ~~查看 token 资源~~
 
 - GET /minetoken/:tokenId/resources
 - 响应状态码： 200
@@ -2895,7 +2893,7 @@ symbol=CNY
 }
 ```
 
-#### 查看所有 token 列表
+#### ~~查看所有 token 列表~~
 
 - GET /token/all
 - 响应状态码： 200
