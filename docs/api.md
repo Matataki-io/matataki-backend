@@ -2970,7 +2970,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 添加/修改文章引用
+#### ~~添加/修改文章引用~~
 
 - PUT /posts/:signId/references
 - 响应状态码： 200
@@ -2994,7 +2994,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 删除文章引用
+#### ~~~删除文章引用~~
 
 - DELETE /posts/:signId/references/:number
 - 响应状态码： 200
@@ -3009,7 +3009,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 根据文章 Id、number 获取文章引用
+#### ~~根据文章 Id、number 获取文章引用~~
 
 - GET /posts/:signId/references/:number
 - 响应状态码： 200
@@ -3031,7 +3031,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 获取文章引用列表
+#### ~~获取文章引用列表~~
 
 - GET /posts/:signId/references?pagesize=20&page=1
 - 响应状态码： 200
@@ -3062,7 +3062,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 草稿发布时发布引用的文章
+#### ~~草稿发布时发布引用的文章~~
 
 - POST /drafts/:draftId/references/publish
 - 响应状态码： 200
@@ -3077,7 +3077,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 添加/修改草稿引用
+#### ~~添加/修改草稿引用~~
 
 - PUT /drafts/:signId/references
 - 响应状态码： 200
@@ -3101,7 +3101,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 删除草稿引用
+#### ~~删除草稿引用~~
 
 - DELETE /drafts/:signId/references/:number
 - 响应状态码： 200
@@ -3116,7 +3116,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 根据草稿 Id、number 获取文章引用
+#### ~~根据草稿 Id、number 获取文章引用~~
 
 - GET /drafts/:draftId/references/:number
 - 响应状态码： 200
@@ -3138,7 +3138,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 获取草稿引用列表
+#### ~~获取草稿引用列表~~
 
 - GET /drafts/:signId/references?pagesize=20&page=1
 - 响应状态码： 200
@@ -3169,7 +3169,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 解析引用网址的 title
+#### ~~解析引用网址的 title~~
 
 - POST /posts/extractRefTitle
 - 响应状态码： 200
@@ -3195,7 +3195,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 查看本文被引用的文章列表
+#### ~~查看本文被引用的文章列表~~
 
 - GET /posts/:signId/posts?pagesize=20&page=1
 - 响应状态码： 200
@@ -3217,7 +3217,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 设置用户网站和社交帐号信息
+#### ~~设置用户网站和社交帐号信息~~
 
 - PUT /user/links
 - 响应状态码： 200
@@ -3254,7 +3254,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 获取用户网站和社交帐号信息
+#### ~~获取用户网站和社交帐号信息~~
 
 - GET /user/:id/links
 - 响应状态码： 200
@@ -3307,7 +3307,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 设置文章价格
+#### ~~设置文章价格~~
 
 - PUT /posts/:signId/prices
 - 响应状态码： 200
@@ -3329,7 +3329,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 创建订单
+#### ~~创建订单~~
 
 - PUT /orders/
 - 响应状态码： 200
@@ -3363,7 +3363,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 修改订单
+#### ~~修改订单~~
 
 - PUT /orders/:tradeNo
 - 响应状态码： 200
@@ -3385,7 +3385,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 获取订单
+#### ~~获取订单~~
 
 - GET /orders/:tradeNo
 - 响应状态码： 200
@@ -3407,7 +3407,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 修改订单
+#### ~~修改订单~~
 
 - POST /orders/handleAmount0
 - 响应状态码： 200
@@ -3429,7 +3429,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 收藏文章
+#### ~~收藏文章~~
 
 - POST /post/:id/bookmark
 - 响应状态码：
@@ -3446,7 +3446,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 取消收藏文章
+#### ~~取消收藏文章~~
 
 - DELETE /post/:id/bookmark
 - 响应状态码：
@@ -3455,7 +3455,7 @@ symbol-desc：字母倒序
 - 参数：无
 - 返回值：（204 时无）
 
-#### 获取收藏文章
+#### ~~获取收藏文章~~
 
 - GET /user/bookmarks
 - 响应状态码：200
@@ -3497,7 +3497,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 获取购买的文章列表
+#### ~~获取购买的文章列表~~
 
 - GET /order/products?pagesize=20&page=1&platform=cny
 - 响应状态码： 200
@@ -3534,7 +3534,7 @@ symbol-desc：字母倒序
 }
 ```
 
-#### 图片上传
+#### ~~图片上传~~
 
 - POST /oss/uploadImage?folder=folderOption
 
@@ -3562,7 +3562,7 @@ const folderOption = {
 }
 ```
 
-#### 账号绑定
+#### ~~账号绑定~~
 
 - POST /account/binding
 - 参数：
@@ -3609,7 +3609,7 @@ const folderOption = {
 }
 ```
 
-#### 账号解绑
+#### ~~账号解绑~~
 
 - POST /account/unbinding
 - 参数：
@@ -3632,7 +3632,7 @@ const folderOption = {
 }
 ```
 
-#### 更换主账号
+#### ~~更换主账号~~
 
 - POST /account/changeMainAccount
 - 参数：
@@ -3655,7 +3655,7 @@ const folderOption = {
 }
 ```
 
-#### 获取绑定账号列表
+#### ~~获取绑定账号列表~~
 
 - GET /account/list
 - 参数： 无
@@ -3670,7 +3670,7 @@ const folderOption = {
 }
 ```
 
-#### 获取 Fan 票相关创作
+#### ~~获取 Fan 票相关创作~~
 
 - GET /minetoken/:id/related
 
@@ -3721,7 +3721,7 @@ const folderOption = {
 }
 ```
 
-#### 创建分享
+#### ~~创建分享~~
 
 - POST /share
 - 响应状态码： 200
@@ -3760,7 +3760,7 @@ const folderOption = {
 }
 ```
 
-#### 分享列表
+#### ~~分享列表~~
 
 - GET /share
 - 响应状态码： 200
@@ -3799,9 +3799,9 @@ const folderOption = {
 }
 ```
 
-#### 分享详情
+#### ~~分享详情~~
 
-### ES 搜索
+### ~~ES 搜索~~
 
 - 统一请求方法： GET
 - 统一请求参数：
@@ -3821,25 +3821,25 @@ const folderOption = {
 }
 ```
 
-#### 搜索文章
+#### ~~搜索文章~~
 
 url: /search/post
 
-#### 搜索用户
+#### ~~搜索用户~~
 
 url: /search/user
 
-#### 搜索分享
+#### ~~搜索分享~~
 
 url: /search/share
 
-#### 搜索 Fan 票
+#### ~~搜索 Fan 票~~
 
 url: /search/token
 
-# ！！！拿文章数据使用 getByPostIds 方法，传入 postids 即可！！！
+# ~~！！！拿文章数据使用 getByPostIds 方法，传入 postids 即可！！！~~
 
-#### 常用候选列表
+#### ~~常用候选列表~~
 
 - GET /history/user?type=post
 - 响应状态码： 200
@@ -3892,7 +3892,7 @@ url: /search/token
 }
 ```
 
-### 获取最热的 k 个标签
+### ~~获取最热的 k 个标签~~
 
 - GET /tags/hotest?pagesize=3&page=0
 - 响应状态码： 200
@@ -3924,7 +3924,7 @@ url: /search/token
 }
 ```
 
-### 获取某篇文章的标签
+### ~~获取某篇文章的标签~~
 
 - GET /tags/get_by_post?id=12345
 - 响应状态码： 200
@@ -3948,7 +3948,7 @@ url: /search/token
 }
 ```
 
-### 获取某个标签下的所有文章
+### ~~获取某个标签下的所有文章~~
 
 - GET /tags/post?id=1&pagesize=2&page=0
 - 响应状态码： 200
@@ -4029,7 +4029,7 @@ url: /search/token
 }
 ```
 
-### 获取用户的子站创建状态
+### ~~获取用户的子站创建状态~~
 
 - GET /user/siteStatus
 - x-access-token：需要
@@ -4039,7 +4039,7 @@ url: /search/token
 - 独立子站未创建，无法进入设置页面，需要走创建步骤： 10021
 - 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
 
-### 获取用户的repo状态
+### ~~获取用户的repo状态~~
 
 - GET /user/repoStatus
 - x-access-token：需要
@@ -4049,7 +4049,7 @@ url: /search/token
 - 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
 - repo没有留空：10020。会返回用户repo名称
 
-### 查看GitHub pages的渲染状态
+### ~~查看GitHub pages的渲染状态~~
 - GET /user/pagesStatus
 - x-access-token：需要
 - 参数：无
@@ -4059,7 +4059,7 @@ url: /search/token
   built:已经渲染完成 building:正在渲染中 Not Found:没有打开pages，或是设置有问题（此状态不在下面官方文档中）
   详见https://docs.github.com/en/rest/reference/repos#get-a-github-pages-site 中的状态解释
 
-### 修改用户子站目标repo
+### ~~修改用户子站目标repo~~
 
 - POST /user/repo
 - x-access-token：需要
@@ -4068,7 +4068,7 @@ url: /search/token
 - 正常状态码：200，表示修改成功
 - 没有绑定GitHub账户、无GitHub token：10019，应引导用户进行GitHub账户绑定
 
-### 获取用户site 设置
+### ~~获取用户site 设置~~
 实际上是读取用户_config.yml文件的部分内容，外加子站url
 - GET /user/siteConfig
 - x-access-token：需要
@@ -4093,7 +4093,7 @@ url: /search/token
 }
 ```
 
-### 修改用户site设置
+### ~~修改用户site设置~~
 实际上是修改用户_config.yml文件的部分内容
 - POST /user/siteConfig
 - x-access-token：需要
@@ -4104,7 +4104,7 @@ url: /search/token
 
 - 正常状态码：200，表示修改成功
 
-### 获取可用theme的列表
+### ~~获取可用theme的列表~~
 
 - GET /user/themeList
 - x-access-token：非必须
@@ -4124,12 +4124,12 @@ url: /search/token
 }
 ```
 
-### 创建子站repo
+### ~~创建子站repo~~
 初始化子站第一步
 - POST /user/prepareRepo
 - x-access-token：需要
 - 正常状态码：200，表示创建成功
-### 设置子站repo的config
+### ~~设置子站repo的config~~
 初始化子站第二步（为防止请求过快，未创建repo完成就进行编辑而导致失败，故拆分）
 - POST /user/prepareConfig
 - x-access-token：需要
